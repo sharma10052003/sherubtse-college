@@ -1,0 +1,99 @@
+/* =============================================================
+   SHERUBTSE COLLEGE — FOOTER STYLES
+   ============================================================= */
+
+.stc-footer {
+  background: var(--stc-ridge);
+  color: rgba(255,255,255,0.82);
+  font-family: var(--stc-font-body);
+  position: relative;
+}
+
+/* Ridgeline motif divider — signature element referencing the Kanglung
+   hillside campus. Rendered once, in the brand gold, at low opacity. */
+.stc-footer__ridge {
+  line-height: 0;
+  transform: translateY(-99%);
+  color: var(--stc-paper);
+}
+.stc-footer__ridge svg { width: 100%; height: 40px; display: block; }
+.stc-footer__ridge path { fill: currentColor; opacity: 1; }
+
+.stc-footer__inner { max-width: var(--stc-container); margin: 0 auto; padding: 0 var(--stc-space-5); }
+
+.stc-footer__main { padding: var(--stc-space-7) 0 var(--stc-space-6); }
+.stc-footer__grid {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr 1fr 1.2fr;
+  gap: var(--stc-space-6);
+}
+
+.stc-footer__brand {
+  display: flex; align-items: center; gap: var(--stc-space-3);
+  text-decoration: none; margin-bottom: var(--stc-space-4);
+}
+.stc-footer__brand img { width: 40px; height: 40px; }
+.stc-footer__brand span {
+  font-family: var(--stc-font-display);
+  font-size: var(--stc-fs-md);
+  color: var(--stc-white);
+}
+.stc-footer__desc { font-size: var(--stc-fs-sm); line-height: var(--stc-lh-base); margin: 0 0 var(--stc-space-3); }
+.stc-footer__motto {
+  font-family: var(--stc-font-display);
+  font-style: italic;
+  color: var(--stc-gold-light);
+  font-size: var(--stc-fs-md);
+  margin: 0 0 var(--stc-space-4);
+}
+.stc-footer__social { display: flex; gap: var(--stc-space-3); }
+.stc-footer__social a {
+  width: 36px; height: 36px; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: rgba(255,255,255,0.08); color: var(--stc-white);
+  transition: background var(--stc-dur-fast) var(--stc-ease), color var(--stc-dur-fast) var(--stc-ease);
+}
+.stc-footer__social a:hover { background: var(--stc-gold); color: var(--stc-ridge); }
+
+.stc-footer__heading {
+  font-family: var(--stc-font-display);
+  font-size: var(--stc-fs-base);
+  color: var(--stc-gold-light);
+  margin: 0 0 var(--stc-space-4);
+  font-weight: 500;
+}
+.stc-footer__links { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--stc-space-3); }
+.stc-footer__links a {
+  color: inherit; text-decoration: none; font-size: var(--stc-fs-sm);
+  transition: color var(--stc-dur-fast) var(--stc-ease), padding-left var(--stc-dur-fast) var(--stc-ease);
+}
+.stc-footer__links a:hover { color: var(--stc-gold-light); padding-left: 4px; }
+
+.stc-footer__contact { list-style: none; margin: 0 0 var(--stc-space-4); padding: 0; display: flex; flex-direction: column; gap: var(--stc-space-3); }
+.stc-footer__contact li { display: flex; align-items: flex-start; gap: var(--stc-space-2); font-size: var(--stc-fs-sm); }
+.stc-footer__contact i { color: var(--stc-gold); margin-top: 3px; flex-shrink: 0; }
+.stc-footer__contact a { color: inherit; text-decoration: none; }
+.stc-footer__contact a:hover { color: var(--stc-gold-light); }
+.stc-footer__map-link {
+  display: inline-flex; align-items: center; gap: var(--stc-space-2);
+  color: var(--stc-gold-light); text-decoration: none; font-size: var(--stc-fs-sm); font-weight: 600;
+}
+.stc-footer__map-link:hover { text-decoration: underline; }
+
+.stc-footer__bottom { border-top: 1px solid rgba(255,255,255,0.12); padding: var(--stc-space-4) 0; }
+.stc-footer__bottom-inner {
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--stc-space-3);
+}
+.stc-footer__copyright { margin: 0; font-size: var(--stc-fs-xs); color: rgba(255,255,255,0.6); }
+.stc-footer__legal { list-style: none; display: flex; flex-wrap: wrap; gap: var(--stc-space-4); margin: 0; padding: 0; }
+.stc-footer__legal a { color: rgba(255,255,255,0.6); text-decoration: none; font-size: var(--stc-fs-xs); }
+.stc-footer__legal a:hover { color: var(--stc-gold-light); }
+
+@media (max-width: 991px) {
+  .stc-footer__grid { grid-template-columns: 1fr 1fr; }
+  .stc-footer__col--about { grid-column: 1 / -1; }
+}
+@media (max-width: 575px) {
+  .stc-footer__grid { grid-template-columns: 1fr; }
+  .stc-footer__bottom-inner { flex-direction: column; align-items: flex-start; }
+}

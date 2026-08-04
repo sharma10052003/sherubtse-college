@@ -1,0 +1,30 @@
+/* Scaled-down mock of the public hero, restyled for the admin preview
+   pane. Deliberately simplified — not a literal reuse of
+   assets/css/homepage/hero.css, which targets a full-viewport section. */
+
+.stc-hero-preview {
+  position: relative;
+  min-height: 460px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  overflow: hidden;
+  color: #fff;
+  background: var(--stc-maroon-dark);
+}
+.stc-hero-preview__bg { position: absolute; inset: 0; background: linear-gradient(135deg, var(--stc-maroon), var(--stc-gold)); background-size: cover; background-position: center; }
+.stc-hero-preview__bg.has-image { background-image: var(--preview-img, none); }
+.stc-hero-preview__overlay { position: absolute; inset: 0; background: rgba(34,26,23,0.55); }
+.stc-hero-preview__content { position: relative; z-index: 2; padding: 2rem; }
+.stc-hero-preview.is-light .stc-hero-preview__content { color: var(--stc-ink); }
+.stc-hero-preview__eyebrow { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--stc-gold-light); margin: 0 0 0.5rem; }
+.stc-hero-preview__content h3 { font-family: var(--stc-font-display); font-size: 1.5rem; line-height: 1.15; margin: 0 0 0.75rem; }
+.stc-hero-preview__content p#previewSubtitle { font-size: 0.85rem; opacity: 0.9; max-width: 32ch; margin: 0 0 1.25rem; }
+.stc-hero-preview__ctas { display: flex; gap: 0.6rem; flex-wrap: wrap; margin-bottom: 1rem; }
+.stc-hero-preview__btn { font-size: 0.75rem; font-weight: 700; padding: 0.5rem 0.9rem; border-radius: var(--stc-radius-md); border: 1px solid rgba(255,255,255,0.4); }
+.stc-hero-preview__btn--primary { background: var(--stc-gold); color: var(--stc-maroon-dark); border-color: transparent; }
+.stc-hero-preview__badges { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.stc-hero-preview__badges span { font-size: 0.65rem; padding: 0.3rem 0.6rem; border-radius: 999px; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.25); display: inline-flex; align-items: center; gap: 0.3rem; }
+.stc-hero-preview__stats { position: relative; z-index: 2; display: flex; justify-content: space-around; flex-wrap: wrap; gap: 0.75rem; padding: 0.9rem; margin: 0 1rem 1.25rem; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.18); border-radius: var(--stc-radius-md); }
+.stc-hero-preview__stats div { text-align: center; font-size: 0.7rem; }
+.stc-hero-preview__stats strong { display: block; font-family: var(--stc-font-display); font-size: 1.1rem; }

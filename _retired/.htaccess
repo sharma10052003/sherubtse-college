@@ -1,0 +1,9 @@
+# Sherubtse College — /_retired access control
+# -----------------------------------------------------------------------
+# Contents here (the old custom /admin panel and includes/db.php) were
+# retired when the site moved to Strapi as its CMS/backend. Kept on disk
+# for reference/rollback rather than deleted outright, but must never be
+# reachable over HTTP.
+
+Require all denied
+Options -Indexes

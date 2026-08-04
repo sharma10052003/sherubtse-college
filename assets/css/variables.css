@@ -1,0 +1,104 @@
+/* =============================================================
+   SHERUBTSE COLLEGE — DESIGN TOKENS
+   -------------------------------------------------------------
+   Central token system for the Header/Footer redesign.
+   Palette is drawn from Bhutanese textile colour (deep maroon +
+   temple gold) rather than a generic "university blue", paired
+   with a warm paper background so the site reads as an Eastern
+   Himalayan academic institution, not a template.
+
+   Edit THIS file to re-brand the header/footer. Nothing else
+   needs to change — every component consumes these variables.
+   ============================================================= */
+
+:root {
+  /* ---- Brand colour ------------------------------------------------ */
+  --stc-maroon:        #7A1B2B; /* primary brand — robe maroon */
+  --stc-maroon-dark:    #4E1019; /* pressed / sticky-shrink state */
+  --stc-maroon-tint:    #FBEFEF; /* faint background wash */
+  --stc-gold:           #C7962C; /* accent — temple gold */
+  --stc-gold-light:     #E8C97A; /* hover / highlight */
+  --stc-ridge:          #24161A; /* deep charcoal-maroon — footer base */
+
+  /* ---- Neutral / paper ---------------------------------------------- */
+  --stc-paper:          #FAF7F1; /* header/body background */
+  --stc-paper-alt:      #F3EEE4; /* mega-menu panel background */
+  --stc-ink:            #221A17; /* primary text */
+  --stc-ink-soft:       #5B4E48; /* secondary text */
+  --stc-line:           #E4DCD1; /* hairline borders on paper */
+  --stc-line-dark:      rgba(255,255,255,0.12); /* hairlines on maroon/ridge */
+  --stc-white:          #FFFFFF;
+
+  /* ---- Feedback / state ---------------------------------------------- */
+  --stc-focus:          #E8C97A; /* visible focus ring, AA against maroon & paper */
+  --stc-success:        #2E7D4F;
+  --stc-overlay:        rgba(34, 26, 23, 0.55);
+
+  /* ---- Typography ----------------------------------------------------- */
+  --stc-font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
+  --stc-font-body:    'Public Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+  --stc-fs-xs:   0.75rem;
+  --stc-fs-sm:   0.875rem;
+  --stc-fs-base: 1rem;
+  --stc-fs-md:   1.125rem;
+  --stc-fs-lg:   1.375rem;
+  --stc-fs-xl:   1.75rem;
+
+  --stc-lh-tight: 1.2;
+  --stc-lh-base:  1.55;
+
+  /* ---- Spacing scale (4px base) --------------------------------------- */
+  --stc-space-1: 0.25rem;
+  --stc-space-2: 0.5rem;
+  --stc-space-3: 0.75rem;
+  --stc-space-4: 1rem;
+  --stc-space-5: 1.5rem;
+  --stc-space-6: 2rem;
+  --stc-space-7: 3rem;
+  --stc-space-8: 4rem;
+
+  /* ---- Layout ----------------------------------------------------------- */
+  --stc-header-h: 95px;        /* full header height */
+  --stc-header-h-shrunk: 64px; /* sticky-shrink height on scroll */
+  --stc-topbar-h: 36px;        /* utility bar height */
+  --stc-container: 1240px;
+  --stc-radius-sm: 4px;
+  --stc-radius-md: 10px;
+  --stc-radius-lg: 18px;
+
+  /* ---- Motion ------------------------------------------------------------ */
+  --stc-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --stc-dur-fast: 150ms;
+  --stc-dur-base: 240ms;
+  --stc-dur-slow: 420ms;
+
+  /* ---- Elevation ---------------------------------------------------------- */
+  --stc-shadow-sm: 0 1px 2px rgba(34,26,23,0.08);
+  --stc-shadow-md: 0 8px 24px rgba(34,26,23,0.12);
+  --stc-shadow-lg: 0 20px 48px rgba(34,26,23,0.18);
+
+  /* ---- Glassmorphism (sticky header) --------------------------------------- */
+  --stc-glass-bg: rgba(250, 247, 241, 0.82);
+  --stc-glass-border: rgba(255,255,255,0.5);
+  --stc-glass-blur: 14px;
+}
+
+/* ---- Dark mode ready (see docs/BRANDING.md) --------------------------------- */
+[data-theme="dark"] {
+  --stc-paper:        #1B1412;
+  --stc-paper-alt:     #241A17;
+  --stc-ink:           #F3EEE4;
+  --stc-ink-soft:      #C9BCB3;
+  --stc-line:          rgba(255,255,255,0.12);
+  --stc-glass-bg:      rgba(27, 20, 18, 0.82);
+  --stc-glass-border:  rgba(255,255,255,0.08);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --stc-dur-fast: 0ms;
+    --stc-dur-base: 0ms;
+    --stc-dur-slow: 0ms;
+  }
+}

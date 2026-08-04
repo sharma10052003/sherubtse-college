@@ -1,0 +1,18 @@
+# Sherubtse College — clean URLs (site root)
+# -----------------------------------------------------------------------
+# Lets every page be linked without a .php extension (as includes/config.php's
+# $stc_nav already assumes, e.g. "/about/history", "/contact") without
+# touching any existing file/folder resolution — real files and
+# directories (assets/, admin/, index.php's own DirectoryIndex handling)
+# are matched and passed through untouched before the rewrite is tried.
+# -----------------------------------------------------------------------
+RewriteEngine On
+
+# Serve existing files/directories as-is.
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# /path/to/page -> /path/to/page.php, only if that file actually exists.
+RewriteCond %{REQUEST_FILENAME}\.php -f
+RewriteRule ^(.+)$ $1.php [L]

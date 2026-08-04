@@ -1,0 +1,36 @@
+.stc-president-preview {
+  padding: 1.5rem;
+  text-align: center;
+}
+.stc-president-preview__photo {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  overflow: hidden;
+  margin: 0 auto 1rem;
+  background: var(--stc-paper-alt);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+  color: var(--stc-ink-soft);
+}
+.stc-president-preview__photo img { width: 100%; height: 100%; object-fit: cover; }
+.stc-president-preview p#presPreviewMessage {
+  font-family: var(--stc-font-display);
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--stc-ink);
+  margin: 0 0 1rem;
+}
+.stc-president-preview__name { font-weight: 700; margin: 0; }
+.stc-president-preview__position { font-size: 0.8rem; color: var(--stc-ink-soft); margin: 0 0 1rem; }
+.stc-president-preview__btn {
+  display: inline-block;
+  padding: 0.5rem 1.1rem;
+  border-radius: var(--stc-radius-md);
+  background: var(--stc-maroon);
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 700;
+}

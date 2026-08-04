@@ -1,0 +1,415 @@
+/* =============================================================
+   PAGE — History & Heritage (/about/history)
+   Scoped under .stc-history so nothing leaks into header/footer or
+   any other page/section. box-sizing reset lives here from line one
+   (the Hero/Gallery overflow bug earlier this session was caused by
+   skipping this on a new scope).
+   ============================================================= */
+
+.stc-history, .stc-history * {
+  box-sizing: border-box;
+}
+
+.stc-history {
+  font-family: var(--stc-font-body);
+  color: var(--stc-ink);
+  overflow-x: hidden;
+}
+
+.stc-history__section { padding: var(--stc-space-8) var(--stc-space-5); }
+.stc-history__section:nth-of-type(even) { background: var(--stc-paper-alt); }
+
+.stc-history__inner { max-width: var(--stc-container); margin: 0 auto; }
+.stc-history__inner--narrow { max-width: 44rem; margin: 0 auto; }
+
+.stc-history__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--stc-space-2);
+  font-size: var(--stc-fs-sm);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--stc-gold);
+  margin: 0 0 var(--stc-space-3);
+}
+.stc-history__section h2 {
+  font-family: var(--stc-font-display);
+  font-size: clamp(1.6rem, 3vw, 2.25rem);
+  color: var(--stc-ink);
+  margin: 0 0 var(--stc-space-5);
+}
+.stc-history__section h3 {
+  font-family: var(--stc-font-display);
+  font-size: var(--stc-fs-md);
+  color: var(--stc-maroon);
+  margin: var(--stc-space-4) 0 var(--stc-space-2);
+}
+.stc-history__prose {
+  font-size: var(--stc-fs-md);
+  line-height: var(--stc-lh-base);
+  color: var(--stc-ink-soft);
+  margin: 0 0 var(--stc-space-3);
+}
+
+/* ---- Reveal animation (shared by every [data-reveal] element) ------------- */
+[data-reveal] {
+  transition: opacity var(--stc-dur-slow) var(--stc-ease), transform var(--stc-dur-slow) var(--stc-ease);
+  transition-delay: calc(var(--i, 0) * 90ms);
+}
+[data-reveal]:not(.is-visible) { opacity: 0; transform: translateY(24px); }
+[data-reveal].is-visible { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal] { transition: none; opacity: 1; transform: none; }
+}
+
+/* ---- 1. Hero ---------------------------------------------------------------- */
+.stc-history__hero {
+  position: relative;
+  min-height: 60vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-size: cover;
+  background-position: center;
+  color: #fff;
+  text-align: center;
+  padding: var(--stc-space-8) var(--stc-space-5);
+}
+.stc-history__hero-gradient {
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, var(--stc-maroon), var(--stc-maroon-dark));
+}
+.stc-history__hero-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.35); }
+.stc-history__hero-inner { position: relative; z-index: 1; max-width: 46rem; }
+.stc-history__hero-inner h1 {
+  font-family: var(--stc-font-display);
+  font-size: clamp(2.25rem, 5vw, 3.5rem);
+  margin: 0 0 var(--stc-space-3);
+}
+.stc-history__hero-subtitle { font-size: var(--stc-fs-lg); color: var(--stc-gold-light); margin: 0 0 var(--stc-space-4); font-weight: 600; }
+.stc-history__hero-intro { font-size: var(--stc-fs-md); line-height: var(--stc-lh-base); color: rgba(255,255,255,0.9); margin: 0; }
+
+/* ---- 3. Timeline — alternating cards + scroll-driven progress line ------------
+   A static muted line runs the full height; a gold overlay ("progress")
+   grows over it as the section scrolls (history.js measures scroll
+   position, no library). Items alternate left/right of the line on
+   wide screens and collapse to a single left-aligned column on mobile. */
+.stc-history__timeline {
+  position: relative;
+  max-width: 54rem;
+  margin: 0 auto;
+  padding: var(--stc-space-4) 0;
+}
+.stc-history__timeline::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 0; bottom: 0;
+  width: 3px;
+  background: var(--stc-line);
+  transform: translateX(-50%);
+}
+.stc-history__timeline-progress {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: linear-gradient(180deg, var(--stc-gold), var(--stc-maroon));
+  /* Plain translateX only (matches ::before below exactly) so top:0 +
+     bottom:0 resolves to the full timeline height; a scaleY() transform
+     here — even scaleY(1) — collapses the box back to a zero-height
+     layout box in this auto-height-parent case. The fill is done with
+     clip-path instead, which only affects paint, not layout. */
+  transform: translateX(-50%);
+  clip-path: inset(0 0 100% 0);
+  transition: clip-path 120ms linear;
+  border-radius: 2px;
+}
+.stc-history__timeline-item {
+  position: relative;
+  width: 50%;
+  padding: 0 3rem var(--stc-space-7);
+  transition: opacity var(--stc-dur-slow) var(--stc-ease), transform var(--stc-dur-slow) var(--stc-ease);
+  transition-delay: calc(var(--i, 0) * 80ms);
+}
+.stc-history__timeline-item--left { left: 0; text-align: right; }
+.stc-history__timeline-item--right { left: 50%; text-align: left; }
+.stc-history__timeline-item[data-reveal-variant]:not(.is-visible) { opacity: 0; }
+.stc-history__timeline-item--left:not(.is-visible) { transform: translateX(-32px); }
+.stc-history__timeline-item--right:not(.is-visible) { transform: translateX(32px); }
+.stc-history__timeline-item.is-visible { opacity: 1; transform: none; }
+
+.stc-history__timeline-dot {
+  position: absolute;
+  top: 0.3rem;
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: var(--stc-gold);
+  border: 4px solid var(--stc-paper-alt);
+  box-shadow: 0 0 0 3px var(--stc-gold);
+}
+.stc-history__timeline-item--left .stc-history__timeline-dot { right: -9px; }
+.stc-history__timeline-item--right .stc-history__timeline-dot { left: -9px; }
+.stc-history__timeline-item.is-visible .stc-history__timeline-dot {
+  animation: stc-timeline-pulse 1.4s var(--stc-ease);
+}
+@keyframes stc-timeline-pulse {
+  0%   { box-shadow: 0 0 0 3px var(--stc-gold), 0 0 0 3px rgba(199,150,44,0.55); }
+  70%  { box-shadow: 0 0 0 3px var(--stc-gold), 0 0 0 14px rgba(199,150,44,0); }
+  100% { box-shadow: 0 0 0 3px var(--stc-gold), 0 0 0 0 rgba(199,150,44,0); }
+}
+
+.stc-history__timeline-card {
+  display: inline-block;
+  max-width: 22rem;
+  text-align: left;
+  background: var(--stc-card-bg, var(--stc-white));
+  border: 1px solid var(--stc-line);
+  border-radius: var(--stc-radius-lg);
+  padding: var(--stc-space-4) var(--stc-space-5);
+  box-shadow: var(--stc-shadow-sm);
+  transition: transform var(--stc-dur-fast) var(--stc-ease), box-shadow var(--stc-dur-fast) var(--stc-ease);
+}
+.stc-history__timeline-card:hover { transform: translateY(-4px); box-shadow: var(--stc-shadow-md); }
+.stc-history__timeline-year-badge {
+  display: inline-block;
+  background: var(--stc-maroon);
+  color: #fff;
+  font-family: var(--stc-font-display);
+  font-weight: 700;
+  font-size: var(--stc-fs-sm);
+  padding: 0.2rem 0.8rem;
+  border-radius: 999px;
+  margin-bottom: var(--stc-space-2);
+}
+.stc-history__timeline-card h3 { margin: 0 0 var(--stc-space-1); font-size: var(--stc-fs-base); color: var(--stc-ink); }
+.stc-history__timeline-card p { margin: 0; color: var(--stc-ink-soft); font-size: var(--stc-fs-sm); }
+
+@media (max-width: 700px) {
+  .stc-history__timeline::before,
+  .stc-history__timeline-progress { left: 1.25rem; }
+  .stc-history__timeline-item,
+  .stc-history__timeline-item--left,
+  .stc-history__timeline-item--right {
+    width: 100%;
+    left: 0;
+    text-align: left;
+    padding: 0 0 var(--stc-space-6) 3rem;
+  }
+  .stc-history__timeline-item--left:not(.is-visible),
+  .stc-history__timeline-item--right:not(.is-visible) { transform: translateY(20px); }
+  .stc-history__timeline-item--left .stc-history__timeline-dot,
+  .stc-history__timeline-item--right .stc-history__timeline-dot { left: 0.9rem; right: auto; }
+  .stc-history__timeline-card { max-width: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stc-history__timeline-item { transition: none; opacity: 1; transform: none; }
+  .stc-history__timeline-dot.is-visible,
+  .stc-history__timeline-item.is-visible .stc-history__timeline-dot { animation: none; }
+  .stc-history__timeline-progress { transition: none; }
+}
+
+/* ---- 4/5. Portrait card — reused by Vision of the Third King and
+   Father Mackey (photo one side, text the other; honest silhouette
+   placeholder when no photo has been uploaded yet). ------------------- */
+.stc-history__portrait-card {
+  display: grid;
+  grid-template-columns: minmax(0, 0.7fr) minmax(0, 1.3fr);
+  gap: var(--stc-space-7);
+  align-items: center;
+}
+.stc-history__portrait-card--reverse { grid-template-columns: minmax(0, 1.3fr) minmax(0, 0.7fr); }
+.stc-history__portrait-card--reverse .stc-history__portrait-photo { order: 2; }
+.stc-history__portrait-photo {
+  aspect-ratio: 1 / 1;
+  border-radius: 50%;
+  overflow: hidden;
+  box-shadow: var(--stc-shadow-lg);
+  max-width: 16rem;
+  margin: 0 auto;
+}
+.stc-history__portrait-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.stc-history__portrait-placeholder {
+  width: 100%; height: 100%;
+  display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(160deg, var(--stc-paper-alt), var(--stc-line));
+  color: var(--stc-ink-soft);
+  font-size: 4rem;
+}
+@media (max-width: 700px) {
+  .stc-history__portrait-card,
+  .stc-history__portrait-card--reverse { grid-template-columns: 1fr; text-align: center; }
+  .stc-history__portrait-card--reverse .stc-history__portrait-photo { order: 0; }
+}
+
+/* ---- 6. Heritage Gallery (bento grid + lightbox, mirrors homepage gallery) ------ */
+.stc-history__gallery-filters { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--stc-space-3); margin-bottom: var(--stc-space-6); }
+.stc-history__gallery-filters button {
+  font-family: inherit; font-size: var(--stc-fs-sm); font-weight: 600;
+  padding: 0.55rem 1.2rem; border-radius: 999px; border: 1.5px solid var(--stc-line);
+  background: var(--stc-card-bg, var(--stc-white)); color: var(--stc-ink-soft); cursor: pointer;
+  transition: background var(--stc-dur-fast) var(--stc-ease), color var(--stc-dur-fast) var(--stc-ease), border-color var(--stc-dur-fast) var(--stc-ease), transform var(--stc-dur-fast) var(--stc-ease);
+}
+.stc-history__gallery-filters button:hover { transform: translateY(-2px); border-color: var(--stc-gold); }
+.stc-history__gallery-filters button:focus-visible { outline: 2px solid var(--stc-focus); outline-offset: 2px; }
+.stc-history__gallery-filters button.is-active { background: var(--stc-maroon); border-color: var(--stc-maroon); color: #fff; }
+
+.stc-history__gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-auto-rows: 130px;
+  grid-auto-flow: dense;
+  gap: var(--stc-space-4);
+}
+.stc-history__gallery-item:nth-child(8n+1) { grid-column: span 2; grid-row: span 2; }
+.stc-history__gallery-item:nth-child(8n+4) { grid-column: span 2; }
+.stc-history__gallery-item:nth-child(8n+6) { grid-row: span 2; }
+@media (max-width: 900px) { .stc-history__gallery-grid { grid-template-columns: repeat(3, 1fr); grid-auto-rows: 120px; } }
+@media (max-width: 560px) {
+  .stc-history__gallery-grid { grid-template-columns: repeat(2, 1fr); grid-auto-rows: 140px; }
+  .stc-history__gallery-item, .stc-history__gallery-item:nth-child(8n+1),
+  .stc-history__gallery-item:nth-child(8n+4), .stc-history__gallery-item:nth-child(8n+6) { grid-column: span 1; grid-row: span 1; }
+}
+
+.stc-history__gallery-item {
+  display: block; width: 100%; height: 100%; position: relative;
+  border: none; padding: 0; background: none; border-radius: var(--stc-radius-lg);
+  overflow: hidden; cursor: pointer; box-shadow: var(--stc-shadow-sm);
+  opacity: 0; transform: translateY(20px);
+  transition: opacity var(--stc-dur-slow) var(--stc-ease), transform var(--stc-dur-slow) var(--stc-ease), box-shadow var(--stc-dur-fast) var(--stc-ease);
+  transition-delay: calc(var(--i, 0) * 70ms);
+}
+.stc-history__gallery-item.is-visible { opacity: 1; transform: none; }
+.stc-history__gallery-item:hover { box-shadow: var(--stc-shadow-lg); }
+.stc-history__gallery-item:focus-visible { outline: 2px solid var(--stc-focus); outline-offset: 2px; }
+.stc-history__gallery-item[hidden] { display: none; }
+.stc-history__gallery-item img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 450ms var(--stc-ease); }
+.stc-history__gallery-item:hover img { transform: scale(1.05); }
+.stc-history__gallery-caption {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  padding: var(--stc-space-3) var(--stc-space-3) var(--stc-space-2);
+  background: linear-gradient(0deg, rgba(0,0,0,0.72), rgba(0,0,0,0));
+  color: #fff; font-size: var(--stc-fs-sm);
+  opacity: 0; transform: translateY(6px);
+  transition: opacity var(--stc-dur-fast) var(--stc-ease), transform var(--stc-dur-fast) var(--stc-ease);
+}
+.stc-history__gallery-item:hover .stc-history__gallery-caption,
+.stc-history__gallery-item:focus-visible .stc-history__gallery-caption { opacity: 1; transform: none; }
+@media (hover: none) { .stc-history__gallery-caption { opacity: 1; transform: none; } }
+
+.stc-history__lightbox {
+  position: fixed; inset: 0; z-index: 2000;
+  background: rgba(10, 8, 7, 0.94);
+  display: flex; align-items: center; justify-content: center;
+  padding: var(--stc-space-6);
+}
+.stc-history__lightbox[hidden] { display: none; }
+.stc-history__lightbox-figure { max-width: 90vw; max-height: 85vh; margin: 0; display: flex; flex-direction: column; align-items: center; gap: var(--stc-space-3); }
+.stc-history__lightbox-figure img { max-width: 90vw; max-height: 75vh; object-fit: contain; border-radius: var(--stc-radius-md); }
+.stc-history__lightbox-figure figcaption { color: rgba(255,255,255,0.85); font-size: var(--stc-fs-sm); text-align: center; max-width: 60ch; }
+.stc-history__lightbox-close, .stc-history__lightbox-nav {
+  position: fixed; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.25);
+  color: #fff; border-radius: 50%; width: 48px; height: 48px;
+  display: flex; align-items: center; justify-content: center; font-size: 1.2rem; cursor: pointer;
+  transition: background var(--stc-dur-fast) var(--stc-ease);
+}
+.stc-history__lightbox-close:hover, .stc-history__lightbox-nav:hover { background: rgba(255,255,255,0.25); }
+.stc-history__lightbox-close:focus-visible, .stc-history__lightbox-nav:focus-visible { outline: 2px solid var(--stc-gold-light); outline-offset: 2px; }
+.stc-history__lightbox-close { top: var(--stc-space-5); right: var(--stc-space-5); }
+.stc-history__lightbox-nav--prev { left: var(--stc-space-5); top: 50%; transform: translateY(-50%); }
+.stc-history__lightbox-nav--next { right: var(--stc-space-5); top: 50%; transform: translateY(-50%); }
+
+/* ---- 7. Motto & Identity ----------------------------------------------------------- */
+.stc-history__motto {
+  font-style: italic;
+  color: var(--stc-maroon);
+  font-size: clamp(1.75rem, 3.5vw, 2.5rem) !important;
+}
+
+/* ---- 8/9. Card grids (Legacy, Traditions) ---------------------------------------------- */
+.stc-history__card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--stc-space-5); }
+.stc-history__card {
+  background: var(--stc-card-bg, var(--stc-white));
+  border: 1px solid var(--stc-line);
+  border-radius: var(--stc-radius-lg);
+  padding: var(--stc-space-5);
+  box-shadow: var(--stc-shadow-sm);
+  transition: transform var(--stc-dur-fast) var(--stc-ease), box-shadow var(--stc-dur-fast) var(--stc-ease);
+}
+.stc-history__card:hover { transform: translateY(-4px); box-shadow: var(--stc-shadow-md); }
+.stc-history__card i { font-size: 1.75rem; color: var(--stc-gold); margin-bottom: var(--stc-space-3); display: block; }
+.stc-history__card h3 { margin: 0 0 var(--stc-space-2); }
+.stc-history__card p { margin: 0; color: var(--stc-ink-soft); font-size: var(--stc-fs-sm); }
+
+/* ---- 10a. Then vs Now slider ---------------------------------------------------------- */
+.stc-history__slider {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  border-radius: var(--stc-radius-lg);
+  overflow: hidden;
+  box-shadow: var(--stc-shadow-lg);
+  user-select: none;
+}
+.stc-history__slider-now, .stc-history__slider-then { width: 100%; height: 100%; object-fit: cover; display: block; }
+.stc-history__slider-now { position: absolute; inset: 0; }
+.stc-history__slider-then-wrap {
+  position: absolute; inset: 0;
+  clip-path: inset(0 calc(100% - var(--stc-slider-pos, 50%)) 0 0);
+}
+.stc-history__slider-handle {
+  position: absolute; top: 0; bottom: 0;
+  left: var(--stc-slider-pos, 50%);
+  width: 3px; background: #fff;
+  transform: translateX(-50%);
+  display: flex; align-items: center; justify-content: center;
+  pointer-events: none;
+}
+.stc-history__slider-handle i {
+  position: absolute;
+  width: 40px; height: 40px;
+  background: #fff; color: var(--stc-maroon);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: var(--stc-shadow-md);
+}
+.stc-history__slider input[type="range"] {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  margin: 0; opacity: 0; cursor: ew-resize;
+}
+.stc-history__slider input[type="range"]:focus-visible ~ .stc-history__slider-handle i { outline: 2px solid var(--stc-focus); outline-offset: 2px; }
+.stc-history__slider-label {
+  position: absolute; bottom: var(--stc-space-3);
+  padding: 0.3rem 0.7rem; border-radius: 999px;
+  background: rgba(0,0,0,0.6); color: #fff; font-size: var(--stc-fs-xs); font-weight: 700; text-transform: uppercase;
+}
+.stc-history__slider-label--then { left: var(--stc-space-3); }
+.stc-history__slider-label--now { right: var(--stc-space-3); }
+
+/* ---- 10b. Video embed ---------------------------------------------------------------- */
+.stc-history__video-frame { position: relative; width: 100%; aspect-ratio: 16 / 9; border-radius: var(--stc-radius-lg); overflow: hidden; box-shadow: var(--stc-shadow-lg); background: #000; }
+.stc-history__video-frame iframe, .stc-history__video-frame video { width: 100%; height: 100%; border: none; display: block; }
+
+/* ---- 10c. Brochure ---------------------------------------------------------------------- */
+.stc-history__brochure-inner { display: flex; align-items: center; justify-content: space-between; gap: var(--stc-space-5); flex-wrap: wrap; }
+.stc-history__btn {
+  display: inline-flex; align-items: center; gap: var(--stc-space-2);
+  padding: 0.85rem 1.6rem; border-radius: var(--stc-radius-md);
+  background: var(--stc-maroon); color: #fff; font-weight: 600; text-decoration: none;
+  box-shadow: var(--stc-shadow-sm);
+  transition: background var(--stc-dur-fast) var(--stc-ease), transform var(--stc-dur-fast) var(--stc-ease);
+  flex-shrink: 0;
+}
+.stc-history__btn:hover { background: var(--stc-maroon-dark); transform: translateY(-3px); }
+.stc-history__btn:focus-visible { outline: 2px solid var(--stc-focus); outline-offset: 3px; }
+
+/* ---- View Transitions (Heritage Gallery lightbox morph) ------------------------------- */
+@media not all and (prefers-reduced-motion: reduce) {
+  ::view-transition-old(stc-history-gallery-transition),
+  ::view-transition-new(stc-history-gallery-transition) {
+    animation-duration: var(--stc-dur-slow);
+  }
+}

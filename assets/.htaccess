@@ -1,0 +1,16 @@
+# Sherubtse College — /assets access control
+# CSS/JS/images must remain publicly readable (the browser needs to
+# fetch them), so we only disable directory listing here.
+Options -Indexes
+
+# Reasonable caching for static assets (adjust to match existing
+# server config; skip this block if the site already sets cache headers
+# elsewhere to avoid duplicate/conflicting rules).
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType text/css "access plus 1 month"
+    ExpiresByType application/javascript "access plus 1 month"
+    ExpiresByType image/svg+xml "access plus 1 month"
+    ExpiresByType image/png "access plus 1 month"
+    ExpiresByType image/x-icon "access plus 1 year"
+</IfModule>

@@ -1,0 +1,12 @@
+# User-uploaded media — disable script execution here regardless of
+# original filename/extension (mirrors assets/uploads/hero/.htaccess).
+<IfModule mod_php7.c>
+    php_flag engine off
+</IfModule>
+<IfModule mod_php8.c>
+    php_flag engine off
+</IfModule>
+<FilesMatch "\.(php|phtml|php[0-9]?|phar)$">
+    Require all denied
+</FilesMatch>
+Options -Indexes
