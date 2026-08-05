@@ -1,0 +1,65 @@
+{
+  "kind": "singleType",
+  "collectionName": "hero_content",
+  "info": {
+    "singularName": "hero-content",
+    "pluralName": "hero-contents",
+    "displayName": "Hero Content",
+    "description": "Homepage hero banner"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {
+    "i18n": {
+      "localized": true
+    }
+  },
+  "attributes": {
+    "title": {
+      "type": "string",
+      "required": true,
+      "pluginOptions": { "i18n": { "localized": true } }
+    },
+    "subtitle": {
+      "type": "text",
+      "required": true,
+      "pluginOptions": { "i18n": { "localized": true } }
+    },
+    "cta1_text": {
+      "type": "string",
+      "pluginOptions": { "i18n": { "localized": true } }
+    },
+    "cta1_url": {
+      "type": "string"
+    },
+    "cta2_text": {
+      "type": "string",
+      "pluginOptions": { "i18n": { "localized": true } }
+    },
+    "cta2_url": {
+      "type": "string"
+    },
+    "background_type": {
+      "type": "enumeration",
+      "enum": ["gradient", "image", "video"],
+      "default": "gradient"
+    },
+    "media": {
+      "type": "media",
+      "multiple": false,
+      "allowedTypes": ["images", "videos"]
+    },
+    "overlay_style": {
+      "type": "enumeration",
+      "enum": ["maroon", "dark", "light"],
+      "default": "maroon"
+    },
+    "overlay_opacity": {
+      "type": "integer",
+      "default": 55,
+      "min": 0,
+      "max": 100
+    }
+  }
+}

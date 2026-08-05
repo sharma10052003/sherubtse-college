@@ -1,0 +1,30 @@
+{
+  "kind": "collectionType",
+  "collectionName": "events_items",
+  "info": {
+    "singularName": "events-item",
+    "pluralName": "events-items",
+    "displayName": "Events Item"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {
+    "i18n": {
+      "localized": true
+    }
+  },
+  "attributes": {
+    "image": { "type": "media", "multiple": false, "allowedTypes": ["images"] },
+    "title": { "type": "string", "required": true, "pluginOptions": { "i18n": { "localized": true } } },
+    "event_date": { "type": "date", "required": true },
+    "event_time": { "type": "string" },
+    "location": { "type": "string" },
+    "description": { "type": "text", "required": true, "pluginOptions": { "i18n": { "localized": true } } },
+    "category": { "type": "string" },
+    "is_featured": { "type": "boolean", "default": false },
+    "status": { "type": "enumeration", "enum": ["upcoming", "ongoing", "past"], "default": "upcoming" },
+    "button_url": { "type": "string" },
+    "sort_order": { "type": "integer", "default": 0 }
+  }
+}

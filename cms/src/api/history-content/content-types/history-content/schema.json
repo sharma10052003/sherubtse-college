@@ -1,0 +1,38 @@
+{
+  "kind": "singleType",
+  "collectionName": "history_content",
+  "info": {
+    "singularName": "history-content",
+    "pluralName": "history-contents",
+    "displayName": "History Content"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {
+    "i18n": {
+      "localized": true
+    }
+  },
+  "attributes": {
+    "hero_title": { "type": "string", "required": true, "pluginOptions": { "i18n": { "localized": true } } },
+    "hero_subtitle": { "type": "string", "required": true, "pluginOptions": { "i18n": { "localized": true } } },
+    "hero_intro": { "type": "text", "required": true, "pluginOptions": { "i18n": { "localized": true } } },
+    "hero_image": { "type": "media", "multiple": false, "allowedTypes": ["images"] },
+    "hero_image_position": { "type": "enumeration", "enum": ["top", "center", "bottom"], "default": "top" },
+    "founding_story": { "type": "text", "required": true, "pluginOptions": { "i18n": { "localized": true } } },
+    "vision_king_text": { "type": "text", "required": true, "pluginOptions": { "i18n": { "localized": true } } },
+    "king_photo": { "type": "media", "multiple": false, "allowedTypes": ["images"] },
+    "mackey_name": { "type": "string", "required": true, "pluginOptions": { "i18n": { "localized": true } } },
+    "mackey_photo": { "type": "media", "multiple": false, "allowedTypes": ["images"] },
+    "mackey_bio": { "type": "text", "required": true, "pluginOptions": { "i18n": { "localized": true } } },
+    "motto": { "type": "string", "required": true, "pluginOptions": { "i18n": { "localized": true } } },
+    "motto_meaning": { "type": "text", "pluginOptions": { "i18n": { "localized": true } } },
+    "emblem_meaning": { "type": "text", "pluginOptions": { "i18n": { "localized": true } } },
+    "values_text": { "type": "text", "pluginOptions": { "i18n": { "localized": true } } },
+    "video_url": { "type": "string" },
+    "brochure": { "type": "media", "multiple": false, "allowedTypes": ["files"] },
+    "then_image": { "type": "media", "multiple": false, "allowedTypes": ["images"] },
+    "now_image": { "type": "media", "multiple": false, "allowedTypes": ["images"] }
+  }
+}

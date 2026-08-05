@@ -1,0 +1,25 @@
+{
+  "kind": "collectionType",
+  "collectionName": "utility_links",
+  "info": {
+    "singularName": "utility-link",
+    "pluralName": "utility-links",
+    "displayName": "Utility Link"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {
+    "i18n": {
+      "localized": true
+    }
+  },
+  "attributes": {
+    "title": { "type": "string", "required": true, "pluginOptions": { "i18n": { "localized": true } } },
+    "url": { "type": "string", "required": true },
+    "icon": { "type": "string" },
+    "is_active": { "type": "boolean", "default": true },
+    "display_order": { "type": "integer", "default": 0 },
+    "is_external": { "type": "boolean", "default": false }
+  }
+}

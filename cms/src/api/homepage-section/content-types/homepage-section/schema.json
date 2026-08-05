@@ -1,0 +1,25 @@
+{
+  "kind": "collectionType",
+  "collectionName": "homepage_sections",
+  "info": {
+    "singularName": "homepage-section",
+    "pluralName": "homepage-sections",
+    "displayName": "Homepage Section"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {
+    "i18n": {
+      "localized": true
+    }
+  },
+  "attributes": {
+    "section_key": { "type": "string", "required": true, "unique": true },
+    "label": { "type": "string", "required": true, "pluginOptions": { "i18n": { "localized": true } } },
+    "sort_order": { "type": "integer", "default": 0 },
+    "is_enabled": { "type": "boolean", "default": true },
+    "publish_at": { "type": "datetime" },
+    "unpublish_at": { "type": "datetime" }
+  }
+}

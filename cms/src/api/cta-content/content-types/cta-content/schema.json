@@ -1,0 +1,28 @@
+{
+  "kind": "singleType",
+  "collectionName": "cta_content",
+  "info": {
+    "singularName": "cta-content",
+    "pluralName": "cta-contents",
+    "displayName": "CTA Content"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "attributes": {
+    "title": {
+      "type": "string",
+      "required": true
+    },
+    "subtitle": {
+      "type": "text",
+      "required": true
+    },
+    "buttons": {
+      "type": "component",
+      "repeatable": true,
+      "component": "shared.button",
+      "max": 4
+    }
+  }
+}

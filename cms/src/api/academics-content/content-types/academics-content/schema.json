@@ -1,0 +1,22 @@
+{
+  "kind": "singleType",
+  "collectionName": "academics_content",
+  "info": {
+    "singularName": "academics-content",
+    "pluralName": "academics-contents",
+    "displayName": "Academics Content"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "attributes": {
+    "title": {
+      "type": "string",
+      "required": true
+    },
+    "subtitle": {
+      "type": "text",
+      "required": true
+    }
+  }
+}

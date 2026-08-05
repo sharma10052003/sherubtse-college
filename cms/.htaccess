@@ -1,0 +1,11 @@
+# Sherubtse College — /cms access control
+# -----------------------------------------------------------------------
+# This folder is the Strapi CMS/backend. It runs its own Node server on
+# port 1337 (started separately with `npm run develop` / `npm start`
+# from inside this folder) — it is NOT meant to be served by Apache at
+# all. This blocks Apache from ever handing out any file in here
+# directly (source code, .env, the SQLite database, node_modules, etc.)
+# if someone requests /cms/... over HTTP.
+
+Require all denied
+Options -Indexes

@@ -1,0 +1,30 @@
+{
+  "kind": "collectionType",
+  "collectionName": "ui_strings",
+  "info": {
+    "singularName": "ui-string",
+    "pluralName": "ui-strings",
+    "displayName": "UI String"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {
+    "i18n": {
+      "localized": true
+    }
+  },
+  "attributes": {
+    "key": {
+      "type": "string",
+      "required": true,
+      "unique": true,
+      "pluginOptions": { "i18n": { "localized": false } }
+    },
+    "group_name": {
+      "type": "string",
+      "pluginOptions": { "i18n": { "localized": false } }
+    },
+    "value": { "type": "text", "pluginOptions": { "i18n": { "localized": true } } }
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "kind": "collectionType",
+  "collectionName": "social_links",
+  "info": {
+    "singularName": "social-link",
+    "pluralName": "social-links",
+    "displayName": "Social Link"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "attributes": {
+    "platform": { "type": "string", "required": true },
+    "platform_icon": { "type": "string" },
+    "url": { "type": "string", "required": true },
+    "is_active": { "type": "boolean", "default": true },
+    "display_order": { "type": "integer", "default": 0 }
+  }
+}

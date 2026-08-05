@@ -1,0 +1,23 @@
+{
+  "kind": "collectionType",
+  "collectionName": "history_timeline_items",
+  "info": {
+    "singularName": "history-timeline-item",
+    "pluralName": "history-timeline-items",
+    "displayName": "History Timeline Item"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {
+    "i18n": {
+      "localized": true
+    }
+  },
+  "attributes": {
+    "year": { "type": "string", "required": true },
+    "event": { "type": "string", "required": true, "pluginOptions": { "i18n": { "localized": true } } },
+    "description": { "type": "text", "pluginOptions": { "i18n": { "localized": true } } },
+    "sort_order": { "type": "integer", "default": 0 }
+  }
+}

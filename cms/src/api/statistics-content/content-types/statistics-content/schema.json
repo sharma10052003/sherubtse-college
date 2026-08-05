@@ -1,0 +1,22 @@
+{
+  "kind": "singleType",
+  "collectionName": "statistics_content",
+  "info": {
+    "singularName": "statistics-content",
+    "pluralName": "statistics-contents",
+    "displayName": "Statistics Content"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "attributes": {
+    "title": {
+      "type": "string",
+      "required": true
+    },
+    "subtitle": {
+      "type": "text",
+      "required": true
+    }
+  }
+}

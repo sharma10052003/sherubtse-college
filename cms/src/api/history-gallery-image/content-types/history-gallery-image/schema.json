@@ -1,0 +1,23 @@
+{
+  "kind": "collectionType",
+  "collectionName": "history_gallery_images",
+  "info": {
+    "singularName": "history-gallery-image",
+    "pluralName": "history-gallery-images",
+    "displayName": "History Gallery Image"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {
+    "i18n": {
+      "localized": true
+    }
+  },
+  "attributes": {
+    "image": { "type": "media", "multiple": false, "allowedTypes": ["images"], "required": true },
+    "caption": { "type": "string", "pluginOptions": { "i18n": { "localized": true } } },
+    "category": { "type": "enumeration", "enum": ["campus", "students", "construction", "events", "festivals", "graduation"], "default": "campus" },
+    "sort_order": { "type": "integer", "default": 0 }
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "kind": "singleType",
+  "collectionName": "news_content",
+  "info": {
+    "singularName": "news-content",
+    "pluralName": "news-contents",
+    "displayName": "News Content"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "attributes": {
+    "title": {
+      "type": "string",
+      "required": true
+    },
+    "subtitle": {
+      "type": "text",
+      "required": true
+    }
+  }
+}

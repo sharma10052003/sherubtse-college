@@ -1,0 +1,31 @@
+{
+  "kind": "collectionType",
+  "collectionName": "announcements",
+  "info": {
+    "singularName": "announcement",
+    "pluralName": "announcements",
+    "displayName": "Announcement"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {
+    "i18n": {
+      "localized": true
+    }
+  },
+  "attributes": {
+    "title": { "type": "string", "required": true, "pluginOptions": { "i18n": { "localized": true } } },
+    "content": { "type": "text", "pluginOptions": { "i18n": { "localized": true } } },
+    "announcement_type": { "type": "enumeration", "enum": ["info", "success", "warning", "danger", "primary"], "default": "info" },
+    "priority": { "type": "integer", "default": 0 },
+    "background_color": { "type": "string" },
+    "icon": { "type": "string" },
+    "link_url": { "type": "string" },
+    "link_text": { "type": "string" },
+    "is_scrolling": { "type": "boolean", "default": false },
+    "is_active": { "type": "boolean", "default": true },
+    "start_date": { "type": "datetime" },
+    "end_date": { "type": "datetime" }
+  }
+}

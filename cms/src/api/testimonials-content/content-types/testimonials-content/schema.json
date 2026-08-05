@@ -1,0 +1,22 @@
+{
+  "kind": "singleType",
+  "collectionName": "testimonials_content",
+  "info": {
+    "singularName": "testimonials-content",
+    "pluralName": "testimonials-contents",
+    "displayName": "Testimonials Content"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "attributes": {
+    "title": {
+      "type": "string",
+      "required": true
+    },
+    "subtitle": {
+      "type": "text",
+      "required": true
+    }
+  }
+}
