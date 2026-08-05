@@ -32,7 +32,7 @@ function stc_get_gallery_content(): array
         'subtitle' => 'A glimpse of life at Sherubtse College — campus, classrooms, events and everything in between.',
     ];
 
-    $res = stc_strapi_get('gallery-contents');
+    $res = stc_strapi_get('gallery-content');
     $row = $res['data'] ?? null;
     if ($row) {
         return array_merge($defaults, array_filter($row, static fn ($v) => $v !== null && $v !== ''));

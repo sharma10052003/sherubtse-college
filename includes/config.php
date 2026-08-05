@@ -68,8 +68,18 @@ if (!defined('BASE_URL')) {
  * in Strapi admin -> Settings -> API Tokens. Safe to keep server-side
  * only; never exposed to the browser (all Strapi calls happen in curl,
  * server-to-server).
+ *
+ * The real token lives in includes/config.local.php, which is
+ * git-ignored (see includes/config.local.php.example for the template)
+ * so it never ends up in version control. Falls back to a placeholder
+ * if that file doesn't exist yet (e.g. right after a fresh clone) —
+ * stc_strapi_get() will just fail closed and every model falls back to
+ * its hardcoded defaults, same as if Strapi were unreachable.
  */
 if (!defined('STRAPI_URL')) define('STRAPI_URL', 'http://localhost:1337');
+if (is_file(__DIR__ . '/config.local.php')) {
+    require_once __DIR__ . '/config.local.php';
+}
 if (!defined('STRAPI_API_TOKEN')) define('STRAPI_API_TOKEN', 'REPLACE_WITH_READ_ONLY_API_TOKEN');
 
 /**

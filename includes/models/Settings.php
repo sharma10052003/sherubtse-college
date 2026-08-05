@@ -56,7 +56,7 @@ function stc_theme_settings(): array
 
     $defaults = stc_settings_defaults();
 
-    $res = stc_strapi_get('theme-settings');
+    $res = stc_strapi_get('theme-setting');
     $row = $res['data'] ?? null;
     if ($row) {
         if (array_key_exists('animations_enabled', $row)) {

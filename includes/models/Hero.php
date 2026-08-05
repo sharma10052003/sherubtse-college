@@ -34,7 +34,7 @@ function stc_get_hero_content(): array
 {
     $defaults = stc_hero_defaults();
 
-    $res = stc_strapi_get('hero-contents', ['populate' => 'media']);
+    $res = stc_strapi_get('hero-content', ['populate' => 'media']);
     $row = $res['data'] ?? null;
     if ($row) {
         $row['media_path'] = stc_strapi_media_url($row['media'] ?? null);

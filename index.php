@@ -13,7 +13,6 @@
  * -----------------------------------------------------------------------
  */
 require_once __DIR__ . '/includes/config.php';
-require_once __DIR__ . '/includes/db.php';
 require_once __DIR__ . '/includes/models/HomepageSections.php';
 
 $stc_page_title = 'Sherubtse College — Royal University of Bhutan';

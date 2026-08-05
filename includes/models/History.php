@@ -51,7 +51,7 @@ function stc_get_history_content(): array
         'now_image_path'    => null,
     ];
 
-    $res = stc_strapi_get('history-contents', [
+    $res = stc_strapi_get('history-content', [
         'populate' => ['hero_image', 'king_photo', 'mackey_photo', 'brochure', 'then_image', 'now_image'],
     ]);
     $row = $res['data'] ?? null;

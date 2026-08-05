@@ -5,7 +5,6 @@
  * -> footer. Reachable as /about/history via the root .htaccess rewrite.
  */
 require_once __DIR__ . '/../includes/config.php';
-require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/models/History.php';
 
 $history = stc_get_history_content();

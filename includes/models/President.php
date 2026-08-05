@@ -25,7 +25,7 @@ function stc_get_president_content(): array
         'button_url'     => '/about/president',
     ];
 
-    $res = stc_strapi_get('president-contents', ['populate' => ['photo', 'signature']]);
+    $res = stc_strapi_get('president-content', ['populate' => ['photo', 'signature']]);
     $row = $res['data'] ?? null;
     if ($row) {
         $row['photo_path'] = stc_strapi_media_url($row['photo'] ?? null);

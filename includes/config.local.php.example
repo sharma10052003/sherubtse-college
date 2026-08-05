@@ -1,0 +1,18 @@
+<?php
+/**
+ * config.local.php.example — template for the git-ignored local secrets
+ * file that config.php loads (if present).
+ *
+ * Copy this file to config.local.php (same folder) and fill in your
+ * real Strapi API token. config.local.php is listed in .gitignore and
+ * must never be committed.
+ */
+if (!defined('SHERUBTSE_INIT')) {
+    http_response_code(403);
+    exit('Forbidden');
+}
+
+define('STRAPI_API_TOKEN', 'PASTE_YOUR_READ_ONLY_STRAPI_API_TOKEN_HERE');
+
+// Uncomment to point at a non-default Strapi host (e.g. in production):
+// define('STRAPI_URL', 'https://cms.sherubtse.edu.bt');
