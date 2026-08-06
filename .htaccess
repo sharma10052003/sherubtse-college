@@ -13,6 +13,11 @@ RewriteCond %{REQUEST_FILENAME} -f [OR]
 RewriteCond %{REQUEST_FILENAME} -d
 RewriteRule ^ - [L]
 
+# /about/faculty/{slug} -> about/faculty-profile.php?slug={slug}
+# (the bare /about/faculty directory index is handled by the generic
+# rule below, since about/faculty.php exists as a real file).
+RewriteRule ^about/faculty/([^/]+)/?$ about/faculty-profile.php?slug=$1 [L,QSA]
+
 # /path/to/page -> /path/to/page.php, only if that file actually exists.
 RewriteCond %{REQUEST_FILENAME}\.php -f
 RewriteRule ^(.+)$ $1.php [L]

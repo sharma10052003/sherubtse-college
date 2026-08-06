@@ -1,0 +1,14 @@
+{
+  "name": "sherubtse-college-frontend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Tailwind CSS build tooling for the Sherubtse College PHP frontend (Faculty Profile section). Not a runtime dependency of the site itself.",
+  "scripts": {
+    "build:css": "tailwindcss -i ./assets/css/faculty/input.css -o ./assets/css/faculty/tailwind.css --minify",
+    "watch:css": "tailwindcss -i ./assets/css/faculty/input.css -o ./assets/css/faculty/tailwind.css --watch"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.3.3",
+    "tailwindcss": "^4.3.3"
+  }
+}

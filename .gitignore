@@ -5,6 +5,9 @@
 .DS_Store
 Thumbs.db
 
+# Tailwind build tooling (root package.json) — devDependency only
+node_modules/
+
 # Local secrets - never commit
 includes/config.local.php
 
