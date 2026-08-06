@@ -1,4 +1,5 @@
-// import type { Core } from '@strapi/strapi';
+import type { Core } from '@strapi/strapi';
+import registerFacultyImport from './faculty-import';
 
 export default {
   /**
@@ -7,7 +8,9 @@ export default {
    *
    * This gives you an opportunity to extend code.
    */
-  register(/* { strapi }: { strapi: Core.Strapi } */) {},
+  register({ strapi }: { strapi: Core.Strapi }) {
+    registerFacultyImport({ strapi });
+  },
 
   /**
    * An asynchronous bootstrap function that runs before

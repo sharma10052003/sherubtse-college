@@ -79,6 +79,7 @@ $gridColsClass = ['2' => 'sm:grid-cols-2', '3' => 'sm:grid-cols-2 lg:grid-cols-3
 
       <div class="stc-faculty-hero__art" aria-hidden="true" data-reveal-variant="right">
         <div class="stc-faculty-hero__emblem">
+          <span class="stc-faculty-hero__emblem-ring"></span>
           <i class="bi bi-mortarboard-fill"></i>
         </div>
       </div>
