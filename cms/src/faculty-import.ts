@@ -16,6 +16,9 @@ import type { Core } from '@strapi/strapi';
 import Router from '@koa/router';
 import multer from '@koa/multer';
 import * as XLSX from 'xlsx';
+import * as fs from 'fs';
+import * as os from 'os';
+import * as path from 'path';
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
 const COOKIE_NAME = 'stc_faculty_import_auth';
@@ -27,7 +30,7 @@ const COLUMNS = [
   'specialization', 'research_areas', 'teaching_subjects', 'work_experience',
   'languages', 'college_email', 'personal_email', 'phone_number', 'office_location',
   'office_hours', 'google_maps_link', 'linkedin_url', 'google_scholar_url',
-  'researchgate_url', 'orcid_url', 'personal_website_url', 'is_featured', 'sort_order',
+  'researchgate_url', 'orcid_url', 'personal_website_url', 'photo_url', 'is_featured', 'sort_order',
 ];
 
 const COLUMN_NOTES: Record<string, string> = {
@@ -38,6 +41,7 @@ const COLUMN_NOTES: Record<string, string> = {
   date_joined: 'Format: YYYY-MM-DD (e.g. 2020-07-01). Leave blank if unknown.',
   is_featured: '"true"/"yes"/"1" to feature this person on the directory, otherwise leave blank.',
   sort_order: 'A number controlling card order (lower = earlier). Leave blank for default ordering.',
+  photo_url: 'Optional — a direct URL to a photo (must end in an image file, publicly reachable). The importer downloads it and attaches it as the Profile Picture automatically.',
   research_areas: 'Comma-separated, e.g. "Bhutanese Studies, Linguistics".',
   teaching_subjects: 'Comma-separated, e.g. "Macroeconomics, Statistics".',
   languages: 'Comma-separated, e.g. "English, Dzongkha".',
@@ -96,6 +100,53 @@ function pageShell(title: string, body: string): string {
 
 function isAuthed(ctx: any): boolean {
   return ctx.cookies.get(COOKIE_NAME, { signed: true }) === 'ok';
+}
+
+function extFromUrlOrType(url: string, contentType: string | null): string {
+  const fromUrl = path.extname(new URL(url).pathname).toLowerCase();
+  if (fromUrl && fromUrl.length <= 5) return fromUrl;
+  const map: Record<string, string> = { 'image/png': '.png', 'image/jpeg': '.jpg', 'image/webp': '.webp', 'image/gif': '.gif' };
+  return map[contentType || ''] || '.jpg';
+}
+
+/**
+ * Downloads a remote image and registers it in Strapi's Media Library
+ * via the upload plugin's internal service (in-process, no HTTP/token
+ * needed since this already runs inside the Strapi server). Returns the
+ * new media entry's id, or null on any failure (never throws — a failed
+ * photo shouldn't block the rest of the row from being created).
+ */
+async function downloadAndUploadImage(strapi: Core.Strapi, url: string, nameHint: string): Promise<number | null> {
+  let tmpPath = '';
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    const contentType = res.headers.get('content-type');
+    const buf = Buffer.from(await res.arrayBuffer());
+
+    const ext = extFromUrlOrType(url, contentType);
+    const filename = `${nameHint.toLowerCase().replace(/[^a-z0-9]+/g, '-')}${ext}`;
+    tmpPath = path.join(os.tmpdir(), `faculty-import-${Date.now()}-${Math.random().toString(36).slice(2)}${ext}`);
+    fs.writeFileSync(tmpPath, buf);
+
+    const uploadService = strapi.plugin('upload').service('upload');
+    const [uploaded] = await uploadService.upload({
+      data: {},
+      files: {
+        filepath: tmpPath,
+        originalFilename: filename,
+        mimetype: contentType || 'image/jpeg',
+        size: buf.length,
+      },
+    });
+    return uploaded?.id ?? null;
+  } catch (e) {
+    return null;
+  } finally {
+    if (tmpPath) {
+      try { fs.unlinkSync(tmpPath); } catch (e) { /* ignore */ }
+    }
+  }
 }
 
 export default function registerFacultyImport({ strapi }: { strapi: Core.Strapi }) {
@@ -179,6 +230,7 @@ export default function registerFacultyImport({ strapi }: { strapi: Core.Strapi 
       researchgate_url: '',
       orcid_url: '',
       personal_website_url: '',
+      photo_url: 'https://example.com/path/to/photo.jpg',
       is_featured: 'false',
       sort_order: '1',
     };
@@ -295,6 +347,16 @@ export default function registerFacultyImport({ strapi }: { strapi: Core.Strapi 
           data.department = deptId;
         } else {
           warnings.push(`Row ${rowNum} (${fullName}): department "${deptName}" not found — created without a department.`);
+        }
+      }
+
+      const photoUrl = String(raw.photo_url || '').trim();
+      if (photoUrl) {
+        const mediaId = await downloadAndUploadImage(strapi, photoUrl, slug);
+        if (mediaId) {
+          data.profile_picture = mediaId;
+        } else {
+          warnings.push(`Row ${rowNum} (${fullName}): could not download/attach photo from ${photoUrl} — profile created without it.`);
         }
       }
 
