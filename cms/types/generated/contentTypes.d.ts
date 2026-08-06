@@ -581,6 +581,38 @@ export interface ApiAnnouncementAnnouncement
   };
 }
 
+export interface ApiAwardAward extends Struct.CollectionTypeSchema {
+  collectionName: 'awards';
+  info: {
+    displayName: 'Award';
+    pluralName: 'awards';
+    singularName: 'award';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    award_name: Schema.Attribute.String & Schema.Attribute.Required;
+    certificate: Schema.Attribute.Media<'files' | 'images'>;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    description: Schema.Attribute.Text;
+    faculty: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::faculty-profile.faculty-profile'
+    >;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<'oneToMany', 'api::award.award'> &
+      Schema.Attribute.Private;
+    publishedAt: Schema.Attribute.DateTime;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    year: Schema.Attribute.Integer;
+  };
+}
+
 export interface ApiCampusLifeContentCampusLifeContent
   extends Struct.SingleTypeSchema {
   collectionName: 'campus_life_content';
@@ -696,6 +728,51 @@ export interface ApiCtaContentCtaContent extends Struct.SingleTypeSchema {
   };
 }
 
+export interface ApiDepartmentDepartment extends Struct.CollectionTypeSchema {
+  collectionName: 'departments';
+  info: {
+    displayName: 'Department';
+    pluralName: 'departments';
+    singularName: 'department';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    banner_image: Schema.Attribute.Media<'images'>;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    department_logo: Schema.Attribute.Media<'images'>;
+    department_name: Schema.Attribute.String & Schema.Attribute.Required;
+    description: Schema.Attribute.Text;
+    display_order: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
+    faculty_members: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::faculty-profile.faculty-profile'
+    >;
+    faculty_name: Schema.Attribute.String;
+    head_of_department: Schema.Attribute.Relation<
+      'oneToOne',
+      'api::faculty-profile.faculty-profile'
+    >;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::department.department'
+    > &
+      Schema.Attribute.Private;
+    mission: Schema.Attribute.Text;
+    publishedAt: Schema.Attribute.DateTime;
+    slug: Schema.Attribute.UID<'department_name'>;
+    theme_color: Schema.Attribute.String;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    vision: Schema.Attribute.Text;
+  };
+}
+
 export interface ApiEventsContentEventsContent extends Struct.SingleTypeSchema {
   collectionName: 'events_content';
   info: {
@@ -774,6 +851,129 @@ export interface ApiEventsItemEventsItem extends Struct.CollectionTypeSchema {
           localized: true;
         };
       }>;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiFacultyProfileFacultyProfile
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'faculty_profiles';
+  info: {
+    displayName: 'Faculty Profile';
+    pluralName: 'faculty-profiles';
+    singularName: 'faculty-profile';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    awards: Schema.Attribute.Relation<'oneToMany', 'api::award.award'>;
+    college_email: Schema.Attribute.String;
+    conference_images: Schema.Attribute.Media<'images', true>;
+    cover_image: Schema.Attribute.Media<'images'>;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    date_joined: Schema.Attribute.Date;
+    department: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::department.department'
+    >;
+    department_event_photos: Schema.Attribute.Media<'images', true>;
+    employee_id: Schema.Attribute.String;
+    employment_status: Schema.Attribute.Enumeration<['active', 'inactive']> &
+      Schema.Attribute.DefaultTo<'active'>;
+    full_name: Schema.Attribute.String & Schema.Attribute.Required;
+    google_maps_link: Schema.Attribute.String;
+    google_scholar_url: Schema.Attribute.String;
+    highest_qualification: Schema.Attribute.String;
+    is_featured: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    languages: Schema.Attribute.Text;
+    linkedin_url: Schema.Attribute.String;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::faculty-profile.faculty-profile'
+    > &
+      Schema.Attribute.Private;
+    office_hours: Schema.Attribute.Text;
+    office_location: Schema.Attribute.String;
+    orcid_url: Schema.Attribute.String;
+    personal_email: Schema.Attribute.String;
+    personal_website_url: Schema.Attribute.String;
+    phone_number: Schema.Attribute.String;
+    position: Schema.Attribute.String;
+    profile_picture: Schema.Attribute.Media<'images'>;
+    publications: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::research-publication.research-publication'
+    >;
+    publishedAt: Schema.Attribute.DateTime;
+    research_areas: Schema.Attribute.Text;
+    research_photos: Schema.Attribute.Media<'images', true>;
+    researchgate_url: Schema.Attribute.String;
+    short_biography: Schema.Attribute.Text;
+    slug: Schema.Attribute.UID<'full_name'> & Schema.Attribute.Required;
+    sort_order: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
+    specialization: Schema.Attribute.String;
+    teaching_subjects: Schema.Attribute.Text;
+    university: Schema.Attribute.String;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    work_experience: Schema.Attribute.Text;
+    workshop_photos: Schema.Attribute.Media<'images', true>;
+  };
+}
+
+export interface ApiFacultySettingFacultySetting
+  extends Struct.SingleTypeSchema {
+  collectionName: 'faculty_settings';
+  info: {
+    displayName: 'Faculty Settings';
+    pluralName: 'faculty-settings';
+    singularName: 'faculty-setting';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    animation_style: Schema.Attribute.Enumeration<
+      ['fade', 'slide', 'zoom', 'none']
+    > &
+      Schema.Attribute.DefaultTo<'fade'>;
+    button_style: Schema.Attribute.Enumeration<
+      ['solid', 'outline', 'gradient']
+    > &
+      Schema.Attribute.DefaultTo<'solid'>;
+    card_style: Schema.Attribute.Enumeration<['rounded', 'sharp', 'bordered']> &
+      Schema.Attribute.DefaultTo<'rounded'>;
+    cards_per_row: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<3>;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    default_banner: Schema.Attribute.Media<'images'>;
+    hero_background: Schema.Attribute.Media<'images' | 'videos'>;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::faculty-setting.faculty-setting'
+    > &
+      Schema.Attribute.Private;
+    publishedAt: Schema.Attribute.DateTime;
+    show_awards: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
+    show_contact: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
+    show_gallery: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
+    show_office_hours: Schema.Attribute.Boolean &
+      Schema.Attribute.DefaultTo<true>;
+    show_publications: Schema.Attribute.Boolean &
+      Schema.Attribute.DefaultTo<true>;
+    show_research: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
+    show_statistics: Schema.Attribute.Boolean &
+      Schema.Attribute.DefaultTo<true>;
+    student_count: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -1821,6 +2021,45 @@ export interface ApiResearchItemResearchItem
   };
 }
 
+export interface ApiResearchPublicationResearchPublication
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'research_publications';
+  info: {
+    displayName: 'Research Publication';
+    pluralName: 'research-publications';
+    singularName: 'research-publication';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    authors: Schema.Attribute.String;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    doi: Schema.Attribute.String;
+    external_link: Schema.Attribute.String;
+    faculty: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::faculty-profile.faculty-profile'
+    >;
+    journal: Schema.Attribute.String;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::research-publication.research-publication'
+    > &
+      Schema.Attribute.Private;
+    pdf: Schema.Attribute.Media<'files'>;
+    publication_year: Schema.Attribute.Integer;
+    publishedAt: Schema.Attribute.DateTime;
+    title: Schema.Attribute.String & Schema.Attribute.Required;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiSocialLinkSocialLink extends Struct.CollectionTypeSchema {
   collectionName: 'social_links';
   info: {
@@ -2759,11 +2998,15 @@ declare module '@strapi/strapi' {
       'api::academics-content.academics-content': ApiAcademicsContentAcademicsContent;
       'api::academics-item.academics-item': ApiAcademicsItemAcademicsItem;
       'api::announcement.announcement': ApiAnnouncementAnnouncement;
+      'api::award.award': ApiAwardAward;
       'api::campus-life-content.campus-life-content': ApiCampusLifeContentCampusLifeContent;
       'api::campus-life-item.campus-life-item': ApiCampusLifeItemCampusLifeItem;
       'api::cta-content.cta-content': ApiCtaContentCtaContent;
+      'api::department.department': ApiDepartmentDepartment;
       'api::events-content.events-content': ApiEventsContentEventsContent;
       'api::events-item.events-item': ApiEventsItemEventsItem;
+      'api::faculty-profile.faculty-profile': ApiFacultyProfileFacultyProfile;
+      'api::faculty-setting.faculty-setting': ApiFacultySettingFacultySetting;
       'api::gallery-content.gallery-content': ApiGalleryContentGalleryContent;
       'api::gallery-image.gallery-image': ApiGalleryImageGalleryImage;
       'api::header-setting.header-setting': ApiHeaderSettingHeaderSetting;
@@ -2785,6 +3028,7 @@ declare module '@strapi/strapi' {
       'api::president-content.president-content': ApiPresidentContentPresidentContent;
       'api::research-content.research-content': ApiResearchContentResearchContent;
       'api::research-item.research-item': ApiResearchItemResearchItem;
+      'api::research-publication.research-publication': ApiResearchPublicationResearchPublication;
       'api::social-link.social-link': ApiSocialLinkSocialLink;
       'api::statistics-content.statistics-content': ApiStatisticsContentStatisticsContent;
       'api::statistics-item.statistics-item': ApiStatisticsItemStatisticsItem;

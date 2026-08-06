@@ -1,0 +1,35 @@
+{
+  "kind": "collectionType",
+  "collectionName": "departments",
+  "info": {
+    "singularName": "department",
+    "pluralName": "departments",
+    "displayName": "Department"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "attributes": {
+    "department_name": { "type": "string", "required": true },
+    "slug": { "type": "uid", "targetField": "department_name" },
+    "department_logo": { "type": "media", "multiple": false, "allowedTypes": ["images"] },
+    "faculty_name": { "type": "string" },
+    "description": { "type": "text" },
+    "vision": { "type": "text" },
+    "mission": { "type": "text" },
+    "banner_image": { "type": "media", "multiple": false, "allowedTypes": ["images"] },
+    "theme_color": { "type": "string" },
+    "head_of_department": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::faculty-profile.faculty-profile"
+    },
+    "display_order": { "type": "integer", "default": 0 },
+    "faculty_members": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::faculty-profile.faculty-profile",
+      "mappedBy": "department"
+    }
+  }
+}

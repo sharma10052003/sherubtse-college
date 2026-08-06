@@ -38,10 +38,11 @@ function stc_strapi_get(string $endpoint, array $query = []): ?array
 
     $ch = curl_init($url);
     curl_setopt_array($ch, [
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_HTTPHEADER     => ['Authorization: Bearer ' . STRAPI_API_TOKEN],
-        CURLOPT_TIMEOUT        => 4,
-        CURLOPT_CONNECTTIMEOUT => 2,
+        CURLOPT_RETURNTRANSFER  => true,
+        CURLOPT_HTTPHEADER      => ['Authorization: Bearer ' . STRAPI_API_TOKEN],
+        CURLOPT_TIMEOUT_MS      => 3000,
+        CURLOPT_CONNECTTIMEOUT_MS => 500, // a healthy local Strapi answers in ms; keep the down-fallback path fast even when a page makes several calls
+        CURLOPT_IPRESOLVE       => CURL_IPRESOLVE_V4, // avoid the IPv6-then-fallback delay some Windows setups have resolving "localhost"
     ]);
     $body = curl_exec($ch);
     $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);

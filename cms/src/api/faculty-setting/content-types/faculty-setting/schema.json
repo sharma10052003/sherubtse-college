@@ -1,0 +1,28 @@
+{
+  "kind": "singleType",
+  "collectionName": "faculty_settings",
+  "info": {
+    "singularName": "faculty-setting",
+    "pluralName": "faculty-settings",
+    "displayName": "Faculty Settings"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "attributes": {
+    "hero_background": { "type": "media", "multiple": false, "allowedTypes": ["images", "videos"] },
+    "card_style": { "type": "enumeration", "enum": ["rounded", "sharp", "bordered"], "default": "rounded" },
+    "animation_style": { "type": "enumeration", "enum": ["fade", "slide", "zoom", "none"], "default": "fade" },
+    "cards_per_row": { "type": "integer", "default": 3 },
+    "student_count": { "type": "integer", "default": 0 },
+    "default_banner": { "type": "media", "multiple": false, "allowedTypes": ["images"] },
+    "button_style": { "type": "enumeration", "enum": ["solid", "outline", "gradient"], "default": "solid" },
+    "show_statistics": { "type": "boolean", "default": true },
+    "show_publications": { "type": "boolean", "default": true },
+    "show_awards": { "type": "boolean", "default": true },
+    "show_gallery": { "type": "boolean", "default": true },
+    "show_contact": { "type": "boolean", "default": true },
+    "show_office_hours": { "type": "boolean", "default": true },
+    "show_research": { "type": "boolean", "default": true }
+  }
+}

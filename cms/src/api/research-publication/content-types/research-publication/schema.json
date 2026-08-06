@@ -1,0 +1,27 @@
+{
+  "kind": "collectionType",
+  "collectionName": "research_publications",
+  "info": {
+    "singularName": "research-publication",
+    "pluralName": "research-publications",
+    "displayName": "Research Publication"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "attributes": {
+    "title": { "type": "string", "required": true },
+    "journal": { "type": "string" },
+    "authors": { "type": "string" },
+    "publication_year": { "type": "integer" },
+    "doi": { "type": "string" },
+    "pdf": { "type": "media", "multiple": false, "allowedTypes": ["files"] },
+    "external_link": { "type": "string" },
+    "faculty": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::faculty-profile.faculty-profile",
+      "inversedBy": "publications"
+    }
+  }
+}

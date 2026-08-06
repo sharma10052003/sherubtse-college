@@ -1,0 +1,24 @@
+{
+  "kind": "collectionType",
+  "collectionName": "awards",
+  "info": {
+    "singularName": "award",
+    "pluralName": "awards",
+    "displayName": "Award"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "attributes": {
+    "award_name": { "type": "string", "required": true },
+    "description": { "type": "text" },
+    "year": { "type": "integer" },
+    "certificate": { "type": "media", "multiple": false, "allowedTypes": ["files", "images"] },
+    "faculty": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::faculty-profile.faculty-profile",
+      "inversedBy": "awards"
+    }
+  }
+}

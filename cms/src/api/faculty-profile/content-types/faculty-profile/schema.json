@@ -1,0 +1,71 @@
+{
+  "kind": "collectionType",
+  "collectionName": "faculty_profiles",
+  "info": {
+    "singularName": "faculty-profile",
+    "pluralName": "faculty-profiles",
+    "displayName": "Faculty Profile"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "attributes": {
+    "full_name": { "type": "string", "required": true },
+    "slug": { "type": "uid", "targetField": "full_name", "required": true },
+    "profile_picture": { "type": "media", "multiple": false, "allowedTypes": ["images"] },
+    "cover_image": { "type": "media", "multiple": false, "allowedTypes": ["images"] },
+    "department": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::department.department",
+      "inversedBy": "faculty_members"
+    },
+    "position": { "type": "string" },
+    "employee_id": { "type": "string" },
+    "short_biography": { "type": "text" },
+    "date_joined": { "type": "date" },
+    "employment_status": { "type": "enumeration", "enum": ["active", "inactive"], "default": "active" },
+
+    "highest_qualification": { "type": "string" },
+    "university": { "type": "string" },
+    "specialization": { "type": "string" },
+    "research_areas": { "type": "text" },
+    "teaching_subjects": { "type": "text" },
+    "work_experience": { "type": "text" },
+    "languages": { "type": "text" },
+
+    "college_email": { "type": "string" },
+    "personal_email": { "type": "string" },
+    "phone_number": { "type": "string" },
+    "office_location": { "type": "string" },
+    "office_hours": { "type": "text" },
+    "google_maps_link": { "type": "string" },
+
+    "linkedin_url": { "type": "string" },
+    "google_scholar_url": { "type": "string" },
+    "researchgate_url": { "type": "string" },
+    "orcid_url": { "type": "string" },
+    "personal_website_url": { "type": "string" },
+
+    "conference_images": { "type": "media", "multiple": true, "allowedTypes": ["images"] },
+    "research_photos": { "type": "media", "multiple": true, "allowedTypes": ["images"] },
+    "department_event_photos": { "type": "media", "multiple": true, "allowedTypes": ["images"] },
+    "workshop_photos": { "type": "media", "multiple": true, "allowedTypes": ["images"] },
+
+    "is_featured": { "type": "boolean", "default": false },
+    "sort_order": { "type": "integer", "default": 0 },
+
+    "publications": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::research-publication.research-publication",
+      "mappedBy": "faculty"
+    },
+    "awards": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::award.award",
+      "mappedBy": "faculty"
+    }
+  }
+}
