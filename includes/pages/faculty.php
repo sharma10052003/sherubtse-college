@@ -17,7 +17,6 @@ $settings = stc_get_faculty_setting();
 $stats = stc_get_faculty_stats();
 $filterOptions = stc_get_faculty_filter_options();
 $facultyList = stc_get_faculty_list();
-$featured = array_values(array_filter($facultyList, static fn ($f) => $f['is_featured']));
 
 $heroBgUrl = $settings['hero_background'] ?? '';
 $cardsPerRow = max(2, min(4, (int) $settings['cards_per_row']));
@@ -26,7 +25,21 @@ $gridColsClass = ['2' => 'sm:grid-cols-2', '3' => 'sm:grid-cols-2 lg:grid-cols-3
 <link rel="stylesheet" href="<?php echo BASE_URL; ?>assets/css/faculty/tailwind.css">
 <link rel="stylesheet" href="<?php echo BASE_URL; ?>assets/css/faculty/faculty.css">
 
-<article class="stc-faculty">
+<article class="stc-faculty" id="stcFacultyArticle">
+
+  <!-- Dynamic department-themed background effects (assets/js/faculty/faculty-list.js
+       toggles which one is active via [data-dept] on this article, based on the
+       department filter). Purely decorative, sits behind all content. -->
+  <div class="stc-faculty-bgfx" aria-hidden="true">
+    <div class="stc-faculty-bgfx__layer stc-faculty-bgfx__layer--default is-active"></div>
+    <div class="stc-faculty-bgfx__layer stc-faculty-bgfx__layer--particles">
+      <?php for ($i = 0; $i < 14; $i++): ?><span class="stc-faculty-bgfx__particle" style="--i:<?php echo $i; ?>"></span><?php endfor; ?>
+    </div>
+    <div class="stc-faculty-bgfx__layer stc-faculty-bgfx__layer--tri">
+      <?php for ($i = 0; $i < 10; $i++): ?><span class="stc-faculty-bgfx__tri" style="--i:<?php echo $i; ?>"></span><?php endfor; ?>
+    </div>
+    <div class="stc-faculty-bgfx__layer stc-faculty-bgfx__layer--gradient"></div>
+  </div>
 
   <!-- Breadcrumb -->
   <nav class="stc-faculty__breadcrumb" aria-label="Breadcrumb">
@@ -89,8 +102,8 @@ $gridColsClass = ['2' => 'sm:grid-cols-2', '3' => 'sm:grid-cols-2 lg:grid-cols-3
   <!-- Search & Filters -->
   <section class="stc-faculty-filters" aria-label="Search and filter faculty">
     <div class="max-w-(--container-page) mx-auto px-4 md:px-8 -mt-8 md:-mt-10 relative z-10">
-      <div class="bg-white rounded-(--radius-lg) shadow-lg border border-line p-4 md:p-6 flex flex-col md:flex-row gap-3 md:items-center" id="stcFacultyFilterBar">
-        <div class="relative flex-1">
+      <div class="bg-white rounded-(--radius-lg) shadow-lg border border-line p-4 md:p-6 flex flex-col md:flex-row flex-wrap gap-3 md:items-center" id="stcFacultyFilterBar">
+        <div class="relative flex-1 min-w-[200px]">
           <i class="bi bi-search absolute left-4 top-1/2 -translate-y-1/2 text-ink-soft" aria-hidden="true"></i>
           <label for="stcFacultySearch" class="sr-only">Search faculty</label>
           <input type="search" id="stcFacultySearch" placeholder="Search by name, position or research area&hellip;"
@@ -128,22 +141,7 @@ $gridColsClass = ['2' => 'sm:grid-cols-2', '3' => 'sm:grid-cols-2 lg:grid-cols-3
     </div>
   </section>
 
-  <!-- Featured Faculty -->
-  <?php if ($settings['show_statistics'] !== null && $featured): ?>
-  <section class="stc-faculty-featured py-14 md:py-20" aria-labelledby="stcFacultyFeaturedTitle">
-    <div class="max-w-(--container-page) mx-auto px-4 md:px-8">
-      <p class="stc-faculty-section-eyebrow"><i class="bi bi-star-fill" aria-hidden="true"></i> Featured</p>
-      <h2 id="stcFacultyFeaturedTitle" class="font-(family-name:--font-display) text-2xl md:text-3xl text-ink mb-8" data-reveal>Featured Faculty</h2>
-      <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        <?php foreach ($featured as $f): ?>
-          <?php include __DIR__ . '/../partials/faculty-card.php'; ?>
-        <?php endforeach; ?>
-      </div>
-    </div>
-  </section>
-  <?php endif; ?>
-
-  <!-- Faculty Grid -->
+  <!-- Faculty Grid (department heads first, then everyone grouped by department) -->
   <section class="stc-faculty-grid-section py-14 md:py-20 bg-cream-alt/40" aria-labelledby="stcFacultyGridTitle">
     <div class="max-w-(--container-page) mx-auto px-4 md:px-8">
       <p class="stc-faculty-section-eyebrow"><i class="bi bi-people-fill" aria-hidden="true"></i> Directory</p>

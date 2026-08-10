@@ -136,8 +136,25 @@ function stc_get_faculty_list(array $args = []): array
         'pagination' => ['pageSize' => 100],
     ]);
     $rows = $res['data'] ?? [];
+    $cards = array_map('stc_map_faculty_card', $rows);
 
-    return array_map('stc_map_faculty_card', $rows);
+    // Department heads first (is_featured), then everyone else grouped by
+    // department (in the admin-configured department display order), each
+    // group internally still in sort_order/name order from the query above
+    // — PHP's usort is stable since 8.0, so ties keep their query order.
+    $deptRank = [];
+    foreach (stc_get_departments() as $i => $dept) {
+        $deptRank[$dept['slug'] ?? ''] = $i;
+    }
+    $heads = array_values(array_filter($cards, static fn ($f) => $f['is_featured']));
+    $rest = array_values(array_filter($cards, static fn ($f) => !$f['is_featured']));
+    usort($rest, static function (array $a, array $b) use ($deptRank): int {
+        $rankA = $deptRank[$a['department_slug']] ?? PHP_INT_MAX;
+        $rankB = $deptRank[$b['department_slug']] ?? PHP_INT_MAX;
+        return $rankA <=> $rankB;
+    });
+
+    return array_merge($heads, $rest);
 }
 
 /** Full profile for the individual faculty page, or null if not found/unreachable. */

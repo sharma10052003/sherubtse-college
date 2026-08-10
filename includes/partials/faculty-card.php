@@ -19,9 +19,6 @@ $profileUrl = BASE_URL . 'about/faculty/' . rawurlencode($f['slug']);
     <?php else: ?>
       <div class="stc-faculty-card__placeholder"><i class="bi bi-person-fill" aria-hidden="true"></i></div>
     <?php endif; ?>
-    <?php if ($f['is_featured']): ?>
-      <span class="stc-faculty-card__badge"><i class="bi bi-star-fill" aria-hidden="true"></i> Featured</span>
-    <?php endif; ?>
   </a>
 
   <div class="stc-faculty-card__body">
