@@ -81,7 +81,6 @@
     var media = f.profile_picture_url
       ? '<img src="' + escapeHtml(f.profile_picture_url) + '" alt="' + escapeHtml(f.full_name) + '" loading="lazy">'
       : '<div class="stc-faculty-card__placeholder"><i class="bi bi-person-fill" aria-hidden="true"></i></div>';
-    var badge = f.is_featured ? '<span class="stc-faculty-card__badge"><i class="bi bi-star-fill" aria-hidden="true"></i> Featured</span>' : '';
     var department = f.department ? '<p class="stc-faculty-card__department"><i class="bi bi-building" aria-hidden="true"></i> ' + escapeHtml(f.department) + '</p>' : '';
     var qualification = f.highest_qualification ? '<p class="stc-faculty-card__qualification"><i class="bi bi-mortarboard" aria-hidden="true"></i> ' + escapeHtml(f.highest_qualification) + '</p>' : '';
     var tags = (f.research_areas || []).slice(0, 3).map(function (t) {
@@ -93,7 +92,7 @@
 
     return (
       '<article class="stc-faculty-card is-visible">' +
-        '<a href="' + escapeHtml(profileUrl) + '" class="stc-faculty-card__media">' + media + badge + '</a>' +
+        '<a href="' + escapeHtml(profileUrl) + '" class="stc-faculty-card__media">' + media + '</a>' +
         '<div class="stc-faculty-card__body">' +
           '<h3 class="stc-faculty-card__name"><a href="' + escapeHtml(profileUrl) + '">' + escapeHtml(f.full_name) + '</a></h3>' +
           '<p class="stc-faculty-card__position">' + escapeHtml(f.position) + '</p>' +
@@ -149,4 +148,30 @@
       debounceTimer = window.setTimeout(fetchFaculty, 300);
     });
   });
+
+  /* ---- Dynamic department-themed background ------------------------------- */
+  var article = document.getElementById('stcFacultyArticle');
+  var bgLayers = {
+    '': 'default',
+    'humanities-social-sciences': 'gradient',
+    'mathematical-data-sciences': 'tri',
+    'natural-sciences': 'particles',
+  };
+
+  function updateBackgroundEffect(deptSlug) {
+    if (!article) return;
+    var layerName = bgLayers[deptSlug] || 'default';
+    article.setAttribute('data-dept', deptSlug || '');
+    document.querySelectorAll('.stc-faculty-bgfx__layer').forEach(function (layer) {
+      var isMatch = layer.classList.contains('stc-faculty-bgfx__layer--' + layerName);
+      layer.classList.toggle('is-active', isMatch);
+    });
+  }
+
+  if (departmentSelect) {
+    departmentSelect.addEventListener('change', function () {
+      updateBackgroundEffect(departmentSelect.value);
+    });
+    updateBackgroundEffect(departmentSelect.value);
+  }
 })();
