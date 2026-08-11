@@ -739,6 +739,18 @@ export interface ApiDepartmentDepartment extends Struct.CollectionTypeSchema {
     draftAndPublish: false;
   };
   attributes: {
+    animation_enabled: Schema.Attribute.Boolean &
+      Schema.Attribute.DefaultTo<true>;
+    animation_intensity: Schema.Attribute.Enumeration<
+      ['low', 'medium', 'high']
+    > &
+      Schema.Attribute.DefaultTo<'medium'>;
+    animation_speed: Schema.Attribute.Enumeration<['slow', 'normal', 'fast']> &
+      Schema.Attribute.DefaultTo<'normal'>;
+    animation_type: Schema.Attribute.Enumeration<
+      ['network-data', 'particles-math', 'flowing-gradient', 'none']
+    > &
+      Schema.Attribute.DefaultTo<'flowing-gradient'>;
     banner_image: Schema.Attribute.Media<'images'>;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
@@ -756,6 +768,7 @@ export interface ApiDepartmentDepartment extends Struct.CollectionTypeSchema {
       'oneToOne',
       'api::faculty-profile.faculty-profile'
     >;
+    hero_video: Schema.Attribute.Media<'videos'>;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
@@ -763,6 +776,16 @@ export interface ApiDepartmentDepartment extends Struct.CollectionTypeSchema {
     > &
       Schema.Attribute.Private;
     mission: Schema.Attribute.Text;
+    mobile_background: Schema.Attribute.Media<'images'>;
+    overlay_opacity: Schema.Attribute.Integer &
+      Schema.Attribute.SetMinMax<
+        {
+          max: 100;
+          min: 0;
+        },
+        number
+      > &
+      Schema.Attribute.DefaultTo<60>;
     publishedAt: Schema.Attribute.DateTime;
     slug: Schema.Attribute.UID<'department_name'>;
     theme_color: Schema.Attribute.String;

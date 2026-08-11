@@ -13,6 +13,12 @@ RewriteCond %{REQUEST_FILENAME} -f [OR]
 RewriteCond %{REQUEST_FILENAME} -d
 RewriteRule ^ - [L]
 
+# /about/faculty/department/{slug} -> about/department.php?slug={slug}
+# (must come before the person-profile rule below, since both match a
+# single path segment after /about/faculty/ and "department" would
+# otherwise be swallowed as if it were a person's slug).
+RewriteRule ^about/faculty/department/([^/]+)/?$ about/department.php?slug=$1 [L,QSA]
+
 # /about/faculty/{slug} -> about/faculty-profile.php?slug={slug}
 # (the bare /about/faculty directory index is handled by the generic
 # rule below, since about/faculty.php exists as a real file).

@@ -116,9 +116,12 @@
   }
 
   function renderGroup(group) {
+    var heading = group.slug
+      ? '<a href="' + escapeHtml(window.STC_FACULTY_PROFILE_BASE.replace(/faculty\/$/, 'faculty/department/') + encodeURIComponent(group.slug)) + '">' + escapeHtml(group.name) + '</a>'
+      : escapeHtml(group.name);
     return (
       '<div class="stc-faculty-dept-group">' +
-        '<h3 class="stc-faculty-dept-heading"><i class="bi bi-building" aria-hidden="true"></i> ' + escapeHtml(group.name) + '</h3>' +
+        '<h3 class="stc-faculty-dept-heading"><i class="bi bi-building" aria-hidden="true"></i> ' + heading + '</h3>' +
         '<div class="grid gap-6 ' + gridCols + '">' + group.members.map(renderCard).join('') + '</div>' +
       '</div>'
     );
