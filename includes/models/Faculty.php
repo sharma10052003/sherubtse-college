@@ -97,10 +97,12 @@ function stc_map_faculty_card(array $row): array
 }
 
 /**
- * Card-shaped faculty list for the directory grid, with optional search/filters.
+ * Runs the filtered faculty-profiles query and returns flat, card-shaped
+ * rows (no ordering/grouping applied yet — see stc_get_faculty_grouped()
+ * and stc_get_faculty_list(), both built on top of this).
  * @param array{q?:string,department?:string,position?:string,qualification?:string,research_area?:string,featured_only?:bool} $args
  */
-function stc_get_faculty_list(array $args = []): array
+function stc_query_faculty_cards(array $args = []): array
 {
     $filters = [];
 
@@ -136,12 +138,21 @@ function stc_get_faculty_list(array $args = []): array
         'pagination' => ['pageSize' => 100],
     ]);
     $rows = $res['data'] ?? [];
-    $cards = array_map('stc_map_faculty_card', $rows);
 
-    // Department heads first (is_featured), then everyone else grouped by
-    // department (in the admin-configured department display order), each
-    // group internally still in sort_order/name order from the query above
-    // — PHP's usort is stable since 8.0, so ties keep their query order.
+    return array_map('stc_map_faculty_card', $rows);
+}
+
+/**
+ * Card-shaped faculty list for the directory grid: department heads
+ * first, then everyone else grouped by department (admin-configured
+ * display order). Flat — see stc_get_faculty_grouped() for the
+ * structured {heads, groups} shape the grid actually renders from.
+ * @param array{q?:string,department?:string,position?:string,qualification?:string,research_area?:string,featured_only?:bool} $args
+ */
+function stc_get_faculty_list(array $args = []): array
+{
+    $cards = stc_query_faculty_cards($args);
+
     $deptRank = [];
     foreach (stc_get_departments() as $i => $dept) {
         $deptRank[$dept['slug'] ?? ''] = $i;
@@ -155,6 +166,50 @@ function stc_get_faculty_list(array $args = []): array
     });
 
     return array_merge($heads, $rest);
+}
+
+/**
+ * Structured version of the same data for the grid: heads (department
+ * heads matching the current filters, e.g. only Natural Science's head
+ * when department=natural-sciences) and groups (remaining members
+ * bucketed by department, each with a heading, in department display
+ * order — departments with zero matching members after filtering are
+ * omitted rather than shown as an empty section).
+ * @param array{q?:string,department?:string,position?:string,qualification?:string,research_area?:string} $args
+ */
+function stc_get_faculty_grouped(array $args = []): array
+{
+    $cards = stc_query_faculty_cards($args);
+
+    $heads = array_values(array_filter($cards, static fn ($f) => $f['is_featured']));
+    $rest = array_values(array_filter($cards, static fn ($f) => !$f['is_featured']));
+
+    $byDept = [];
+    foreach ($rest as $card) {
+        $key = $card['department_slug'] ?: '';
+        $byDept[$key]['name'] = $card['department'] ?: 'Other';
+        $byDept[$key]['slug'] = $key;
+        $byDept[$key]['members'][] = $card;
+    }
+
+    $groups = [];
+    foreach (stc_get_departments() as $dept) {
+        $key = $dept['slug'] ?? '';
+        if (isset($byDept[$key])) {
+            $groups[] = $byDept[$key];
+            unset($byDept[$key]);
+        }
+    }
+    // Anything left (no department set, or a department not in the registry) goes last.
+    foreach ($byDept as $group) {
+        $groups[] = $group;
+    }
+
+    return [
+        'heads'  => $heads,
+        'groups' => $groups,
+        'total'  => count($cards),
+    ];
 }
 
 /** Full profile for the individual faculty page, or null if not found/unreachable. */

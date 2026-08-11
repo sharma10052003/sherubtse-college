@@ -1,8 +1,10 @@
 /**
  * faculty-list.js — directory page: reveal-on-scroll, stat counters,
- * and AJAX search/filter against ajax/faculty-list.php. No dependencies,
- * matches the reveal/counter conventions used elsewhere on the site
- * (see assets/js/homepage/hero.js, assets/js/pages/history.js).
+ * AJAX search/filter against ajax/faculty-list.php (which now returns a
+ * grouped {heads, groups, total} shape — heads first, then everyone
+ * else bucketed by department, matching the server-rendered markup in
+ * pages/faculty.php so the no-JS and AJAX-filtered views always agree),
+ * and the department-themed animated background. No dependencies.
  */
 (function () {
   'use strict';
@@ -10,11 +12,12 @@
   var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches || window.STC_ANIMATIONS_ENABLED === false;
 
   /* ---- Reveal-on-scroll --------------------------------------------------- */
-  var revealTargets = document.querySelectorAll('[data-reveal], [data-reveal-variant]');
-  if (reduceMotion || !('IntersectionObserver' in window)) {
-    revealTargets.forEach(function (el) { el.classList.add('is-visible'); });
-  } else {
-    var revealObserver = new IntersectionObserver(function (entries, obs) {
+  function observeReveal(targets) {
+    if (reduceMotion || !('IntersectionObserver' in window)) {
+      targets.forEach(function (el) { el.classList.add('is-visible'); });
+      return;
+    }
+    var observer = new IntersectionObserver(function (entries, obs) {
       entries.forEach(function (entry) {
         if (entry.isIntersecting) {
           entry.target.classList.add('is-visible');
@@ -22,8 +25,9 @@
         }
       });
     }, { threshold: 0.15 });
-    revealTargets.forEach(function (el) { revealObserver.observe(el); });
+    targets.forEach(function (el) { observer.observe(el); });
   }
+  observeReveal(document.querySelectorAll('[data-reveal], [data-reveal-variant]'));
 
   /* ---- Animated stat counters --------------------------------------------- */
   var counters = document.querySelectorAll('.stc-counter');
@@ -58,7 +62,9 @@
   }
 
   /* ---- AJAX search & filter ------------------------------------------------ */
-  var grid = document.getElementById('stcFacultyGrid');
+  var headsSection = document.getElementById('stcFacultyHeadsSection');
+  var headsGrid = document.getElementById('stcFacultyHeadsGrid');
+  var groupsWrap = document.getElementById('stcFacultyGroups');
   var skeleton = document.getElementById('stcFacultySkeleton');
   var emptyState = document.getElementById('stcFacultyEmptyState');
   var resultsCount = document.getElementById('stcFacultyResultsCount');
@@ -68,7 +74,9 @@
   var qualificationSelect = document.getElementById('stcFacultyQualification');
   var researchAreaSelect = document.getElementById('stcFacultyResearchArea');
 
-  if (!grid || !window.STC_FACULTY_AJAX_URL) return;
+  if (!groupsWrap || !window.STC_FACULTY_AJAX_URL) return;
+
+  var gridCols = groupsWrap.dataset.cols || '';
 
   function escapeHtml(str) {
     var div = document.createElement('div');
@@ -107,6 +115,15 @@
     );
   }
 
+  function renderGroup(group) {
+    return (
+      '<div class="stc-faculty-dept-group">' +
+        '<h3 class="stc-faculty-dept-heading"><i class="bi bi-building" aria-hidden="true"></i> ' + escapeHtml(group.name) + '</h3>' +
+        '<div class="grid gap-6 ' + gridCols + '">' + group.members.map(renderCard).join('') + '</div>' +
+      '</div>'
+    );
+  }
+
   var debounceTimer = null;
   function fetchFaculty() {
     var params = new URLSearchParams({
@@ -118,25 +135,33 @@
     });
 
     if (skeleton) skeleton.hidden = false;
-    grid.hidden = true;
+    groupsWrap.hidden = true;
+    if (headsSection) headsSection.hidden = true;
     if (emptyState) emptyState.hidden = true;
 
     fetch(window.STC_FACULTY_AJAX_URL + '?' + params.toString(), { headers: { 'Accept': 'application/json' } })
       .then(function (res) { return res.json(); })
       .then(function (json) {
-        var rows = json.data || [];
-        grid.innerHTML = rows.map(renderCard).join('');
+        var heads = json.heads || [];
+        var groups = json.groups || [];
+        var total = json.total || 0;
+
+        if (headsGrid) headsGrid.innerHTML = heads.map(renderCard).join('');
+        if (headsSection) headsSection.hidden = heads.length === 0;
+
+        groupsWrap.innerHTML = groups.map(renderGroup).join('');
+
         if (resultsCount) {
-          resultsCount.textContent = rows.length + ' faculty member' + (rows.length === 1 ? '' : 's') + ' found';
+          resultsCount.textContent = total + ' faculty member' + (total === 1 ? '' : 's') + ' found';
         }
-        if (emptyState) emptyState.hidden = rows.length !== 0;
+        if (emptyState) emptyState.hidden = total !== 0;
       })
       .catch(function () {
         if (resultsCount) resultsCount.textContent = 'Could not load faculty right now — please try again.';
       })
       .finally(function () {
         if (skeleton) skeleton.hidden = true;
-        grid.hidden = false;
+        groupsWrap.hidden = false;
       });
   }
 
@@ -149,18 +174,18 @@
     });
   });
 
-  /* ---- Dynamic department-themed background ------------------------------- */
+  /* ---- Dynamic department-themed background -------------------------------- */
   var article = document.getElementById('stcFacultyArticle');
   var bgLayers = {
     '': 'default',
-    'humanities-social-sciences': 'gradient',
-    'mathematical-data-sciences': 'tri',
-    'natural-sciences': 'particles',
+    'humanities-social-sciences': 'humanities',
+    'mathematical-data-sciences': 'mds',
+    'natural-sciences': 'natural',
   };
 
   function updateBackgroundEffect(deptSlug) {
     if (!article) return;
-    var layerName = bgLayers[deptSlug] || 'default';
+    var layerName = bgLayers[deptSlug] || 'other';
     article.setAttribute('data-dept', deptSlug || '');
     document.querySelectorAll('.stc-faculty-bgfx__layer').forEach(function (layer) {
       var isMatch = layer.classList.contains('stc-faculty-bgfx__layer--' + layerName);
