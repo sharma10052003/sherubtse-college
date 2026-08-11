@@ -16,7 +16,7 @@ require_once __DIR__ . '/../models/Faculty.php';
 $settings = stc_get_faculty_setting();
 $stats = stc_get_faculty_stats();
 $filterOptions = stc_get_faculty_filter_options();
-$facultyList = stc_get_faculty_list();
+$grouped = stc_get_faculty_grouped();
 
 $heroBgUrl = $settings['hero_background'] ?? '';
 $cardsPerRow = max(2, min(4, (int) $settings['cards_per_row']));
@@ -28,17 +28,29 @@ $gridColsClass = ['2' => 'sm:grid-cols-2', '3' => 'sm:grid-cols-2 lg:grid-cols-3
 <article class="stc-faculty" id="stcFacultyArticle">
 
   <!-- Dynamic department-themed background effects (assets/js/faculty/faculty-list.js
-       toggles which one is active via [data-dept] on this article, based on the
-       department filter). Purely decorative, sits behind all content. -->
+       toggles which layer is active based on the department filter). Sits
+       behind all content (see the z-index rules in faculty.css) — bold on
+       purpose, it only shows through the page's empty space since every
+       card has an opaque background. -->
   <div class="stc-faculty-bgfx" aria-hidden="true">
-    <div class="stc-faculty-bgfx__layer stc-faculty-bgfx__layer--default is-active"></div>
-    <div class="stc-faculty-bgfx__layer stc-faculty-bgfx__layer--particles">
-      <?php for ($i = 0; $i < 14; $i++): ?><span class="stc-faculty-bgfx__particle" style="--i:<?php echo $i; ?>"></span><?php endfor; ?>
+    <div class="stc-faculty-bgfx__layer stc-faculty-bgfx__layer--default is-active">
+      <span class="stc-faculty-bgfx__blob"></span><span class="stc-faculty-bgfx__blob"></span><span class="stc-faculty-bgfx__blob"></span>
     </div>
-    <div class="stc-faculty-bgfx__layer stc-faculty-bgfx__layer--tri">
-      <?php for ($i = 0; $i < 10; $i++): ?><span class="stc-faculty-bgfx__tri" style="--i:<?php echo $i; ?>"></span><?php endfor; ?>
+    <div class="stc-faculty-bgfx__layer stc-faculty-bgfx__layer--natural">
+      <span class="stc-faculty-bgfx__blob"></span><span class="stc-faculty-bgfx__blob"></span>
+      <?php for ($i = 0; $i < 22; $i++): ?><span class="stc-faculty-bgfx__particle" style="--i:<?php echo $i; ?>"></span><?php endfor; ?>
     </div>
-    <div class="stc-faculty-bgfx__layer stc-faculty-bgfx__layer--gradient"></div>
+    <div class="stc-faculty-bgfx__layer stc-faculty-bgfx__layer--mds">
+      <?php for ($i = 0; $i < 16; $i++): ?><span class="stc-faculty-bgfx__tri" style="--i:<?php echo $i; ?>"></span><?php endfor; ?>
+      <?php for ($i = 0; $i < 8; $i++): ?><span class="stc-faculty-bgfx__node" style="--i:<?php echo $i; ?>"></span><?php endfor; ?>
+    </div>
+    <div class="stc-faculty-bgfx__layer stc-faculty-bgfx__layer--humanities">
+      <span class="stc-faculty-bgfx__blob"></span><span class="stc-faculty-bgfx__blob"></span><span class="stc-faculty-bgfx__blob"></span>
+    </div>
+    <div class="stc-faculty-bgfx__layer stc-faculty-bgfx__layer--other">
+      <span class="stc-faculty-bgfx__blob"></span><span class="stc-faculty-bgfx__blob"></span>
+      <?php for ($i = 0; $i < 6; $i++): ?><span class="stc-faculty-bgfx__node" style="--i:<?php echo $i; ?>"></span><?php endfor; ?>
+    </div>
   </div>
 
   <!-- Breadcrumb -->
@@ -141,13 +153,26 @@ $gridColsClass = ['2' => 'sm:grid-cols-2', '3' => 'sm:grid-cols-2 lg:grid-cols-3
     </div>
   </section>
 
-  <!-- Faculty Grid (department heads first, then everyone grouped by department) -->
+  <!-- Department Heads -->
+  <section class="stc-faculty-grid-section stc-faculty-heads-section py-10 md:py-14" aria-labelledby="stcFacultyHeadsTitle" id="stcFacultyHeadsSection"<?php echo $grouped['heads'] ? '' : ' hidden'; ?>>
+    <div class="max-w-(--container-page) mx-auto px-4 md:px-8">
+      <p class="stc-faculty-section-eyebrow"><i class="bi bi-award-fill" aria-hidden="true"></i> Leadership</p>
+      <h2 id="stcFacultyHeadsTitle" class="font-(family-name:--font-display) text-2xl md:text-3xl text-ink mb-8" data-reveal>Department Heads</h2>
+      <div id="stcFacultyHeadsGrid" class="grid gap-6 <?php echo htmlspecialchars($gridColsClass, ENT_QUOTES, 'UTF-8'); ?>">
+        <?php foreach ($grouped['heads'] as $f): ?>
+          <?php include __DIR__ . '/../partials/faculty-card.php'; ?>
+        <?php endforeach; ?>
+      </div>
+    </div>
+  </section>
+
+  <!-- Faculty Grid, grouped department-wise -->
   <section class="stc-faculty-grid-section py-14 md:py-20 bg-cream-alt/40" aria-labelledby="stcFacultyGridTitle">
     <div class="max-w-(--container-page) mx-auto px-4 md:px-8">
       <p class="stc-faculty-section-eyebrow"><i class="bi bi-people-fill" aria-hidden="true"></i> Directory</p>
       <h2 id="stcFacultyGridTitle" class="font-(family-name:--font-display) text-2xl md:text-3xl text-ink mb-8" data-reveal>All Faculty Members</h2>
 
-      <div id="stcFacultyResultsCount" class="text-sm text-ink-soft mb-4" aria-live="polite"><?php echo count($facultyList); ?> faculty member<?php echo count($facultyList) === 1 ? '' : 's'; ?> found</div>
+      <div id="stcFacultyResultsCount" class="text-sm text-ink-soft mb-4" aria-live="polite"><?php echo (int) $grouped['total']; ?> faculty member<?php echo $grouped['total'] === 1 ? '' : 's'; ?> found</div>
 
       <div id="stcFacultySkeleton" class="grid gap-6 <?php echo htmlspecialchars($gridColsClass, ENT_QUOTES, 'UTF-8'); ?>" hidden aria-hidden="true">
         <?php for ($i = 0; $i < 6; $i++): ?>
@@ -155,10 +180,17 @@ $gridColsClass = ['2' => 'sm:grid-cols-2', '3' => 'sm:grid-cols-2 lg:grid-cols-3
         <?php endfor; ?>
       </div>
 
-      <div id="stcFacultyGrid" class="grid gap-6 <?php echo htmlspecialchars($gridColsClass, ENT_QUOTES, 'UTF-8'); ?>">
-        <?php if ($facultyList): ?>
-          <?php foreach ($facultyList as $f): ?>
-            <?php include __DIR__ . '/../partials/faculty-card.php'; ?>
+      <div id="stcFacultyGroups" data-cols="<?php echo htmlspecialchars($gridColsClass, ENT_QUOTES, 'UTF-8'); ?>">
+        <?php if ($grouped['groups']): ?>
+          <?php foreach ($grouped['groups'] as $group): ?>
+            <div class="stc-faculty-dept-group">
+              <h3 class="stc-faculty-dept-heading"><i class="bi bi-building" aria-hidden="true"></i> <?php echo htmlspecialchars($group['name'], ENT_QUOTES, 'UTF-8'); ?></h3>
+              <div class="grid gap-6 <?php echo htmlspecialchars($gridColsClass, ENT_QUOTES, 'UTF-8'); ?>">
+                <?php foreach ($group['members'] as $f): ?>
+                  <?php include __DIR__ . '/../partials/faculty-card.php'; ?>
+                <?php endforeach; ?>
+              </div>
+            </div>
           <?php endforeach; ?>
         <?php else: ?>
           <p class="col-span-full text-center text-ink-soft py-12">Faculty profiles will appear here once added from the admin panel.</p>

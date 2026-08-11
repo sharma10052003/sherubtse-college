@@ -22,9 +22,6 @@ $args = [
     'research_area' => isset($_GET['research_area']) ? trim((string) $_GET['research_area']) : '',
 ];
 
-$faculty = stc_get_faculty_list($args);
+$grouped = stc_get_faculty_grouped($args);
 
-echo json_encode([
-    'data'  => $faculty,
-    'count' => count($faculty),
-], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+echo json_encode($grouped, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);

@@ -28,11 +28,44 @@ foreach (array_keys($galleryGroups) as $key) {
         break;
     }
 }
+
+// Same department-themed background as the directory (assets/css/faculty/
+// faculty.css) — fixed here to this person's own department since there's
+// no filter dropdown on a single profile page.
+$bgLayerMap = [
+    'humanities-social-sciences' => 'humanities',
+    'mathematical-data-sciences' => 'mds',
+    'natural-sciences'           => 'natural',
+];
+$bgLayer = $bgLayerMap[$f['department_slug'] ?? ''] ?? 'other';
 ?>
 <link rel="stylesheet" href="<?php echo BASE_URL; ?>assets/css/faculty/tailwind.css">
 <link rel="stylesheet" href="<?php echo BASE_URL; ?>assets/css/faculty/faculty.css">
 
 <article class="stc-faculty-profile">
+
+  <div class="stc-faculty-bgfx" aria-hidden="true">
+    <?php if ($bgLayer === 'natural'): ?>
+      <div class="stc-faculty-bgfx__layer stc-faculty-bgfx__layer--natural is-active">
+        <span class="stc-faculty-bgfx__blob"></span><span class="stc-faculty-bgfx__blob"></span>
+        <?php for ($i = 0; $i < 22; $i++): ?><span class="stc-faculty-bgfx__particle" style="--i:<?php echo $i; ?>"></span><?php endfor; ?>
+      </div>
+    <?php elseif ($bgLayer === 'mds'): ?>
+      <div class="stc-faculty-bgfx__layer stc-faculty-bgfx__layer--mds is-active">
+        <?php for ($i = 0; $i < 16; $i++): ?><span class="stc-faculty-bgfx__tri" style="--i:<?php echo $i; ?>"></span><?php endfor; ?>
+        <?php for ($i = 0; $i < 8; $i++): ?><span class="stc-faculty-bgfx__node" style="--i:<?php echo $i; ?>"></span><?php endfor; ?>
+      </div>
+    <?php elseif ($bgLayer === 'humanities'): ?>
+      <div class="stc-faculty-bgfx__layer stc-faculty-bgfx__layer--humanities is-active">
+        <span class="stc-faculty-bgfx__blob"></span><span class="stc-faculty-bgfx__blob"></span><span class="stc-faculty-bgfx__blob"></span>
+      </div>
+    <?php else: ?>
+      <div class="stc-faculty-bgfx__layer stc-faculty-bgfx__layer--other is-active">
+        <span class="stc-faculty-bgfx__blob"></span><span class="stc-faculty-bgfx__blob"></span>
+        <?php for ($i = 0; $i < 6; $i++): ?><span class="stc-faculty-bgfx__node" style="--i:<?php echo $i; ?>"></span><?php endfor; ?>
+      </div>
+    <?php endif; ?>
+  </div>
 
   <!-- Hero -->
   <section class="stc-faculty-profile-hero"<?php echo $f['cover_image_url'] ? ' style="--stc-faculty-profile-cover:url(\'' . htmlspecialchars($f['cover_image_url'], ENT_QUOTES, 'UTF-8') . '\')"' : ''; ?>>
