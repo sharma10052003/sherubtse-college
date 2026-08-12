@@ -187,7 +187,7 @@ $gridColsClass = ['2' => 'sm:grid-cols-2', '3' => 'sm:grid-cols-2 lg:grid-cols-3
               <h3 class="stc-faculty-dept-heading">
                 <i class="bi bi-building" aria-hidden="true"></i>
                 <?php if (!empty($group['slug'])): ?>
-                  <a href="<?php echo htmlspecialchars(BASE_URL . 'about/faculty/department/' . rawurlencode($group['slug']), ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($group['name'], ENT_QUOTES, 'UTF-8'); ?></a>
+                  <a href="<?php echo htmlspecialchars(BASE_URL . 'departments/' . rawurlencode($group['slug']), ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($group['name'], ENT_QUOTES, 'UTF-8'); ?></a>
                 <?php else: ?>
                   <?php echo htmlspecialchars($group['name'], ENT_QUOTES, 'UTF-8'); ?>
                 <?php endif; ?>

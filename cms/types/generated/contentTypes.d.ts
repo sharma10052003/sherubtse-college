@@ -443,6 +443,68 @@ export interface AdminUser extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiAcademicCalendarAcademicCalendar
+  extends Struct.SingleTypeSchema {
+  collectionName: 'academic_calendar';
+  info: {
+    displayName: 'Academic Calendar';
+    pluralName: 'academic-calendars';
+    singularName: 'academic-calendar';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    academic_year: Schema.Attribute.String;
+    calendar_pdf: Schema.Attribute.Media<'files'>;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    description: Schema.Attribute.Text;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::academic-calendar.academic-calendar'
+    > &
+      Schema.Attribute.Private;
+    publishedAt: Schema.Attribute.DateTime;
+    title: Schema.Attribute.String & Schema.Attribute.Required;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiAcademicGuideAcademicGuide extends Struct.SingleTypeSchema {
+  collectionName: 'academic_guide';
+  info: {
+    displayName: 'Academic Guide';
+    pluralName: 'academic-guides';
+    singularName: 'academic-guide';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    description: Schema.Attribute.Text;
+    guide_pdf: Schema.Attribute.Media<'files'> & Schema.Attribute.Required;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::academic-guide.academic-guide'
+    > &
+      Schema.Attribute.Private;
+    publishedAt: Schema.Attribute.DateTime;
+    title: Schema.Attribute.String & Schema.Attribute.Required;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiAcademicsContentAcademicsContent
   extends Struct.SingleTypeSchema {
   collectionName: 'academics_content';
@@ -786,7 +848,14 @@ export interface ApiDepartmentDepartment extends Struct.CollectionTypeSchema {
         number
       > &
       Schema.Attribute.DefaultTo<60>;
+    programmes: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::programme.programme'
+    >;
     publishedAt: Schema.Attribute.DateTime;
+    seo_description: Schema.Attribute.Text;
+    seo_title: Schema.Attribute.String;
+    short_description: Schema.Attribute.Text;
     slug: Schema.Attribute.UID<'department_name'>;
     theme_color: Schema.Attribute.String;
     updatedAt: Schema.Attribute.DateTime;
@@ -1964,6 +2033,129 @@ export interface ApiPresidentContentPresidentContent
   };
 }
 
+export interface ApiProgrammeTimetableProgrammeTimetable
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'programme_timetables';
+  info: {
+    displayName: 'Programme Timetable';
+    pluralName: 'programme-timetables';
+    singularName: 'programme-timetable';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::programme-timetable.programme-timetable'
+    > &
+      Schema.Attribute.Private;
+    programme: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::programme.programme'
+    > &
+      Schema.Attribute.Required;
+    publishedAt: Schema.Attribute.DateTime;
+    semester: Schema.Attribute.String & Schema.Attribute.Required;
+    timetable_file: Schema.Attribute.Media<'files'>;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    year: Schema.Attribute.String & Schema.Attribute.Required;
+  };
+}
+
+export interface ApiProgrammeProgramme extends Struct.CollectionTypeSchema {
+  collectionName: 'programmes';
+  info: {
+    displayName: 'Programme';
+    pluralName: 'programmes';
+    singularName: 'programme';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    about: Schema.Attribute.Text;
+    admission_requirements: Schema.Attribute.Text;
+    career_opportunities: Schema.Attribute.Text;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    curriculum: Schema.Attribute.Component<'programme.curriculum-block', true>;
+    degree_type: Schema.Attribute.String;
+    department: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::department.department'
+    >;
+    display_order: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
+    duration: Schema.Attribute.String;
+    faqs: Schema.Attribute.Component<'shared.faq-item', true>;
+    further_study: Schema.Attribute.Text;
+    hero_image: Schema.Attribute.Media<'images'>;
+    learning_outcomes: Schema.Attribute.Text;
+    level: Schema.Attribute.Enumeration<['undergraduate', 'postgraduate']> &
+      Schema.Attribute.Required;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::programme.programme'
+    > &
+      Schema.Attribute.Private;
+    objectives: Schema.Attribute.Text;
+    overview: Schema.Attribute.Text;
+    programme_name: Schema.Attribute.String & Schema.Attribute.Required;
+    publishedAt: Schema.Attribute.DateTime;
+    seo_description: Schema.Attribute.Text;
+    seo_title: Schema.Attribute.String;
+    short_description: Schema.Attribute.Text;
+    slug: Schema.Attribute.UID<'programme_name'>;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiReassessmentTimetableReassessmentTimetable
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'reassessment_timetables';
+  info: {
+    displayName: 'Reassessment Timetable';
+    pluralName: 'reassessment-timetables';
+    singularName: 'reassessment-timetable';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    document: Schema.Attribute.Media<'files'>;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::reassessment-timetable.reassessment-timetable'
+    > &
+      Schema.Attribute.Private;
+    programme: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::programme.programme'
+    >;
+    published_date: Schema.Attribute.Date;
+    publishedAt: Schema.Attribute.DateTime;
+    semester: Schema.Attribute.String;
+    title: Schema.Attribute.String & Schema.Attribute.Required;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiResearchContentResearchContent
   extends Struct.SingleTypeSchema {
   collectionName: 'research_content';
@@ -3018,6 +3210,8 @@ declare module '@strapi/strapi' {
       'admin::transfer-token': AdminTransferToken;
       'admin::transfer-token-permission': AdminTransferTokenPermission;
       'admin::user': AdminUser;
+      'api::academic-calendar.academic-calendar': ApiAcademicCalendarAcademicCalendar;
+      'api::academic-guide.academic-guide': ApiAcademicGuideAcademicGuide;
       'api::academics-content.academics-content': ApiAcademicsContentAcademicsContent;
       'api::academics-item.academics-item': ApiAcademicsItemAcademicsItem;
       'api::announcement.announcement': ApiAnnouncementAnnouncement;
@@ -3049,6 +3243,9 @@ declare module '@strapi/strapi' {
       'api::partners-content.partners-content': ApiPartnersContentPartnersContent;
       'api::partners-item.partners-item': ApiPartnersItemPartnersItem;
       'api::president-content.president-content': ApiPresidentContentPresidentContent;
+      'api::programme-timetable.programme-timetable': ApiProgrammeTimetableProgrammeTimetable;
+      'api::programme.programme': ApiProgrammeProgramme;
+      'api::reassessment-timetable.reassessment-timetable': ApiReassessmentTimetableReassessmentTimetable;
       'api::research-content.research-content': ApiResearchContentResearchContent;
       'api::research-item.research-item': ApiResearchItemResearchItem;
       'api::research-publication.research-publication': ApiResearchPublicationResearchPublication;

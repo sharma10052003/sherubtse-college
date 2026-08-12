@@ -1,0 +1,23 @@
+{
+  "kind": "collectionType",
+  "collectionName": "reassessment_timetables",
+  "info": {
+    "singularName": "reassessment-timetable",
+    "pluralName": "reassessment-timetables",
+    "displayName": "Reassessment Timetable"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "attributes": {
+    "title": { "type": "string", "required": true },
+    "programme": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::programme.programme"
+    },
+    "semester": { "type": "string" },
+    "document": { "type": "media", "multiple": false, "allowedTypes": ["files"] },
+    "published_date": { "type": "date" }
+  }
+}

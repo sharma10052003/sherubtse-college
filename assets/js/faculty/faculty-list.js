@@ -117,7 +117,7 @@
 
   function renderGroup(group) {
     var heading = group.slug
-      ? '<a href="' + escapeHtml(window.STC_FACULTY_PROFILE_BASE.replace(/faculty\/$/, 'faculty/department/') + encodeURIComponent(group.slug)) + '">' + escapeHtml(group.name) + '</a>'
+      ? '<a href="' + escapeHtml(window.STC_FACULTY_PROFILE_BASE.replace(/about\/faculty\/$/, 'departments/') + encodeURIComponent(group.slug)) + '">' + escapeHtml(group.name) + '</a>'
       : escapeHtml(group.name);
     return (
       '<div class="stc-faculty-dept-group">' +

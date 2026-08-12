@@ -32,6 +32,16 @@
       "mappedBy": "department"
     },
 
+    "short_description": { "type": "text" },
+    "seo_title": { "type": "string" },
+    "seo_description": { "type": "text" },
+    "programmes": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::programme.programme",
+      "mappedBy": "department"
+    },
+
     "hero_video": { "type": "media", "multiple": false, "allowedTypes": ["videos"] },
     "animation_type": {
       "type": "enumeration",

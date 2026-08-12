@@ -1,0 +1,17 @@
+{
+  "kind": "singleType",
+  "collectionName": "academic_guide",
+  "info": {
+    "singularName": "academic-guide",
+    "pluralName": "academic-guides",
+    "displayName": "Academic Guide"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "attributes": {
+    "title": { "type": "string", "required": true },
+    "guide_pdf": { "type": "media", "multiple": false, "allowedTypes": ["files"], "required": true },
+    "description": { "type": "text" }
+  }
+}

@@ -11,6 +11,9 @@ node_modules/
 # Local secrets - never commit
 includes/config.local.php
 
+# Generated nav cache (see includes/navigation.php) — rebuilt automatically
+includes/cache/
+
 # --- Strapi CMS (cms/) ---
 cms/node_modules
 cms/.tmp

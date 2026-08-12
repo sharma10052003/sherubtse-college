@@ -18,10 +18,12 @@ if (!defined('SHERUBTSE_INIT')) {
 }
 
 require_once __DIR__ . '/../models/Faculty.php';
+require_once __DIR__ . '/../models/Department.php';
 
 $d = $department;
 $grouped = stc_get_faculty_grouped(['department' => $d['slug']]);
 $members = array_merge($grouped['heads'], $grouped['groups'][0]['members'] ?? []);
+$programmes = stc_get_department_programmes($d['slug']);
 
 $heroStyle = '--stc-dept-overlay-opacity:' . (max(0, min(100, (int) $d['overlay_opacity'])) / 100) . ';';
 if (!empty($d['theme_color'])) {
@@ -39,7 +41,7 @@ if (!empty($d['theme_color'])) {
     <div class="max-w-(--container-page) mx-auto px-4 md:px-8 py-3 text-sm flex items-center gap-2 text-ink-soft">
       <a href="<?php echo htmlspecialchars(BASE_URL, ENT_QUOTES, 'UTF-8'); ?>" class="hover:text-gold transition-colors">Home</a>
       <span aria-hidden="true">/</span>
-      <a href="<?php echo htmlspecialchars(BASE_URL . 'about/faculty', ENT_QUOTES, 'UTF-8'); ?>" class="hover:text-gold transition-colors">Faculty</a>
+      <a href="<?php echo htmlspecialchars(BASE_URL . 'departments', ENT_QUOTES, 'UTF-8'); ?>" class="hover:text-gold transition-colors">Departments</a>
       <span aria-hidden="true">/</span>
       <span class="text-ink font-medium"><?php echo htmlspecialchars($d['department_name'], ENT_QUOTES, 'UTF-8'); ?></span>
     </div>
@@ -107,6 +109,34 @@ if (!empty($d['theme_color'])) {
           <p class="stc-faculty-prose"><?php echo nl2br(htmlspecialchars($d['mission'], ENT_QUOTES, 'UTF-8')); ?></p>
         </div>
       <?php endif; ?>
+    </div>
+  </section>
+  <?php endif; ?>
+
+  <!-- Programmes offered -->
+  <?php if ($programmes): ?>
+  <section class="stc-faculty-grid-section py-14 md:py-20" aria-labelledby="stcDeptProgrammesTitle">
+    <div class="max-w-(--container-page) mx-auto px-4 md:px-8">
+      <p class="stc-faculty-section-eyebrow"><i class="bi bi-mortarboard-fill" aria-hidden="true"></i> Programmes</p>
+      <h2 id="stcDeptProgrammesTitle" class="font-(family-name:--font-display) text-2xl md:text-3xl text-ink mb-8" data-reveal>Programmes Offered</h2>
+
+      <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <?php foreach ($programmes as $p): ?>
+          <a href="<?php echo htmlspecialchars(BASE_URL . 'programmes/' . rawurlencode($p['slug'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>"
+             class="group block rounded-(--radius-lg) overflow-hidden border border-line bg-white shadow-sm hover:shadow-lg transition-shadow p-6" data-reveal>
+            <?php if (!empty($p['level'])): ?>
+              <span class="inline-block text-xs font-semibold uppercase tracking-wide text-gold mb-2"><?php echo htmlspecialchars(ucfirst($p['level']), ENT_QUOTES, 'UTF-8'); ?></span>
+            <?php endif; ?>
+            <h3 class="font-(family-name:--font-display) text-lg text-ink mb-2 group-hover:text-gold transition-colors"><?php echo htmlspecialchars($p['programme_name'] ?? '', ENT_QUOTES, 'UTF-8'); ?></h3>
+            <?php if (!empty($p['short_description'])): ?>
+              <p class="text-ink-soft text-sm line-clamp-2 mb-3"><?php echo htmlspecialchars($p['short_description'], ENT_QUOTES, 'UTF-8'); ?></p>
+            <?php endif; ?>
+            <?php if (!empty($p['duration']) || !empty($p['degree_type'])): ?>
+              <p class="text-xs text-ink-soft"><?php echo htmlspecialchars(trim(($p['degree_type'] ?? '') . (!empty($p['degree_type']) && !empty($p['duration']) ? ' · ' : '') . ($p['duration'] ?? ''), ' '), ENT_QUOTES, 'UTF-8'); ?></p>
+            <?php endif; ?>
+          </a>
+        <?php endforeach; ?>
+      </div>
     </div>
   </section>
   <?php endif; ?>
