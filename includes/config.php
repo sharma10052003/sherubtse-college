@@ -203,19 +203,23 @@ $stc_nav = [
         'mega'  => true,
         'columns' => [
             [
-                'heading' => 'Programmes',
-                'links' => [
-                    ['label' => 'Undergraduate Programmes', 'url' => '/academics/undergraduate', 'icon' => 'bi-mortarboard'],
-                    ['label' => 'Postgraduate Programmes',  'url' => '/academics/postgraduate',  'icon' => 'bi-award'],
-                    ['label' => 'Academic Calendar',        'url' => '/academics/calendar',      'icon' => 'bi-calendar3'],
-                ],
+                // 'dynamic' => 'departments' tells navigation.php to fill
+                // these links in at render time from the real department
+                // list (cached — see stc_get_cached_nav_departments() in
+                // navigation.php) instead of from this static array. Only
+                // department names belong here — never programme names.
+                'heading' => 'Departments',
+                'dynamic' => 'departments',
+                'links' => [],
             ],
             [
-                'heading' => 'Departments',
+                'heading' => 'Academic Resources',
                 'links' => [
-                    ['label' => 'Humanities & Social Sciences', 'url' => '/departments/humanities', 'icon' => 'bi-journal-text'],
-                    ['label' => 'Commerce',                      'url' => '/departments/commerce',   'icon' => 'bi-graph-up'],
-                    ['label' => 'Science & Mathematics',         'url' => '/departments/science',    'icon' => 'bi-clipboard-pulse'],
+                    ['label' => 'Browse All Programmes',    'url' => '/programmes',                          'icon' => 'bi-mortarboard'],
+                    ['label' => 'Academic Calendar',        'url' => '/academics/calendar',                  'icon' => 'bi-calendar3'],
+                    ['label' => 'Academic Guide',           'url' => '/academics/guide',                     'icon' => 'bi-book'],
+                    ['label' => 'Reassessment Timetable',   'url' => '/academics/reassessment-timetable',    'icon' => 'bi-clipboard-check'],
+                    ['label' => 'Programme Timetable',      'url' => '/academics/timetable',                 'icon' => 'bi-calendar-week'],
                 ],
             ],
         ],

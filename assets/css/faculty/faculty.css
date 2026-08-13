@@ -297,6 +297,8 @@
   gap: 10px;
 }
 .stc-faculty-dept-heading i { color: var(--stc-gold); }
+.stc-faculty-dept-heading a { color: inherit; text-decoration: none; }
+.stc-faculty-dept-heading a:hover { color: var(--stc-gold); text-decoration: underline; }
 
 /* ---- Not-found ---- */
 .stc-faculty-notfound { padding: var(--stc-space-8) var(--stc-space-4); text-align: center; }

@@ -1,0 +1,185 @@
+/* =============================================================
+   DEPARTMENT HERO — cinematic, per-department landing page hero.
+   Layered stack (bg image -> optional video -> canvas motif ->
+   overlay -> content), config-driven from Strapi per department
+   (see includes/pages/department.php and assets/js/faculty/
+   department-hero.js). Independent from the lighter "ambient"
+   .stc-faculty-bgfx system used on the directory listing page.
+   ============================================================= */
+
+.stc-dept-hero {
+  position: relative;
+  min-height: 86vh;
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
+  background: #0d0a09; /* near-black base so nothing flashes white before layers paint */
+  isolation: isolate;
+}
+
+/* ---- Layer 1: static background image ---- */
+.stc-dept-hero__bg-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+}
+.stc-dept-hero__bg-img--mobile { display: none; }
+.stc-dept-hero.has-mobile-bg .stc-dept-hero__bg-img--mobile {
+  display: none; /* still desktop-hidden by default; the media query below flips it */
+}
+
+/* ---- Layer 2: optional video (muted/looped, faded in once playing) ---- */
+.stc-dept-hero__bg-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 1;
+  opacity: 0;
+  transition: opacity 1.4s ease;
+}
+.stc-dept-hero__bg-video.is-playing { opacity: 0.5; }
+
+/* ---- Layer 3: canvas motif ---- */
+.stc-dept-hero__canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 2;
+  display: block;
+}
+.stc-dept-hero__canvas.is-hidden { display: none; }
+
+/* ---- Layer 4: gradient/dark overlay — keeps content readable regardless
+   of what's animating underneath; darkness driven by --stc-dept-overlay-opacity
+   (0-1, set inline per department from Strapi's overlay_opacity field). ---- */
+.stc-dept-hero__overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  background:
+    linear-gradient(180deg,
+      rgba(13, 10, 9, calc(var(--stc-dept-overlay-opacity, 0.6) * 0.55)) 0%,
+      rgba(13, 10, 9, var(--stc-dept-overlay-opacity, 0.6)) 60%,
+      rgba(13, 10, 9, calc(var(--stc-dept-overlay-opacity, 0.6) + 0.22)) 100%),
+    linear-gradient(90deg, rgba(13, 10, 9, 0.55) 0%, transparent 60%);
+}
+
+/* ---- Layer 5: content ---- */
+.stc-dept-hero__content {
+  position: relative;
+  z-index: 4;
+  padding-block: 14vh 9vh;
+  width: 100%;
+  color: #fff;
+}
+.stc-dept-hero__eyebrow {
+  display: inline-block;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: var(--stc-fs-sm);
+  font-weight: 700;
+  color: var(--stc-dept-accent, var(--stc-gold-light));
+  margin-bottom: var(--stc-space-4);
+}
+.stc-dept-hero__title {
+  font-family: var(--stc-font-display);
+  font-size: clamp(2.1rem, 5vw, 4rem);
+  line-height: 1.08;
+  max-width: 900px;
+  text-shadow: 0 4px 30px rgba(0, 0, 0, 0.45);
+}
+.stc-dept-hero__desc {
+  margin-top: var(--stc-space-5);
+  max-width: 640px;
+  font-size: var(--stc-fs-md);
+  color: rgba(255, 255, 255, 0.82);
+  line-height: var(--stc-lh-base);
+}
+.stc-dept-hero__meta {
+  margin-top: var(--stc-space-6);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--stc-space-4);
+}
+.stc-dept-hero__meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--stc-fs-sm);
+  color: rgba(255, 255, 255, 0.88);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  padding: 8px 16px;
+  border-radius: 999px;
+  backdrop-filter: blur(6px);
+}
+.stc-dept-hero__meta-item i { color: var(--stc-dept-accent, var(--stc-gold)); }
+
+/* ---- Mobile: swap in the dedicated mobile background (if the admin set
+   one) and hide the canvas entirely — otherwise the canvas keeps running,
+   just at a lower particle/node count set by department-hero.js. ---- */
+@media (max-width: 767px) {
+  .stc-dept-hero { min-height: 68vh; }
+  .stc-dept-hero__content { padding-block: 10vh 6vh; }
+  .stc-dept-hero.has-mobile-bg .stc-dept-hero__bg-img:not(.stc-dept-hero__bg-img--mobile) { display: none; }
+  .stc-dept-hero.has-mobile-bg .stc-dept-hero__bg-img--mobile { display: block; }
+  .stc-dept-hero.has-mobile-bg .stc-dept-hero__canvas,
+  .stc-dept-hero.has-mobile-bg .stc-dept-hero__bg-video { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stc-dept-hero__bg-video { display: none; }
+}
+
+/* =============================================================
+   Canvas motif palettes. department-hero.js reads these via
+   getComputedStyle so the JS doesn't hardcode colors — swapping
+   theme_color in Strapi (or overriding here) changes the motif
+   color without touching JS.
+   ============================================================= */
+.stc-dept-hero[data-animation-type="network-data"] {
+  --stc-dept-motif-primary: var(--stc-dept-accent, #c7962c);
+  --stc-dept-motif-secondary: #7a1b2b;
+  --stc-dept-motif-line: rgba(199, 150, 44, 0.35);
+}
+.stc-dept-hero[data-animation-type="particles-math"] {
+  --stc-dept-motif-primary: var(--stc-dept-accent, #e8c97a);
+  --stc-dept-motif-secondary: #ffffff;
+}
+.stc-dept-hero[data-animation-type="flowing-gradient"] {
+  --stc-dept-motif-primary: var(--stc-dept-accent, #7a1b2b);
+  --stc-dept-motif-secondary: #c7962c;
+}
+
+/* "flowing-gradient" is CSS-only (no canvas needed — a moving gradient +
+   blurred blobs is GPU-composited via transform/opacity and cheaper than
+   a rAF loop for what's meant to be the simple/generic fallback motif).
+   department-hero.js hides the empty canvas for this type. */
+.stc-dept-hero[data-animation-type="flowing-gradient"] .stc-dept-hero__overlay {
+  background:
+    linear-gradient(125deg,
+      color-mix(in srgb, var(--stc-dept-motif-primary) 55%, transparent) 0%,
+      color-mix(in srgb, var(--stc-dept-motif-secondary) 45%, transparent) 35%,
+      rgba(13, 10, 9, 0.75) 70%,
+      rgba(13, 10, 9, 0.9) 100%),
+    radial-gradient(circle at 20% 30%, color-mix(in srgb, var(--stc-dept-motif-primary) 40%, transparent), transparent 55%),
+    radial-gradient(circle at 82% 70%, color-mix(in srgb, var(--stc-dept-motif-secondary) 35%, transparent), transparent 55%);
+  background-size: 260% 260%, 100% 100%, 100% 100%;
+  animation: stc-dept-gradient-flow 24s ease infinite;
+}
+@keyframes stc-dept-gradient-flow {
+  0%   { background-position: 0% 50%, 0 0, 0 0; }
+  50%  { background-position: 100% 50%, 0 0, 0 0; }
+  100% { background-position: 0% 50%, 0 0, 0 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .stc-dept-hero[data-animation-type="flowing-gradient"] .stc-dept-hero__overlay { animation: none; }
+}
+
+/* ---- Vision/Mission section reuses .stc-faculty-prose / .stc-faculty-section-eyebrow from faculty.css ---- */

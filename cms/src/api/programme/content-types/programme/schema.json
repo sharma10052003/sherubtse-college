@@ -1,0 +1,47 @@
+{
+  "kind": "collectionType",
+  "collectionName": "programmes",
+  "info": {
+    "singularName": "programme",
+    "pluralName": "programmes",
+    "displayName": "Programme"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "attributes": {
+    "programme_name": { "type": "string", "required": true },
+    "slug": { "type": "uid", "targetField": "programme_name" },
+    "department": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::department.department",
+      "inversedBy": "programmes"
+    },
+    "level": { "type": "enumeration", "enum": ["undergraduate", "postgraduate"], "required": true },
+    "degree_type": { "type": "string" },
+    "duration": { "type": "string" },
+    "short_description": { "type": "text" },
+    "overview": { "type": "text" },
+    "about": { "type": "text" },
+    "objectives": { "type": "text" },
+    "learning_outcomes": { "type": "text" },
+    "curriculum": {
+      "type": "component",
+      "repeatable": true,
+      "component": "programme.curriculum-block"
+    },
+    "admission_requirements": { "type": "text" },
+    "career_opportunities": { "type": "text" },
+    "further_study": { "type": "text" },
+    "faqs": {
+      "type": "component",
+      "repeatable": true,
+      "component": "shared.faq-item"
+    },
+    "hero_image": { "type": "media", "multiple": false, "allowedTypes": ["images"] },
+    "display_order": { "type": "integer", "default": 0 },
+    "seo_title": { "type": "string" },
+    "seo_description": { "type": "text" }
+  }
+}

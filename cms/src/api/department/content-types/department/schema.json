@@ -30,6 +30,28 @@
       "relation": "oneToMany",
       "target": "api::faculty-profile.faculty-profile",
       "mappedBy": "department"
-    }
+    },
+
+    "short_description": { "type": "text" },
+    "seo_title": { "type": "string" },
+    "seo_description": { "type": "text" },
+    "programmes": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::programme.programme",
+      "mappedBy": "department"
+    },
+
+    "hero_video": { "type": "media", "multiple": false, "allowedTypes": ["videos"] },
+    "animation_type": {
+      "type": "enumeration",
+      "enum": ["network-data", "particles-math", "flowing-gradient", "none"],
+      "default": "flowing-gradient"
+    },
+    "animation_intensity": { "type": "enumeration", "enum": ["low", "medium", "high"], "default": "medium" },
+    "animation_speed": { "type": "enumeration", "enum": ["slow", "normal", "fast"], "default": "normal" },
+    "overlay_opacity": { "type": "integer", "default": 60, "min": 0, "max": 100 },
+    "animation_enabled": { "type": "boolean", "default": true },
+    "mobile_background": { "type": "media", "multiple": false, "allowedTypes": ["images"] }
   }
 }

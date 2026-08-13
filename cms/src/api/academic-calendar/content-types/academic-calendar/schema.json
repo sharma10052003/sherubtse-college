@@ -1,0 +1,18 @@
+{
+  "kind": "singleType",
+  "collectionName": "academic_calendar",
+  "info": {
+    "singularName": "academic-calendar",
+    "pluralName": "academic-calendars",
+    "displayName": "Academic Calendar"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "attributes": {
+    "title": { "type": "string", "required": true },
+    "academic_year": { "type": "string" },
+    "calendar_pdf": { "type": "media", "multiple": false, "allowedTypes": ["files"] },
+    "description": { "type": "text" }
+  }
+}

@@ -184,7 +184,14 @@ $gridColsClass = ['2' => 'sm:grid-cols-2', '3' => 'sm:grid-cols-2 lg:grid-cols-3
         <?php if ($grouped['groups']): ?>
           <?php foreach ($grouped['groups'] as $group): ?>
             <div class="stc-faculty-dept-group">
-              <h3 class="stc-faculty-dept-heading"><i class="bi bi-building" aria-hidden="true"></i> <?php echo htmlspecialchars($group['name'], ENT_QUOTES, 'UTF-8'); ?></h3>
+              <h3 class="stc-faculty-dept-heading">
+                <i class="bi bi-building" aria-hidden="true"></i>
+                <?php if (!empty($group['slug'])): ?>
+                  <a href="<?php echo htmlspecialchars(BASE_URL . 'departments/' . rawurlencode($group['slug']), ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($group['name'], ENT_QUOTES, 'UTF-8'); ?></a>
+                <?php else: ?>
+                  <?php echo htmlspecialchars($group['name'], ENT_QUOTES, 'UTF-8'); ?>
+                <?php endif; ?>
+              </h3>
               <div class="grid gap-6 <?php echo htmlspecialchars($gridColsClass, ENT_QUOTES, 'UTF-8'); ?>">
                 <?php foreach ($group['members'] as $f): ?>
                   <?php include __DIR__ . '/../partials/faculty-card.php'; ?>

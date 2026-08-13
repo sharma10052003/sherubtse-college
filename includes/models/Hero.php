@@ -22,7 +22,7 @@ function stc_hero_defaults(): array
         'cta1_text'       => 'Apply Now',
         'cta1_url'        => '/admissions/apply',
         'cta2_text'       => 'Explore Programmes',
-        'cta2_url'        => '/academics/undergraduate',
+        'cta2_url'        => '/programmes',
         'background_type' => 'gradient',
         'media_path'      => null,
         'overlay_style'   => 'maroon',

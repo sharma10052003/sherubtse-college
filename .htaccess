@@ -13,10 +13,32 @@ RewriteCond %{REQUEST_FILENAME} -f [OR]
 RewriteCond %{REQUEST_FILENAME} -d
 RewriteRule ^ - [L]
 
+# /about/faculty/department/{slug} -> about/department.php?slug={slug}
+# (must come before the person-profile rule below, since both match a
+# single path segment after /about/faculty/ and "department" would
+# otherwise be swallowed as if it were a person's slug). about/department.php
+# is now just a 301 redirect to /departments/{slug} (the canonical URL) —
+# kept only so old links/bookmarks don't break.
+RewriteRule ^about/faculty/department/([^/]+)/?$ about/department.php?slug=$1 [L,QSA]
+
 # /about/faculty/{slug} -> about/faculty-profile.php?slug={slug}
 # (the bare /about/faculty directory index is handled by the generic
 # rule below, since about/faculty.php exists as a real file).
 RewriteRule ^about/faculty/([^/]+)/?$ about/faculty-profile.php?slug=$1 [L,QSA]
+
+# /departments -> departments/index.php (directory grid)
+RewriteRule ^departments/?$ departments/index.php [L,QSA]
+
+# /departments/{slug} -> departments/detail.php?slug={slug} (canonical
+# department landing page — see about/department.php above for the
+# retired /about/faculty/department/{slug} URL this replaces).
+RewriteRule ^departments/([^/]+)/?$ departments/detail.php?slug=$1 [L,QSA]
+
+# /programmes -> programmes/index.php (catalogue)
+RewriteRule ^programmes/?$ programmes/index.php [L,QSA]
+
+# /programmes/{slug} -> programmes/detail.php?slug={slug}
+RewriteRule ^programmes/([^/]+)/?$ programmes/detail.php?slug=$1 [L,QSA]
 
 # /path/to/page -> /path/to/page.php, only if that file actually exists.
 RewriteCond %{REQUEST_FILENAME}\.php -f
