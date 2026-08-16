@@ -9,7 +9,7 @@ if (!defined('SHERUBTSE_INIT')) {
     exit('Forbidden');
 }
 ?>
-<link rel="stylesheet" href="<?php echo BASE_URL; ?>assets/css/footer.css">
+<link rel="stylesheet" href="<?php echo stc_asset('assets/css/footer.css'); ?>">
 
 <!-- ===================== Sherubtse College — Footer ===================== -->
 <footer class="stc-footer">

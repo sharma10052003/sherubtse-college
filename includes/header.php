@@ -26,9 +26,9 @@ if (!defined('SHERUBTSE_INIT')) {
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
-<link rel="stylesheet" href="<?php echo BASE_URL; ?>assets/css/variables.css">
-<link rel="stylesheet" href="<?php echo BASE_URL; ?>assets/css/navigation.css">
-<link rel="stylesheet" href="<?php echo BASE_URL; ?>assets/css/header.css">
+<link rel="stylesheet" href="<?php echo stc_asset('assets/css/variables.css'); ?>">
+<link rel="stylesheet" href="<?php echo stc_asset('assets/css/navigation.css'); ?>">
+<link rel="stylesheet" href="<?php echo stc_asset('assets/css/header.css'); ?>">
 
 <a class="stc-skip-link" href="#main-content">Skip to main content</a>
 
@@ -100,8 +100,8 @@ if (!defined('SHERUBTSE_INIT')) {
 <!-- Spacer matched to header height so sticky positioning doesn't jump page content -->
 <div class="stc-header-spacer" aria-hidden="true"></div>
 
-<script src="<?php echo BASE_URL; ?>assets/js/header.js" defer></script>
-<script src="<?php echo BASE_URL; ?>assets/js/navigation.js" defer></script>
-<script src="<?php echo BASE_URL; ?>assets/js/mobile-menu.js" defer></script>
-<script src="<?php echo BASE_URL; ?>assets/js/search.js" defer></script>
+<script src="<?php echo stc_asset('assets/js/header.js'); ?>" defer></script>
+<script src="<?php echo stc_asset('assets/js/navigation.js'); ?>" defer></script>
+<script src="<?php echo stc_asset('assets/js/mobile-menu.js'); ?>" defer></script>
+<script src="<?php echo stc_asset('assets/js/search.js'); ?>" defer></script>
 <!-- =================== /Sherubtse College — Header ==================== -->

@@ -1,0 +1,25 @@
+{
+  "kind": "collectionType",
+  "collectionName": "contact_people",
+  "info": {
+    "singularName": "contact-person",
+    "pluralName": "contact-people",
+    "displayName": "Contact Directory Entry"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "attributes": {
+    "full_name": { "type": "string", "required": true },
+    "role_title": { "type": "string", "required": true },
+    "group_title": { "type": "string", "required": true },
+    "group_icon": { "type": "string" },
+    "group_order": { "type": "integer", "default": 0 },
+    "display_order": { "type": "integer", "default": 0 },
+    "photo": { "type": "media", "multiple": false, "allowedTypes": ["images"] },
+    "email": { "type": "email" },
+    "phone": { "type": "string" },
+    "office_location": { "type": "string" },
+    "bio": { "type": "text" }
+  }
+}

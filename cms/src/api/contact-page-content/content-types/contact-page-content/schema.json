@@ -1,0 +1,47 @@
+{
+  "kind": "singleType",
+  "collectionName": "contact_page_content",
+  "info": {
+    "singularName": "contact-page-content",
+    "pluralName": "contact-page-contents",
+    "displayName": "Contact Page Content"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {
+    "i18n": {
+      "localized": true
+    }
+  },
+  "attributes": {
+    "hero_eyebrow": {
+      "type": "string",
+      "default": "Get in Touch",
+      "pluginOptions": { "i18n": { "localized": true } }
+    },
+    "hero_title": {
+      "type": "string",
+      "required": true,
+      "default": "Contact Us",
+      "pluginOptions": { "i18n": { "localized": true } }
+    },
+    "hero_subtitle": {
+      "type": "text",
+      "pluginOptions": { "i18n": { "localized": true } }
+    },
+    "office_hours": {
+      "type": "string",
+      "pluginOptions": { "i18n": { "localized": true } }
+    },
+    "general_email": {
+      "type": "email"
+    },
+    "general_phone": {
+      "type": "string"
+    },
+    "map_url": {
+      "type": "string"
+    }
+  }
+}

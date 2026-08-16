@@ -11,6 +11,17 @@
    needs to change — every component consumes these variables.
    ============================================================= */
 
+/* Global overflow guard — loaded on every page. Several components
+   (mega menus, wide hero backgrounds, etc.) use absolute positioning
+   that can extend past the viewport edge; since off-screen elements
+   still count toward document scrollWidth even while invisible, a
+   single misaligned component anywhere on the site can otherwise
+   introduce a permanent horizontal scrollbar site-wide. */
+html, body {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
 :root {
   /* ---- Brand colour ------------------------------------------------ */
   --stc-maroon:        #7A1B2B; /* primary brand — robe maroon */

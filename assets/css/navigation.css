@@ -21,22 +21,21 @@
 }
 .stc-nav__item {
   position: relative;
-  flex: 1;
 }
 .stc-nav__link {
   display: inline-flex;
-  width: 100%;
   justify-content: center;
   align-items: center;
   gap: 6px;
   background: none;
   border: none;
   font: inherit;
-  font-size: var(--stc-fs-sm);
+  font-size: 0.9375rem;
   font-weight: 600;
   color: var(--stc-ink);
   text-decoration: none;
-  padding: var(--stc-space-3) var(--stc-space-3);
+  white-space: nowrap;
+  padding: var(--stc-space-3) var(--stc-space-4);
   border-radius: var(--stc-radius-sm);
   cursor: pointer;
   position: relative;
@@ -66,7 +65,8 @@
   top: calc(100% + 10px);
   left: 50%;
   transform: translate(-50%, 8px);
-  min-width: 480px;
+  max-width: calc(100vw - 2 * var(--stc-space-5));
+  min-width: min(480px, calc(100vw - 2 * var(--stc-space-5)));
   background: var(--stc-paper-alt);
   border: 1px solid var(--stc-line);
   border-radius: var(--stc-radius-md);
@@ -83,11 +83,17 @@
   pointer-events: auto;
   transform: translate(-50%, 0);
 }
+/* JS (navigation.js positionMega) sets an inline transform on edge
+   items to pull the panel back on-screen; this open-state rule must
+   not outrank that inline override, which it can't since inline
+   styles always win over class selectors regardless of source order. */
 .stc-mega__inner {
   display: grid;
   grid-auto-flow: column;
   gap: var(--stc-space-6);
   padding: var(--stc-space-5);
+  max-width: 100%;
+  overflow-x: auto;
 }
 .stc-mega__heading {
   font-family: var(--stc-font-display);

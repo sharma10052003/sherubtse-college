@@ -23,11 +23,40 @@
     });
   }
 
+  // Mega panels are centered under their trigger by default, which
+  // pushes them past the viewport edge for triggers near either side
+  // (e.g. the last item or two before the header's search/menu
+  // buttons). Nudge the panel back on-screen with an extra transform
+  // offset rather than letting it clip or force a scrollbar.
+  function positionMega(item) {
+    var mega = item.querySelector('.stc-mega');
+    if (!mega) return;
+    mega.style.transform = ''; // back to the CSS default (centered) to measure cleanly
+    var margin = 16;
+    var rect = mega.getBoundingClientRect();
+    var overflowRight = rect.right - (window.innerWidth - margin);
+    var overflowLeft = margin - rect.left;
+    var shift = 0;
+    if (overflowRight > 0) shift = -overflowRight;
+    else if (overflowLeft > 0) shift = overflowLeft;
+    if (shift !== 0) {
+      mega.style.transform = 'translate(calc(-50% + ' + shift + 'px), 0)';
+    }
+  }
+
   function openItem(item) {
     closeAll(item);
     item.classList.add('is-open');
     var trigger = item.querySelector('.stc-nav__trigger');
     if (trigger) trigger.setAttribute('aria-expanded', 'true');
+    // Deferred a tick: measuring/overriding transform in the same tick
+    // as the is-open class toggle races the CSS transition that toggle
+    // just started, and the browser locks the property to the
+    // transition's value until it resolves, silently ignoring our
+    // inline override. A minimal setTimeout (unlike rAF, not paused on
+    // a backgrounded/non-composited tab) is enough for the toggle's
+    // initial style flush to land before we read and adjust position.
+    setTimeout(function () { positionMega(item); }, 0);
   }
 
   function closeItem(item) {
@@ -109,5 +138,12 @@
   // Close all on Escape anywhere
   document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape') closeAll();
+  });
+
+  // Re-clamp the open panel's position if the viewport is resized
+  // (e.g. rotating a tablet) while it's open.
+  window.addEventListener('resize', function () {
+    var openItem = document.querySelector('.stc-nav__item--has-menu.is-open');
+    if (openItem) positionMega(openItem);
   });
 })();

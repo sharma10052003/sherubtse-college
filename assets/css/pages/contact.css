@@ -1,0 +1,237 @@
+/* =============================================================
+   PAGE — Contact Us (/contact)
+   Scoped under .stc-contact. Who's in the directory is entirely
+   admin-defined (includes/models/Contact.php) — a flat grid of
+   click-to-flip cards, no grouping/tabs.
+   ============================================================= */
+
+.stc-contact, .stc-contact * {
+  box-sizing: border-box;
+}
+
+.stc-contact {
+  font-family: var(--stc-font-body);
+  color: var(--stc-ink);
+  background: var(--stc-paper);
+  overflow-x: hidden;
+}
+
+/* ---- Reveal animation (shared convention, see history.css) ---------------- */
+[data-reveal] {
+  transition: opacity var(--stc-dur-slow) var(--stc-ease), transform var(--stc-dur-slow) var(--stc-ease);
+  transition-delay: calc(var(--i, 0) * 90ms);
+}
+[data-reveal]:not(.is-visible) { opacity: 0; transform: translateY(24px); }
+[data-reveal].is-visible { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal] { transition: none; opacity: 1; transform: none; }
+}
+
+/* ---- Hero ------------------------------------------------------------------- */
+.stc-contact__hero {
+  position: relative;
+  padding: var(--stc-space-8) var(--stc-space-5) var(--stc-space-7);
+  background: linear-gradient(135deg, var(--stc-maroon), var(--stc-maroon-dark));
+  color: #fff;
+  text-align: center;
+}
+.stc-contact__hero-inner { position: relative; max-width: 46rem; margin: 0 auto; }
+.stc-contact__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--stc-space-2);
+  font-size: var(--stc-fs-sm);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--stc-gold-light);
+  margin: 0 0 var(--stc-space-3);
+}
+.stc-contact__hero-inner h1 {
+  font-family: var(--stc-font-display);
+  font-size: clamp(2.1rem, 5vw, 3.25rem);
+  margin: 0 0 var(--stc-space-3);
+}
+.stc-contact__hero-subtitle {
+  font-size: var(--stc-fs-md);
+  line-height: var(--stc-lh-base);
+  color: rgba(255,255,255,0.85);
+  margin: 0 0 var(--stc-space-5);
+}
+.stc-contact__quickbar {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--stc-space-3);
+  margin: 0;
+  padding: 0;
+}
+.stc-contact__quickbar a,
+.stc-contact__quickbar span {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--stc-space-2);
+  padding: var(--stc-space-2) var(--stc-space-4);
+  border-radius: 999px;
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.22);
+  color: #fff;
+  font-size: var(--stc-fs-sm);
+  font-weight: 600;
+  text-decoration: none;
+  backdrop-filter: blur(6px);
+  transition: background var(--stc-dur-base) var(--stc-ease), transform var(--stc-dur-base) var(--stc-ease);
+}
+.stc-contact__quickbar a:hover,
+.stc-contact__quickbar a:focus-visible {
+  background: rgba(255,255,255,0.22);
+  transform: translateY(-1px);
+}
+.stc-contact__quickbar i { color: var(--stc-gold-light); }
+
+/* ---- Directory layout -------------------------------------------------------- */
+.stc-contact__directory {
+  max-width: var(--stc-container);
+  margin: 0 auto;
+  padding: var(--stc-space-8) var(--stc-space-5);
+}
+.stc-contact__empty {
+  text-align: center;
+  color: var(--stc-ink-soft);
+  padding: var(--stc-space-8) 0;
+}
+
+/* ---- Cards -------------------------------------------------------------
+   Flex + centered wrap (not CSS Grid's auto-fill columns) so a handful
+   of cards sit centered/evenly spaced as a group instead of stacking
+   at the left edge of an empty grid row — 1 card centers alone, 2-3
+   center as a row with equal gaps, and once there are enough to fill
+   a row it wraps into an ordinary centered grid. */
+.stc-contact__grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--stc-space-5);
+}
+
+.stc-contact__card {
+  perspective: 1400px;
+  flex: 0 1 260px;
+  height: 300px;
+  cursor: pointer;
+  border-radius: var(--stc-radius-lg);
+}
+.stc-contact__card:focus-visible { outline: 2px solid var(--stc-focus); outline-offset: 4px; }
+
+.stc-contact__card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transition: transform var(--stc-dur-slow) var(--stc-ease);
+  transform-style: preserve-3d;
+}
+.stc-contact__card.is-flipped .stc-contact__card-inner { transform: rotateY(180deg); }
+
+.stc-contact__card-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border-radius: var(--stc-radius-lg);
+  border: 1px solid var(--stc-line);
+  background: var(--stc-paper);
+  box-shadow: var(--stc-shadow-sm);
+  padding: var(--stc-space-5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+.stc-contact__card:hover .stc-contact__card-face { box-shadow: var(--stc-shadow-md); }
+
+.stc-contact__card-face--back {
+  transform: rotateY(180deg);
+  justify-content: center;
+  background: var(--stc-paper-alt);
+}
+
+.stc-contact__photo {
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--stc-maroon-tint);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: var(--stc-space-4);
+  border: 2px solid var(--stc-gold-light);
+  flex-shrink: 0;
+}
+.stc-contact__photo img { width: 100%; height: 100%; object-fit: cover; }
+.stc-contact__photo i { font-size: 2.25rem; color: var(--stc-maroon); }
+
+.stc-contact__name {
+  font-family: var(--stc-font-display);
+  font-size: var(--stc-fs-md);
+  color: var(--stc-ink);
+  margin: 0 0 0.15em;
+}
+.stc-contact__name--back { margin-top: 0; }
+.stc-contact__role {
+  font-size: var(--stc-fs-sm);
+  color: var(--stc-ink-soft);
+  margin: 0 0 var(--stc-space-3);
+}
+
+.stc-contact__hint {
+  margin-top: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--stc-space-2);
+  font-size: var(--stc-fs-xs);
+  font-weight: 600;
+  color: var(--stc-gold);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.stc-contact__details {
+  list-style: none;
+  margin: 0 0 var(--stc-space-3);
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--stc-space-2);
+  width: 100%;
+}
+.stc-contact__details li { display: flex; justify-content: center; }
+.stc-contact__details a,
+.stc-contact__details span {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--stc-space-2);
+  font-size: var(--stc-fs-sm);
+  color: var(--stc-ink);
+  text-decoration: none;
+  word-break: break-word;
+}
+.stc-contact__details a:hover,
+.stc-contact__details a:focus-visible { color: var(--stc-maroon); }
+.stc-contact__details i { color: var(--stc-maroon); flex-shrink: 0; }
+
+.stc-contact__bio {
+  font-size: var(--stc-fs-xs);
+  color: var(--stc-ink-soft);
+  line-height: var(--stc-lh-base);
+  margin: 0 0 var(--stc-space-3);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stc-contact__card-inner { transition: none; }
+}
+
+@media (max-width: 480px) {
+  .stc-contact__card { flex-basis: 100%; max-width: 340px; }
+}

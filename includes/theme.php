@@ -166,4 +166,4 @@ $heroOverlayAlpha = max(0, min(100, (int) $s['hero_overlay_opacity'])) / 100;
      section scripts check this alongside prefers-reduced-motion. */
   window.STC_ANIMATIONS_ENABLED = <?php echo $animationsEnabled ? 'true' : 'false'; ?>;
 </script>
-<script src="<?php echo BASE_URL; ?>assets/js/homepage/theme-toggle.js" defer></script>
+<script src="<?php echo stc_asset('assets/js/homepage/theme-toggle.js'); ?>" defer></script>

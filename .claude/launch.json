@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "strapi-cms",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "develop", "--prefix", "cms"],
+      "port": 1337
+    }
+  ]
+}

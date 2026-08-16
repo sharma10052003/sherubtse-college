@@ -83,6 +83,20 @@ if (is_file(__DIR__ . '/config.local.php')) {
 if (!defined('STRAPI_API_TOKEN')) define('STRAPI_API_TOKEN', 'REPLACE_WITH_READ_ONLY_API_TOKEN');
 
 /**
+ * Local CSS/JS URL with a filemtime()-based cache-busting query string,
+ * so browsers pick up a new deploy immediately instead of serving a
+ * stale cached copy indefinitely. Falls back to an unversioned URL if
+ * the file can't be stat'd (e.g. a typo'd path) rather than fataling.
+ */
+function stc_asset(string $relativePath): string
+{
+    $relativePath = ltrim($relativePath, '/');
+    $full = __DIR__ . '/../' . $relativePath;
+    $ver = is_file($full) ? filemtime($full) : false;
+    return BASE_URL . $relativePath . ($ver !== false ? '?v=' . $ver : '');
+}
+
+/**
  * Resolves an internal path (e.g. "/about/history") so links work
  * correctly whether the site is hosted at the domain root or inside a
  * subfolder like this local /sherubtse-college/ copy — the same
