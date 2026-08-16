@@ -754,6 +754,107 @@ export interface ApiCampusLifeItemCampusLifeItem
   };
 }
 
+export interface ApiContactPageContentContactPageContent
+  extends Struct.SingleTypeSchema {
+  collectionName: 'contact_page_content';
+  info: {
+    displayName: 'Contact Page Content';
+    pluralName: 'contact-page-contents';
+    singularName: 'contact-page-content';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  pluginOptions: {
+    i18n: {
+      localized: true;
+    };
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    general_email: Schema.Attribute.Email;
+    general_phone: Schema.Attribute.String;
+    hero_eyebrow: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }> &
+      Schema.Attribute.DefaultTo<'Get in Touch'>;
+    hero_subtitle: Schema.Attribute.Text &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    hero_title: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }> &
+      Schema.Attribute.DefaultTo<'Contact Us'>;
+    locale: Schema.Attribute.String;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::contact-page-content.contact-page-content'
+    >;
+    map_url: Schema.Attribute.String;
+    office_hours: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    publishedAt: Schema.Attribute.DateTime;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiContactPersonContactPerson
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'contact_people';
+  info: {
+    displayName: 'Contact Directory Entry';
+    pluralName: 'contact-people';
+    singularName: 'contact-person';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    bio: Schema.Attribute.Text;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    display_order: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
+    email: Schema.Attribute.Email;
+    full_name: Schema.Attribute.String & Schema.Attribute.Required;
+    group_icon: Schema.Attribute.String;
+    group_order: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
+    group_title: Schema.Attribute.String & Schema.Attribute.Required;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::contact-person.contact-person'
+    > &
+      Schema.Attribute.Private;
+    office_location: Schema.Attribute.String;
+    phone: Schema.Attribute.String;
+    photo: Schema.Attribute.Media<'images'>;
+    publishedAt: Schema.Attribute.DateTime;
+    role_title: Schema.Attribute.String & Schema.Attribute.Required;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiCtaContentCtaContent extends Struct.SingleTypeSchema {
   collectionName: 'cta_content';
   info: {
@@ -3218,6 +3319,8 @@ declare module '@strapi/strapi' {
       'api::award.award': ApiAwardAward;
       'api::campus-life-content.campus-life-content': ApiCampusLifeContentCampusLifeContent;
       'api::campus-life-item.campus-life-item': ApiCampusLifeItemCampusLifeItem;
+      'api::contact-page-content.contact-page-content': ApiContactPageContentContactPageContent;
+      'api::contact-person.contact-person': ApiContactPersonContactPerson;
       'api::cta-content.cta-content': ApiCtaContentCtaContent;
       'api::department.department': ApiDepartmentDepartment;
       'api::events-content.events-content': ApiEventsContentEventsContent;

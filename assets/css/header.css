@@ -50,9 +50,6 @@
   font-size: var(--stc-fs-sm);
   flex: 1;
 }
-.stc-nav__link {
-    font-size: 18px;
-}
 .stc-announcement__link {
   color: var(--stc-gold-light);
   font-weight: 600;
@@ -324,12 +321,18 @@
   .stc-topbar__links li:nth-child(n+4) { display: none; } /* keep topbar tidy on tablet */
   .stc-nav { display: none; }
   .stc-header__menu-btn { display: inline-flex; }
+  /* 120px was sized for the desktop glass header bleed effect; on a
+     tablet-or-narrower single-row header it's taller than the header
+     itself, so it gets clipped. Match it to the header's own height. */
+  .stc-brand__logo { width: 56px; height: 56px; }
 }
 @media (max-width: 767px) {
   .stc-topbar__affiliation span { display: none; }
   .stc-topbar__links { gap: var(--stc-space-3); }
   .stc-topbar__links li:nth-child(n+3) { display: none; }
   .stc-header__inner { padding: 0 var(--stc-space-4); gap: var(--stc-space-3); }
+  .stc-brand__logo { width: 44px; height: 44px; }
+  .stc-brand__name { font-size: 1.25rem; }
   .stc-brand__tagline { display: none; }
   .stc-back-to-top { right: var(--stc-space-4); bottom: var(--stc-space-4); width: 44px; height: 44px; }
 }
