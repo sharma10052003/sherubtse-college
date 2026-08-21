@@ -1,0 +1,18 @@
+---
+import ListingTemplate from '../../../components/templates/ListingTemplate.astro';
+import { getAllEvents } from '../../../lib/content/events';
+
+const events = await getAllEvents();
+const rows = events.map((e) => ({
+  id: e.id,
+  href: `/news-notices/events/${e.id}`,
+  date: new Date(e.starts_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+  title: e.title,
+  meta: e.venue ?? undefined,
+}));
+---
+<ListingTemplate
+  title="Events"
+  breadcrumb={[{ label: 'Home', url: '/' }, { label: 'News & Notices', url: '/news-notices' }, { label: 'Events', url: '/news-notices/events' }]}
+  rows={rows}
+/>

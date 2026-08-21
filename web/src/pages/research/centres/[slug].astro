@@ -1,0 +1,27 @@
+---
+import UnitTemplate from '../../../components/templates/UnitTemplate.astro';
+import { getResearchCentreBySlug } from '../../../lib/content/research-centres';
+import { strapiGet } from '../../../lib/strapi';
+import type { StrapiListResponse } from '../../../lib/strapi';
+
+export async function getStaticPaths() {
+  const res = await strapiGet<StrapiListResponse<{ slug: string }>>('research-centres', {
+    fields: ['slug'],
+    pagination: { pageSize: 100 },
+  });
+  return (res?.data ?? []).map((c) => ({ params: { slug: c.slug } }));
+}
+
+const { slug } = Astro.params;
+const unit = await getResearchCentreBySlug(slug as string);
+if (!unit) return Astro.redirect('/research/centres', 404);
+---
+<UnitTemplate
+  unit={unit}
+  breadcrumb={[
+    { label: 'Home', url: '/' },
+    { label: 'Research', url: '/research' },
+    { label: 'Research Centres', url: '/research/centres' },
+    { label: unit.name, url: `/research/centres/${unit.slug}` },
+  ]}
+/>

@@ -1,0 +1,21 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import { getUnits } from '../../../lib/content/units';
+
+const units = await getUnits('administrative');
+---
+<Layout title="Administrative Units" description="Administrative offices at Sherubtse College.">
+  <div class="wrap" style="padding-top:var(--s5);padding-bottom:var(--s7)">
+    <nav class="breadcrumb" aria-label="Breadcrumb"><a href="/">Home</a> › <a href="/about">About</a> › <span class="current">Administrative Units</span></nav>
+    <h1 class="h1">Administrative Units</h1>
+    <div class="cards" style="margin-top:var(--s6)">
+      {units.length > 0 ? units.map((u) => (
+        <div class="card">
+          <h3 class="h3">{u.name}</h3>
+          {u.description && <p>{u.description}</p>}
+          <a href={`/about/units/${u.slug}`} class="btn-quiet">View unit</a>
+        </div>
+      )) : <p class="small">Administrative units will appear here once added in Strapi.</p>}
+    </div>
+  </div>
+</Layout>

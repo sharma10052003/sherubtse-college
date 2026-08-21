@@ -1,0 +1,220 @@
+/**
+ * Design tokens — authored directly from the Visual Style Guide (v1.4),
+ * not reinterpreted. Every value here has a section reference in that
+ * document; if a value needs to change, change it there first.
+ */
+:root {
+  /* Navy — structure (Style Guide §02) */
+  --navy: #0d1b4b;       /* masthead, footer, primary buttons — 16.5:1 on white */
+  --navy-mid: #1a2f7a;   /* every text link on light backgrounds — 12.1:1 on white */
+  --navy-deep: #081234;  /* footer base, hover state on navy — never text */
+
+  /* Gold — surfaces and marks only, never body text except gold-ink (§02) */
+  --gold: #f0b429;       /* quick-access strip, kemar gold half, focus rings — 1.9:1 on white, NEVER text */
+  --gold-light: #ffd166; /* highlighted tags/rows — always with black text on it */
+  --gold-deep: #c98f12;  /* borders/hairlines on gold surfaces — 2.8:1 on white, NEVER text */
+  --gold-ink: #8a6410;   /* the ONLY gold permitted as text on white — eyebrows, link hover — 5.4:1 */
+
+  /* Neutral — carries the page (§02) */
+  --ink: #14161b;        /* all body text and headings — 17.6:1 on white */
+  --ink-2: #4a4f58;      /* dates, captions, metadata, ledes — 8.6:1 on white */
+  --paper: #ffffff;
+  --paper-2: #fafafc;    /* alternate section bands — neutral near-white, not a navy tint */
+  --line: #e3e5ea;       /* rules, borders, table dividers */
+  --line-strong: #c6cad2;
+
+  /* Reserved states (§02) — not design colours, meaning-only */
+  --urgent: #b3261e;     /* deadlines inside 7 days, closures, corrections — 6.5:1 */
+  --open: #1e6b4f;       /* applications open, registration live, results published — 6.4:1 */
+
+  /* Type (§03) */
+  --font-serif: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --font-sans: "Public Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+
+  /* Spacing scale (§04) — 4px base, nothing sits off this scale */
+  --s1: 4px;
+  --s2: 8px;
+  --s3: 12px;
+  --s4: 16px;
+  --s5: 24px;
+  --s6: 32px;
+  --s7: 48px;
+  --s8: 64px;
+  --s9: 96px;
+
+  /* Layout (§04) */
+  --measure: 68ch;       /* reading width, all running text, every screen size */
+  --content-width: 1140px;
+  --radius: 0px;         /* radius everywhere is 0 — no rounded corners, no drop shadows */
+
+  /* Breakpoints (§04) — TWO only. Referenced in comments; CSS custom
+     properties can't be used inside @media, so these are documented here
+     and hardcoded at the two call sites (760px, 1024px). */
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 16px; /* mobile base — never below 16px, see Style Guide §09 (auto-zoom on input focus) */
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Base (mobile) is the only unconditional rule set here. Every adjustment
+   for a wider viewport is added with min-width — never max-width — per
+   Style Guide §09: "This is visible in a diff." */
+@media (min-width: 760px) {
+  body {
+    font-size: 17px;
+  }
+}
+
+p {
+  margin: 0 0 var(--s4);
+}
+
+a {
+  color: var(--navy-mid);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+}
+a:hover {
+  color: var(--gold-ink);
+  text-decoration-thickness: 2px;
+}
+
+:focus-visible {
+  outline: 3px solid var(--gold);
+  outline-offset: 2px;
+}
+
+/* ---------- Type scale (§03) ---------- */
+.h-display {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: clamp(2.2rem, 5vw, 3.4rem);
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+  margin: 0;
+  color: var(--ink);
+}
+.h1 {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: clamp(1.9rem, 4vw, 2.5rem);
+  line-height: 1.18;
+  letter-spacing: -0.015em;
+  margin: 0;
+  color: var(--ink);
+}
+.h2 {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  font-size: 1.6rem;
+  line-height: 1.25;
+  margin: 0;
+  color: var(--ink);
+}
+.h3 {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  font-size: 1.22rem;
+  line-height: 1.3;
+  margin: 0;
+  color: var(--ink);
+}
+.eyebrow {
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gold-ink);
+  margin: 0 0 var(--s2);
+}
+.lede {
+  font-size: 1.18rem;
+  line-height: 1.6;
+  color: var(--ink-2);
+}
+.small {
+  font-size: 0.86rem;
+  line-height: 1.55;
+  color: var(--ink-2);
+}
+.mono-num {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Layout helpers ---------- */
+.wrap {
+  max-width: var(--content-width);
+  margin: 0 auto;
+  padding: 0 var(--s5);
+}
+.narrow {
+  max-width: var(--measure);
+}
+.band {
+  padding: var(--s7) 0; /* mobile base */
+}
+@media (min-width: 760px) {
+  .band {
+    padding: var(--s8) 0;
+  }
+}
+.band-alt {
+  background: var(--paper-2);
+}
+.band-navy {
+  background: var(--navy);
+  color: #fff;
+}
+.band-navy .h1,
+.band-navy .h2,
+.band-navy .h3,
+.band-navy .h-display {
+  color: #fff;
+}
+.band-navy .lede,
+.band-navy .small {
+  color: #c9d0e4;
+}
+.band-navy a {
+  color: var(--gold-light);
+}
+
+/* ---------- The kemar mark — identity, in forty pixels (§02) ---------- */
+.kemar {
+  display: block;
+  width: 56px;
+  height: 3px;
+  border: 0;
+  margin: 0 0 var(--s4);
+  background: linear-gradient(to right, var(--gold) 0, var(--gold) 18px, var(--navy) 18px, var(--navy) 100%);
+}
+.kemar-on-navy {
+  background: linear-gradient(to right, var(--gold) 0, var(--gold) 18px, #ffffff 18px, #ffffff 100%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}

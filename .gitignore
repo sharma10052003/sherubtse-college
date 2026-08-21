@@ -16,7 +16,11 @@ includes/cache/
 
 # --- Strapi CMS (cms/) ---
 cms/node_modules
-cms/.tmp
+# cms/.tmp/data.db is intentionally tracked (see decision log) so the
+# actual content data travels with the repo, not just the schema —
+# everything else in .tmp (locks/cache) still isn't.
+cms/.tmp/*
+!cms/.tmp/data.db
 cms/dist
 cms/build
 cms/.env
@@ -26,9 +30,16 @@ cms/.strapi-updater.json
 cms/.strapi-cloud.json
 cms/license.txt
 cms/exports
-cms/public/uploads/*
-!cms/public/uploads/.gitkeep
+# cms/public/uploads/* is intentionally tracked too, for the same reason —
+# schema without the actual uploaded media is only half the picture.
 cms/*.log
 cms/.tsbuildinfo
 cms/.eslintcache
 cms/coverage
+
+# --- Astro frontend (web/) ---
+web/node_modules
+web/dist
+web/.astro
+web/.env
+web/npm-debug.log*

@@ -1,0 +1,35 @@
+---
+import { getSiteSettings } from '../lib/content/site-settings';
+
+const settings = await getSiteSettings();
+const year = new Date().getFullYear();
+---
+<footer class="site-footer">
+  <div class="wrap">
+    <div>
+      <h3>Contact</h3>
+      <ul>
+        {settings.address && <li>{settings.address}</li>}
+        {(settings.phones ?? []).map((p) => <li><a href={`tel:${p}`}>{p}</a></li>)}
+        {(settings.official_emails ?? []).map((e) => <li><a href={`mailto:${e}`}>{e}</a></li>)}
+      </ul>
+    </div>
+    {settings.footer_link_groups.map((group) => (
+      <div>
+        <h3>{group.label}</h3>
+        <ul>
+          {group.links.map((l) => <li><a href={l.url}>{l.label}</a></li>)}
+        </ul>
+      </div>
+    ))}
+    <div>
+      <h3>Subdomains</h3>
+      <ul>
+        {settings.subdomain_links.map((l) => <li><a href={l.url} target="_blank" rel="noopener">{l.label}</a></li>)}
+      </ul>
+    </div>
+  </div>
+  <div class="wrap bottom">
+    <p>&copy; {year} Sherubtse College, Royal University of Bhutan. <a href="/about/privacy">Privacy</a> &middot; <a href="/about/accessibility">Accessibility</a></p>
+  </div>
+</footer>

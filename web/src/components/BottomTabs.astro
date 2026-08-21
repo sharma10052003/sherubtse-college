@@ -1,0 +1,20 @@
+---
+// Mobile-only fixed bottom tab bar — Stack doc §08 / Style Guide §09's
+// named exception to "no fixed elements". Exactly four destinations: the
+// site's highest-frequency actions, not a second copy of the main menu.
+const currentPath = Astro.url.pathname;
+const tabs = [
+  { href: '/', label: 'Home', icon: '\u{1F3E0}' },
+  { href: '/academics/calendar', label: 'Calendar', icon: '\u{1F4C5}' },
+  { href: '/news-notices/announcements', label: 'Notices', icon: '\u{1F4F0}' },
+  { href: '/search', label: 'Search', icon: '\u{2315}' },
+];
+---
+<nav class="bottom-tabs" aria-label="Quick access">
+  {tabs.map((tab) => (
+    <a href={tab.href} aria-current={currentPath === tab.href ? 'page' : undefined}>
+      <span class="icon" aria-hidden="true">{tab.icon}</span>
+      <span>{tab.label}</span>
+    </a>
+  ))}
+</nav>

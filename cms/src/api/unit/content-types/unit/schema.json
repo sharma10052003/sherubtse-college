@@ -1,0 +1,36 @@
+{
+  "kind": "collectionType",
+  "collectionName": "units",
+  "info": {
+    "singularName": "unit",
+    "pluralName": "units",
+    "displayName": "Unit"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "attributes": {
+    "name": { "type": "string", "required": true, "unique": true },
+    "short_name": { "type": "string" },
+    "slug": { "type": "uid", "targetField": "name" },
+    "kind": {
+      "type": "enumeration",
+      "enum": ["academic", "administrative", "research_centre", "student_body"],
+      "required": true
+    },
+    "description": { "type": "richtext" },
+    "head": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::person.person"
+    },
+    "content_owner": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::person.person"
+    },
+    "contact": { "type": "component", "repeatable": false, "component": "shared.contact-block" },
+    "photo": { "type": "media", "multiple": false, "allowedTypes": ["images"] },
+    "last_reviewed": { "type": "date", "required": true }
+  }
+}

@@ -1,0 +1,34 @@
+---
+import UnitTemplate from '../../../components/templates/UnitTemplate.astro';
+import { getUnits, getUnitBySlug } from '../../../lib/content/units';
+import { getProgrammesByUnit } from '../../../lib/content/programmes';
+import { getPeopleByUnit } from '../../../lib/content/people';
+import { getNoticesByUnit } from '../../../lib/content/notices';
+
+export async function getStaticPaths() {
+  const units = await getUnits('academic');
+  return units.map((u) => ({ params: { slug: u.slug } }));
+}
+
+const { slug } = Astro.params;
+const unit = await getUnitBySlug(slug as string);
+if (!unit) return Astro.redirect('/academics/departments', 404);
+
+const [programmes, people, notices] = await Promise.all([
+  getProgrammesByUnit(unit.slug),
+  getPeopleByUnit(unit.slug),
+  getNoticesByUnit(unit.slug),
+]);
+---
+<UnitTemplate
+  unit={unit}
+  programmes={programmes}
+  people={people}
+  notices={notices}
+  breadcrumb={[
+    { label: 'Home', url: '/' },
+    { label: 'Academics', url: '/academics' },
+    { label: 'Departments', url: '/academics/departments' },
+    { label: unit.name, url: `/academics/departments/${unit.slug}` },
+  ]}
+/>

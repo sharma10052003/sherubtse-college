@@ -1,0 +1,122 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { getCalendarEntries } from '../../lib/content/calendar-entries';
+
+const entries = await getCalendarEntries();
+
+const groups = new Map<string, typeof entries>();
+for (const e of entries) {
+  const d = new Date(e.starts_on);
+  const key = d.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+  if (!groups.has(key)) groups.set(key, []);
+  groups.get(key)!.push(e);
+}
+
+const categories: { value: string; label: string }[] = [
+  { value: 'registration', label: 'Registration' },
+  { value: 'examination', label: 'Examinations' },
+  { value: 'results', label: 'Results' },
+  { value: 'holiday', label: 'Holidays' },
+];
+
+function formatRange(entry: (typeof entries)[number]) {
+  const start = new Date(entry.starts_on);
+  const startStr = start.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+  if (!entry.ends_on) return startStr;
+  const end = new Date(entry.ends_on);
+  return `${startStr} – ${end.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`;
+}
+---
+<Layout title="Academic Calendar" description="Registration windows, examinations, results and holidays at Sherubtse College.">
+  <div class="wrap" style="padding-top:var(--s5);padding-bottom:var(--s7)">
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <a href="/">Home</a> › <a href="/academics">Academics</a> › <span class="current">Academic Calendar</span>
+    </nav>
+    <h1 class="h1">Academic Calendar</h1>
+
+    <div class="filters" style="margin-top:var(--s5)" id="calendarFilters">
+      <button type="button" class="chip" data-category="" aria-pressed="true">All</button>
+      {categories.map((c) => <button type="button" class="chip" data-category={c.value} aria-pressed="false">{c.label}</button>)}
+    </div>
+
+    {entries.length === 0 && <p class="small">The academic calendar has not been published yet.</p>}
+
+    {[...groups.entries()].map(([month, monthEntries]) => (
+      <div class="cal-month" data-month>
+        <h2 class="cal-month-heading">{month.toUpperCase()}</h2>
+        {monthEntries.map((e) => (
+          <div class="cal-row" data-category={e.category}>
+            <span class="cal-date">{formatRange(e)}</span>
+            <span>{e.title}</span>
+            <span class="cal-tag">{e.category}</span>
+          </div>
+        ))}
+      </div>
+    ))}
+  </div>
+</Layout>
+
+<script>
+  const buttons = document.querySelectorAll<HTMLButtonElement>('#calendarFilters .chip');
+  const rows = document.querySelectorAll<HTMLElement>('.cal-row');
+  buttons.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      buttons.forEach((b) => b.setAttribute('aria-pressed', 'false'));
+      btn.setAttribute('aria-pressed', 'true');
+      const category = btn.dataset.category;
+      rows.forEach((row) => {
+        row.style.display = !category || row.dataset.category === category ? '' : 'none';
+      });
+      document.querySelectorAll<HTMLElement>('[data-month]').forEach((month) => {
+        const visible = [...month.querySelectorAll<HTMLElement>('.cal-row')].some((r) => r.style.display !== 'none');
+        month.style.display = visible ? '' : 'none';
+      });
+    });
+  });
+</script>
+
+<style>
+  .cal-month-heading {
+    font-weight: 700;
+    font-size: 0.9rem;
+    letter-spacing: 0.08em;
+    color: var(--navy);
+    margin: var(--s6) 0 var(--s3);
+    padding-bottom: var(--s2);
+    border-bottom: 2px solid var(--navy);
+  }
+  .cal-row {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 4px;
+    padding: var(--s3) 0;
+    border-bottom: 1px solid var(--line);
+  }
+  @media (min-width: 760px) {
+    .cal-row {
+      grid-template-columns: 110px 1fr 130px;
+      align-items: center;
+      gap: var(--s3);
+    }
+  }
+  .cal-date {
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    font-size: 0.85rem;
+  }
+  .cal-tag {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    border: 1px solid var(--line-strong);
+    padding: 3px 8px;
+    text-align: center;
+    justify-self: start;
+  }
+  @media (min-width: 760px) {
+    .cal-tag {
+      justify-self: end;
+    }
+  }
+</style>

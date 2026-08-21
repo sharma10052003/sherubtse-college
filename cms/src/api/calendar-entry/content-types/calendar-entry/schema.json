@@ -1,0 +1,41 @@
+{
+  "kind": "collectionType",
+  "collectionName": "calendar_entries",
+  "info": {
+    "singularName": "calendar-entry",
+    "pluralName": "calendar-entries",
+    "displayName": "Calendar Entry"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "attributes": {
+    "title": { "type": "string", "required": true },
+    "category": {
+      "type": "enumeration",
+      "enum": ["registration", "examination", "results", "fee", "holiday", "convocation"],
+      "required": true
+    },
+    "starts_on": { "type": "date", "required": true },
+    "ends_on": { "type": "date" },
+    "applies_to_programmes": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::programme.programme"
+    },
+    "related_announcement": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::notice.notice"
+    },
+    "owning_unit": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::unit.unit",
+      "required": true
+    },
+    "last_reviewed": { "type": "date", "required": true },
+    "review_interval": { "type": "enumeration", "enum": ["semester", "annual", "none"], "default": "none" },
+    "expires_at": { "type": "datetime" }
+  }
+}

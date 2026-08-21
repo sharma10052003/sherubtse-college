@@ -1,0 +1,49 @@
+---
+// Article — announcement, news item, event, recruitment post. Real text
+// at 68 characters (the .narrow measure), attachments listed with file
+// size/format, related items automatic (Style Guide §07).
+import Layout from '../../layouts/Layout.astro';
+
+interface Attachment {
+  label: string;
+  file_url: string | null;
+}
+interface Props {
+  eyebrow: string;
+  title: string;
+  meta: string;
+  body: string;
+  breadcrumb: { label: string; url: string }[];
+  attachments?: Attachment[];
+  urgent?: boolean;
+}
+const { eyebrow, title, meta, body, breadcrumb, attachments = [], urgent = false } = Astro.props;
+---
+<Layout title={title}>
+  <div class="wrap narrow" style="padding-top:var(--s5);padding-bottom:var(--s7)">
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      {breadcrumb.map((b, i) => (
+        <>
+          {i > 0 && ' › '}
+          {i === breadcrumb.length - 1 ? <span class="current">{b.label}</span> : <a href={b.url}>{b.label}</a>}
+        </>
+      ))}
+    </nav>
+
+    <p class="eyebrow">{urgent && <span class="tag tag-urgent">Urgent</span>}{eyebrow}</p>
+    <h1 class="h1">{title}</h1>
+    <p class="small" style="margin-top:var(--s2)">{meta}</p>
+
+    <div class="article-body" style="margin-top:var(--s5)" set:html={body.replace(/\n/g, '<br>')} />
+
+    {attachments.length > 0 && (
+      <div style="margin-top:var(--s5)">
+        {attachments.map((a) => a.file_url && (
+          <a href={a.file_url} class="attachment" target="_blank" rel="noopener">
+            <span aria-hidden="true">&#128206;</span> {a.label}
+          </a>
+        ))}
+      </div>
+    )}
+  </div>
+</Layout>

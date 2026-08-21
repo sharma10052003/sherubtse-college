@@ -1,0 +1,98 @@
+---
+// Listing — announcements, news, events, recruitment, documents. Filters,
+// not a menu (Style Guide §07). Paginated at 20, "Load more" rather than
+// infinite scroll (Stack doc §08) — this first pass renders everything
+// server-side and reveals more via a plain <details>-free JS toggle kept
+// under the page's JS budget exception for listings.
+import Layout from '../../layouts/Layout.astro';
+
+interface Row {
+  id: number | string;
+  href: string;
+  date?: string;
+  title: string;
+  tags?: string[];
+  meta?: string;
+}
+interface Props {
+  title: string;
+  breadcrumb: { label: string; url: string }[];
+  rows: Row[];
+  archiveHref?: string;
+}
+const { title, breadcrumb, rows, archiveHref } = Astro.props;
+const PAGE_SIZE = 20;
+const firstPage = rows.slice(0, PAGE_SIZE);
+const rest = rows.slice(PAGE_SIZE);
+---
+<Layout title={title}>
+  <div class="wrap" style="padding-top:var(--s5);padding-bottom:var(--s7)">
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      {breadcrumb.map((b, i) => (
+        <>
+          {i > 0 && ' › '}
+          {i === breadcrumb.length - 1 ? <span class="current">{b.label}</span> : <a href={b.url}>{b.label}</a>}
+        </>
+      ))}
+    </nav>
+    <h1 class="h1">{title}</h1>
+
+    <div id="listingRows" style="margin-top:var(--s6)">
+      {firstPage.map((r) => (
+        <div class="notice-row">
+          {r.date && <span class="date">{r.date}</span>}
+          <div>
+            <p class="title"><a href={r.href}>{r.title}</a></p>
+            {(r.tags?.length || r.meta) && (
+              <p class="meta">
+                {r.tags?.map((t) => <span class="tag">{t}</span>)}
+                {r.meta}
+              </p>
+            )}
+          </div>
+        </div>
+      ))}
+    </div>
+
+    {rest.length > 0 && (
+      <template id="moreRows">
+        {rest.map((r) => (
+          <div class="notice-row">
+            {r.date && <span class="date">{r.date}</span>}
+            <div>
+              <p class="title"><a href={r.href}>{r.title}</a></p>
+              {(r.tags?.length || r.meta) && (
+                <p class="meta">
+                  {r.tags?.map((t) => <span class="tag">{t}</span>)}
+                  {r.meta}
+                </p>
+              )}
+            </div>
+          </div>
+        ))}
+      </template>
+    )}
+
+    {rows.length === 0 && <p class="small" style="margin-top:var(--s4)">Nothing to show here yet.</p>}
+
+    <div style="margin-top:var(--s5);display:flex;gap:var(--s5);align-items:center">
+      {rest.length > 0 && <button type="button" id="loadMoreBtn" class="btn btn-secondary">Load more</button>}
+      {archiveHref && <a href={archiveHref} class="btn-quiet">Archive</a>}
+    </div>
+  </div>
+</Layout>
+
+<script>
+  // The one interactive listing behaviour this page needs — "Load more",
+  // not infinite scroll (Stack doc §08). Well under the JS budget
+  // exception for listings.
+  const btn = document.getElementById('loadMoreBtn');
+  const more = document.getElementById('moreRows') as HTMLTemplateElement | null;
+  const target = document.getElementById('listingRows');
+  btn?.addEventListener('click', () => {
+    if (more && target) {
+      target.appendChild(more.content.cloneNode(true));
+    }
+    btn.remove();
+  });
+</script>

@@ -1,0 +1,58 @@
+---
+// Self-hosted, Latin subset only, three weights max per family (Style
+// Guide §03/§09): Public Sans 400/500/700, Source Serif 4 600/700 (the
+// serif is heading-only, so 400 isn't needed).
+import '@fontsource/public-sans/latin-400.css';
+import '@fontsource/public-sans/latin-500.css';
+import '@fontsource/public-sans/latin-700.css';
+import '@fontsource/source-serif-4/latin-600.css';
+import '@fontsource/source-serif-4/latin-700.css';
+import '../styles/tokens.css';
+import '../styles/components.css';
+import '../styles/layout.css';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import BottomTabs from '../components/BottomTabs.astro';
+
+interface Props {
+  title: string;
+  description?: string;
+}
+const { title, description } = Astro.props;
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title} — Sherubtse College</title>
+    {description && <meta name="description" content={description} />}
+    <link rel="icon" href="/favicon.svg" />
+  </head>
+  <body>
+    <a href="#main-content" class="sr-only-focusable">Skip to main content</a>
+    <Header />
+    <main id="main-content">
+      <slot />
+    </main>
+    <Footer />
+    <BottomTabs />
+  </body>
+</html>
+
+<style is:global>
+  .sr-only-focusable {
+    position: absolute;
+    left: -9999px;
+    top: 0;
+    background: var(--gold);
+    color: var(--ink);
+    padding: var(--s3) var(--s4);
+    z-index: 100;
+    font-weight: 700;
+  }
+  .sr-only-focusable:focus {
+    left: var(--s4);
+    top: var(--s4);
+  }
+</style>

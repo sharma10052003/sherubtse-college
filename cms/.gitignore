@@ -65,11 +65,12 @@ $RECYCLE.BIN/
 # Logs and databases
 ############################
 
-.tmp
+# .tmp/data.db is intentionally tracked — see docs/DECISIONS.md #019 —
+# so real content data travels with the repo, not just the schema.
+.tmp/*
+!.tmp/data.db
 *.log
 *.sql
-*.sqlite
-*.sqlite3
 
 
 ############################
@@ -80,8 +81,7 @@ $RECYCLE.BIN/
 ssl
 .idea
 nbproject
-public/uploads/*
-!public/uploads/.gitkeep
+# public/uploads/* is intentionally tracked — see docs/DECISIONS.md #019.
 .tsbuildinfo
 .eslintcache
 

@@ -585,6 +585,47 @@ export interface ApiAcademicsItemAcademicsItem
   };
 }
 
+export interface ApiAlumniAlumni extends Struct.CollectionTypeSchema {
+  collectionName: 'alumni_profiles';
+  info: {
+    displayName: 'Alumni';
+    pluralName: 'alumnis';
+    singularName: 'alumni';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    consent: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    current_role: Schema.Attribute.String;
+    full_name: Schema.Attribute.String & Schema.Attribute.Required;
+    graduation_year: Schema.Attribute.Integer;
+    last_reviewed: Schema.Attribute.Date & Schema.Attribute.Required;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::alumni.alumni'
+    > &
+      Schema.Attribute.Private;
+    owning_unit: Schema.Attribute.Relation<'manyToOne', 'api::unit.unit'> &
+      Schema.Attribute.Required;
+    photo: Schema.Attribute.Media<'images'>;
+    programme: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::programme.programme'
+    >;
+    publishedAt: Schema.Attribute.DateTime;
+    slug: Schema.Attribute.UID<'full_name'>;
+    story: Schema.Attribute.RichText;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiAnnouncementAnnouncement
   extends Struct.CollectionTypeSchema {
   collectionName: 'announcements';
@@ -675,6 +716,64 @@ export interface ApiAwardAward extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiCalendarEntryCalendarEntry
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'calendar_entries';
+  info: {
+    displayName: 'Calendar Entry';
+    pluralName: 'calendar-entries';
+    singularName: 'calendar-entry';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    applies_to_programmes: Schema.Attribute.Relation<
+      'manyToMany',
+      'api::programme.programme'
+    >;
+    category: Schema.Attribute.Enumeration<
+      [
+        'registration',
+        'examination',
+        'results',
+        'fee',
+        'holiday',
+        'convocation',
+      ]
+    > &
+      Schema.Attribute.Required;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    ends_on: Schema.Attribute.Date;
+    expires_at: Schema.Attribute.DateTime;
+    last_reviewed: Schema.Attribute.Date & Schema.Attribute.Required;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::calendar-entry.calendar-entry'
+    > &
+      Schema.Attribute.Private;
+    owning_unit: Schema.Attribute.Relation<'manyToOne', 'api::unit.unit'> &
+      Schema.Attribute.Required;
+    publishedAt: Schema.Attribute.DateTime;
+    related_announcement: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::notice.notice'
+    >;
+    review_interval: Schema.Attribute.Enumeration<
+      ['semester', 'annual', 'none']
+    > &
+      Schema.Attribute.DefaultTo<'none'>;
+    starts_on: Schema.Attribute.Date & Schema.Attribute.Required;
+    title: Schema.Attribute.String & Schema.Attribute.Required;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiCampusLifeContentCampusLifeContent
   extends Struct.SingleTypeSchema {
   collectionName: 'campus_life_content';
@@ -748,6 +847,46 @@ export interface ApiCampusLifeItemCampusLifeItem
           localized: true;
         };
       }>;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiClubClub extends Struct.CollectionTypeSchema {
+  collectionName: 'clubs';
+  info: {
+    displayName: 'Club';
+    pluralName: 'clubs';
+    singularName: 'club';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    category: Schema.Attribute.String;
+    coordinator: Schema.Attribute.Relation<'oneToOne', 'api::person.person'>;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    description: Schema.Attribute.RichText;
+    expires_at: Schema.Attribute.DateTime;
+    images: Schema.Attribute.Media<'images', true>;
+    is_active: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
+    last_reviewed: Schema.Attribute.Date & Schema.Attribute.Required;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<'oneToMany', 'api::club.club'> &
+      Schema.Attribute.Private;
+    name: Schema.Attribute.String & Schema.Attribute.Required;
+    owning_unit: Schema.Attribute.Relation<'manyToOne', 'api::unit.unit'> &
+      Schema.Attribute.Required;
+    publishedAt: Schema.Attribute.DateTime;
+    review_interval: Schema.Attribute.Enumeration<
+      ['semester', 'annual', 'none']
+    > &
+      Schema.Attribute.DefaultTo<'none'>;
+    slug: Schema.Attribute.UID<'name'>;
+    student_lead: Schema.Attribute.String;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -966,6 +1105,92 @@ export interface ApiDepartmentDepartment extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiDocumentDocument extends Struct.CollectionTypeSchema {
+  collectionName: 'documents';
+  info: {
+    displayName: 'Document';
+    pluralName: 'documents';
+    singularName: 'document';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    category: Schema.Attribute.Enumeration<
+      ['policy', 'form', 'timetable', 'guide', 'report', 'other']
+    >;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    effective_date: Schema.Attribute.Date;
+    expires_at: Schema.Attribute.DateTime;
+    file: Schema.Attribute.Media<'files'> & Schema.Attribute.Required;
+    is_current: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
+    last_reviewed: Schema.Attribute.Date & Schema.Attribute.Required;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::document.document'
+    > &
+      Schema.Attribute.Private;
+    owning_unit: Schema.Attribute.Relation<'manyToOne', 'api::unit.unit'> &
+      Schema.Attribute.Required;
+    publishedAt: Schema.Attribute.DateTime;
+    review_date: Schema.Attribute.Date;
+    review_interval: Schema.Attribute.Enumeration<
+      ['semester', 'annual', 'none']
+    > &
+      Schema.Attribute.DefaultTo<'none'>;
+    source_note: Schema.Attribute.Text;
+    title: Schema.Attribute.String & Schema.Attribute.Required;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    version: Schema.Attribute.String;
+  };
+}
+
+export interface ApiEventEvent extends Struct.CollectionTypeSchema {
+  collectionName: 'events';
+  info: {
+    displayName: 'Event';
+    pluralName: 'events';
+    singularName: 'event';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    description: Schema.Attribute.RichText;
+    ends_at: Schema.Attribute.DateTime;
+    expires_at: Schema.Attribute.DateTime & Schema.Attribute.Required;
+    last_reviewed: Schema.Attribute.Date & Schema.Attribute.Required;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<'oneToMany', 'api::event.event'> &
+      Schema.Attribute.Private;
+    open_to: Schema.Attribute.Enumeration<
+      ['public', 'students', 'staff', 'invited']
+    >;
+    owning_unit: Schema.Attribute.Relation<'manyToOne', 'api::unit.unit'> &
+      Schema.Attribute.Required;
+    publishedAt: Schema.Attribute.DateTime;
+    registration_link: Schema.Attribute.String;
+    review_interval: Schema.Attribute.Enumeration<
+      ['semester', 'annual', 'none']
+    > &
+      Schema.Attribute.DefaultTo<'none'>;
+    starts_at: Schema.Attribute.DateTime & Schema.Attribute.Required;
+    title: Schema.Attribute.String & Schema.Attribute.Required;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    venue: Schema.Attribute.String;
+  };
+}
+
 export interface ApiEventsContentEventsContent extends Struct.SingleTypeSchema {
   collectionName: 'events_content';
   info: {
@@ -1044,6 +1269,37 @@ export interface ApiEventsItemEventsItem extends Struct.CollectionTypeSchema {
           localized: true;
         };
       }>;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiExpertiseExpertise extends Struct.CollectionTypeSchema {
+  collectionName: 'expertise_areas';
+  info: {
+    displayName: 'Expertise';
+    pluralName: 'expertises';
+    singularName: 'expertise';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    description: Schema.Attribute.Text;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::expertise.expertise'
+    > &
+      Schema.Attribute.Private;
+    name: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Unique;
+    publishedAt: Schema.Attribute.DateTime;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -1167,6 +1423,51 @@ export interface ApiFacultySettingFacultySetting
     show_statistics: Schema.Attribute.Boolean &
       Schema.Attribute.DefaultTo<true>;
     student_count: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiFeatureFeature extends Struct.CollectionTypeSchema {
+  collectionName: 'features';
+  info: {
+    displayName: 'Feature';
+    pluralName: 'features';
+    singularName: 'feature';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    author: Schema.Attribute.Relation<'manyToOne', 'api::person.person'>;
+    author_name: Schema.Attribute.String;
+    body: Schema.Attribute.RichText & Schema.Attribute.Required;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    hero_image: Schema.Attribute.Media<'images'> & Schema.Attribute.Required;
+    last_reviewed: Schema.Attribute.Date & Schema.Attribute.Required;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::feature.feature'
+    > &
+      Schema.Attribute.Private;
+    owning_unit: Schema.Attribute.Relation<'manyToOne', 'api::unit.unit'> &
+      Schema.Attribute.Required;
+    publishedAt: Schema.Attribute.DateTime;
+    related_people: Schema.Attribute.Relation<
+      'manyToMany',
+      'api::person.person'
+    >;
+    related_units: Schema.Attribute.Relation<'manyToMany', 'api::unit.unit'>;
+    slug: Schema.Attribute.UID<'title'>;
+    standfirst: Schema.Attribute.Text & Schema.Attribute.Required;
+    theme: Schema.Attribute.Enumeration<
+      ['research', 'student_life', 'alumni', 'campus', 'history', 'people']
+    >;
+    title: Schema.Attribute.String & Schema.Attribute.Required;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -1867,6 +2168,37 @@ export interface ApiHomepageSectionHomepageSection
   };
 }
 
+export interface ApiHomepageHomepage extends Struct.SingleTypeSchema {
+  collectionName: 'homepage';
+  info: {
+    displayName: 'Homepage';
+    pluralName: 'homepages';
+    singularName: 'homepage';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    featured_selections: Schema.Attribute.Component<'shared.link-item', true>;
+    hero_images: Schema.Attribute.Media<'images', true>;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::homepage.homepage'
+    > &
+      Schema.Attribute.Private;
+    publishedAt: Schema.Attribute.DateTime;
+    quick_links: Schema.Attribute.Component<'shared.link-item', true>;
+    statement: Schema.Attribute.Text;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiMenuItemMenuItem extends Struct.CollectionTypeSchema {
   collectionName: 'menu_items';
   info: {
@@ -1916,6 +2248,34 @@ export interface ApiMenuItemMenuItem extends Struct.CollectionTypeSchema {
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     url: Schema.Attribute.String;
+  };
+}
+
+export interface ApiNavigationNavigation extends Struct.SingleTypeSchema {
+  collectionName: 'navigation';
+  info: {
+    displayName: 'Navigation';
+    pluralName: 'navigations';
+    singularName: 'navigation';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::navigation.navigation'
+    > &
+      Schema.Attribute.Private;
+    menu: Schema.Attribute.Component<'navigation.nav-item', true>;
+    publishedAt: Schema.Attribute.DateTime;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
   };
 }
 
@@ -1998,6 +2358,126 @@ export interface ApiNewsItemNewsItem extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiNewsNews extends Struct.CollectionTypeSchema {
+  collectionName: 'news_entries';
+  info: {
+    displayName: 'News';
+    pluralName: 'news-entries';
+    singularName: 'news';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    body: Schema.Attribute.RichText & Schema.Attribute.Required;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    date: Schema.Attribute.Date & Schema.Attribute.Required;
+    expires_at: Schema.Attribute.DateTime;
+    images: Schema.Attribute.Media<'images', true>;
+    last_reviewed: Schema.Attribute.Date & Schema.Attribute.Required;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<'oneToMany', 'api::news.news'> &
+      Schema.Attribute.Private;
+    owning_unit: Schema.Attribute.Relation<'manyToOne', 'api::unit.unit'> &
+      Schema.Attribute.Required;
+    publishedAt: Schema.Attribute.DateTime;
+    review_interval: Schema.Attribute.Enumeration<
+      ['semester', 'annual', 'none']
+    > &
+      Schema.Attribute.DefaultTo<'none'>;
+    tags: Schema.Attribute.String;
+    title: Schema.Attribute.String & Schema.Attribute.Required;
+    unit: Schema.Attribute.Relation<'manyToOne', 'api::unit.unit'>;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiNoticeNotice extends Struct.CollectionTypeSchema {
+  collectionName: 'notices';
+  info: {
+    displayName: 'Notice';
+    pluralName: 'notices';
+    singularName: 'notice';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    attachments: Schema.Attribute.Component<'shared.attachment', true>;
+    audience: Schema.Attribute.JSON;
+    body: Schema.Attribute.RichText & Schema.Attribute.Required;
+    category: Schema.Attribute.Enumeration<
+      ['admissions', 'registration', 'results', 'fees', 'tender', 'general']
+    > &
+      Schema.Attribute.Required;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    expires_at: Schema.Attribute.DateTime & Schema.Attribute.Required;
+    featured_for_international: Schema.Attribute.Boolean &
+      Schema.Attribute.DefaultTo<false>;
+    last_reviewed: Schema.Attribute.Date & Schema.Attribute.Required;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::notice.notice'
+    > &
+      Schema.Attribute.Private;
+    owning_unit: Schema.Attribute.Relation<'manyToOne', 'api::unit.unit'> &
+      Schema.Attribute.Required;
+    publish_at: Schema.Attribute.DateTime & Schema.Attribute.Required;
+    publishedAt: Schema.Attribute.DateTime;
+    review_interval: Schema.Attribute.Enumeration<
+      ['semester', 'annual', 'none']
+    > &
+      Schema.Attribute.DefaultTo<'none'>;
+    title: Schema.Attribute.String & Schema.Attribute.Required;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    urgency: Schema.Attribute.Enumeration<['normal', 'urgent']> &
+      Schema.Attribute.DefaultTo<'normal'>;
+  };
+}
+
+export interface ApiPagePage extends Struct.CollectionTypeSchema {
+  collectionName: 'pages';
+  info: {
+    displayName: 'Page';
+    pluralName: 'pages';
+    singularName: 'page';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    body: Schema.Attribute.RichText & Schema.Attribute.Required;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    last_reviewed: Schema.Attribute.Date & Schema.Attribute.Required;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<'oneToMany', 'api::page.page'> &
+      Schema.Attribute.Private;
+    owning_unit: Schema.Attribute.Relation<'manyToOne', 'api::unit.unit'> &
+      Schema.Attribute.Required;
+    publishedAt: Schema.Attribute.DateTime;
+    review_interval: Schema.Attribute.Enumeration<
+      ['semester', 'annual', 'none']
+    > &
+      Schema.Attribute.DefaultTo<'none'>;
+    slug: Schema.Attribute.UID<'title'>;
+    title: Schema.Attribute.String & Schema.Attribute.Required;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiPartnersContentPartnersContent
   extends Struct.SingleTypeSchema {
   collectionName: 'partners_content';
@@ -2067,6 +2547,60 @@ export interface ApiPartnersItemPartnersItem
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     url: Schema.Attribute.String;
+  };
+}
+
+export interface ApiPersonPerson extends Struct.CollectionTypeSchema {
+  collectionName: 'people';
+  info: {
+    displayName: 'Person';
+    pluralName: 'people';
+    singularName: 'person';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    bio: Schema.Attribute.Text &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 600;
+      }>;
+    contact_consent: Schema.Attribute.Boolean &
+      Schema.Attribute.DefaultTo<false>;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    designation: Schema.Attribute.String & Schema.Attribute.Required;
+    email: Schema.Attribute.String;
+    employment_status: Schema.Attribute.Enumeration<
+      ['active', 'on_leave', 'departed']
+    > &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'active'>;
+    full_name: Schema.Attribute.String & Schema.Attribute.Required;
+    honorific: Schema.Attribute.String;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::person.person'
+    > &
+      Schema.Attribute.Private;
+    phone: Schema.Attribute.String;
+    photo: Schema.Attribute.Media<'images'>;
+    photo_consent: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    photo_consent_date: Schema.Attribute.Date;
+    publications: Schema.Attribute.Component<'shared.publication', true>;
+    publishedAt: Schema.Attribute.DateTime;
+    qualification: Schema.Attribute.String;
+    slug: Schema.Attribute.UID<'full_name'>;
+    specialisation: Schema.Attribute.Relation<
+      'manyToMany',
+      'api::expertise.expertise'
+    >;
+    unit: Schema.Attribute.Relation<'manyToOne', 'api::unit.unit'>;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
   };
 }
 
@@ -2178,12 +2712,14 @@ export interface ApiProgrammeProgramme extends Struct.CollectionTypeSchema {
     singularName: 'programme';
   };
   options: {
-    draftAndPublish: false;
+    draftAndPublish: true;
   };
   attributes: {
     about: Schema.Attribute.Text;
     admission_requirements: Schema.Attribute.Text;
+    annual_fee: Schema.Attribute.Decimal;
     career_opportunities: Schema.Attribute.Text;
+    coordinator: Schema.Attribute.Relation<'manyToOne', 'api::person.person'>;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -2195,9 +2731,14 @@ export interface ApiProgrammeProgramme extends Struct.CollectionTypeSchema {
     >;
     display_order: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
     duration: Schema.Attribute.String;
+    expires_at: Schema.Attribute.DateTime;
     faqs: Schema.Attribute.Component<'shared.faq-item', true>;
+    featured_for_international: Schema.Attribute.Boolean &
+      Schema.Attribute.DefaultTo<false>;
     further_study: Schema.Attribute.Text;
     hero_image: Schema.Attribute.Media<'images'>;
+    intake_status: Schema.Attribute.Enumeration<['open', 'closed', 'waitlist']>;
+    last_reviewed: Schema.Attribute.Date;
     learning_outcomes: Schema.Attribute.Text;
     level: Schema.Attribute.Enumeration<['undergraduate', 'postgraduate']> &
       Schema.Attribute.Required;
@@ -2209,12 +2750,18 @@ export interface ApiProgrammeProgramme extends Struct.CollectionTypeSchema {
       Schema.Attribute.Private;
     objectives: Schema.Attribute.Text;
     overview: Schema.Attribute.Text;
+    owning_unit: Schema.Attribute.Relation<'manyToOne', 'api::unit.unit'>;
     programme_name: Schema.Attribute.String & Schema.Attribute.Required;
     publishedAt: Schema.Attribute.DateTime;
+    review_interval: Schema.Attribute.Enumeration<
+      ['semester', 'annual', 'none']
+    > &
+      Schema.Attribute.DefaultTo<'none'>;
     seo_description: Schema.Attribute.Text;
     seo_title: Schema.Attribute.String;
     short_description: Schema.Attribute.Text;
     slug: Schema.Attribute.UID<'programme_name'>;
+    unit: Schema.Attribute.Relation<'manyToOne', 'api::unit.unit'>;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -2251,6 +2798,107 @@ export interface ApiReassessmentTimetableReassessmentTimetable
     publishedAt: Schema.Attribute.DateTime;
     semester: Schema.Attribute.String;
     title: Schema.Attribute.String & Schema.Attribute.Required;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiRecruitmentRecruitment extends Struct.CollectionTypeSchema {
+  collectionName: 'recruitments';
+  info: {
+    displayName: 'Recruitment';
+    pluralName: 'recruitments';
+    singularName: 'recruitment';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    apply_url: Schema.Attribute.String;
+    archive_after: Schema.Attribute.Date;
+    closing_date: Schema.Attribute.Date;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    employment_type: Schema.Attribute.Enumeration<
+      ['regular', 'fixed_term', 'contract']
+    >;
+    expires_at: Schema.Attribute.DateTime & Schema.Attribute.Required;
+    last_reviewed: Schema.Attribute.Date & Schema.Attribute.Required;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::recruitment.recruitment'
+    > &
+      Schema.Attribute.Private;
+    owning_unit: Schema.Attribute.Relation<'manyToOne', 'api::unit.unit'> &
+      Schema.Attribute.Required;
+    post_title: Schema.Attribute.String & Schema.Attribute.Required;
+    publishedAt: Schema.Attribute.DateTime;
+    reference_no: Schema.Attribute.String;
+    review_interval: Schema.Attribute.Enumeration<
+      ['semester', 'annual', 'none']
+    > &
+      Schema.Attribute.DefaultTo<'none'>;
+    stage: Schema.Attribute.Enumeration<
+      [
+        'advertised',
+        'shortlisted_written',
+        'shortlisted_viva',
+        'result_declared',
+        'closed_unfilled',
+      ]
+    > &
+      Schema.Attribute.Required;
+    stage_documents: Schema.Attribute.Component<'shared.stage-document', true>;
+    unit: Schema.Attribute.Relation<'manyToOne', 'api::unit.unit'>;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiResearchCentreResearchCentre
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'research_centres';
+  info: {
+    displayName: 'Research Centre';
+    pluralName: 'research-centres';
+    singularName: 'research-centre';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    description: Schema.Attribute.RichText;
+    expires_at: Schema.Attribute.DateTime;
+    external_link: Schema.Attribute.String;
+    focus_areas: Schema.Attribute.Relation<
+      'manyToMany',
+      'api::expertise.expertise'
+    >;
+    last_reviewed: Schema.Attribute.Date & Schema.Attribute.Required;
+    lead: Schema.Attribute.Relation<'oneToOne', 'api::person.person'>;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::research-centre.research-centre'
+    > &
+      Schema.Attribute.Private;
+    members: Schema.Attribute.Relation<'manyToMany', 'api::person.person'>;
+    name: Schema.Attribute.String & Schema.Attribute.Required;
+    owning_unit: Schema.Attribute.Relation<'manyToOne', 'api::unit.unit'> &
+      Schema.Attribute.Required;
+    publishedAt: Schema.Attribute.DateTime;
+    review_interval: Schema.Attribute.Enumeration<
+      ['semester', 'annual', 'none']
+    > &
+      Schema.Attribute.DefaultTo<'none'>;
+    slug: Schema.Attribute.UID<'name'>;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -2370,6 +3018,38 @@ export interface ApiResearchPublicationResearchPublication
     publication_year: Schema.Attribute.Integer;
     publishedAt: Schema.Attribute.DateTime;
     title: Schema.Attribute.String & Schema.Attribute.Required;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiSiteSettingsSiteSettings extends Struct.SingleTypeSchema {
+  collectionName: 'site_settings';
+  info: {
+    displayName: 'Site Settings';
+    pluralName: 'site-settings-collection';
+    singularName: 'site-settings';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    address: Schema.Attribute.Text;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    footer_link_groups: Schema.Attribute.Component<'shared.link-group', true>;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::site-settings.site-settings'
+    > &
+      Schema.Attribute.Private;
+    official_emails: Schema.Attribute.JSON;
+    phones: Schema.Attribute.JSON;
+    publishedAt: Schema.Attribute.DateTime;
+    subdomain_links: Schema.Attribute.Component<'shared.link-item', true>;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -2671,6 +3351,45 @@ export interface ApiUiStringUiString extends Struct.CollectionTypeSchema {
           localized: true;
         };
       }>;
+  };
+}
+
+export interface ApiUnitUnit extends Struct.CollectionTypeSchema {
+  collectionName: 'units';
+  info: {
+    displayName: 'Unit';
+    pluralName: 'units';
+    singularName: 'unit';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    contact: Schema.Attribute.Component<'shared.contact-block', false>;
+    content_owner: Schema.Attribute.Relation<'oneToOne', 'api::person.person'>;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    description: Schema.Attribute.RichText;
+    head: Schema.Attribute.Relation<'oneToOne', 'api::person.person'>;
+    kind: Schema.Attribute.Enumeration<
+      ['academic', 'administrative', 'research_centre', 'student_body']
+    > &
+      Schema.Attribute.Required;
+    last_reviewed: Schema.Attribute.Date & Schema.Attribute.Required;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<'oneToMany', 'api::unit.unit'> &
+      Schema.Attribute.Private;
+    name: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Unique;
+    photo: Schema.Attribute.Media<'images'>;
+    publishedAt: Schema.Attribute.DateTime;
+    short_name: Schema.Attribute.String;
+    slug: Schema.Attribute.UID<'name'>;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
   };
 }
 
@@ -3315,18 +4034,25 @@ declare module '@strapi/strapi' {
       'api::academic-guide.academic-guide': ApiAcademicGuideAcademicGuide;
       'api::academics-content.academics-content': ApiAcademicsContentAcademicsContent;
       'api::academics-item.academics-item': ApiAcademicsItemAcademicsItem;
+      'api::alumni.alumni': ApiAlumniAlumni;
       'api::announcement.announcement': ApiAnnouncementAnnouncement;
       'api::award.award': ApiAwardAward;
+      'api::calendar-entry.calendar-entry': ApiCalendarEntryCalendarEntry;
       'api::campus-life-content.campus-life-content': ApiCampusLifeContentCampusLifeContent;
       'api::campus-life-item.campus-life-item': ApiCampusLifeItemCampusLifeItem;
+      'api::club.club': ApiClubClub;
       'api::contact-page-content.contact-page-content': ApiContactPageContentContactPageContent;
       'api::contact-person.contact-person': ApiContactPersonContactPerson;
       'api::cta-content.cta-content': ApiCtaContentCtaContent;
       'api::department.department': ApiDepartmentDepartment;
+      'api::document.document': ApiDocumentDocument;
+      'api::event.event': ApiEventEvent;
       'api::events-content.events-content': ApiEventsContentEventsContent;
       'api::events-item.events-item': ApiEventsItemEventsItem;
+      'api::expertise.expertise': ApiExpertiseExpertise;
       'api::faculty-profile.faculty-profile': ApiFacultyProfileFacultyProfile;
       'api::faculty-setting.faculty-setting': ApiFacultySettingFacultySetting;
+      'api::feature.feature': ApiFeatureFeature;
       'api::gallery-content.gallery-content': ApiGalleryContentGalleryContent;
       'api::gallery-image.gallery-image': ApiGalleryImageGalleryImage;
       'api::header-setting.header-setting': ApiHeaderSettingHeaderSetting;
@@ -3340,18 +4066,27 @@ declare module '@strapi/strapi' {
       'api::history-timeline-item.history-timeline-item': ApiHistoryTimelineItemHistoryTimelineItem;
       'api::history-tradition-item.history-tradition-item': ApiHistoryTraditionItemHistoryTraditionItem;
       'api::homepage-section.homepage-section': ApiHomepageSectionHomepageSection;
+      'api::homepage.homepage': ApiHomepageHomepage;
       'api::menu-item.menu-item': ApiMenuItemMenuItem;
+      'api::navigation.navigation': ApiNavigationNavigation;
       'api::news-content.news-content': ApiNewsContentNewsContent;
       'api::news-item.news-item': ApiNewsItemNewsItem;
+      'api::news.news': ApiNewsNews;
+      'api::notice.notice': ApiNoticeNotice;
+      'api::page.page': ApiPagePage;
       'api::partners-content.partners-content': ApiPartnersContentPartnersContent;
       'api::partners-item.partners-item': ApiPartnersItemPartnersItem;
+      'api::person.person': ApiPersonPerson;
       'api::president-content.president-content': ApiPresidentContentPresidentContent;
       'api::programme-timetable.programme-timetable': ApiProgrammeTimetableProgrammeTimetable;
       'api::programme.programme': ApiProgrammeProgramme;
       'api::reassessment-timetable.reassessment-timetable': ApiReassessmentTimetableReassessmentTimetable;
+      'api::recruitment.recruitment': ApiRecruitmentRecruitment;
+      'api::research-centre.research-centre': ApiResearchCentreResearchCentre;
       'api::research-content.research-content': ApiResearchContentResearchContent;
       'api::research-item.research-item': ApiResearchItemResearchItem;
       'api::research-publication.research-publication': ApiResearchPublicationResearchPublication;
+      'api::site-settings.site-settings': ApiSiteSettingsSiteSettings;
       'api::social-link.social-link': ApiSocialLinkSocialLink;
       'api::statistics-content.statistics-content': ApiStatisticsContentStatisticsContent;
       'api::statistics-item.statistics-item': ApiStatisticsItemStatisticsItem;
@@ -3359,6 +4094,7 @@ declare module '@strapi/strapi' {
       'api::testimonials-item.testimonials-item': ApiTestimonialsItemTestimonialsItem;
       'api::theme-setting.theme-setting': ApiThemeSettingThemeSetting;
       'api::ui-string.ui-string': ApiUiStringUiString;
+      'api::unit.unit': ApiUnitUnit;
       'api::utility-link.utility-link': ApiUtilityLinkUtilityLink;
       'api::vision-mission-content.vision-mission-content': ApiVisionMissionContentVisionMissionContent;
       'plugin::content-releases.release': PluginContentReleasesRelease;

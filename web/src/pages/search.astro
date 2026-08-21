@@ -1,0 +1,24 @@
+---
+// Pagefind indexes the built site (dist/pagefind) after `astro build`;
+// it has nothing to search against in dev mode until a build has run at
+// least once — that's a Pagefind limitation, not a bug here.
+import Layout from '../layouts/Layout.astro';
+---
+<Layout title="Search" description="Search the Sherubtse College website.">
+  <div class="wrap narrow" style="padding-top:var(--s5);padding-bottom:var(--s7)">
+    <nav class="breadcrumb" aria-label="Breadcrumb"><a href="/">Home</a> › <span class="current">Search</span></nav>
+    <h1 class="h1">Search</h1>
+    <div id="search" style="margin-top:var(--s5)"></div>
+    <noscript><p class="small">Search requires JavaScript. Browse the site using the menu instead.</p></noscript>
+  </div>
+</Layout>
+
+<link href="/pagefind/pagefind-ui.css" rel="stylesheet" />
+<script is:inline src="/pagefind/pagefind-ui.js"></script>
+<script is:inline>
+  window.addEventListener('DOMContentLoaded', () => {
+    if (window.PagefindUI) {
+      new window.PagefindUI({ element: '#search', showSubResults: true });
+    }
+  });
+</script>

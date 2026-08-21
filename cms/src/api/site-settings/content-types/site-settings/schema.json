@@ -1,0 +1,27 @@
+{
+  "kind": "singleType",
+  "collectionName": "site_settings",
+  "info": {
+    "singularName": "site-settings",
+    "pluralName": "site-settings-collection",
+    "displayName": "Site Settings"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "attributes": {
+    "address": { "type": "text" },
+    "phones": { "type": "json" },
+    "official_emails": { "type": "json" },
+    "footer_link_groups": {
+      "type": "component",
+      "repeatable": true,
+      "component": "shared.link-group"
+    },
+    "subdomain_links": {
+      "type": "component",
+      "repeatable": true,
+      "component": "shared.link-item"
+    }
+  }
+}

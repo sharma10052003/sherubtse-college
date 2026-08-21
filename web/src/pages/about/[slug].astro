@@ -1,0 +1,26 @@
+---
+// Content page — genuinely bespoke static pages only (Page type,
+// restricted to Super Admin: Vision & Mission, Core Values, History,
+// About — Build Brief §02). Note this route is more specific than
+// about/[slug] handled by units/index.astro etc. only because those live
+// under their own subpaths (about/units) — Astro resolves the literal
+// subpath first.
+import Layout from '../../layouts/Layout.astro';
+import { getAllPageSlugs, getPageBySlug } from '../../lib/content/pages';
+
+export async function getStaticPaths() {
+  const slugs = await getAllPageSlugs();
+  return slugs.map((slug) => ({ params: { slug } }));
+}
+
+const { slug } = Astro.params;
+const page = await getPageBySlug(slug as string);
+if (!page) return Astro.redirect('/about', 404);
+---
+<Layout title={page.title}>
+  <div class="wrap narrow" style="padding-top:var(--s5);padding-bottom:var(--s7)">
+    <nav class="breadcrumb" aria-label="Breadcrumb"><a href="/">Home</a> › <a href="/about">About</a> › <span class="current">{page.title}</span></nav>
+    <h1 class="h1">{page.title}</h1>
+    <div class="article-body" style="margin-top:var(--s5)" set:html={page.body.replace(/\n/g, '<br>')} />
+  </div>
+</Layout>

@@ -1,0 +1,20 @@
+---
+// Expired notices — never deleted, always findable (Style Guide §06/§11).
+import ListingTemplate from '../../components/templates/ListingTemplate.astro';
+import { getArchivedNotices } from '../../lib/content/notices';
+
+const notices = await getArchivedNotices();
+const rows = notices.map((n) => ({
+  id: n.id,
+  href: `/news-notices/announcements/${n.id}`,
+  date: new Date(n.publish_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+  title: n.title,
+  tags: [n.category],
+  meta: n.owning_unit_name ?? undefined,
+}));
+---
+<ListingTemplate
+  title="Archive"
+  breadcrumb={[{ label: 'Home', url: '/' }, { label: 'News & Notices', url: '/news-notices' }, { label: 'Archive', url: '/news-notices/archive' }]}
+  rows={rows}
+/>

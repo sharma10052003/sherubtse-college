@@ -1,0 +1,13 @@
+{
+  "collectionName": "components_shared_publications",
+  "info": {
+    "displayName": "Publication",
+    "icon": "file-text"
+  },
+  "options": {},
+  "attributes": {
+    "citation": { "type": "text", "required": true },
+    "year": { "type": "integer" },
+    "link": { "type": "string" }
+  }
+}

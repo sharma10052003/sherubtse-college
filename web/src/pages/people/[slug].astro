@@ -1,0 +1,101 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { strapiGet } from '../../lib/strapi';
+import type { StrapiListResponse } from '../../lib/strapi';
+import { getPersonBySlug } from '../../lib/content/people';
+
+export async function getStaticPaths() {
+  const res = await strapiGet<StrapiListResponse<{ slug: string }>>('people', {
+    fields: ['slug'],
+    pagination: { pageSize: 200 },
+  });
+  return (res?.data ?? []).map((p) => ({ params: { slug: p.slug } }));
+}
+
+const { slug } = Astro.params;
+const person = await getPersonBySlug(slug as string);
+if (!person) return Astro.redirect('/', 404);
+---
+<Layout title={person.full_name}>
+  <div class="wrap" style="padding-top:var(--s5);padding-bottom:var(--s7)">
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <a href="/">Home</a> › <span class="current">People</span>
+    </nav>
+    <div class="profile-grid">
+      <div>
+        <h1 class="h1">{person.honorific ? `${person.honorific} ` : ''}{person.full_name}</h1>
+        <p class="lede" style="margin-top:var(--s2)">{person.designation}{person.unit_name ? ` · ${person.unit_name}` : ''}</p>
+
+        {person.qualification && (<><h2 class="h2" style="margin-top:var(--s6)">Qualification</h2><p>{person.qualification}</p></>)}
+
+        {person.specialisation.length > 0 && (
+          <>
+            <h2 class="h2">Specialisation</h2>
+            <div class="tag-list">
+              {person.specialisation.map((s) => <span class="tag">{s}</span>)}
+            </div>
+          </>
+        )}
+
+        {person.bio && (<><h2 class="h2">Biography</h2><p>{person.bio}</p></>)}
+
+        {person.publications.length > 0 && (
+          <>
+            <h2 class="h2">Publications</h2>
+            <ul>
+              {person.publications.map((pub) => (
+                <li>{pub.citation}{pub.year ? ` (${pub.year})` : ''} {pub.link && <a href={pub.link}>Link</a>}</li>
+              ))}
+            </ul>
+          </>
+        )}
+      </div>
+      <div>
+        {person.photo_url ? <img src={person.photo_url} alt="" class="portrait" /> : <div class="portrait portrait-placeholder">4:5</div>}
+        {person.contact_consent && (person.email || person.phone) && (
+          <ul class="contact-list">
+            {person.email && <li><a href={`mailto:${person.email}`}>{person.email}</a></li>}
+            {person.phone && <li><a href={`tel:${person.phone}`}>{person.phone}</a></li>}
+          </ul>
+        )}
+      </div>
+    </div>
+  </div>
+</Layout>
+
+<style>
+  .profile-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--s6);
+  }
+  @media (min-width: 760px) {
+    .profile-grid {
+      grid-template-columns: 2fr 1fr;
+    }
+  }
+  .portrait {
+    width: 100%;
+    max-width: 260px;
+    aspect-ratio: 4/5;
+    object-fit: cover;
+  }
+  .portrait-placeholder {
+    background: var(--paper-2);
+    border: 1px solid var(--line);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--ink-2);
+  }
+  .tag-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s2);
+  }
+  .contact-list {
+    list-style: none;
+    margin: var(--s4) 0 0;
+    padding: 0;
+  }
+</style>

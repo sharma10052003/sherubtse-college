@@ -1,0 +1,19 @@
+{
+  "kind": "singleType",
+  "collectionName": "navigation",
+  "info": {
+    "singularName": "navigation",
+    "pluralName": "navigations",
+    "displayName": "Navigation"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "attributes": {
+    "menu": {
+      "type": "component",
+      "repeatable": true,
+      "component": "navigation.nav-item"
+    }
+  }
+}

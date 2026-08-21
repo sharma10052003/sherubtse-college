@@ -1,0 +1,26 @@
+{
+  "kind": "singleType",
+  "collectionName": "homepage",
+  "info": {
+    "singularName": "homepage",
+    "pluralName": "homepages",
+    "displayName": "Homepage"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "attributes": {
+    "hero_images": { "type": "media", "multiple": true, "allowedTypes": ["images"] },
+    "statement": { "type": "text" },
+    "quick_links": {
+      "type": "component",
+      "repeatable": true,
+      "component": "shared.link-item"
+    },
+    "featured_selections": {
+      "type": "component",
+      "repeatable": true,
+      "component": "shared.link-item"
+    }
+  }
+}

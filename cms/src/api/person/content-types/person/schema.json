@@ -1,0 +1,47 @@
+{
+  "kind": "collectionType",
+  "collectionName": "people",
+  "info": {
+    "singularName": "person",
+    "pluralName": "people",
+    "displayName": "Person"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "attributes": {
+    "full_name": { "type": "string", "required": true },
+    "honorific": { "type": "string" },
+    "slug": { "type": "uid", "targetField": "full_name" },
+    "designation": { "type": "string", "required": true },
+    "unit": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::unit.unit"
+    },
+    "qualification": { "type": "string" },
+    "specialisation": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::expertise.expertise"
+    },
+    "bio": { "type": "text", "maxLength": 600 },
+    "photo": { "type": "media", "multiple": false, "allowedTypes": ["images"] },
+    "email": { "type": "string" },
+    "phone": { "type": "string" },
+    "contact_consent": { "type": "boolean", "default": false },
+    "photo_consent": { "type": "boolean", "default": false },
+    "photo_consent_date": { "type": "date" },
+    "publications": {
+      "type": "component",
+      "repeatable": true,
+      "component": "shared.publication"
+    },
+    "employment_status": {
+      "type": "enumeration",
+      "enum": ["active", "on_leave", "departed"],
+      "required": true,
+      "default": "active"
+    }
+  }
+}

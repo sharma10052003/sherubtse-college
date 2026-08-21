@@ -1,0 +1,21 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { getFeatures } from '../../lib/content/features';
+
+const features = await getFeatures();
+---
+<Layout title="Features" description="Long-form stories from Sherubtse College.">
+  <div class="wrap" style="padding-top:var(--s5);padding-bottom:var(--s7)">
+    <nav class="breadcrumb" aria-label="Breadcrumb"><a href="/">Home</a> › <span class="current">Features</span></nav>
+    <h1 class="h1">Features</h1>
+    <div class="cards" style="margin-top:var(--s6)">
+      {features.length > 0 ? features.map((f) => (
+        <div class="card">
+          <h3 class="h3"><a href={`/features/${f.slug}`} style="text-decoration:none;color:inherit">{f.title}</a></h3>
+          <p>{f.standfirst}</p>
+          <a href={`/features/${f.slug}`} class="btn-quiet">Read</a>
+        </div>
+      )) : <p class="small">No features published yet — quota, not cadence (4-6 a year, when there's a story).</p>}
+    </div>
+  </div>
+</Layout>

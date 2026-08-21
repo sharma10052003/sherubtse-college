@@ -1,0 +1,155 @@
+---
+// The Unit template — identical for every department, administrative
+// unit, research centre and club (Stack doc §06 wireframe). Three of the
+// five blocks populate themselves; an editor only ever writes the
+// description and the contact block (Style Guide §07).
+import Layout from '../../layouts/Layout.astro';
+import type { UnitLike } from '../../lib/content/unit-like';
+import type { ProgrammeCard } from '../../lib/content/programmes';
+import type { PersonCard } from '../../lib/content/people';
+import type { Notice } from '../../lib/content/notices';
+
+interface Props {
+  unit: UnitLike;
+  breadcrumb: { label: string; url: string }[];
+  programmes?: ProgrammeCard[];
+  people?: PersonCard[];
+  notices?: Notice[];
+}
+const { unit, breadcrumb, programmes = [], people = [], notices = [] } = Astro.props;
+---
+<Layout title={unit.name} description={unit.description ?? undefined}>
+  <div class="wrap" style="padding-top:var(--s5)">
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      {breadcrumb.map((b, i) => (
+        <>
+          {i > 0 && ' › '}
+          {i === breadcrumb.length - 1 ? <span class="current">{b.label}</span> : <a href={b.url}>{b.label}</a>}
+        </>
+      ))}
+    </nav>
+
+    <h1 class="h1">{unit.name}</h1>
+    {unit.description && <p class="lede" style="margin-top:var(--s3)">{unit.description}</p>}
+
+    {unit.photo_url && <img src={unit.photo_url} alt="" class="unit-photo" />}
+
+    {programmes.length > 0 && (
+      <section class="band" style="padding-top:var(--s6)">
+        <h2 class="h2">Programmes offered <span class="auto-tag">auto — from Programme records</span></h2>
+        <div class="cards" style="margin-top:var(--s4)">
+          {programmes.map((p) => (
+            <div class="card">
+              <h3 class="h3">{p.programme_name}</h3>
+              {p.short_description && <p>{p.short_description}</p>}
+              <a href={`/academics/programmes/${p.slug}`} class="btn-quiet">View programme</a>
+            </div>
+          ))}
+        </div>
+      </section>
+    )}
+
+    {people.length > 0 && (
+      <section class="band band-alt" style="padding-top:var(--s6)">
+        <h2 class="h2">People <span class="auto-tag">auto — from Person records, head first</span></h2>
+        <div class="people-grid">
+          {people.map((p) => (
+            <div class="person">
+              {p.photo_url ? <img class="avatar" src={p.photo_url} alt="" /> : <span class="avatar">4:5</span>}
+              <div>
+                <p class="pname"><a href={`/people/${p.slug}`}>{p.honorific ? `${p.honorific} ` : ''}{p.full_name}</a></p>
+                <p class="prole">{p.designation}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+    )}
+
+    <div class="two-col" style="margin-top:var(--s7)">
+      <div>
+        <h2 class="h2">{unit.name} notices <span class="auto-tag">auto — filtered by owning unit</span></h2>
+        {notices.length > 0 ? (
+          notices.map((n) => (
+            <div class="notice-row">
+              <span class="date">{new Date(n.publish_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}</span>
+              <p class="title" style="margin:0"><a href={`/news-notices/announcements/${n.id}`}>{n.title}</a></p>
+            </div>
+          ))
+        ) : (
+          <p class="small">No current notices from this unit.</p>
+        )}
+      </div>
+      <div>
+        <h2 class="h2">Contact</h2>
+        {unit.contact ? (
+          <ul class="contact-list">
+            {unit.contact.email && <li><a href={`mailto:${unit.contact.email}`}>{unit.contact.email}</a></li>}
+            {unit.contact.phone && <li><a href={`tel:${unit.contact.phone}`}>{unit.contact.phone}</a></li>}
+            {unit.contact.office && <li>{unit.contact.office}</li>}
+            {unit.contact.hours && <li>{unit.contact.hours}</li>}
+          </ul>
+        ) : (
+          <p class="small">No contact details published yet.</p>
+        )}
+        <p class="owner-line">
+          {unit.head && <>Content owner: {unit.head.full_name} &middot; </>}
+          Last reviewed: {new Date(unit.last_reviewed).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
+        </p>
+      </div>
+    </div>
+  </div>
+</Layout>
+
+<style>
+  .unit-photo {
+    width: 100%;
+    aspect-ratio: 16/9;
+    object-fit: cover;
+    margin: var(--s5) 0;
+  }
+  .auto-tag {
+    font-size: 0.62rem;
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: 0;
+    color: var(--gold-ink);
+    margin-left: var(--s2);
+  }
+  .people-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--s4);
+    margin-top: var(--s4);
+  }
+  @media (min-width: 760px) {
+    .people-grid {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--s6);
+    padding-bottom: var(--s7);
+  }
+  @media (min-width: 1024px) {
+    .two-col {
+      grid-template-columns: 2fr 1fr;
+    }
+  }
+  .contact-list {
+    list-style: none;
+    margin: 0 0 var(--s4);
+    padding: 0;
+    font-size: 0.92rem;
+  }
+  .owner-line {
+    margin-top: var(--s3);
+    padding-top: var(--s3);
+    border-top: 1px solid var(--line);
+    font-size: 0.8rem;
+    color: var(--gold-ink);
+    font-weight: 600;
+  }
+</style>

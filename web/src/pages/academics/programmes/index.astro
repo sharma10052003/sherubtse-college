@@ -1,0 +1,21 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import { getProgrammes } from '../../../lib/content/programmes';
+
+const programmes = await getProgrammes();
+---
+<Layout title="Programmes" description="Undergraduate and postgraduate degree programmes at Sherubtse College.">
+  <div class="wrap" style="padding-top:var(--s5);padding-bottom:var(--s7)">
+    <nav class="breadcrumb" aria-label="Breadcrumb"><a href="/">Home</a> › <a href="/academics">Academics</a> › <span class="current">Programmes</span></nav>
+    <h1 class="h1">Programmes</h1>
+    <div class="cards" style="margin-top:var(--s6)">
+      {programmes.length > 0 ? programmes.map((p) => (
+        <div class="card">
+          <h3 class="h3">{p.programme_name}</h3>
+          {p.short_description && <p>{p.short_description}</p>}
+          <a href={`/academics/programmes/${p.slug}`} class="btn-quiet">View programme</a>
+        </div>
+      )) : <p class="small">Programmes will appear here once added in Strapi.</p>}
+    </div>
+  </div>
+</Layout>

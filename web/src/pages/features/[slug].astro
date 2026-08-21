@@ -1,0 +1,62 @@
+---
+// Feature — the 10th template (Stack doc §07). Narrower measure (~60ch),
+// full-bleed hero, evergreen (no expiry).
+import Layout from '../../layouts/Layout.astro';
+import { getFeatures, getFeatureBySlug } from '../../lib/content/features';
+
+export async function getStaticPaths() {
+  const features = await getFeatures();
+  return features.map((f) => ({ params: { slug: f.slug } }));
+}
+
+const { slug } = Astro.params;
+const feature = await getFeatureBySlug(slug as string);
+if (!feature) return Astro.redirect('/features', 404);
+---
+<Layout title={feature.title} description={feature.standfirst}>
+  {feature.hero_image_url && (
+    <div class="feature-hero" style={`background-image:url(${feature.hero_image_url})`}></div>
+  )}
+  <div class="wrap feature-measure" style="padding-top:var(--s6);padding-bottom:var(--s7)">
+    <p class="eyebrow">Feature{feature.theme ? ` · ${feature.theme.replace('_', ' ')}` : ''}</p>
+    <h1 class="h1">{feature.title}</h1>
+    <p class="lede" style="margin-top:var(--s3)">{feature.standfirst}</p>
+    <p class="small" style="margin-top:var(--s3)">By {feature.author_name} · {feature.reading_time} min read</p>
+
+    <div class="article-body feature-body" style="margin-top:var(--s6)" set:html={feature.body.replace(/\n/g, '<br>')} />
+
+    {feature.related_people.length > 0 && (
+      <>
+        <h2 class="h2" style="margin-top:var(--s7)">People in this story <span class="auto-tag">auto — from relations</span></h2>
+        <div class="people-grid-3">
+          {feature.related_people.map((p) => (
+            <div class="person">
+              {p.photo_url ? <img class="avatar" src={p.photo_url} alt="" /> : <span class="avatar">4:5</span>}
+              <p class="pname"><a href={`/people/${p.slug}`}>{p.full_name}</a></p>
+            </div>
+          ))}
+        </div>
+      </>
+    )}
+  </div>
+</Layout>
+
+<style>
+  .feature-hero {
+    aspect-ratio: 16/9;
+    background-size: cover;
+    background-position: center;
+  }
+  .feature-measure {
+    max-width: 62ch;
+  }
+  .feature-body :global(p) {
+    margin-bottom: var(--s4);
+  }
+  .people-grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--s4);
+    margin-top: var(--s4);
+  }
+</style>

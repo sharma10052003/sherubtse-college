@@ -1,0 +1,14 @@
+{
+  "collectionName": "components_shared_stage_documents",
+  "info": {
+    "displayName": "Stage Document",
+    "icon": "paperclip"
+  },
+  "options": {},
+  "attributes": {
+    "stage": { "type": "string", "required": true },
+    "label": { "type": "string" },
+    "file": { "type": "media", "multiple": false, "allowedTypes": ["files"] },
+    "date_posted": { "type": "date" }
+  }
+}

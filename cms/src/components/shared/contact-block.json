@@ -1,0 +1,14 @@
+{
+  "collectionName": "components_shared_contact_blocks",
+  "info": {
+    "displayName": "Contact Block",
+    "icon": "phone"
+  },
+  "options": {},
+  "attributes": {
+    "email": { "type": "string" },
+    "phone": { "type": "string" },
+    "office": { "type": "string" },
+    "hours": { "type": "string" }
+  }
+}

@@ -1,0 +1,27 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import { strapiGet, mediaUrl } from '../../../lib/strapi';
+import type { StrapiListResponse } from '../../../lib/strapi';
+
+const res = await strapiGet<StrapiListResponse<any>>('research-centres', {
+  fields: ['name', 'slug', 'description'],
+  sort: 'name:asc',
+  pagination: { pageSize: 100 },
+});
+const centres = res?.data ?? [];
+---
+<Layout title="Research Centres" description="Research centres at Sherubtse College.">
+  <div class="wrap" style="padding-top:var(--s5);padding-bottom:var(--s7)">
+    <nav class="breadcrumb" aria-label="Breadcrumb"><a href="/">Home</a> › <a href="/research">Research</a> › <span class="current">Research Centres</span></nav>
+    <h1 class="h1">Research Centres</h1>
+    <div class="cards" style="margin-top:var(--s6)">
+      {centres.length > 0 ? centres.map((c: any) => (
+        <div class="card">
+          <h3 class="h3">{c.name}</h3>
+          {c.description && <p>{c.description}</p>}
+          <a href={`/research/centres/${c.slug}`} class="btn-quiet">View centre</a>
+        </div>
+      )) : <p class="small">Research centres will appear here once added in Strapi.</p>}
+    </div>
+  </div>
+</Layout>

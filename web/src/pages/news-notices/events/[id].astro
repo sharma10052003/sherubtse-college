@@ -1,0 +1,34 @@
+---
+import ArticleTemplate from '../../../components/templates/ArticleTemplate.astro';
+import { getAllEventIds, getEventById } from '../../../lib/content/events';
+
+export async function getStaticPaths() {
+  const ids = await getAllEventIds();
+  return ids.map((id) => ({ params: { id: String(id) } }));
+}
+
+const { id } = Astro.params;
+const event = await getEventById(Number(id));
+if (!event) return Astro.redirect('/news-notices/events', 404);
+
+const dateRange = event.ends_at
+  ? `${new Date(event.starts_at).toLocaleString('en-GB', { dateStyle: 'long', timeStyle: 'short' })} – ${new Date(event.ends_at).toLocaleString('en-GB', { dateStyle: 'long', timeStyle: 'short' })}`
+  : new Date(event.starts_at).toLocaleString('en-GB', { dateStyle: 'long', timeStyle: 'short' });
+---
+<ArticleTemplate
+  eyebrow={event.open_to ? `Open to ${event.open_to.replace('_', ' ')}` : 'Event'}
+  title={event.title}
+  meta={`${dateRange}${event.venue ? ' · ' + event.venue : ''}`}
+  body={event.description ?? ''}
+  breadcrumb={[
+    { label: 'Home', url: '/' },
+    { label: 'News & Notices', url: '/news-notices' },
+    { label: 'Events', url: '/news-notices/events' },
+    { label: event.title, url: `/news-notices/events/${event.id}` },
+  ]}
+/>
+{event.registration_link && (
+  <div class="wrap narrow" style="padding-bottom:var(--s7)">
+    <a href={event.registration_link} class="btn btn-primary">Register</a>
+  </div>
+)}

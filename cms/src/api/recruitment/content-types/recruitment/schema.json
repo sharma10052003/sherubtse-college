@@ -1,0 +1,44 @@
+{
+  "kind": "collectionType",
+  "collectionName": "recruitments",
+  "info": {
+    "singularName": "recruitment",
+    "pluralName": "recruitments",
+    "displayName": "Recruitment"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "attributes": {
+    "post_title": { "type": "string", "required": true },
+    "reference_no": { "type": "string" },
+    "unit": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::unit.unit"
+    },
+    "employment_type": { "type": "enumeration", "enum": ["regular", "fixed_term", "contract"] },
+    "stage": {
+      "type": "enumeration",
+      "enum": ["advertised", "shortlisted_written", "shortlisted_viva", "result_declared", "closed_unfilled"],
+      "required": true
+    },
+    "closing_date": { "type": "date" },
+    "apply_url": { "type": "string" },
+    "stage_documents": {
+      "type": "component",
+      "repeatable": true,
+      "component": "shared.stage-document"
+    },
+    "archive_after": { "type": "date" },
+    "owning_unit": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::unit.unit",
+      "required": true
+    },
+    "last_reviewed": { "type": "date", "required": true },
+    "review_interval": { "type": "enumeration", "enum": ["semester", "annual", "none"], "default": "none" },
+    "expires_at": { "type": "datetime", "required": true }
+  }
+}

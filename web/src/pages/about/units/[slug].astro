@@ -1,0 +1,28 @@
+---
+import UnitTemplate from '../../../components/templates/UnitTemplate.astro';
+import { getUnits, getUnitBySlug } from '../../../lib/content/units';
+import { getPeopleByUnit } from '../../../lib/content/people';
+import { getNoticesByUnit } from '../../../lib/content/notices';
+
+export async function getStaticPaths() {
+  const units = await getUnits('administrative');
+  return units.map((u) => ({ params: { slug: u.slug } }));
+}
+
+const { slug } = Astro.params;
+const unit = await getUnitBySlug(slug as string);
+if (!unit) return Astro.redirect('/about/units', 404);
+
+const [people, notices] = await Promise.all([getPeopleByUnit(unit.slug), getNoticesByUnit(unit.slug)]);
+---
+<UnitTemplate
+  unit={unit}
+  people={people}
+  notices={notices}
+  breadcrumb={[
+    { label: 'Home', url: '/' },
+    { label: 'About', url: '/about' },
+    { label: 'Administrative Units', url: '/about/units' },
+    { label: unit.name, url: `/about/units/${unit.slug}` },
+  ]}
+/>

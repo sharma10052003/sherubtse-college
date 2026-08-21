@@ -7,7 +7,7 @@
     "displayName": "Programme"
   },
   "options": {
-    "draftAndPublish": false
+    "draftAndPublish": true
   },
   "attributes": {
     "programme_name": { "type": "string", "required": true },
@@ -18,6 +18,27 @@
       "target": "api::department.department",
       "inversedBy": "programmes"
     },
+    "unit": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::unit.unit"
+    },
+    "coordinator": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::person.person"
+    },
+    "annual_fee": { "type": "decimal" },
+    "intake_status": { "type": "enumeration", "enum": ["open", "closed", "waitlist"] },
+    "featured_for_international": { "type": "boolean", "default": false },
+    "owning_unit": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::unit.unit"
+    },
+    "last_reviewed": { "type": "date" },
+    "review_interval": { "type": "enumeration", "enum": ["semester", "annual", "none"], "default": "none" },
+    "expires_at": { "type": "datetime" },
     "level": { "type": "enumeration", "enum": ["undergraduate", "postgraduate"], "required": true },
     "degree_type": { "type": "string" },
     "duration": { "type": "string" },

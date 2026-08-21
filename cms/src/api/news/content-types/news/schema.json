@@ -1,0 +1,33 @@
+{
+  "kind": "collectionType",
+  "collectionName": "news_entries",
+  "info": {
+    "singularName": "news",
+    "pluralName": "news-entries",
+    "displayName": "News"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "attributes": {
+    "title": { "type": "string", "required": true },
+    "body": { "type": "richtext", "required": true },
+    "date": { "type": "date", "required": true },
+    "unit": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::unit.unit"
+    },
+    "images": { "type": "media", "multiple": true, "allowedTypes": ["images"] },
+    "tags": { "type": "string" },
+    "owning_unit": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::unit.unit",
+      "required": true
+    },
+    "last_reviewed": { "type": "date", "required": true },
+    "review_interval": { "type": "enumeration", "enum": ["semester", "annual", "none"], "default": "none" },
+    "expires_at": { "type": "datetime" }
+  }
+}

@@ -1,0 +1,35 @@
+---
+// Section landing — one of 6. Does real navigational work: lists every
+// child page with a description, since there are no dropdown menus
+// (Stack doc §07, the Stanford-derived rule).
+import Layout from '../../layouts/Layout.astro';
+
+interface Child {
+  label: string;
+  url: string;
+  description: string;
+}
+interface Props {
+  title: string;
+  intro: string;
+  children: Child[];
+}
+const { title, intro, children } = Astro.props;
+---
+<Layout title={title} description={intro}>
+  <div class="wrap" style="padding-top:var(--s5);padding-bottom:var(--s7)">
+    <nav class="breadcrumb" aria-label="Breadcrumb"><a href="/">Home</a> › <span class="current">{title}</span></nav>
+    <h1 class="h1">{title}</h1>
+    <p class="lede" style="margin-top:var(--s3);max-width:var(--measure)">{intro}</p>
+
+    <div class="cards" style="margin-top:var(--s6)">
+      {children.map((c) => (
+        <div class="card">
+          <h3 class="h3"><a href={c.url} style="text-decoration:none;color:inherit">{c.label}</a></h3>
+          <p>{c.description}</p>
+          <a href={c.url} class="btn-quiet">Open</a>
+        </div>
+      ))}
+    </div>
+  </div>
+</Layout>

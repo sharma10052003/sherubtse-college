@@ -1,0 +1,239 @@
+/**
+ * Site chrome: utility bar, masthead, footer, mobile bottom tab bar.
+ * No dropdowns anywhere — Stack doc §07 (Stanford finding): each
+ * top-level item links straight to its section landing page.
+ */
+
+/* ---------- Utility bar — thin, navy deep, above the masthead ---------- */
+.utility-bar {
+  background: var(--navy-deep);
+  color: #8e9ac0;
+}
+.utility-bar .wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s3) var(--s5);
+  padding-block: 6px;
+  font-size: 0.72rem;
+}
+.utility-bar a {
+  color: #c9d0e4;
+  text-decoration: none;
+}
+.utility-bar a:hover {
+  color: #fff;
+  text-decoration: underline;
+}
+
+/* ---------- Masthead — fixed, no dropdowns ---------- */
+.masthead {
+  background: var(--navy);
+  color: #fff;
+  border-bottom: 4px solid var(--gold);
+}
+.masthead .wrap {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s4);
+  padding-block: var(--s3);
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  color: #fff;
+  text-decoration: none;
+}
+.brand img {
+  height: 32px;
+  width: auto;
+  display: block;
+}
+.brand-text {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: 1.05rem;
+  line-height: 1.15;
+}
+.brand-text small {
+  display: block;
+  font-family: var(--font-sans);
+  font-weight: 400;
+  font-size: 0.68rem;
+  color: #c9d0e4;
+}
+
+.primary-nav {
+  display: none;
+}
+@media (min-width: 1024px) {
+  .primary-nav {
+    display: flex;
+    gap: var(--s6);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .primary-nav a {
+    color: #fff;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.92rem;
+    padding: var(--s2) 0;
+    border-bottom: 2px solid transparent;
+  }
+  .primary-nav a:hover,
+  .primary-nav a[aria-current='page'] {
+    border-bottom-color: var(--gold);
+  }
+}
+
+.menu-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s2);
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  color: #fff;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 0.85rem;
+  padding: 8px 14px;
+  min-height: 44px;
+}
+@media (min-width: 1024px) {
+  .menu-toggle {
+    display: none;
+  }
+}
+
+.mobile-menu {
+  background: var(--navy);
+  border-bottom: 4px solid var(--gold);
+}
+.mobile-menu[hidden] {
+  display: none;
+}
+.mobile-menu ul {
+  list-style: none;
+  margin: 0;
+  padding: var(--s3) var(--s5) var(--s5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+}
+.mobile-menu a {
+  color: #fff;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 1rem;
+  display: block;
+  padding: var(--s2) 0;
+  min-height: 44px;
+}
+@media (min-width: 1024px) {
+  .mobile-menu {
+    display: none !important;
+  }
+}
+
+/* ---------- Footer ---------- */
+.site-footer {
+  background: var(--navy);
+  color: #c9d0e4;
+  margin-top: var(--s9);
+  border-top: 4px solid var(--gold);
+}
+.site-footer .wrap {
+  padding-block: var(--s7);
+  display: grid;
+  gap: var(--s6);
+  grid-template-columns: 1fr;
+  font-size: 0.88rem;
+}
+@media (min-width: 760px) {
+  .site-footer .wrap {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+.site-footer h3 {
+  color: #fff;
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin: 0 0 var(--s3);
+}
+.site-footer ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.site-footer li {
+  margin-bottom: var(--s2);
+}
+.site-footer a {
+  color: #c9d0e4;
+}
+.site-footer a:hover {
+  color: #fff;
+}
+.site-footer .bottom {
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  padding-top: var(--s4);
+  margin-top: var(--s5);
+  font-size: 0.78rem;
+  color: #8e9ac0;
+}
+
+/* ---------- Mobile bottom tab bar (Stack doc §08 — named exception to
+   "no fixed elements", Style Guide §09 confirms it as the only other
+   permitted fixed element besides the masthead) ---------- */
+.bottom-tabs {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 40;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  background: #fff;
+  border-top: 1px solid var(--line-strong);
+  font-size: 0.62rem;
+  text-align: center;
+}
+@media (min-width: 760px) {
+  .bottom-tabs {
+    display: none;
+  }
+}
+.bottom-tabs a {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-height: 56px;
+  color: var(--ink-2);
+  text-decoration: none;
+  padding: 4px;
+}
+.bottom-tabs a[aria-current='page'] {
+  color: var(--navy);
+  font-weight: 700;
+}
+.bottom-tabs .icon {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+/* Page content gets bottom clearance so nothing hides behind the fixed bar. */
+main {
+  padding-bottom: 64px;
+}
+@media (min-width: 760px) {
+  main {
+    padding-bottom: 0;
+  }
+}

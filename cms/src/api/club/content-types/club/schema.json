@@ -1,0 +1,35 @@
+{
+  "kind": "collectionType",
+  "collectionName": "clubs",
+  "info": {
+    "singularName": "club",
+    "pluralName": "clubs",
+    "displayName": "Club"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "attributes": {
+    "name": { "type": "string", "required": true },
+    "slug": { "type": "uid", "targetField": "name" },
+    "category": { "type": "string" },
+    "coordinator": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::person.person"
+    },
+    "student_lead": { "type": "string" },
+    "images": { "type": "media", "multiple": true, "allowedTypes": ["images"] },
+    "is_active": { "type": "boolean", "default": true },
+    "description": { "type": "richtext" },
+    "owning_unit": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::unit.unit",
+      "required": true
+    },
+    "last_reviewed": { "type": "date", "required": true },
+    "review_interval": { "type": "enumeration", "enum": ["semester", "annual", "none"], "default": "none" },
+    "expires_at": { "type": "datetime" }
+  }
+}

@@ -1,0 +1,141 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { getHomepage } from '../lib/content/homepage';
+import { getCurrentNotices } from '../lib/content/notices';
+import { getUpcomingEvents } from '../lib/content/events';
+
+const homepage = await getHomepage();
+const notices = await getCurrentNotices(4);
+const events = await getUpcomingEvents(4);
+
+const heroImage = homepage.hero_image_urls[0] ?? null;
+
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }).toUpperCase();
+}
+---
+<Layout title="Home" description="Sherubtse College, Kanglung — a constituent college of the Royal University of Bhutan.">
+  <!-- Hero — one photograph, one statement. Written once, not a rotating slider. -->
+  <section class="hero" style={heroImage ? `background-image:url(${heroImage})` : undefined}>
+    <div class="wrap">
+      <p class="hero-statement">{homepage.statement ?? 'Sherubtse College — the seat of learning in the eastern Himalayas.'}</p>
+    </div>
+  </section>
+
+  <!-- Quick-access strip — the one large gold moment on the site. -->
+  {homepage.quick_links.length > 0 && (
+    <div class="quickstrip">
+      <div class="wrap">
+        <ul>
+          {homepage.quick_links.map((l) => <li><a href={l.url}>{l.label}</a></li>)}
+        </ul>
+      </div>
+    </div>
+  )}
+
+  <section class="band">
+    <div class="wrap two-col">
+      <div>
+        <h2 class="h2">Current announcements</h2>
+        {notices.length > 0 ? (
+          <>
+            {notices.map((n) => (
+              <div class="notice-row">
+                <span class="date">{formatDate(n.publish_at)}</span>
+                <div>
+                  <p class="title"><a href={`/news-notices/announcements/${n.id}`}>{n.title}</a></p>
+                  <p class="meta">
+                    {n.urgency === 'urgent' && <span class="tag tag-urgent">Urgent</span>}
+                    <span class="tag">{n.category}</span>
+                    {n.owning_unit_name}
+                  </p>
+                </div>
+              </div>
+            ))}
+            <p class="small" style="margin-top:var(--s4)"><a href="/news-notices/announcements">All announcements &rarr;</a></p>
+          </>
+        ) : (
+          <p class="small">No current announcements.</p>
+        )}
+      </div>
+      <div>
+        <h2 class="h2">What's on</h2>
+        {events.length > 0 ? (
+          <>
+            {events.map((e) => (
+              <div class="notice-row" style="grid-template-columns:100px 1fr">
+                <span class="date">{formatDate(e.starts_at)}</span>
+                <p class="title" style="margin:0"><a href={`/news-notices/events/${e.id}`}>{e.title}</a></p>
+              </div>
+            ))}
+            <p class="small" style="margin-top:var(--s4)"><a href="/news-notices/events">Full calendar &rarr;</a></p>
+          </>
+        ) : (
+          <p class="small">No upcoming events.</p>
+        )}
+      </div>
+    </div>
+  </section>
+
+  <section class="band band-alt">
+    <div class="wrap">
+      <h2 class="h2" style="margin-bottom:var(--s5)">Explore</h2>
+      <div class="cards">
+        {homepage.featured_selections.length > 0 ? (
+          homepage.featured_selections.map((f) => (
+            <div class="card"><h3 class="h3">{f.label}</h3><a href={f.url} class="btn-quiet">Learn more</a></div>
+          ))
+        ) : (
+          <>
+            <div class="card"><h3 class="h3">Academics</h3><p>Departments, programmes and the academic calendar.</p><a href="/academics" class="btn-quiet">Explore academics</a></div>
+            <div class="card"><h3 class="h3">Admissions</h3><p>Entry requirements, dates, fees and how to apply.</p><a href="/admissions" class="btn-quiet">How to apply</a></div>
+            <div class="card"><h3 class="h3">Research</h3><p>Centres, grants, journals and staff expertise.</p><a href="/research" class="btn-quiet">Research at Sherubtse</a></div>
+          </>
+        )}
+      </div>
+    </div>
+  </section>
+</Layout>
+
+<style>
+  .hero {
+    min-height: 320px;
+    display: flex;
+    align-items: flex-end;
+    background-color: var(--navy);
+    background-size: cover;
+    background-position: center;
+    color: #fff;
+  }
+  .hero::before {
+    content: '';
+  }
+  .hero .wrap {
+    padding-block: var(--s6);
+    background: linear-gradient(to top, rgba(8, 18, 52, 0.85), rgba(8, 18, 52, 0));
+    width: 100%;
+  }
+  .hero-statement {
+    font-family: var(--font-serif);
+    font-weight: 700;
+    font-size: clamp(1.6rem, 4vw, 2.4rem);
+    line-height: 1.2;
+    max-width: 20ch;
+    margin: 0;
+  }
+  @media (min-width: 760px) {
+    .hero {
+      min-height: 440px;
+    }
+  }
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--s7);
+  }
+  @media (min-width: 1024px) {
+    .two-col {
+      grid-template-columns: 2fr 1fr;
+    }
+  }
+</style>

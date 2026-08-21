@@ -1,0 +1,25 @@
+{
+  "kind": "collectionType",
+  "collectionName": "pages",
+  "info": {
+    "singularName": "page",
+    "pluralName": "pages",
+    "displayName": "Page"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "attributes": {
+    "title": { "type": "string", "required": true },
+    "slug": { "type": "uid", "targetField": "title" },
+    "body": { "type": "richtext", "required": true },
+    "owning_unit": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::unit.unit",
+      "required": true
+    },
+    "last_reviewed": { "type": "date", "required": true },
+    "review_interval": { "type": "enumeration", "enum": ["semester", "annual", "none"], "default": "none" }
+  }
+}

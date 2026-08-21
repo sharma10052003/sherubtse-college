@@ -1,0 +1,21 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import { getUnits } from '../../../lib/content/units';
+
+const departments = await getUnits('academic');
+---
+<Layout title="Departments" description="Academic departments at Sherubtse College.">
+  <div class="wrap" style="padding-top:var(--s5);padding-bottom:var(--s7)">
+    <nav class="breadcrumb" aria-label="Breadcrumb"><a href="/">Home</a> › <a href="/academics">Academics</a> › <span class="current">Departments</span></nav>
+    <h1 class="h1">Departments</h1>
+    <div class="cards" style="margin-top:var(--s6)">
+      {departments.length > 0 ? departments.map((d) => (
+        <div class="card">
+          <h3 class="h3">{d.name}</h3>
+          {d.description && <p>{d.description}</p>}
+          <a href={`/academics/departments/${d.slug}`} class="btn-quiet">View department</a>
+        </div>
+      )) : <p class="small">Departments will appear here once added in Strapi.</p>}
+    </div>
+  </div>
+</Layout>
