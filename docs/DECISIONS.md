@@ -399,3 +399,41 @@ now, not a substitute for the real backup strategy Track D still owes (daily, of
 tested quarterly). Binary diffs on this file will bloat repository history over time —
 worth moving to a proper Postgres-based workflow with real backups before this becomes
 a habit, not a permanent pattern.
+
+---
+
+## 020 — `main` fast-forwarded to include Track A/Track B; `feature/faculty-profile-system` and `chore/strapi-launch-config` retired
+
+**Status:** Decided
+
+**Context:** A separate local checkout of this repository (used for a working-plan review
+against the Website Requirements and Content Specification) had a corrupted `.git` object
+store: `cms/src/api`'s 14 collection types, 8 components, and 26 of `web/`'s page
+routes/templates/data-fetchers were tracked by that checkout's index but the underlying
+blobs were missing — not recoverable there even from a fresh clone of `origin/main`,
+because `main` had never included commit `56a6041` ("Add Strapi content model rebuild
+(Track A) and Astro frontend (Track B)") in the first place. That checkout spent
+significant effort reconstructing the schema from `cms/docs/CONTENT-MODEL.md` and
+rebuilding the Astro layer from scratch, on the mistaken premise that the work was
+genuinely lost.
+
+It wasn't. A fresh clone of `origin/feature/faculty-profile-system` (rather than
+`origin/main`) showed commit `56a6041` fully intact on GitHub — the real, original Track
+A/Track B implementation that decision 018 verified, not a reconstruction. The problem
+was entirely local to one machine's checkout; nothing was ever actually lost from the
+remote.
+
+**Choice:** Fast-forwarded `main` directly to `56a6041` (`git push origin
+origin/feature/faculty-profile-system:refs/heads/main`) rather than merging the
+reconstruction — `main` was a strict ancestor of `feature/faculty-profile-system`, so this
+was a clean fast-forward with no conflicts and no data loss. Deleted the now-fully-merged
+`feature/faculty-profile-system` branch on the remote, and the already-merged
+`chore/strapi-launch-config` branch (both remote and the stale local copy). `main` is now
+the only branch, and it holds the authentic Track A/Track B work.
+
+**Consequences:** Anyone else with a local checkout showing `cms/src/api` or `web/src`
+mostly empty should re-clone or hard-reset to `origin/main` rather than reconstructing —
+check `git fetch && git log origin/main` first. The specification's own §1.5 ("PHP front
+end confirmed") remains a separate, genuine documentation error independent of this
+incident — Astro is still the confirmed stack per decisions 001/017/018, and that
+specification text still needs correcting to match, which this decision does not do.
