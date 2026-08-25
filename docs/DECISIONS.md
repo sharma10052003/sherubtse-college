@@ -1238,3 +1238,63 @@ the newly-built site repeating the live site's own stale information.
 **Consequences:** None beyond the two corrected Page bodies. `events`, `features`, and
 `recruitments` remain at zero records — same reasoning as decision 035's note, left for
 a following pass.
+
+---
+
+## 037 — Phase 5 continued: real Documents seeded, three categories deliberately left
+empty (not overlooked), and a real download-link bug fixed
+
+**Status:** Decided
+
+**Context:** Checked every remaining zero-record category against the audit
+(decision 025) individually rather than treating "still empty" as one leftover task.
+
+**Choice — three categories left empty on purpose:**
+- **Recruitment** (61 audit rows, the single largest category): every one of them is
+  `Retire → /news-notices/recruitment` — expired vacancy/shortlist notices whose
+  correct handling per decision 025's own rule is a redirect to the nearest sensible
+  parent, already done in decision 034. None represents a real, currently open
+  position, so no `Recruitment` record would be honest to create — the collection
+  stays empty until an actual vacancy exists.
+- **Tenders**: the 2 real, specific tenders found (`/notice-inviting-tender-bids/`,
+  `/invitation-for-bids-ifb/`) both closed years ago (2021, 2024) — same reasoning as
+  Recruitment. Left as redirects only.
+- **Notices** (the 6 "Move" rows: `/notification/`, `/results/`, three semester-end
+  result pages, `/newsletter/`): checked each individually rather than assuming "Move"
+  meant real content existed. `/notification/` and `/results/` are bare category
+  index pages with no unique content of their own. The three exam-result pages are
+  each just a heading plus a bare external link (Google Drive/Forms), with no real
+  publish or expiry date stated anywhere on the page or in site metadata — inventing
+  one to satisfy the schema's required `publish_at`/`expires_at` would be a fabrication,
+  so these were skipped rather than forced in. `/newsletter/` names one real current
+  issue ("The Tower — Summer Edition 2026") but only as a downloadable PDF with no
+  stated date either; same reasoning, skipped.
+
+**Choice — Downloads got real content, because it had real content:**
+`/student-related-form/` listed 11 real, currently-linked files, 9 of them hosted
+directly on the live site's own domain (not third-party Drive links) — downloaded and
+re-uploaded as real `Document` records: the 6 named student forms (Character
+Certificate, Student Leave, Student Travel, Admission Undertaking, New Student
+Clearance, Transcript of Records), plus 4 more surfaced by reading the actual page
+rather than trusting the audit's title alone (College Organogram, The Wheel of
+Academic Law, Zhib-Tshol, RUB Student Code of Conduct July 2022, Student Handbook
+2025–2026). Two Google-Drive-hosted forms (Day Scholar, Residence Hall Change) were
+left out — fetching and re-hosting third-party Drive files was judged out of scope for
+this pass, not silently dropped. `alternativeText` set per-file, specific to each
+document (satisfying the same lifecycle-hook requirement decision 028 hit during the
+faculty migration).
+
+**A real, pre-existing bug found by checking the rendered link, not the API
+response:** `documents.ts`'s `file_url` used the raw Strapi-relative path
+(`row.file?.url`) instead of the `mediaUrl()` helper every other content file in this
+codebase uses to resolve media against `STRAPI_URL`. Every `Document` ever created —
+not just this session's — would have produced a download link that 404s the moment
+Astro and Strapi are on separate hosts. Fixed in `documents.ts`; confirmed by reading
+the actual rendered `href` before and after (`/uploads/...` → `http://localhost:1337/
+uploads/...`).
+
+**Consequences:** `events` and `features` remain at zero records — the audit's
+`/events/` row is itself just the landing page (already built), and no old-site URL
+was classified as belonging to `features` (an evergreen narrative type introduced by
+the new content model, without a live-site equivalent to migrate from). Both stay
+empty until there's real content to put in them, not fabricated to look "finished."
