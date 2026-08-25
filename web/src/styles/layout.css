@@ -4,6 +4,18 @@
  * top-level item links straight to its section landing page.
  */
 
+/* The utility bar and masthead deliberately use more of the screen than
+   the site's --content-width (1140px, tuned for reading body text) — a
+   navigation bar reading as a solid band across the screen is a
+   different job than a column of prose, and at wide viewports 1140px
+   left ~380px of dead navy on each side. 1600px is still a real cap
+   (not full-bleed) so it doesn't stretch absurdly on ultra-wide
+   monitors, just uses noticeably more of a normal wide screen. */
+.utility-bar .wrap,
+.masthead .wrap {
+  max-width: 1600px;
+}
+
 /* ---------- Utility bar — thin, navy deep, above the masthead ---------- */
 .utility-bar {
   background: var(--navy-deep);
@@ -57,9 +69,19 @@
   text-decoration: none;
 }
 .brand img {
-  height: 56px;
+  height: 44px;
   width: auto;
   display: block;
+}
+@media (min-width: 760px) {
+  .brand img {
+    height: 60px;
+  }
+}
+@media (min-width: 1024px) {
+  .brand img {
+    height: 80px;
+  }
 }
 .primary-nav {
   display: none;
@@ -114,7 +136,7 @@
   .header-search input {
     font-family: var(--font-sans);
     font-size: 0.85rem;
-    width: 90px;
+    width: 70px;
     border: 1px solid rgba(255, 255, 255, 0.4);
     border-right: 0;
     background: rgba(255, 255, 255, 0.08);
@@ -145,7 +167,7 @@
 }
 @media (min-width: 1024px) {
   .header-search input {
-    width: 200px;
+    width: 140px;
   }
 }
 

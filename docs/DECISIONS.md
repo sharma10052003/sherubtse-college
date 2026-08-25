@@ -1051,3 +1051,48 @@ server (`astro dev`) never serves it either. A new `astro-web-preview` entry was
 `.claude/launch.json` (port 4322) specifically to test against the real built output —
 worth keeping for any future verification that depends on Pagefind or other
 build-only artifacts.
+
+---
+
+## 033 — Masthead widened past --content-width; logo/search resized in three tiers, not one
+
+**Status:** Decided
+
+**Context:** The project owner asked why the masthead's content "appears in the middle"
+on their screen. Measured rather than assumed: at 1920px, `.masthead .wrap` inherited
+the site's shared `--content-width` (1140px, tuned for reading body text), leaving
+382px of dead navy on each side — real and symmetric, confirmed by
+`getBoundingClientRect`. Also asked for the logo bigger and the search box shorter,
+opposite directions on the same element decision 031/032 had just sized.
+
+**Choice — widen the chrome, not the whole site.** A nav bar reading as a solid band and
+a paragraph of body text have different jobs; capping both to the same 1140px isn't
+required by anything in the Style Guide, it's just what the shared `.wrap` class does by
+default. Added `max-width: 1600px` scoped to `.utility-bar .wrap` and `.masthead .wrap`
+only — a real cap, not full-bleed, so it doesn't stretch absurdly on an ultra-wide
+monitor, but uses much more of a normal wide screen. `--content-width` itself (used
+everywhere else — articles, cards, listings) was left untouched.
+
+**A real bug found while resizing the logo, not assumed fixed by editing CSS alone:**
+the `<Image>` component had an inline `style="height:80px"` left over from decision 031.
+Inline styles beat any external stylesheet rule regardless of specificity tricks, so
+every `.brand img` media-query rule written for this change would have silently done
+nothing — confirmed by checking the rendered height at each breakpoint before assuming
+the CSS took effect. Removed the inline style entirely; sizing now lives only in CSS,
+where it can actually differ by breakpoint: 44px base, 60px at 760px, 80px at 1024px+
+(matching the same three-tier mobile-first pattern used everywhere else in this file,
+not a flat value).
+
+**Two more overflow bugs, same tight 760px tier as before:** the first attempt (widen +
+80px logo everywhere + 140px search) overflowed 760px by 19px — the bigger logo alone
+cost more than the margin decision 032 had left. Fixed by keeping the logo modest (60px)
+at that specific tier and shrinking the search input further there (90px → 70px) — the
+same "big only from 1024px+" principle already applied to the nav font/padding. Re-
+verified all five widths after: 375px (44px logo, no hamburger collision), 760px (21px
+margin, up from the previous fix's precarious 5px), 1024px (80px logo, 24px margin),
+1280px (still aligned with the utility bar), 1920px (dead space 382px → 152px per side,
+nav gaps still equal at 144px, search confirmed 140px wide, logo confirmed 80px — not
+just requested, measured).
+
+**Consequences:** None beyond the masthead/utility bar — `--content-width` and every
+other section of the site keep their existing 1140px reading measure.
