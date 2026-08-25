@@ -11,6 +11,7 @@
   },
   "attributes": {
     "hero_images": { "type": "media", "multiple": true, "allowedTypes": ["images"] },
+    "hero_video": { "type": "media", "multiple": false, "allowedTypes": ["videos"] },
     "statement": { "type": "text" },
     "quick_links": {
       "type": "component",

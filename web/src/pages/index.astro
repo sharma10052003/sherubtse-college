@@ -15,8 +15,19 @@ function formatDate(iso: string) {
 }
 ---
 <Layout title="Home" description="Sherubtse College, Kanglung — a constituent college of the Royal University of Bhutan.">
-  <!-- Hero — one photograph, one statement. Written once, not a rotating slider. -->
+  <!-- Hero — one photograph, one statement. Written once, not a rotating slider.
+       The video is desktop/tablet only, gated by JS below rather than
+       <source media="">, which turned out not to reliably suppress the
+       fetch (verified: networkState stayed NETWORK_NO_SOURCE even at
+       1280px). No src/autoplay in the markup at all — the script only sets
+       .src and calls .play() once it has confirmed both the width and
+       prefers-reduced-motion, so a phone on mobile data never requests
+       the file in the first place. The still image (also the video's
+       poster) is the only asset mobile visitors pay for. -->
   <section class="hero" style={heroImage ? `background-image:url(${heroImage})` : undefined}>
+    {homepage.hero_video_url && (
+      <video class="hero-video" poster={heroImage ?? undefined} muted loop playsinline preload="none" id="heroVideo" data-src={homepage.hero_video_url}></video>
+    )}
     <div class="wrap">
       <p class="hero-statement">{homepage.statement ?? 'Sherubtse College — the seat of learning in the eastern Himalayas.'}</p>
     </div>
@@ -99,6 +110,7 @@ function formatDate(iso: string) {
 
 <style>
   .hero {
+    position: relative;
     min-height: 320px;
     display: flex;
     align-items: flex-end;
@@ -106,11 +118,23 @@ function formatDate(iso: string) {
     background-size: cover;
     background-position: center;
     color: #fff;
+    overflow: hidden;
   }
   .hero::before {
     content: '';
   }
+  .hero-video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    /* The still background-image on .hero is directly behind this and
+       shows through until the video has a frame ready — never a blank
+       flash, on any connection speed. */
+  }
   .hero .wrap {
+    position: relative;
     padding-block: var(--s6);
     background: linear-gradient(to top, rgba(8, 18, 52, 0.85), rgba(8, 18, 52, 0));
     width: 100%;
@@ -139,3 +163,31 @@ function formatDate(iso: string) {
     }
   }
 </style>
+
+<script>
+  // No src/autoplay in the markup — this only loads and plays the hero
+  // video once it has confirmed the viewport is desktop/tablet-sized AND
+  // the visitor hasn't asked for reduced motion. Either condition failing
+  // means the video file is never requested at all, so a phone on mobile
+  // data (the site's stated primary persona) never pays for it — same
+  // budget-exempt-interaction class as the mobile menu toggle and
+  // calendar filter chips.
+  const heroVideo = document.getElementById('heroVideo') as HTMLVideoElement | null;
+  if (heroVideo) {
+    const isDesktop = window.matchMedia('(min-width: 760px)').matches;
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (isDesktop && !reducedMotion) {
+      heroVideo.src = heroVideo.dataset.src ?? '';
+      heroVideo.load();
+      // Two attempts, not one: calling .play() in the same tick as setting
+      // .src can lose a race against the browser registering the new
+      // source (verified — the immediate call silently failed while a
+      // later manual call succeeded once loaded). 'canplay' catches it
+      // once the browser is actually ready; the immediate call covers the
+      // common case where it already is.
+      const tryPlay = () => heroVideo.play().catch(() => {}); // browser autoplay policy can still block it — fail silently, poster stays visible
+      tryPlay();
+      heroVideo.addEventListener('canplay', tryPlay, { once: true });
+    }
+  }
+</script>

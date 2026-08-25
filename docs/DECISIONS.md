@@ -890,3 +890,57 @@ overlap). Confirmed the rule shipped in the actual production CSS
 
 **Consequences:** None beyond the one rule — no other layout changes were made, per the
 explicit "ignore colour, ignore dropdown" scope.
+
+---
+
+## 030 — Homepage hero video added, gated to desktop and loaded via JS, not `<source media="">`
+
+**Status:** Decided
+
+**Context:** The project owner pointed at the old PHP homepage's hero video for "good
+vibes" and confirmed a matching video already sits in Strapi's media library (same file
+as `assets/uploads/hero/hero_79333feee3ece0f709bc94df.mp4`, 2.68MB, `video/mp4`) —
+verified via the upload API before doing anything, not assumed from the mention alone.
+`homepage`'s schema had no video field — only `hero_images` (`allowedTypes: ["images"]`).
+Added `hero_video` (`allowedTypes: ["videos"]`), which required a Strapi restart to take
+effect (schema.json changes aren't hot-reloaded).
+
+**A real cross-cutting tension, resolved deliberately, not ignored:** this project's own
+stated performance philosophy (500KB budget, "a Class XII student in Samdrup Jongkhar, on
+a phone, on mobile data" as the explicit test case) sits directly against autoplaying a
+2.68MB video. Resolved by making the video desktop/tablet-only and never fetched on
+mobile at all, not merely hidden with CSS.
+
+**First attempt was wrong, caught by testing rather than shipped:** used `<source
+media="(min-width: 760px)">` inside the `<video>` element, the standards-documented way
+to do this. Tested it directly — `networkState` stayed `NETWORK_NO_SOURCE` even at
+1280px, well above the breakpoint. The media-query gate on `<video>`'s `<source>` did not
+behave as documented in this environment. Replaced with a small script (same
+budget-exempt-interaction class as the mobile menu toggle and calendar filter chips): the
+video ships with no `src`/`autoplay` attribute at all; a script checks `matchMedia('(min-
+width: 760px)')` and `matchMedia('(prefers-reduced-motion: reduce)')` and only then sets
+`.src` and calls `.play()`. Verified this actually stops the fetch, not just the
+attribute: at 375px, `networkState` is `0` (`NETWORK_EMPTY`) and `currentSrc` is empty —
+no request made. At 1280px, real range-request (`206 Partial Content`) traffic for the
+video file is visible in the network log.
+
+**A second real bug, also caught by testing rather than assumed working:** the first
+version of the script called `.play()` in the same tick as setting `.src`, which silently
+lost a race against the browser registering the new source — verified: the video loaded
+fully (`readyState: 4`) but stayed paused, and a script correction confirmed a later,
+separately-called `.play()` succeeded, isolating the timing bug rather than the browser
+autoplay policy. Fixed with a `.load()` call plus a `canplay` listener as a second attempt,
+alongside the immediate one. Re-verified on a fresh page load with the tab actually in the
+foreground (a background tab in this multi-tab session paused the video after ~5s, which
+is normal browser tab-throttling behaviour, not a site defect) — `currentTime` genuinely
+advancing, `paused: false`.
+
+**Not independently re-verified:** the `prefers-reduced-motion` branch uses the identical
+`matchMedia(...).matches` gate already proven to work for the width check, but this
+environment has no way to emulate that OS-level preference from page script to force a
+fresh-navigation test of it specifically — noted rather than claimed as tested.
+
+**Consequences:** No `hero_images` or `statement` is set on the homepage record yet — the
+navy background colour shows before the video loads, and the default English statement
+text is used. Not addressed here; adding a real hero photo/statement is separate content
+work, not part of what was asked.
