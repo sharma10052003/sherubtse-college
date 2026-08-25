@@ -37,7 +37,17 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--s4);
-  padding-block: var(--s3);
+  padding-block: var(--s4);
+}
+@media (min-width: 760px) {
+  .masthead .wrap {
+    padding-block: var(--s5);
+  }
+}
+@media (min-width: 1024px) {
+  .masthead .wrap {
+    padding-block: var(--s6);
+  }
 }
 .brand {
   display: flex;
@@ -47,21 +57,21 @@
   text-decoration: none;
 }
 .brand img {
-  height: 32px;
+  height: 56px;
   width: auto;
   display: block;
 }
 .brand-text {
   font-family: var(--font-serif);
   font-weight: 700;
-  font-size: 1.05rem;
+  font-size: 1.2rem;
   line-height: 1.15;
 }
 .brand-text small {
   display: block;
   font-family: var(--font-sans);
   font-weight: 400;
-  font-size: 0.68rem;
+  font-size: 0.75rem;
   color: #c9d0e4;
 }
 
@@ -86,7 +96,7 @@
     text-decoration: none;
     font-weight: 600;
     font-size: 0.85rem;
-    padding: var(--s2) 0;
+    padding: var(--s3) 0;
     border-bottom: 2px solid transparent;
     white-space: nowrap;
   }
@@ -97,10 +107,11 @@
 }
 @media (min-width: 1024px) {
   .primary-nav {
-    gap: var(--s6);
+    gap: var(--s7);
   }
   .primary-nav a {
-    font-size: 0.92rem;
+    font-size: 1.02rem;
+    padding-block: var(--s4);
   }
 }
 

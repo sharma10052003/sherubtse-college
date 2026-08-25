@@ -944,3 +944,41 @@ fresh-navigation test of it specifically — noted rather than claimed as tested
 navy background colour shows before the video loads, and the default English statement
 text is used. Not addressed here; adding a real hero photo/statement is separate content
 work, not part of what was asked.
+
+---
+
+## 031 — Masthead enlarged (crest + nav), scope confirmed before touching the colour decision
+
+**Status:** Decided
+
+**Context:** The project owner shared RUB's header (white background, large circular
+crest badge, spacious nav) as a "look how good this looks" reference. RUB's background
+is white; ours is navy, locked in by decisions 001/017. Asked directly which was wanted
+— a same-colour size/spacing increase, or an actual reversal of the navy decision — before
+touching anything, since the two are very different in scope. Confirmed: keep navy, make
+the crest bigger and the nav row more spacious. No colour or structural change made.
+
+**Choice:** `Header.astro`'s crest grew from 32px to 56px (both the `<Image>` component's
+width/height props and the CSS, kept in sync so Astro's image pipeline generates the
+right size rather than upscaling a smaller render). `.masthead .wrap`'s padding grew in
+three tiers, mobile-first (`--s4` base → `--s5` at 760px → `--s6` at 1024px), rather than
+one flat value, so the masthead gets progressively roomier rather than just uniformly
+bigger everywhere including cramped mobile widths. `.brand-text` grew 1.05rem→1.2rem,
+`.primary-nav a`'s font-size and padding grew at the 1024px+ tier specifically
+(1.02rem, `--s4` vertical padding, `--s7` gap) — deliberately not at the 760px tablet
+tier, where six nav items were already close to the wrap's edge after decision 026's
+breakpoint fix.
+
+**Verification, not assumption, given the tablet tier was already tight:** re-measured at
+all four of the plan's standard widths after the change. 760px: no overflow, no
+brand/nav collision (nav starts at 227px, brand ends at 211px). 1024px: no overflow,
+confirmed nav font actually is 16.32px (1.02rem) and logo actually renders at 56px, not
+just requested. 1280px: no overflow, and — checked specifically because decision 029 just
+fixed this — the utility bar's last link and the primary nav's right edge are still
+exactly aligned (both 1178.4px), confirming the bigger masthead didn't quietly break that
+fix. 375px: no brand/toggle collision, masthead height 94px (was ~66px), still reasonable
+for a phone. Also confirmed the 1.6MB source PNG still compresses to ~2KB WebP at the
+larger display size — the bigger crest costs nothing in the performance budget.
+
+**Consequences:** None beyond the masthead — no other layout or colour changes were made,
+matching the confirmed scope.
