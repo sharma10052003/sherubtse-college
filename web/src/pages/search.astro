@@ -16,9 +16,20 @@ import Layout from '../layouts/Layout.astro';
 <link href="/pagefind/pagefind-ui.css" rel="stylesheet" />
 <script is:inline src="/pagefind/pagefind-ui.js"></script>
 <script is:inline>
+  // The masthead search box submits here as a plain GET (?q=...) — works
+  // with JavaScript disabled, matching the noscript fallback above. With
+  // JS on, this reads that query back out of the URL and drives it into
+  // Pagefind's own input so the visitor lands straight on their results
+  // instead of an empty search box they'd have to retype into.
   window.addEventListener('DOMContentLoaded', () => {
-    if (window.PagefindUI) {
-      new window.PagefindUI({ element: '#search', showSubResults: true });
-    }
+    if (!window.PagefindUI) return;
+    new window.PagefindUI({ element: '#search', showSubResults: true });
+
+    const q = new URLSearchParams(window.location.search).get('q');
+    if (!q) return;
+    const input = document.querySelector('#search input[type="text"]');
+    if (!input) return;
+    input.value = q;
+    input.dispatchEvent(new Event('input', { bubbles: true }));
   });
 </script>

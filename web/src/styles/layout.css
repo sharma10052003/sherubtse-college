@@ -61,34 +61,23 @@
   width: auto;
   display: block;
 }
-.brand-text {
-  font-family: var(--font-serif);
-  font-weight: 700;
-  font-size: 1.2rem;
-  line-height: 1.15;
-}
-.brand-text small {
-  display: block;
-  font-family: var(--font-sans);
-  font-weight: 400;
-  font-size: 0.75rem;
-  color: #c9d0e4;
-}
-
 .primary-nav {
   display: none;
 }
 /* Breakpoint moved from 1024px to 760px (Style Guide Phase 3.1) — tablet
    users were falling through to the hamburger button with nothing between
    phone and laptop widths, the single biggest usability problem in the
-   bar. Gap is tighter here than at desktop width on purpose: six items at
-   exactly 760px need to fit without wrapping. */
+   bar. flex:1 + justify-content:space-between spreads the items evenly
+   across whatever room is left between the logo and the search box,
+   rather than clustering them with a fixed gap. */
 @media (min-width: 760px) {
   .primary-nav {
     display: flex;
-    gap: var(--s4);
+    flex: 1;
+    justify-content: space-between;
+    gap: var(--s3);
     list-style: none;
-    margin: 0;
+    margin: 0 var(--s3);
     padding: 0;
   }
   .primary-nav a {
@@ -106,12 +95,57 @@
   }
 }
 @media (min-width: 1024px) {
-  .primary-nav {
-    gap: var(--s7);
-  }
   .primary-nav a {
     font-size: 1.02rem;
     padding-block: var(--s4);
+  }
+}
+
+/* ---------- Header search — plain GET form, works with JS off ---------- */
+.header-search {
+  display: none;
+}
+@media (min-width: 760px) {
+  .header-search {
+    display: flex;
+    align-items: stretch;
+    flex-shrink: 0;
+  }
+  .header-search input {
+    font-family: var(--font-sans);
+    font-size: 0.85rem;
+    width: 90px;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-right: 0;
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+    padding: 0 var(--s3);
+  }
+  .header-search input::placeholder {
+    color: #c9d0e4;
+  }
+  .header-search input:focus-visible {
+    background: #fff;
+    color: var(--ink);
+  }
+  .header-search button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    background: var(--gold);
+    color: var(--navy);
+    cursor: pointer;
+  }
+  .header-search button svg {
+    width: 18px;
+    height: 18px;
+  }
+}
+@media (min-width: 1024px) {
+  .header-search input {
+    width: 200px;
   }
 }
 

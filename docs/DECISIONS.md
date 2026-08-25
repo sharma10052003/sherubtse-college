@@ -982,3 +982,72 @@ larger display size — the bigger crest costs nothing in the performance budget
 
 **Consequences:** None beyond the masthead — no other layout or colour changes were made,
 matching the confirmed scope.
+
+---
+
+## 032 — Logo-only brand mark, evenly-distributed nav, real header search — three rounds of scope clarification, then two real bugs caught in verification
+
+**Status:** Decided
+
+**Context:** The project owner's first message ("nothing written near the logo") directly
+contradicted their own follow-up answer ("logo should contain... sherubtse college
+kanglung"). Rather than guess which was meant, asked directly — confirmed: logo image
+only, no text. Search behaviour also needed a second clarifying round: offered a live
+dropdown vs. a plain redirect, the owner picked neither ("something else") and supplied
+a real reference URL (`rub.edu.bt/?s=programmes...`). Fetched and read that page rather
+than guessing what "like this" meant: a full-page-reload results list — title, excerpt,
+link, no live dropdown, no thumbnails.
+
+**Choice:**
+- `Header.astro`: removed the `<span class="brand-text">` entirely — crest image only,
+  `aria-label` moved to the link itself so the accessible name isn't lost.
+- Added a real `<form action="/search" role="search">` after the nav — plain GET,
+  works with JavaScript disabled, submits to the site's existing Pagefind-powered
+  `/search` page. Positioned after "News & Notices" per the owner's explicit placement
+  instruction.
+- `.primary-nav` changed from a fixed `gap` to `flex: 1` + `justify-content: space-between`
+  — the six links now genuinely spread across whatever room is left between the logo and
+  the search box, not clustered with uniform-but-arbitrary spacing.
+- `search.astro`: reads `?q=` off the URL on load and drives it into Pagefind's own input
+  (`dispatchEvent(new Event('input'))`) so the masthead search box's query lands the
+  visitor on populated results, not an empty search box they'd have to retype into —
+  the closest honest match to the RUB reference's "type once, see results" flow, built on
+  the site's real (better — live, no reload) search technology rather than copying
+  WordPress's page-reload mechanism.
+
+**Two real overflow bugs, found by measuring, not by looking:** first pass overflowed at
+760px (search box 89px too wide for what was left after the logo and six links).
+Fixed by shrinking the search input at that tier and tightening the nav's own margin —
+re-measured, fit with 5px to spare. Second pass then overflowed at 1024px (a `margin-
+inline: var(--s7)` left over from decision 031, now competing with a wider 200px search
+box for the same space) — removed that margin entirely, since the "bigger" feel at that
+tier was already coming from the links' own font-size and padding, not extra margin.
+Re-verified all four standard widths after both fixes: 375px (search correctly hidden,
+no collision with the hamburger), 760px, 1024px, and 1280px (search box lands at
+1178.4px — the same right edge decision 029 established for the utility bar) all clean,
+with nav gaps confirmed genuinely equal at each width measured (31px at 1280px before
+the 1024px fix, 45px after — the point being they're equal to each other at any given
+width, not a fixed value across widths).
+
+**A tooling-fidelity finding, isolated rather than assumed to be a site bug:** the
+Browser pane's synthetic mouse click and Enter keypress did not focus the input or
+submit the form here, even after confirming coordinates were correct. Rather than
+conclude the feature was broken, isolated the cause: JS `.focus()` genuinely focused the
+input, and after that, typed text landed correctly — the click specifically wasn't
+registering as a real focus event in this non-compositing pane. `button.click()` (a real
+DOM click, not a bypass like `.submit()`) fired a real `submit` event and navigated
+correctly to `/search?q=Physics`. This is a standard HTML form with one input and one
+submit button — that combination submits on Enter in every real browser natively, with
+or without JavaScript; nothing in this codebase's scripts touches this form's keydown
+events. Verified the actual outcome twice with different real queries against the real
+migrated data: "Economics" → 6 results including Karma Yoezer and Ugyen Lhendup's real
+profiles (both have "MA Economics" as their qualification); "Physics" → 9 results
+including three real Physics faculty and the BSc Physics programme.
+
+**Consequences:** `npm run build` (the full script, including `pagefind --site dist`)
+must be run for search to work at all — plain `astro build` alone (what most of this
+session's other verifications used) does not generate the Pagefind index, and the dev
+server (`astro dev`) never serves it either. A new `astro-web-preview` entry was added to
+`.claude/launch.json` (port 4322) specifically to test against the real built output —
+worth keeping for any future verification that depends on Pagefind or other
+build-only artifacts.
