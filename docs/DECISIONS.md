@@ -1096,3 +1096,46 @@ just requested, measured).
 
 **Consequences:** None beyond the masthead/utility bar — `--content-width` and every
 other section of the site keep their existing 1140px reading measure.
+
+---
+
+## 034 — Phase 2 closure: real redirect map for all 205 audited old-site URLs
+
+**Status:** Decided
+
+**Context:** A stale status snapshot shown by the project owner claimed Phase 3 was
+still broken (emoji icons, 1024px breakpoint) and that decisions 008/009 were still
+open — checked both directly against the real code and this log: `BottomTabs.astro`
+already uses inline SVG and the breakpoint is already 760px (decision 026), and
+008/009 were confirmed by the project owner back in decision 024. The one genuinely
+remaining Phase 2 gap, confirmed by re-reading decision 025's audit output, was that
+the 205 classified URLs had never been turned into an actual redirect mechanism.
+
+**Choice:** Generated `web/src/data/redirects.json` (203 entries) directly from
+`docs/Sherubtse-Content-Audit-v5.xlsx`'s Move/Merge/Retire/target columns — no new
+classification decisions, just wiring up what decision 025 already decided. Wired it
+into `astro.config.mjs`'s built-in `redirects` option. Excluded two rows: the one
+Elementor widget URL explicitly marked "not indexable, no redirect needed," and the
+homepage's own row (`/` → `/`, not a real redirect).
+
+**A real data bug caught before shipping:** 37 of the spreadsheet's target URLs had a
+stray trailing slash (`/academics/programmes/` etc.) that wouldn't have matched the
+site's actual no-trailing-slash routes. Fixed programmatically during generation, then
+verified all 27 unique targets against the real `src/pages` route structure.
+
+**Verified with a real build, not assumed from config alone:** `npx astro build`
+produced 80 pages plus 203 static redirect stubs with no errors. Spot-checked
+`dist/management-team/index.html` directly — correct `meta http-equiv="refresh"`,
+`rel="canonical"`, and `noindex`, pointing at `/about/about-the-college` as classified.
+
+**A known, pre-existing gap this surfaces rather than creates:** five of the redirect
+targets (`/about/about-the-college`, `/about/history`, `/about/vision-mission-core-
+values`, `/about/campus-facilities`, `/about/contact`) route through `about/[slug].astro`,
+which currently generates zero paths — Strapi's `pages` collection has 0 records. The
+redirect targets are correct; they'll resolve once Phase 5 seeds real Page content.
+Not fabricating that content now.
+
+**Consequences:** Static-host meta-refresh redirects return HTTP 200, not a real 301 —
+adequate for functionality and works with JS off, but a real 301 (via `.htaccess` or a
+hosting platform's redirect config) is still worth doing at Phase 6 launch time for SEO
+link-equity transfer. Left as a Phase 6 note, not solved here.
