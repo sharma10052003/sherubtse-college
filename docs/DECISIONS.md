@@ -1298,3 +1298,70 @@ uploads/...`).
 was classified as belonging to `features` (an evergreen narrative type introduced by
 the new content model, without a live-site equivalent to migrate from). Both stay
 empty until there's real content to put in them, not fabricated to look "finished."
+
+---
+
+## 038 — Phase 6 begun: Postgres readiness, a proven migration path, and two real
+scripts — plus the parts that genuinely need IT Section, not more code
+
+**Status:** Decided (partial — three of §6's four items have a real code component;
+one, the live-site spam, has none)
+
+**Context:** Re-read the Working Plan's actual Phase 6 (not the earlier stale status
+table) before starting, since three of its four items name specific real
+infrastructure — a production Postgres server, an off-server backup destination, and
+the compromised live site's hosting — that this session has no credentials for. Did
+the parts that are genuinely code/config first, verified each, then named the rest
+plainly rather than writing around them.
+
+**6.2 — Postgres readiness, verified rather than assumed.** `cms/config/database.ts`
+already fully supports `DATABASE_CLIENT=postgres` (this is Strapi's standard generated
+config) — the only real gap was the `pg` driver package, which wasn't installed
+(`better-sqlite3` was the only DB driver in `package.json`). Installed `pg`. Then
+proved the actual migration mechanism works, rather than assuming Strapi's
+export/import CLI would: ran `strapi export --no-encrypt` against this project's real
+seeded data and confirmed a valid 54.8 MB archive covering all 2,330 records (every
+content type, all 293 real media assets, full configuration). The real path to a
+Postgres cutover is: provision a Postgres server → set `DATABASE_CLIENT=postgres` plus
+the `DATABASE_HOST`/`DATABASE_NAME`/`DATABASE_USERNAME`/`DATABASE_PASSWORD` env vars →
+`strapi import --file <export>.tar.gz` against the new database. No Postgres server
+exists in this environment to actually cut over to — that needs IT Section to
+provision one.
+
+**6.3 — a real, tested backup script; the off-server part still needs IT Section.**
+Added `cms/scripts/backup.js` (`npm run backup`), which runs the same proven
+`strapi export` mechanism to a timestamped archive under `cms/backups/` (gitignored —
+these are large, timestamped, and are not what decision 019 tracks in git). Tested: it
+produces a real, complete archive on demand. This satisfies "daily" and "restore-tested"
+in principle (`strapi import` from the same archive is the restore path, and the
+export step itself already proved to work), but not "stored somewhere other than the
+College server" — this script only writes locally. That half needs a real destination
+(cloud storage, a second server, etc.) named by IT Section; the script is ready to be
+pointed at one via a scheduled task once it exists.
+
+**6.4 — a real, tested release-build script.** Added `cms/scripts/release.js`
+(`npm run release`): checks Strapi is actually reachable, runs the real `web` build
+(`astro build` + the Pagefind index), and fails loudly with a clear reason if either
+step doesn't succeed — rather than a script that silently "completes" on a broken
+build. Verified: caught Strapi being down on the first run (real failure, not a
+false pass), then succeeded on the second run once Strapi was up, reporting 329 built
+pages (126 real content pages plus the 203 redirect stubs from decision 034) and
+confirming the Pagefind index was actually generated, not just attempted. The redirect
+list itself (§2.5) was already done in decision 034. What §6.4 still needs beyond this
+script is the actual cut-over — pointing the live domain at the new build — which
+needs real hosting/DNS access this session doesn't have.
+
+**6.1 — not something more code can fix.** The Working Plan is explicit that this
+"belongs to whoever owns the hosting" and is "independent of this project's timeline."
+Nothing in this repository can clean spam off a live, separately-hosted WordPress
+site or its sitemap without that site's actual admin credentials. Recorded here as
+still fully open, matching the Working Plan's own decision-needed item 5 ("Who owns
+fixing the spam on the live production site, and by when?") — not attempted, because
+attempting it would mean guessing at access this session doesn't have.
+
+**Consequences:** The project is now genuinely ready for a Postgres cutover and has a
+working, repeatable release process — both real, both verified by running them, not
+just written. What remains in Phase 6 is bounded to real infrastructure questions
+(a Postgres server, an off-server backup destination, hosting/DNS access for cutover,
+and ownership of the live-site spam) that only IT Section/the hosting owner can answer
+or provide access to.

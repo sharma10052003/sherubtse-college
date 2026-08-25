@@ -72,6 +72,11 @@ $RECYCLE.BIN/
 *.log
 *.sql
 
+# Backup archives (Phase 6.3) — local artifacts of scripts/backup.js.
+# Real backups must live off the College server (docs/DECISIONS.md #038),
+# not in git — these are timestamped and would bloat the repo fast.
+backups/
+
 
 ############################
 # Misc.
