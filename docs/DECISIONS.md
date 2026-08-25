@@ -1139,3 +1139,60 @@ Not fabricating that content now.
 adequate for functionality and works with JS off, but a real 301 (via `.htaccess` or a
 hosting platform's redirect config) is still worth doing at Phase 6 launch time for SEO
 link-equity transfer. Left as a Phase 6 note, not solved here.
+
+---
+
+## 035 — Phase 5 begun: real Pages, Research Centres, and Clubs — sourced from the live
+site, not fabricated
+
+**Status:** Decided
+
+**Context:** Phase 5 (load real content) had zero records in `pages`, `clubs`, and
+`research-centres` — the department/faculty migration (decision 028) never covered
+these. Decision 025's audit had already identified real named entities for both
+(4 research centres after deduplication, ~20 real clubs), so rather than invent
+placeholder content, fetched each entity's actual live page on www.sherubtse.edu.bt
+and used only its genuine, verifiable text.
+
+**Choice:**
+- Created 4 new `Unit` records to serve as real `owning_unit`s, since none of the
+  existing 3 academic departments fit: **Office of the President** (owns the 5 About
+  pages below), **Office of Research and Industrial Linkages** (owns the research
+  centres), **Student Association** (owns the clubs), and **Games & Sports** (recorded
+  per decisions 009/011/024's classification, no content beyond the Unit record itself
+  — still flagged as needing a dedicated frontend route per the Phase 4 note in
+  decision 025).
+- 5 `Page` records for the About section, closing the redirect gap decision 034
+  flagged: About the College (leadership names/titles, sourced from the site's own
+  Contact page rather than Management Team, whose bios are the site's known "Duden
+  river" Lorem-Ipsum placeholder — explicitly excluded, not reproduced), History (the
+  real 1968–2021 timeline), Vision/Mission/Core Values, Campus Facilities
+  (library/lab), and Contact.
+- 4 `Research Centre` records (Population & Development Studies, Climate Change &
+  Spatial Information, Science & Environmental Research, Business Incubation Centre),
+  each with its real vision/mission/focus-area text and named coordinator. Skipped
+  "FINA" — decision 025 flagged it as a duplicate needing disambiguation with a real
+  person, still unresolved.
+- 20 `Club` records, one per real club/society page found in the audit. Verified each
+  page individually before writing a description, rather than trusting the audit's
+  slug-derived name alone — two pairs (Y-VIA vs. Y-PEER Network, Science Forum vs.
+  Social Science Forum) were checked specifically for being duplicates and confirmed
+  distinct. Coordinator/student-lead names were left blank wherever the live page
+  didn't name one, rather than invented.
+
+**A real bug caught by verifying the build, not the API response:** all 28 new
+records (4 units, 4 centres, 20 clubs) came back with `slug: null` — Strapi 5's `uid`
+field only auto-generates through the admin-panel content-manager, not the plain REST
+API used here. The existing department/programme data has real slugs because an
+earlier session's migration script set them explicitly; this script didn't. Fixed by
+slugifying each `name` and `PUT`-ing it back per record. Confirmed with a real
+`astro build` (111 pages, up from 80) and by reading the actual rendered output of a
+club page, a research-centre page, and the two listing pages — real names, categories
+and descriptions in place, not just present in the API.
+
+**Consequences:** `notices`, `events`, `features`, and `recruitments` are still at
+zero records — unlike Pages/Clubs/Research Centres, most of the audit's matching old
+URLs are already-expired notices (decision 025's ~100 "Retire" rows), where the audit
+only captured a title/slug, not real body text, so seeding them properly means
+fetching each one individually rather than reusing this session's approach directly.
+Left for a following pass.
