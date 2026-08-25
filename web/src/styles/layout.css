@@ -11,40 +11,19 @@
    left ~380px of dead navy on each side. 1600px is still a real cap
    (not full-bleed) so it doesn't stretch absurdly on ultra-wide
    monitors, just uses noticeably more of a normal wide screen. */
-.utility-bar .wrap,
-.masthead .wrap {
+.masthead-top .wrap,
+.masthead-nav .wrap {
   max-width: 1600px;
 }
 
-/* ---------- Utility bar — thin, navy deep, above the masthead ---------- */
-.utility-bar {
-  background: var(--navy-deep);
-  color: #8e9ac0;
-}
-.utility-bar .wrap {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: var(--s3) var(--s5);
-  padding-block: 6px;
-  font-size: 0.72rem;
-}
-.utility-bar a {
-  color: #c9d0e4;
-  text-decoration: none;
-}
-.utility-bar a:hover {
-  color: #fff;
-  text-decoration: underline;
-}
-
-/* ---------- Masthead — fixed, no dropdowns ---------- */
+/* ---------- Masthead — two rows, RUB-reference layout in our own navy/gold
+   palette: crest + utility links + search on top, nav links on their own
+   row below, no dropdowns. ---------- */
 .masthead {
   background: var(--navy);
   color: #fff;
-  border-bottom: 4px solid var(--gold);
 }
-.masthead .wrap {
+.masthead-top .wrap {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -52,14 +31,67 @@
   padding-block: var(--s4);
 }
 @media (min-width: 760px) {
-  .masthead .wrap {
+  .masthead-top .wrap {
     padding-block: var(--s5);
   }
 }
 @media (min-width: 1024px) {
-  .masthead .wrap {
+  .masthead-top .wrap {
     padding-block: var(--s6);
   }
+}
+.masthead-top-right {
+  display: none;
+}
+@media (min-width: 760px) {
+  .masthead-top-right {
+    display: flex;
+    align-items: center;
+    gap: var(--s4);
+  }
+}
+
+/* ---------- Utility links — moved beside search from the old separate
+   utility bar strip (RUB reference puts icons in this spot). ---------- */
+.utility-links {
+  display: none;
+}
+@media (min-width: 760px) {
+  .utility-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s3);
+    font-size: 0.72rem;
+  }
+  .utility-links a {
+    color: #c9d0e4;
+    text-decoration: none;
+  }
+  .utility-links a:hover {
+    color: #fff;
+    text-decoration: underline;
+  }
+}
+
+/* Second row: nav links only, on their own band with a thin separator —
+   matching the RUB reference's two-row structure, still navy throughout
+   per the project owner's choice to keep the existing colour system.
+   Hidden below 760px along with .primary-nav itself (mobile uses the
+   hamburger panel instead) — otherwise this row survives as an empty,
+   gold-bordered strip with nothing in it. The gold accent line instead
+   lives on .masthead itself, so it's correct whichever row is visually
+   last on a given screen width. */
+.masthead-nav {
+  display: none;
+}
+@media (min-width: 760px) {
+  .masthead-nav {
+    display: block;
+    border-top: 1px solid rgba(255, 255, 255, 0.15);
+  }
+}
+.masthead {
+  border-bottom: 4px solid var(--gold);
 }
 .brand {
   display: flex;
@@ -69,7 +101,7 @@
   text-decoration: none;
 }
 .brand img {
-  height: 44px;
+  height: 120px;
   width: auto;
   display: block;
 }
@@ -83,23 +115,25 @@
     height: 80px;
   }
 }
+.masthead-nav .wrap {
+  padding-block: var(--s2);
+}
 .primary-nav {
   display: none;
 }
 /* Breakpoint moved from 1024px to 760px (Style Guide Phase 3.1) — tablet
    users were falling through to the hamburger button with nothing between
    phone and laptop widths, the single biggest usability problem in the
-   bar. flex:1 + justify-content:space-between spreads the items evenly
-   across whatever room is left between the logo and the search box,
-   rather than clustering them with a fixed gap. */
+   bar. Left-aligned with a fixed gap (RUB reference layout) rather than
+   spread across the row — the nav now lives on its own band, so it no
+   longer needs to fill the space between a logo and a search box. */
 @media (min-width: 760px) {
   .primary-nav {
     display: flex;
-    flex: 1;
-    justify-content: space-between;
-    gap: var(--s3);
+    flex-wrap: wrap;
+    gap: var(--s5);
     list-style: none;
-    margin: 0 var(--s3);
+    margin: 0;
     padding: 0;
   }
   .primary-nav a {
