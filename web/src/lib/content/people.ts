@@ -30,7 +30,10 @@ function mapCard(row: any): PersonCard {
     honorific: row.honorific ?? null,
     designation: row.designation,
     unit_name: row.unit?.name ?? null,
-    photo_url: mediaUrl(row.photo),
+    // decision 006: a portrait with no recorded consent must behave exactly
+    // as if there were no portrait at all — gated here, not left to callers,
+    // so no template can get this wrong.
+    photo_url: row.photo_consent ? mediaUrl(row.photo) : null,
   };
 }
 

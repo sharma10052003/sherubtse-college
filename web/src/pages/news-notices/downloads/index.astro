@@ -1,0 +1,53 @@
+---
+// Downloads & Forms — the document register (spec 7.8.7). A table, not a
+// row list: version/format/size are the point, matching the spec's
+// "document-row" component shape rather than ListingTemplate's rows.
+import Layout from '../../../layouts/Layout.astro';
+import { getCurrentDocuments } from '../../../lib/content/documents';
+
+const documents = await getCurrentDocuments();
+
+function formatSize(bytes: number | null | undefined) {
+  if (!bytes) return '—';
+  const kb = bytes;
+  return kb < 1024 ? `${Math.round(kb)} KB` : `${(kb / 1024).toFixed(1)} MB`;
+}
+---
+<Layout title="Downloads & Forms" description="Forms, policies and other documents available from Sherubtse College.">
+  <div class="wrap" style="padding-top:var(--s5);padding-bottom:var(--s7)">
+    <nav class="breadcrumb" aria-label="Breadcrumb"><a href="/">Home</a> › <a href="/news-notices">News & Notices</a> › <span class="current">Downloads & Forms</span></nav>
+    <h1 class="h1">Downloads & Forms</h1>
+
+    {documents.length > 0 ? (
+      <div class="tbl-wrap" style="margin-top:var(--s6)">
+        <table class="tbl">
+          <caption>Current forms, policies and documents. Superseded versions are not listed.</caption>
+          <thead>
+            <tr>
+              <th scope="col">Title</th>
+              <th scope="col">Category</th>
+              <th scope="col">Version</th>
+              <th scope="col">Effective</th>
+              <th scope="col">Format</th>
+              <th scope="col">Size</th>
+            </tr>
+          </thead>
+          <tbody>
+            {documents.map((d) => (
+              <tr>
+                <td>{d.file_url ? <a href={d.file_url} target="_blank" rel="noopener">{d.title}</a> : d.title}</td>
+                <td style="text-transform:capitalize">{d.category ?? '—'}</td>
+                <td class="mono-num">{d.version ?? '—'}</td>
+                <td class="mono-num">{d.effective_date ? new Date(d.effective_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}</td>
+                <td>{d.file_format ?? '—'}</td>
+                <td class="mono-num">{formatSize(d.file_size)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    ) : (
+      <p class="small" style="margin-top:var(--s6)">No documents have been added yet.</p>
+    )}
+  </div>
+</Layout>

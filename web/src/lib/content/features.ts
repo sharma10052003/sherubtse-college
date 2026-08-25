@@ -56,7 +56,10 @@ export async function getFeatureBySlug(slug: string): Promise<FeatureDetail | nu
     body: row.body,
     author_name: row.author?.full_name ?? row.author_name ?? 'Sherubtse College',
     reading_time: readingTime(row.body),
-    related_people: (row.related_people ?? []).map((p: any) => ({ full_name: p.full_name, slug: p.slug, photo_url: mediaUrl(p.photo) })),
+    // decision 006: same consent gate as people.ts's mapCard — a related
+    // person's portrait here must not bypass the check just because it's
+    // reached through a different relation.
+    related_people: (row.related_people ?? []).map((p: any) => ({ full_name: p.full_name, slug: p.slug, photo_url: p.photo_consent ? mediaUrl(p.photo) : null })),
     related_units: (row.related_units ?? []).map((u: any) => ({ name: u.name, slug: u.slug })),
   };
 }

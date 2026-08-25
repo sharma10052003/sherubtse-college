@@ -67,10 +67,15 @@
 .primary-nav {
   display: none;
 }
-@media (min-width: 1024px) {
+/* Breakpoint moved from 1024px to 760px (Style Guide Phase 3.1) — tablet
+   users were falling through to the hamburger button with nothing between
+   phone and laptop widths, the single biggest usability problem in the
+   bar. Gap is tighter here than at desktop width on purpose: six items at
+   exactly 760px need to fit without wrapping. */
+@media (min-width: 760px) {
   .primary-nav {
     display: flex;
-    gap: var(--s6);
+    gap: var(--s4);
     list-style: none;
     margin: 0;
     padding: 0;
@@ -79,13 +84,22 @@
     color: #fff;
     text-decoration: none;
     font-weight: 600;
-    font-size: 0.92rem;
+    font-size: 0.85rem;
     padding: var(--s2) 0;
     border-bottom: 2px solid transparent;
+    white-space: nowrap;
   }
   .primary-nav a:hover,
   .primary-nav a[aria-current='page'] {
     border-bottom-color: var(--gold);
+  }
+}
+@media (min-width: 1024px) {
+  .primary-nav {
+    gap: var(--s6);
+  }
+  .primary-nav a {
+    font-size: 0.92rem;
   }
 }
 
@@ -102,7 +116,7 @@
   padding: 8px 14px;
   min-height: 44px;
 }
-@media (min-width: 1024px) {
+@media (min-width: 760px) {
   .menu-toggle {
     display: none;
   }
@@ -132,7 +146,7 @@
   padding: var(--s2) 0;
   min-height: 44px;
 }
-@media (min-width: 1024px) {
+@media (min-width: 760px) {
   .mobile-menu {
     display: none !important;
   }
@@ -224,8 +238,8 @@
   font-weight: 700;
 }
 .bottom-tabs .icon {
-  font-size: 1.1rem;
-  line-height: 1;
+  width: 22px;
+  height: 22px;
 }
 
 /* Page content gets bottom clearance so nothing hides behind the fixed bar. */

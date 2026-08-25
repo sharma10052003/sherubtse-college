@@ -13,26 +13,15 @@ export interface Navigation {
 }
 
 /**
- * Fallback matches the Stack, Structure & Wireframes §03 structure exactly
- * — used only if Strapi is unreachable or the single type is still empty,
- * so the site never renders with no navigation at all. The real content
- * lives in Strapi once seeded (see cms/scripts/seed-navigation.js).
+ * No hardcoded fallback (Phase 3.4) — navigation is seeded in Strapi now
+ * (decision 023), so an empty response means something is actually wrong
+ * (Strapi down, the record cleared) and the menu should show as empty
+ * rather than quietly substituting a plausible-looking fake one. A fake
+ * fallback here would hide exactly the failure this step exists to surface.
  */
-const FALLBACK: Navigation = {
-  menu: [
-    { label: 'About', url: '/about', children: [] },
-    { label: 'Academics', url: '/academics', children: [] },
-    { label: 'Admissions', url: '/admissions', children: [] },
-    { label: 'Research', url: '/research', children: [] },
-    { label: 'Student Life', url: '/student-life', children: [] },
-    { label: 'News & Notices', url: '/news-notices', children: [] },
-  ],
-};
-
 export async function getNavigation(): Promise<Navigation> {
   const res = await strapiGet<StrapiSingleResponse<Navigation>>('navigation', {
     populate: ['menu', 'menu.children'],
   });
-  const menu = res?.data?.menu;
-  return menu && menu.length ? { menu } : FALLBACK;
+  return { menu: res?.data?.menu ?? [] };
 }

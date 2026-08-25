@@ -139,8 +139,8 @@ blocks, not 5 — this was the second dependent on this decision, now also resol
 
 ---
 
-## 008 — OPEN: International Student section modelling
-**Status:** Open — blocks M1
+## 008 — International Student section modelling
+**Status:** Decided — confirmed by project owner, see decision 024
 
 **Context:** The live site's International Student section (6 sub-pages: Academic
 Programme, Eligibility, Fees, Faculty Expertise, Library/Lab, Student Life & Support)
@@ -156,8 +156,8 @@ audience flag) rather than a new type or a Page.
 
 ---
 
-## 009 — OPEN: Games & Sports classification
-**Status:** Open — blocks M1
+## 009 — Games & Sports classification
+**Status:** Decided — confirmed by project owner, see decision 024
 
 **Context:** Ambiguous from the outside whether `games-sports`/`sports` on the live site
 represents a staffed Unit (kind: student_body) with a coordinator, or just an
@@ -187,7 +187,7 @@ prerequisites allow.
 ---
 
 ## 011 — Games & Sports classified as a Unit (kind: student_body)
-**Status:** Decided by default — reversible if IT Section objects
+**Status:** Decided — confirmed by project owner (decision 024), no longer reversible-by-default
 
 **Context:** Item 009 above. Ambiguous from the outside whether this is a staffed body or
 an informational page.
@@ -203,7 +203,7 @@ redesign.
 ---
 
 ## 012 — International Student section built as a filtered view, not a new type
-**Status:** Decided by default — reversible if IT Section objects
+**Status:** Decided — confirmed by project owner (decision 024), no longer reversible-by-default
 
 **Context:** Item 008 above.
 
@@ -437,3 +437,420 @@ check `git fetch && git log origin/main` first. The specification's own §1.5 ("
 end confirmed") remains a separate, genuine documentation error independent of this
 incident — Astro is still the confirmed stack per decisions 001/017/018, and that
 specification text still needs correcting to match, which this decision does not do.
+
+---
+
+## 021 — Phase 1 (colour system) audited against the real code: clean except the crest
+
+**Status:** Decided
+
+**Context:** Working-plan Phase 1 calls for a single approved colour per job, no
+near-duplicates, and the crest supplied as SVG. Audited the actual authentic code (post
+decision 020, not a reconstruction) rather than re-trusting the plan document's earlier
+draft findings.
+
+**Findings:**
+- Navy: only `#0D1B4B` exists anywhere in the repo — the near-duplicate `#1D204D` the
+  plan flagged from measuring the physical crest is not present in any file.
+- Gold-as-text: zero violations — `var(--gold)` is never used as a text `color:`
+  anywhere in `web/src/styles/`, only as border/surface.
+- Maroon/navy separation: `assets/css/variables.css` (old PHP site, `--stc-maroon` etc.)
+  and `web/src/styles/tokens.css` (Astro, `--navy` etc.) share zero hex values in either
+  direction.
+- Crest colour claim verified directly: pixel-sampled `assets/images/sherubtse-logo.png`
+  (1024×1024) with `sharp` — the shield's dominant colour is `#FFF600`-ish, matching the
+  plan's `#FCEA00` "too bright/green for the palette, must never sit on a gold
+  background" finding.
+- Crest SVG: still missing. Only a 1.6MB PNG and a 31KB JPG exist in the repo — no
+  vector source anywhere.
+
+**Choice:** Everything in Phase 1 is already correct in the codebase except the crest
+vector file, which the project owner will source directly (official artwork from IT
+Section/marketing) rather than have it auto-traced from the raster photo — tracing an
+official identity mark risks introducing real errors into something meant to be
+authoritative.
+
+**Consequences:** Phase 1 is effectively done pending that one asset. Once the SVG
+arrives, replace `assets/images/sherubtse-logo.png`/`.jpg` and `web/src/assets/
+sherubtse-logo.png`, and re-run the Astro build's image pipeline (decision 018 confirmed
+it compresses a `src/`-imported PNG logo to ~1KB WebP — an SVG source should do at least
+as well). Next up per the plan is Phase 2, which is blocked on IT Section decisions
+(items 1–3 in Section 5 of the working plan), not on anything further from this session.
+
+---
+
+## 022 — Phase 2: the four missing listing pages built; everything else genuinely blocked on inputs this session doesn't have
+
+**Status:** Decided
+
+**Context:** Working-plan Phase 2 (freeze the site structure) has five steps. Attempted
+all five against the real, authenticated system rather than assuming.
+
+**2.1/2.2 (IT Section decisions) — blocked, not attempted.** Confirming the International
+Student section model, the Games & Sports classification, and the six-section top level
+are explicitly the project owner's/IT Section's calls (decisions 008/009 are still open
+in this log for exactly that reason). Nothing to build here; these need an actual answer
+from a person, not code.
+
+**2.3 (seed navigation/site-settings) — blocked on permissions, verified directly.**
+Booted Strapi and tested `web/.env`'s `STRAPI_API_TOKEN` directly: it has read access
+(`GET /api/notices` → 200) but not write (`PUT /api/navigation` → 403 Forbidden). This
+matches the plan's own diagnosis exactly ("needs a temporary permission change on the
+access token"). Elevating it requires logging into the Strapi admin panel, which needs
+credentials this session doesn't have. Confirmed as a byproduct: `GET /api/navigation`
+returns 404 (not 403) — the single type genuinely has zero records, not a permissions
+issue on the read side.
+
+**2.4 (build the four missing listing pages) — done.** `web/src/lib/content/{news,
+recruitment,documents}.ts` (Tenders needed no new module — it's Notice filtered by
+`category: "tender"`, the same pattern as Admission Notices, confirmed by reading the
+real `notice` schema's category enum, which already includes `"tender"`) plus 6 new
+page routes: `/news-notices/{news,recruitment}/index.astro` and `[id].astro`,
+`/news-notices/tenders/index.astro` (reuses the existing `/news-notices/announcements/
+[id]` detail route since it's the same content type), and `/news-notices/downloads/
+index.astro` (a document register table — spec's `document-row` shape needs
+version/format/size columns, which `ListingTemplate`'s row shape doesn't carry, so this
+one is a plain table rather than forced through the shared template). `news-notices/
+index.astro` already linked to all four routes without edits needed. Build verified:
+`npm run build` succeeded, 30 pages (up from 18 — the 4 new listing pages, plus several
+department/programme dynamic pages that now resolve because Strapi has real pre-existing
+data for those two types).
+
+**2.5 (redirect map for the 215 audited addresses) — blocked, not attempted.** The
+underlying content audit (`Sherubtse-Content-Audit-v4.xlsx`, referenced in decision 002)
+isn't in this repository. Searched for it; not present. Cannot build a redirect map
+without the actual list of old URLs to map.
+
+**Consequences:** Phase 2 is roughly 20% complete by step count, but the completed step
+(2.4) is real and verified. The other four steps are correctly blocked, not skipped —
+2.1/2.2 need IT Section answers, 2.3 needs elevated Strapi credentials, 2.5 needs the
+audit spreadsheet. None of these should be worked around; they're listed here so the next
+session doesn't waste time re-diagnosing the same blockers.
+
+---
+
+## 023 — Phase 2.3 done: navigation and site settings seeded with real data
+
+**Status:** Decided
+
+**Context:** Decision 022 found the "PHP Frontend" API token (the one `web/.env`
+actually uses — confirmed by its "last used" timestamp lining up with that session's own
+test calls) was read-only, blocking any seeding. The project owner logged into the
+Strapi admin panel directly and elevated it.
+
+**Choice:** Verified write access first (`PUT /api/navigation` now returns 200, not
+403), then seeded both single types with real data sourced from the live PHP site's own
+`includes/config.php` — not invented:
+- **Navigation**: the six confirmed top-level sections (About, Academics, Admissions,
+  Research, Student Life, News & Notices), matching what's already used consistently
+  across the decision log, `CONTENT-MODEL.md`, and the specification.
+- **Site Settings**: address, phone and email straight from `$stc_footer['contact']`;
+  footer link groups adapted from `$stc_footer['columns']` to the new site's actual
+  routes; six subdomain links (Student Portal, Staff Portal, IMS, VLE, Library, Webmail)
+  straight from `$stc_quick_links`, the old utility bar's own real list.
+
+**Verification:** Re-fetched both records with `populate` to confirm the component data
+saved correctly (not just the top-level fields), then ran `npm run build` — the
+`[strapi] navigation failed`/`site-settings failed` fetch warnings that appeared on every
+page in every previous build are gone, and the built HTML contains the real menu labels
+and contact links (grepped `dist/index.html` directly to confirm, not just trusted the
+build log). `getNavigation()`'s hardcoded fallback is no longer what's live.
+
+**Consequences:** Phase 2.3 is done. `homepage` is still an empty single type (expected —
+that's Phase 5 content work, not this step). Phase 2 is now blocked only on 2.1/2.2 (IT
+Section answers) and 2.5 (the missing audit spreadsheet) — both still require input this
+session doesn't have.
+
+---
+
+## 024 — Phase 2.1/2.2 closed: IT Section decisions confirmed by project owner
+
+**Status:** Decided
+
+**Context:** Decisions 008/009 were open, and 011/012 had only ever been "decided by
+default — reversible if IT Section objects." The project owner gave direct answers.
+
+**Choice:**
+1. International Student section stays a filtered view over existing content (Programme/
+   Notice/Document with an audience flag), not a new content type — confirms decision 012
+   as final, not a default.
+2. Games & Sports stays classified as `Unit (kind: student_body)`, consistent with
+   Student Association and the audited Club pages — confirms decision 011 as final, not a
+   default.
+3. The six top-level sections (About, Academics, Admissions, Research, Student Life, News
+   & Notices) are confirmed for now, with an explicit expectation that more can be added
+   later — both in the Strapi admin and on the live site — without a rebuild.
+
+**Verification of point 3, not just accepted at face value:** Checked whether the
+frontend can actually do this today. `web/src/components/Header.astro` (both the desktop
+`primary-nav` and the mobile panel) renders `menu.map(...)` directly from
+`getNavigation()` — there is no hardcoded count of six anywhere in the component. Adding
+a 7th `nav-item` in the Strapi admin's Navigation single type and rebuilding the site is
+already sufficient; no code change is needed to support more top-level sections later.
+This also matches `cms/docs/CONTENT-MODEL.md`'s own note that "max-6-top-level... is
+editorial policy, not a schema constraint."
+
+**Consequences:** Decisions 008/009 are closed; 011/012 are no longer reversible-by-
+default, they're final. Phase 2 is now blocked only on 2.5 (the missing content-audit
+spreadsheet). Phase 3 (navigation bar rebuild) is unblocked — it was gated on the site
+structure being settled, which it now is.
+
+---
+
+## 025 — Phase 2.5 done: content audit rebuilt from a live crawl, not the missing spreadsheet
+
+**Status:** Decided
+
+**Context:** `Sherubtse-Content-Audit-v4.xlsx` (referenced throughout this log since
+decision 002) was never found in this repository or the project owner's Downloads
+folder. Rather than stay blocked indefinitely, rebuilt the audit from scratch by
+crawling the live site directly — the same method decision 002 used originally.
+
+**Choice — used the real sitemap, not the spam one.** `https://www.sherubtse.edu.bt/
+sitemap.xml` is entirely the gambling-spam injection decision 002/006.1 already
+flagged (verified again here: 1,000+ URLs, all dated 2024-01-19T16:19:45+08:00, all
+male-enhancement product spam). The real sitemap is named in `robots.txt`'s own
+`Sitemap:` line: `/wp-sitemap.xml`, a WordPress sitemap index pointing to pages, posts,
+and category sub-sitemaps.
+
+**A data-quality issue surfaced and was caught, not shipped:** the `WebFetch` tool's
+first pass (which summarizes large pages through a small model) reported 254 page URLs.
+Fetching the same sitemap's raw XML directly with `curl` and counting `<loc>` tags found
+the true number is **192** — matching decision 002's original count exactly. The
+inflated first pass was silently fabricating ~62 URLs that don't exist. Rebuilt the
+classification against the verified raw-XML list (192 pages + 10 posts + 3 category
+archives = 205 real URLs) and cross-checked programmatically: zero real URLs
+unclassified, zero classified URLs that don't actually exist. This is the same
+discipline as decision 020/021 — verify against the primary source, don't trust a
+summarized intermediate.
+
+**Choice — classification logic:** each of the 205 URLs got Move (maps 1:1 to a new
+URL) / Merge (folds into another page or record) / Retire (301s to the nearest sensible
+parent — never straight to the homepage, per the plan's own rule), based on matching
+against the confirmed content model and the six confirmed top-level sections. Notably,
+the live site's `/international-student/` section plus its 5 real sub-pages
+(`/academic-programme/`, `/eligibility-application-process/`, `/faculty-expertise-
+research-opportunities/`, `/library-lab-facilities/`, `/student-life-support/`) match
+decision 008's originally-described 6 sub-pages exactly, confirming that description was
+accurate. Department/programme duplicates found on the live site (e.g. two data-science
+programme pages, two chemistry pages, `/fina/` + `/fina-2/`) are marked Merge, matching
+decision 002's original "duplicate pages" finding.
+
+**Deliverable:** `docs/Sherubtse-Content-Audit-v5.xlsx` — a Content Audit sheet (205
+rows: old URL, category, action, target, notes) and a Summary sheet (counts by action
+and category, plus 5 items flagged as genuinely needing a human decision rather than
+being auto-classifiable — a numeric-slug page with no descriptive content, duplicate
+research-centre pages, and two Units with no frontend route built yet). Verified by
+reading the written file back and checking row counts and totals match, not just trusting
+the write succeeded.
+
+**Consequences:** Phase 2 is now fully done. Section 5 of the working plan should get a
+6th superseded item removed (the crest question and this one are the only two that
+originally required IT Section input; both are now resolved this session). Building the
+actual redirect rules from this spreadsheet is Phase 6.4 work ("the redirect list from
+2.5"), not done here — this decision closes the *audit*, not the redirect implementation.
+
+---
+
+## 026 — Phase 3 done: navigation bar rebuilt, verified interactively, not just read
+
+**Status:** Decided
+
+**Context:** Working-plan Phase 3 named five concrete defects in the navigation bar:
+the main menu's breakpoint stranding tablet users on a hamburger, emoji bottom-tab icons
+that can't take the highlight colour, a mobile panel with no keyboard support, a
+hardcoded navigation fallback that would hide a real failure, and a requirement to check
+all of this at four widths.
+
+**Choice:**
+- **3.1** — `web/src/styles/layout.css`: moved `.primary-nav`/`.menu-toggle`/
+  `.mobile-menu`'s breakpoint from `min-width: 1024px` to `760px`, matching where
+  `.bottom-tabs` already disappears — no dead zone between the two. Gap tightened to
+  `var(--s4)` at 760px (six items need to fit in less width there), widening back to
+  `var(--s6)` at 1024px+ for breathing room, added as a third, narrower media query layer
+  rather than replacing the base rule — mobile-first, additive, matches the project's own
+  standing rule.
+- **3.2** — `BottomTabs.astro`: replaced the four emoji with inline SVG
+  (`stroke="currentColor"`), so the active tab's existing `color: var(--navy)` /
+  hover-gold styling now reaches the icon too, which emoji structurally couldn't do.
+- **3.3** — `Header.astro`'s script: added a real focus trap (Tab/Shift+Tab cycle inside
+  the panel while open), Escape closes it, focus returns to the toggle button. Opening
+  the panel now also moves focus to its first link, which is what makes "trapped" mean
+  anything the moment a keyboard user opens it.
+- **3.4** — `navigation.ts`: deleted the hardcoded six-section fallback now that Strapi
+  actually holds real navigation data (decision 023) — an empty Strapi response now
+  renders an empty menu, not a plausible-looking fake one, per the plan's own reasoning
+  for this step.
+
+**Verification — actually exercised, not just read back.** The Browser pane here can't
+composite visual frames (screenshots time out), so verification used `read_page` plus
+direct `javascript_tool` DOM/event simulation instead of screenshots — a real constraint
+worth recording for whoever picks this up next in this same environment. Confirmed
+against the running dev server, not just the source:
+- 375px: six items correctly absent from `.primary-nav` (`display:none`), hamburger
+  present, all four bottom tabs present and pointing at real routes.
+- Clicking the toggle: `aria-expanded` flips, panel un-hides, **focus lands on "About"
+  automatically** — all 6 real seeded labels present in DOM order (About, Academics,
+  Admissions, Research, Student Life, News & Notices).
+- Dispatched a real `Escape` keydown: panel closes, focus lands back on the toggle button
+  — checked via `document.activeElement === toggle`, not assumed.
+- Dispatched real `Tab` and `Shift+Tab` keydowns from the last/first link: focus wraps to
+  the first/last item respectively — the actual trap behaviour, not just that the
+  listener exists.
+- 760px (the fix that matters most): `.primary-nav` visible, hamburger and bottom-tabs
+  both hidden, all six links present, `primaryNavRect.right` (736px) stays inside the
+  wrap's right edge (760px) — verified no overflow, not eyeballed.
+- 1024px: gap genuinely widens to 32px and font to 0.92rem as the third media-query
+  layer intends; still no overflow.
+- 1280px: same, hamburger/bottom-tabs still correctly hidden.
+- Bottom-tab icons: confirmed real `<svg>` elements (not broken emoji-replacement), 22×22,
+  computed `color` resolves to `rgb(13, 27, 75)` (`--navy`) on the active Home tab —
+  `currentColor` inheritance confirmed working, not assumed from the CSS alone.
+- `npm run build` output (`dist/index.html`) checked directly, not just dev mode — the
+  SVG icons and real nav labels are baked into the actual production HTML.
+- Console: zero errors at any tested width.
+
+**Consequences:** Phase 3 is done. The one thing not verified: this environment can't
+render the panel visually, so a human should still eyeball it once — the DOM-level
+behaviour is confirmed correct, but "does it *look* right" wasn't and can't be checked
+from here.
+
+---
+
+## 027 — Phase 4: two real photo-consent bugs found and fixed; the rest is genuinely blocked on content, not more auditing
+
+**Status:** Decided
+
+**Context:** Phase 4 asks for templates checked in three states, photo shapes enforced,
+consent verified working, and page weight re-checked with real content. Audited the
+actual code against each, rather than assuming decision 018's original verification
+(against placeholder content, before the Track A/B loss-and-recovery of decisions
+020/021) still holds.
+
+**4.3 (photo consent) — two real bugs found and fixed, not assumed clean.**
+`web/src/lib/content/people.ts`'s `mapCard()` was exposing `photo_url` unconditionally —
+`photo_consent` was never checked anywhere in the file, despite the field existing on the
+`person` schema exactly as decision 006 specified. A second, identical leak existed in
+`features.ts`'s `related_people` mapping. Both fixed: `photo_url` is now `null` unless
+`row.photo_consent` is true, in both places. This is exactly the class of bug Phase 4.3
+exists to catch — the schema was right, the CMS was right, the *frontend* silently
+ignored the flag. Checked every other template/content module for the same pattern
+(`grep` for `.photo\b` across `web/src`) — `units.ts` and `clubs.ts`/`research-centres.ts`
+only ever expose `{full_name, slug}` for a related Person, never a photo, so no further
+leak exists.
+
+**4.2 (photo shapes) — mostly enforced, one real gap.** Portrait 4:5: enforced twice
+(`people/[slug].astro`'s `aspect-ratio: 4/5`, and `.person .avatar`'s 88×110px box in
+`components.css`, which is the same ratio expressed as fixed pixels). Unit/Feature 16:9
+banners: enforced (`aspect-ratio: 16/9` in both `UnitTemplate.astro` and
+`features/[slug].astro`). Homepage hero uses `min-height` + `background-size: cover`
+rather than a literal `aspect-ratio: 16/9` box — a deliberate, defensible choice for a
+responsive full-bleed hero (a strict ratio box crops badly on very wide or very narrow
+viewports), not treated as a defect. **The real gap: 3:2 for cards/articles has nothing
+to enforce yet** — checked every listing (`ListingTemplate.astro`, the programme/news
+index pages) and none of them render a thumbnail image at all, despite `hero_image_url`
+existing on the underlying data. Not a wrong ratio; a not-yet-built one. Left as a Phase
+5 item, since there's no real photograph to size correctly until content exists anyway.
+
+**4.1 (three states) and 4.4 (page weight) — partially verified against the one
+template that actually has real content, structurally blocked for the other nine.**
+`programme` is the one content type with real, pre-existing records (8 programmes, old
+schema, extended per decision 015) — everything else (`unit`, `person`, `notice`,
+`event`, `news`, `feature`, `page`, `club`, `research-centre`) has zero rows (confirmed
+by direct query in the "what's missing" check earlier this session). Loaded
+`/academics/programmes/economics/` on the running dev server and read its actual
+rendered text: a real **sparse state** — half the fact-strip (award, duration, fee,
+intake) renders `—`, not blank or `undefined`, and empty sections (overview, curriculum,
+FAQs) are omitted entirely rather than showing empty headers. This looks deliberate, not
+broken, which is what 4.1 asks for — but it's one data point out of ten templates.
+Checked the built page weight directly from `dist/` (not the dev server, which carries
+toolbar/HMR overhead that doesn't ship): 8.3KB HTML + 12.3KB CSS ≈ 20.5KB, comfortably
+under budget and close to decision 018's original placeholder-content figures. The other
+nine templates currently only exist in the **empty** state (verified: they render their
+own empty-state copy — "No departments have been entered yet" etc. — correctly, not a
+crash), which is one of the three states Phase 4.1 asks for, but not "full" or "sparse."
+
+**Consequences:** Phase 4 cannot be meaningfully finished without real content — this
+isn't a gap in auditing, it's the actual dependency the working plan's own phase ordering
+assumes (Phase 5 feeds Phase 4's remaining verification). The natural next step is
+migrating some of the real data already sitting in this same Strapi instance under the
+old schema — 3 departments and **47 real faculty profiles** — into the new `unit`/
+`person` types. That would simultaneously advance Phase 5 and give Phase 4.1/4.4 real
+full/sparse states to check across more than one template. Not started here — a genuine
+content migration is a large enough scope decision (does it start with one department,
+all three, real photos with real consent, etc.) to confirm before doing.
+
+---
+
+## 028 — Real content migrated: all 3 departments and all 47 faculty profiles, no consent fabricated
+
+**Status:** Decided
+
+**Context:** Decision 027 identified that Phase 4's remaining verification was
+structurally blocked — nine of ten templates had zero real records. The project owner
+explicitly authorised migrating the real, pre-existing old-schema data (`department`,
+`faculty-profile` — 3 and 47 records respectively) into the new schema (`unit`,
+`person`, `expertise`) to unblock it.
+
+**A real governance rule caught a real problem before it shipped, not after:** the old
+`faculty-profile` schema was checked first and has **no consent field of any kind** —
+neither `photo_consent` nor anything equivalent to `contact_consent` was ever captured
+for these 47 real people. Setting either to `true` during migration would have been
+fabricating consent that was never actually given — precisely what decision 006 and the
+two bugs fixed in decision 027 exist to prevent. Every migrated person got
+`photo_consent: false` and `contact_consent: false`, unconditionally, regardless of
+whether a photo file exists. `email`/`phone` were left unmigrated entirely (the old data
+had none filled in anyway, across all 47 records — verified by direct count, not
+assumed).
+
+**A second real governance rule caught a second real problem mid-migration:** the first
+attempt to create a Unit with a reused banner-image file failed with a bare 500. Root
+cause, found by testing the exact payload directly rather than guessing: the alt-text
+lifecycle hook (Build Brief §03, wired into `unit`/`person` in decision 020) was
+correctly rejecting the reused media — none of it has `alternativeText`, because it
+predates that rule. Fixed properly, not bypassed: every reused file gets a real,
+specific `alternativeText` set via Strapi's upload API before being attached
+(`"Portrait of {full_name}"` for the 46 profile photos, `"{Department name} banner"` for
+the one department banner that has an image) — not a generic placeholder string.
+
+**Choice — what actually migrated, checked field-by-field before assuming completeness:**
+of the old schema's ~30 faculty-profile fields, only `full_name`, `slug`, `position`
+(→`designation`), `highest_qualification` (→`qualification`), `profile_picture`
+(→`photo`, 46/47 records), `department` (→`unit` relation), and `employment_status`
+(all 47 were `active`) had real data — verified by counting non-null values across all
+47 records first, not assumed from the schema alone. `specialization` (free text, 17
+records, clean short values like "Chemistry"/"Physics") became 11 unique `Expertise`
+records, linked via the `specialisation` relation. `short_biography`, both email fields,
+phone, office details, research/teaching text, social links, and the `publications`/
+`awards` relations were 100% empty across every one of the 47 records — nothing to
+migrate, not a scope cut. Department `head_of_department` was backfilled onto the new
+`unit.head` (and `content_owner`) relation after all people existed, matched by the old
+relation, not by name-guessing.
+
+**Script was idempotent, not run-once-and-hope:** every step checks for an existing
+record by its unique field (name/slug) before creating, so the run that failed partway
+through (on the alt-text bug) could be safely re-run after the fix without duplicating
+the 3 units, 11 expertise tags, or 47 people it had already created.
+
+**Verification — rebuilt and checked the actual output, not just the API responses:**
+`npm run build` went from 30 to **80 pages** (47 new profile pages + department pages
+with real content + the pages that were already there). Directly `grep`ped the built
+`people/karma-yoezer/index.html` for `/uploads/` — **zero matches**, confirming the
+consent gate holds against real data with a real attached photo, not just in the abstract.
+The placeholder (`portrait-placeholder`, "4:5") renders instead, exactly as decision 006
+requires. Directly queried Strapi for people filtered by `unit.slug=humanities-social-
+sciences` — 10 real names, matching what the built department page actually links to
+(cross-checked by extracting every `/people/*` URL from the built HTML, not by trusting
+the query alone). The Humanities & Social Sciences department page shows its real head,
+Karma Yoezer, correctly. Page weight for that department page: 11.8KB HTML — still
+comfortably under budget with real content and 10 real linked profiles.
+
+**Consequences:** Phase 4.1 can now be genuinely checked in the **full** state (a
+department with 10 real staff, a real head, a real banner) and **sparse** state (a
+profile with only name/designation/qualification, no bio/email/phone) across the Unit and
+Profile templates specifically — still not the other seven (Notice, Event, News, Feature,
+Page, Club, ResearchCentre remain empty; nothing in the old schema maps to them). Every
+migrated photo is real but invisible until someone with actual authority to ask these 47
+people for consent does so and flips `photo_consent` in the Strapi admin — that is real,
+human, outside-this-session work by design, not a follow-up task for a future coding
+session.

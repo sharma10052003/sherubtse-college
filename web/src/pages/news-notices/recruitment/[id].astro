@@ -1,0 +1,49 @@
+---
+// Recruitment posts carry their own document trail (advertisement, shortlist,
+// result) rather than one body of text — ArticleTemplate's single `body`
+// doesn't fit, so this route renders the stage documents directly instead
+// of forcing recruitment into the announcement/news shape.
+import Layout from '../../../layouts/Layout.astro';
+import { getAllRecruitmentIds, getRecruitmentById } from '../../../lib/content/recruitment';
+
+export async function getStaticPaths() {
+  const ids = await getAllRecruitmentIds();
+  return ids.map((id) => ({ params: { id: String(id) } }));
+}
+
+const { id } = Astro.params;
+const post = await getRecruitmentById(Number(id));
+if (!post) return Astro.redirect('/news-notices/recruitment', 404);
+---
+<Layout title={post.title}>
+  <div class="wrap narrow" style="padding-top:var(--s5);padding-bottom:var(--s7)">
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <a href="/">Home</a> › <a href="/news-notices">News & Notices</a> › <a href="/news-notices/recruitment">Recruitment</a> › <span class="current">{post.title}</span>
+    </nav>
+
+    <p class="eyebrow">{post.owning_unit_name ?? 'Recruitment'}{post.reference_no ? ` · Ref. ${post.reference_no}` : ''}</p>
+    <h1 class="h1">{post.title}</h1>
+    <p class="small" style="margin-top:var(--s2)">
+      <span class="tag">{post.stage_label}</span>
+      {post.employment_type && <span style="margin-left:var(--s2)">{post.employment_type.replace('_', ' ')}</span>}
+      {post.closing_date && <span style="margin-left:var(--s2)">Closes {new Date(post.closing_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</span>}
+    </p>
+
+    {post.apply_url && (
+      <p style="margin-top:var(--s5)"><a href={post.apply_url} class="btn btn-primary" target="_blank" rel="noopener">Apply</a></p>
+    )}
+
+    {post.stage_documents.length > 0 && (
+      <div style="margin-top:var(--s6)">
+        <h2 class="h2">Documents</h2>
+        {post.stage_documents.map((d) => (
+          <div class="attachment">
+            <span aria-hidden="true">&#128206;</span>
+            {d.file_url ? <a href={d.file_url} target="_blank" rel="noopener">{d.label}</a> : <span>{d.label}</span>}
+            {d.date_posted && <span class="small" style="margin-left:var(--s3)">{new Date(d.date_posted).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</span>}
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+</Layout>

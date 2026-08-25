@@ -1,0 +1,25 @@
+---
+import ArticleTemplate from '../../../components/templates/ArticleTemplate.astro';
+import { getAllNewsIds, getNewsById } from '../../../lib/content/news';
+
+export async function getStaticPaths() {
+  const ids = await getAllNewsIds();
+  return ids.map((id) => ({ params: { id: String(id) } }));
+}
+
+const { id } = Astro.params;
+const item = await getNewsById(Number(id));
+if (!item) return Astro.redirect('/news-notices/news', 404);
+---
+<ArticleTemplate
+  eyebrow={item.unit_name ?? 'News'}
+  title={item.title}
+  meta={new Date(item.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
+  body={item.body}
+  breadcrumb={[
+    { label: 'Home', url: '/' },
+    { label: 'News & Notices', url: '/news-notices' },
+    { label: 'News', url: '/news-notices/news' },
+    { label: item.title, url: `/news-notices/news/${item.id}` },
+  ]}
+/>
