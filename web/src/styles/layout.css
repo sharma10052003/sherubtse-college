@@ -32,12 +32,12 @@
 }
 @media (min-width: 760px) {
   .masthead-top .wrap {
-    padding-block: var(--s5);
+    padding-block: var(--s6);
   }
 }
 @media (min-width: 1024px) {
   .masthead-top .wrap {
-    padding-block: var(--s6);
+    padding-block: var(--s7);
   }
 }
 .masthead-top-right {
@@ -47,12 +47,14 @@
   .masthead-top-right {
     display: flex;
     align-items: center;
-    gap: var(--s4);
+    gap: var(--s6);
   }
 }
 
 /* ---------- Utility links — moved beside search from the old separate
-   utility bar strip (RUB reference puts icons in this spot). ---------- */
+   utility bar strip (RUB reference puts icons in this spot). More
+   generous gap than the old cramped strip — the reference layout reads
+   as airy, not tightly packed. ---------- */
 .utility-links {
   display: none;
 }
@@ -60,8 +62,8 @@
   .utility-links {
     display: flex;
     flex-wrap: wrap;
-    gap: var(--s3);
-    font-size: 0.72rem;
+    gap: var(--s4);
+    font-size: 0.78rem;
   }
   .utility-links a {
     color: #c9d0e4;
@@ -116,7 +118,12 @@
   }
 }
 .masthead-nav .wrap {
-  padding-block: var(--s2);
+  padding-block: var(--s4);
+}
+@media (min-width: 1024px) {
+  .masthead-nav .wrap {
+    padding-block: var(--s5);
+  }
 }
 .primary-nav {
   display: none;
@@ -124,14 +131,15 @@
 /* Breakpoint moved from 1024px to 760px (Style Guide Phase 3.1) — tablet
    users were falling through to the hamburger button with nothing between
    phone and laptop widths, the single biggest usability problem in the
-   bar. Left-aligned with a fixed gap (RUB reference layout) rather than
-   spread across the row — the nav now lives on its own band, so it no
-   longer needs to fill the space between a logo and a search box. */
+   bar. Left-aligned with a generous fixed gap and a lighter font weight
+   (RUB reference layout reads as airy and light, not dense and bold)
+   rather than spread across the row — the nav now lives on its own band,
+   so it no longer needs to fill the space between a logo and a search box. */
 @media (min-width: 760px) {
   .primary-nav {
     display: flex;
     flex-wrap: wrap;
-    gap: var(--s5);
+    gap: var(--s6);
     list-style: none;
     margin: 0;
     padding: 0;
@@ -139,9 +147,9 @@
   .primary-nav a {
     color: #fff;
     text-decoration: none;
-    font-weight: 600;
-    font-size: 0.85rem;
-    padding: var(--s3) 0;
+    font-weight: 500;
+    font-size: 0.9rem;
+    padding: var(--s2) 0;
     border-bottom: 2px solid transparent;
     white-space: nowrap;
   }
@@ -151,9 +159,11 @@
   }
 }
 @media (min-width: 1024px) {
+  .primary-nav {
+    gap: var(--s7);
+  }
   .primary-nav a {
-    font-size: 1.02rem;
-    padding-block: var(--s4);
+    font-size: 1rem;
   }
 }
 
