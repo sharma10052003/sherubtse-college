@@ -4,6 +4,7 @@
    ============================================================= */
 
 /* ---- Reset scope (namespaced, does not touch rest of site) --------- */
+.stc-announcement, .stc-announcement *,
 .stc-header, .stc-header * ,
 .stc-footer, .stc-footer *,
 .stc-mobile, .stc-mobile *,
@@ -43,6 +44,13 @@
   display: flex;
   align-items: center;
   gap: var(--stc-space-3);
+}
+/* Same wide-screen behaviour as .stc-topbar__inner/.stc-header__inner
+   below — without this, the announcement bar stays centered at 1240px
+   while the bars beneath it stretch edge-to-edge past 1600px, leaving a
+   growing gap between their left edges as the viewport widens. */
+@media (min-width: 1600px) {
+  .stc-announcement__inner { max-width: none; padding-left: 1.5in; padding-right: 1.5in; }
 }
 .stc-announcement__icon { color: var(--stc-gold); flex-shrink: 0; }
 .stc-announcement__text {

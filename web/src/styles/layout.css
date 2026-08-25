@@ -12,6 +12,7 @@
 .utility-bar .wrap {
   display: flex;
   flex-wrap: wrap;
+  justify-content: flex-end;
   gap: var(--s3) var(--s5);
   padding-block: 6px;
   font-size: 0.72rem;

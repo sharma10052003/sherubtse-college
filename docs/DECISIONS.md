@@ -854,3 +854,39 @@ migrated photo is real but invisible until someone with actual authority to ask 
 people for consent does so and flips `photo_consent` in the Strapi admin — that is real,
 human, outside-this-session work by design, not a follow-up task for a future coding
 session.
+
+---
+
+## 029 — Utility bar alignment bug found and fixed with measured numbers, not eyeballed
+
+**Status:** Decided
+
+**Context:** The project owner compared a screenshot of the live dev server against the
+old PHP site's header, asking specifically to check size/alignment (not colour or
+dropdown behaviour, both already decided elsewhere) and flagged the new site as
+"badly built." Screenshots aren't renderable in this environment (confirmed in decision
+026), so this was checked with real computed geometry via `javascript_tool` at a 1920px
+viewport instead of guessed from the description.
+
+**Finding, with numbers:** `.utility-bar .wrap` is correctly bounded to 1140px
+(`--content-width`), but its links (left-aligned, no `justify-content`) only spanned to
+855.7px into it — **666.7px of dead navy space** sat unused on the right, inside the
+bar's own width. The masthead row directly below it, by contrast, was already correct:
+its nav ends at 1498.4px against the wrap's 1522.4px right edge (24px = the standard
+edge padding). The two stacked bars didn't align with each other, which is what actually
+read as "badly built" — not a colour or dropdown issue.
+
+**Choice:** Added `justify-content: flex-end` to `.utility-bar .wrap` — the minimal fix
+that directly closes the measured gap, without inventing a left-side tagline element the
+old PHP header has that isn't part of what was asked (colour/dropdown/content additions
+were explicitly out of scope here).
+
+**Verification:** Re-measured after the fix — utility bar's last link now ends at
+1498.4px, **exactly matching** the masthead nav's 1498.4px. Both rows now align flush at
+the same right edge. Checked 375px separately to confirm `flex-wrap` still wraps cleanly
+with the new `justify-content` (two rows, both still right-aligned per line, no
+overlap). Confirmed the rule shipped in the actual production CSS
+(`dist/_astro/Layout.*.css`), not just the dev server.
+
+**Consequences:** None beyond the one rule — no other layout changes were made, per the
+explicit "ignore colour, ignore dropdown" scope.
