@@ -1,4 +1,4 @@
-import { strapiGet } from '../strapi';
+import { strapiGet, mediaUrl } from '../strapi';
 import type { StrapiListResponse } from '../strapi';
 
 export type DocumentCategory = 'policy' | 'form' | 'timetable' | 'guide' | 'report' | 'other';
@@ -20,7 +20,7 @@ function mapDocument(row: any): DocumentRecord {
   return {
     id: row.id,
     title: row.title,
-    file_url: file?.url ?? null,
+    file_url: mediaUrl(file),
     file_format: file?.ext ? String(file.ext).replace('.', '').toUpperCase() : null,
     file_size: file?.size ?? null,
     category: row.category ?? null,
