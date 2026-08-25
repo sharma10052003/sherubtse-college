@@ -1196,3 +1196,45 @@ URLs are already-expired notices (decision 025's ~100 "Retire" rows), where the 
 only captured a title/slug, not real body text, so seeding them properly means
 fetching each one individually rather than reusing this session's approach directly.
 Left for a following pass.
+
+---
+
+## 036 — Phase 5 continued: 15 real News articles — and a stale-content discrepancy
+found and corrected along the way
+
+**Status:** Decided
+
+**Context:** Of decision 025's "News/Events" rows, 17 had real individual articles
+(2 more — `/news/` and `/events/` — were already-built landing pages, not articles).
+Fetched each of the 17 individually rather than reusing titles from the audit alone.
+
+**Choice:** 15 `News` records created. Two rows excluded, not fabricated around:
+"The Research Journal of Sherubtse College — Call for Papers" had no real body text on
+the live page (an image plus a comment form only) — skipped rather than inventing
+submission details. "Sherubtse College reopens after summer vacation-3" is a confirmed
+duplicate of "-2" (near-identical `lastmod` seven minutes apart in the real WordPress
+sitemap) — same pattern as decision 002's duplicate homepage, one record kept.
+`date` was taken from the live site's own `wp-sitemap-posts-page-1.xml`/`-post-1.xml`
+`<lastmod>` values throughout, not estimated, for consistency across all 15 (a few
+articles stated an in-body date that didn't exactly match the sitemap's; the sitemap
+was used uniformly rather than mixing sources per-article). Each article's
+`owning_unit` was assigned from its actual real subject matter, not defaulted blindly:
+DRIL-tied stories (grant writing, the Perfect Group and Nyingnor Data MoUs, the
+Generative AI workshop, the recruitment drive) → Office of Research and Industrial
+Linkages; physics-specific stories (the ICTP symmetries workshop, the CERN workshop)
+→ Department of Natural Sciences; the DCPM project seminar → Department of Humanities
+and Social Sciences; genuinely college-wide stories → Office of the President.
+
+**A real, current discrepancy found and corrected, not just noted:** the "reopens
+after summer vacation" article (dated 21 July 2026 — the most recent of the 17) states
+Mr. Tshering Wangdi's twelve years as President ended and Dr. Yezer became Officiating
+President as of that reopening. The live site's own Contact and Management Team
+pages — the source this session's earlier "About the College" and "Contact" pages
+(decision 035) were built from — still show Tshering Wangdi as sitting President; they
+were evidently never updated after the transition. Corrected both `Page` records to
+name Dr. Yezer as Officiating President, citing the transition, rather than leaving
+the newly-built site repeating the live site's own stale information.
+
+**Consequences:** None beyond the two corrected Page bodies. `events`, `features`, and
+`recruitments` remain at zero records — same reasoning as decision 035's note, left for
+a following pass.
