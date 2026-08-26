@@ -72,18 +72,18 @@
   text-decoration: none;
 }
 .brand img {
-  height: 120px;
+  height: 90px;
   width: auto;
   display: block;
 }
 @media (min-width: 760px) {
   .brand img {
-    height: 60px;
+    height: 110px;
   }
 }
 @media (min-width: 1024px) {
   .brand img {
-    height: 80px;
+    height: 140px;
   }
 }
 .masthead-nav .wrap {
