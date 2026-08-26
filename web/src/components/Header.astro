@@ -7,16 +7,23 @@ const { menu } = await getNavigation();
 const currentPath = Astro.url.pathname;
 ---
 <header class="masthead">
-  <!-- Top row: crest and search only — RUB reference layout. The
-       subdomain/portal links (Student Portal, VLE, etc.) were removed
-       from here per the project owner's direct feedback that the
-       reference has no such links in its top row; they're still real,
-       findable content in the footer's Subdomains group. -->
-  <div class="masthead-top">
-    <div class="wrap">
-      <a href="/" class="brand" aria-label="Sherubtse College — home">
-        <Image src={logo} alt="Sherubtse College" width={150} height={150} />
-      </a>
+  <!-- Single row: crest on the left, nav links and search grouped together
+       on the right, all on one line — per direct feedback that the two-row
+       version left too much vertical gap between the nav and the search
+       box sitting right above it. -->
+  <div class="wrap">
+    <a href="/" class="brand" aria-label="Sherubtse College — home">
+      <Image src={logo} alt="Sherubtse College" width={150} height={150} />
+    </a>
+
+    <div class="masthead-right">
+      <!-- No dropdowns — each item links straight to its section landing page
+           (Stack, Structure & Wireframes section 07, Stanford finding). -->
+      <ul class="primary-nav">
+        {menu.map((item) => (
+          <li><a href={item.url ?? '#'} aria-current={currentPath.startsWith(item.url ?? ' ') ? 'page' : undefined}>{item.label}</a></li>
+        ))}
+      </ul>
 
       <form class="header-search" action="/search" role="search">
         <input type="search" name="q" placeholder="Search" aria-label="Search the site" required />
@@ -27,25 +34,12 @@ const currentPath = Astro.url.pathname;
           </svg>
         </button>
       </form>
-
-      <button type="button" class="menu-toggle" id="mobileMenuToggle" aria-expanded="false" aria-controls="mobileMenu">
-        <span aria-hidden="true">&#9776;</span> Menu
-      </button>
     </div>
+
+    <button type="button" class="menu-toggle" id="mobileMenuToggle" aria-expanded="false" aria-controls="mobileMenu">
+      <span aria-hidden="true">&#9776;</span> Menu
+    </button>
   </div>
-
-  <!-- Second row: nav links only, left-aligned — RUB reference layout.
-       No dropdowns — each item links straight to its section landing page
-       (Stack, Structure & Wireframes section 07, Stanford finding). -->
-  <nav class="masthead-nav" aria-label="Primary">
-    <div class="wrap">
-      <ul class="primary-nav">
-        {menu.map((item) => (
-          <li><a href={item.url ?? '#'} aria-current={currentPath.startsWith(item.url ?? ' ') ? 'page' : undefined}>{item.label}</a></li>
-        ))}
-      </ul>
-    </div>
-  </nav>
 </header>
 
 <nav class="mobile-menu" id="mobileMenu" hidden>

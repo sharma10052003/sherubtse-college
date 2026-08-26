@@ -11,22 +11,23 @@
    left ~380px of dead navy on each side. 1600px is still a real cap
    (not full-bleed) so it doesn't stretch absurdly on ultra-wide
    monitors, just uses noticeably more of a normal wide screen. */
-.masthead-top .wrap,
-.masthead-nav .wrap {
+.masthead .wrap {
   max-width: 1600px;
 }
 
-/* ---------- Masthead — two rows, RUB-reference layout in our own navy/gold
-   palette: crest + search on top, nav links on their own row below, no
-   dropdowns. The old utility/portal links (Student Portal, VLE, etc.)
-   were removed from this row entirely, per direct feedback that the RUB
-   reference has no such links here — they're still real, findable
-   content in the footer's Subdomains group. ---------- */
+/* ---------- Masthead — single row: crest on the left, nav links and
+   search grouped together on the right. Started as a two-row RUB-style
+   layout, then collapsed back to one row per direct feedback that the
+   gap between the nav row and the search box above it read as too much
+   dead space. The old utility/portal links (Student Portal, VLE, etc.)
+   stay removed from here — still real, findable content in the footer's
+   Subdomains group. ---------- */
 .masthead {
   background: var(--navy);
   color: #fff;
+  border-bottom: 4px solid var(--gold);
 }
-.masthead-top .wrap {
+.masthead .wrap {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -34,35 +35,14 @@
   padding-block: var(--s4);
 }
 @media (min-width: 760px) {
-  .masthead-top .wrap {
-    padding-block: var(--s6);
+  .masthead .wrap {
+    padding-block: var(--s5);
   }
 }
 @media (min-width: 1024px) {
-  .masthead-top .wrap {
-    padding-block: var(--s7);
+  .masthead .wrap {
+    padding-block: var(--s6);
   }
-}
-
-/* Second row: nav links only, on their own band with a thin separator —
-   matching the RUB reference's two-row structure, still navy throughout
-   per the project owner's choice to keep the existing colour system.
-   Hidden below 760px along with .primary-nav itself (mobile uses the
-   hamburger panel instead) — otherwise this row survives as an empty,
-   gold-bordered strip with nothing in it. The gold accent line instead
-   lives on .masthead itself, so it's correct whichever row is visually
-   last on a given screen width. */
-.masthead-nav {
-  display: none;
-}
-@media (min-width: 760px) {
-  .masthead-nav {
-    display: block;
-    border-top: 1px solid rgba(255, 255, 255, 0.15);
-  }
-}
-.masthead {
-  border-bottom: 4px solid var(--gold);
 }
 .brand {
   display: flex;
@@ -76,9 +56,13 @@
   width: auto;
   display: block;
 }
+/* 760px is the tightest fit — crest, all six nav links and search all
+   share one line for the first time here — so the crest grows more
+   gradually (70px, not straight to the full 140px) specifically at this
+   tier to leave room; it still reaches the full requested size at 1024px. */
 @media (min-width: 760px) {
   .brand img {
-    height: 110px;
+    height: 70px;
   }
 }
 @media (min-width: 1024px) {
@@ -86,12 +70,14 @@
     height: 140px;
   }
 }
-.masthead-nav .wrap {
-  padding-block: var(--s4);
+.masthead-right {
+  display: none;
 }
-@media (min-width: 1024px) {
-  .masthead-nav .wrap {
-    padding-block: var(--s5);
+@media (min-width: 760px) {
+  .masthead-right {
+    display: flex;
+    align-items: center;
+    gap: var(--s4);
   }
 }
 .primary-nav {
@@ -100,16 +86,13 @@
 /* Breakpoint moved from 1024px to 760px (Style Guide Phase 3.1) — tablet
    users were falling through to the hamburger button with nothing between
    phone and laptop widths, the single biggest usability problem in the
-   bar. Right-aligned so it sits under the search box above it, matching
-   the RUB reference exactly (its nav starts well right of the crest
-   column, ending flush with the search/icons row) — not spread across
-   the row or left-aligned under the logo. */
+   bar. Sits directly beside the search box now (both inside
+   .masthead-right), not on its own row. */
 @media (min-width: 760px) {
   .primary-nav {
     display: flex;
     flex-wrap: wrap;
-    justify-content: flex-end;
-    gap: var(--s6);
+    gap: var(--s3);
     list-style: none;
     margin: 0;
     padding: 0;
@@ -118,7 +101,7 @@
     color: #fff;
     text-decoration: none;
     font-weight: 500;
-    font-size: 0.9rem;
+    font-size: 0.74rem;
     padding: var(--s2) 0;
     border-bottom: 2px solid transparent;
     white-space: nowrap;
@@ -130,10 +113,10 @@
 }
 @media (min-width: 1024px) {
   .primary-nav {
-    gap: var(--s7);
+    gap: var(--s5);
   }
   .primary-nav a {
-    font-size: 1rem;
+    font-size: 0.95rem;
   }
 }
 
