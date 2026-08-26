@@ -1,38 +1,32 @@
 ---
 import { Image } from 'astro:assets';
 import logo from '../assets/sherubtse-logo.png';
-import { getSiteSettings } from '../lib/content/site-settings';
 import { getNavigation } from '../lib/content/navigation';
 
-const settings = await getSiteSettings();
 const { menu } = await getNavigation();
 const currentPath = Astro.url.pathname;
 ---
 <header class="masthead">
-  <!-- Top row: crest, utility links and search — RUB reference layout,
-       kept in our navy/gold palette rather than RUB's white (project owner
-       confirmed: same colours, same two-row structure). -->
+  <!-- Top row: crest and search only — RUB reference layout. The
+       subdomain/portal links (Student Portal, VLE, etc.) were removed
+       from here per the project owner's direct feedback that the
+       reference has no such links in its top row; they're still real,
+       findable content in the footer's Subdomains group. -->
   <div class="masthead-top">
     <div class="wrap">
       <a href="/" class="brand" aria-label="Sherubtse College — home">
         <Image src={logo} alt="Sherubtse College" width={150} height={150} />
       </a>
 
-      <div class="masthead-top-right">
-        <nav class="utility-links" aria-label="College systems">
-          {settings.subdomain_links.map((l) => <a href={l.url} target="_blank" rel="noopener">{l.label}</a>)}
-        </nav>
-
-        <form class="header-search" action="/search" role="search">
-          <input type="search" name="q" placeholder="Search" aria-label="Search the site" required />
-          <button type="submit" aria-label="Search">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <circle cx="10.5" cy="10.5" r="6.5" />
-              <path d="M20 20l-4.8-4.8" />
-            </svg>
-          </button>
-        </form>
-      </div>
+      <form class="header-search" action="/search" role="search">
+        <input type="search" name="q" placeholder="Search" aria-label="Search the site" required />
+        <button type="submit" aria-label="Search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="10.5" cy="10.5" r="6.5" />
+            <path d="M20 20l-4.8-4.8" />
+          </svg>
+        </button>
+      </form>
 
       <button type="button" class="menu-toggle" id="mobileMenuToggle" aria-expanded="false" aria-controls="mobileMenu">
         <span aria-hidden="true">&#9776;</span> Menu

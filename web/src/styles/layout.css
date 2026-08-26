@@ -17,8 +17,11 @@
 }
 
 /* ---------- Masthead — two rows, RUB-reference layout in our own navy/gold
-   palette: crest + utility links + search on top, nav links on their own
-   row below, no dropdowns. ---------- */
+   palette: crest + search on top, nav links on their own row below, no
+   dropdowns. The old utility/portal links (Student Portal, VLE, etc.)
+   were removed from this row entirely, per direct feedback that the RUB
+   reference has no such links here — they're still real, findable
+   content in the footer's Subdomains group. ---------- */
 .masthead {
   background: var(--navy);
   color: #fff;
@@ -38,40 +41,6 @@
 @media (min-width: 1024px) {
   .masthead-top .wrap {
     padding-block: var(--s7);
-  }
-}
-.masthead-top-right {
-  display: none;
-}
-@media (min-width: 760px) {
-  .masthead-top-right {
-    display: flex;
-    align-items: center;
-    gap: var(--s6);
-  }
-}
-
-/* ---------- Utility links — moved beside search from the old separate
-   utility bar strip (RUB reference puts icons in this spot). More
-   generous gap than the old cramped strip — the reference layout reads
-   as airy, not tightly packed. ---------- */
-.utility-links {
-  display: none;
-}
-@media (min-width: 760px) {
-  .utility-links {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--s4);
-    font-size: 0.78rem;
-  }
-  .utility-links a {
-    color: #c9d0e4;
-    text-decoration: none;
-  }
-  .utility-links a:hover {
-    color: #fff;
-    text-decoration: underline;
   }
 }
 
