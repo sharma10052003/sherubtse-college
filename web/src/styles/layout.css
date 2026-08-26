@@ -100,14 +100,15 @@
 /* Breakpoint moved from 1024px to 760px (Style Guide Phase 3.1) — tablet
    users were falling through to the hamburger button with nothing between
    phone and laptop widths, the single biggest usability problem in the
-   bar. Left-aligned with a generous fixed gap and a lighter font weight
-   (RUB reference layout reads as airy and light, not dense and bold)
-   rather than spread across the row — the nav now lives on its own band,
-   so it no longer needs to fill the space between a logo and a search box. */
+   bar. Right-aligned so it sits under the search box above it, matching
+   the RUB reference exactly (its nav starts well right of the crest
+   column, ending flush with the search/icons row) — not spread across
+   the row or left-aligned under the logo. */
 @media (min-width: 760px) {
   .primary-nav {
     display: flex;
     flex-wrap: wrap;
+    justify-content: flex-end;
     gap: var(--s6);
     list-style: none;
     margin: 0;
