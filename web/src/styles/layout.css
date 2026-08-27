@@ -341,7 +341,12 @@
 }
 @media (min-width: 760px) {
   .site-footer .wrap {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (min-width: 1024px) {
+  .site-footer .wrap {
+    grid-template-columns: repeat(5, 1fr);
   }
 }
 .site-footer h3 {
@@ -362,9 +367,11 @@
 }
 .site-footer a {
   color: #c9d0e4;
+  text-decoration: none;
 }
 .site-footer a:hover {
   color: #fff;
+  text-decoration: underline;
 }
 .footer-map-link {
   display: inline-flex;
