@@ -2191,6 +2191,10 @@ export interface ApiHomepageHomepage extends Struct.SingleTypeSchema {
       'api::homepage.homepage'
     > &
       Schema.Attribute.Private;
+    president_message: Schema.Attribute.RichText;
+    president_name: Schema.Attribute.String;
+    president_photo: Schema.Attribute.Media<'images'>;
+    president_title: Schema.Attribute.String;
     publishedAt: Schema.Attribute.DateTime;
     quick_links: Schema.Attribute.Component<'shared.link-item', true>;
     statement: Schema.Attribute.Text;

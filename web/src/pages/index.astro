@@ -33,6 +33,32 @@ function formatDate(iso: string) {
     </div>
   </section>
 
+  <!-- President's message — editable from the Homepage section in the
+       admin (president_name/title/message/photo). Doesn't render at all
+       unless a message has actually been entered, same rule the person-
+       directory photo/consent fields already follow, so an unfilled
+       field never leaves a broken-looking empty section on the live
+       homepage. -->
+  {homepage.president_message && (
+    <section class="band president-message">
+      <div class="wrap president-message-grid">
+        {homepage.president_photo_url && (
+          <img src={homepage.president_photo_url} alt={homepage.president_name ?? ''} class="president-photo" />
+        )}
+        <div>
+          <h2 class="h2">A Message from the {homepage.president_title ?? 'President'}</h2>
+          <div class="article-body" style="margin-top:var(--s4)" set:html={homepage.president_message.replace(/\n/g, '<br>')} />
+          {homepage.president_name && (
+            <p class="president-signature">
+              {homepage.president_name}
+              {homepage.president_title && <span class="president-title-line">{homepage.president_title}</span>}
+            </p>
+          )}
+        </div>
+      </div>
+    </section>
+  )}
+
   <!-- Quick-access strip — the one large gold moment on the site. -->
   {homepage.quick_links.length > 0 && (
     <div class="quickstrip">
@@ -166,6 +192,33 @@ function formatDate(iso: string) {
     .two-col {
       grid-template-columns: 2fr 1fr;
     }
+  }
+  .president-message-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--s6);
+  }
+  @media (min-width: 760px) {
+    .president-message-grid {
+      grid-template-columns: 220px 1fr;
+      align-items: start;
+    }
+  }
+  .president-photo {
+    width: 100%;
+    max-width: 220px;
+    aspect-ratio: 4/5;
+    object-fit: cover;
+  }
+  .president-signature {
+    margin-top: var(--s4);
+    font-weight: 700;
+  }
+  .president-title-line {
+    display: block;
+    font-weight: 400;
+    font-size: 0.85rem;
+    color: var(--ink-2);
   }
 </style>
 
