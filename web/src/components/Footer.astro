@@ -5,25 +5,35 @@ import { getSiteSettings } from '../lib/content/site-settings';
 
 const settings = await getSiteSettings();
 const year = new Date().getFullYear();
+const mapsUrl = settings.address
+  ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(settings.address)}`
+  : null;
 
 function isExternal(url: string) {
   return url.startsWith('http://') || url.startsWith('https://');
 }
 ---
 <footer class="site-footer">
-  <div class="wrap">
-    <div>
-      <h3>Contact</h3>
-      <ul>
-        {settings.address && <li>{settings.address}</li>}
-        {(settings.phones ?? []).map((p) => <li><a href={`tel:${p}`}>{p}</a></li>)}
-        {(settings.official_emails ?? []).map((e) => <li><a href={`mailto:${e}`}>{e}</a></li>)}
-      </ul>
+  <div class="wrap footer-grid">
+    <div class="footer-brand">
+      <p class="footer-tagline">
+        Founded in 1968, Sherubtse College is a constituent college of the Royal University of
+        Bhutan, seated in the eastern hills of Kanglung.
+      </p>
+      <p class="footer-motto">&ldquo;The Seat of Learning&rdquo;</p>
+      <!-- No social icons here: the live site has none to source (checked
+           its real homepage HTML directly — no Facebook/Instagram/X
+           account links exist anywhere on it, only generic share-button
+           strings and two unrelated embedded YouTube videos). Adding
+           icons linking to guessed accounts would be fabricating an
+           official presence that may not exist; real accounts can be
+           added here once someone confirms them. -->
       <a href="https://finalmap.sherubtse.edu.bt/" target="_blank" rel="noopener" class="footer-map-link">
         <Image src={spatialMap} alt="Sherubtse College campus spatial map" width={148} height={147} />
         <span>Spatial Map</span>
       </a>
     </div>
+
     {settings.footer_link_groups.map((group) => (
       <div>
         <h3>{group.label}</h3>
@@ -40,14 +50,66 @@ function isExternal(url: string) {
         </ul>
       </div>
     ))}
+
     <div>
-      <h3>Subdomains</h3>
-      <ul>
-        {settings.subdomain_links.map((l) => <li><a href={l.url} target="_blank" rel="noopener">{l.label}</a></li>)}
+      <h3>Contact</h3>
+      <ul class="footer-contact">
+        {settings.address && (
+          <li>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.1-7-11a7 7 0 0 1 14 0c0 4.9-7 11-7 11z" /><circle cx="12" cy="10" r="2.5" /></svg>
+            <span>{settings.address}</span>
+          </li>
+        )}
+        {(settings.phones ?? []).map((p) => (
+          <li>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L14 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 2 6a2 2 0 0 1 2-2z" /></svg>
+            <a href={`tel:${p}`}>{p}</a>
+          </li>
+        ))}
+        {(settings.official_emails ?? []).map((e) => (
+          <li>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="0" /><path d="M3 6l9 7 9-7" /></svg>
+            <a href={`mailto:${e}`}>{e}</a>
+          </li>
+        ))}
+        {mapsUrl && (
+          <li>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2z" /><path d="M9 4v14M15 6v14" /></svg>
+            <a href={mapsUrl} target="_blank" rel="noopener">View on Google Maps</a>
+          </li>
+        )}
       </ul>
     </div>
   </div>
   <div class="wrap bottom">
-    <p>&copy; {year} Sherubtse College, Royal University of Bhutan. <a href="/about/privacy">Privacy</a> &middot; <a href="/about/accessibility">Accessibility</a></p>
+    <p>&copy; {year} Sherubtse College, Royal University of Bhutan.</p>
+    <p><a href="/about/privacy">Privacy Policy</a> &middot; <a href="/about/accessibility">Accessibility</a></p>
   </div>
 </footer>
+
+<button type="button" id="backToTop" class="back-to-top" aria-label="Back to top" hidden>
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M12 19V5" />
+    <path d="M5 12l7-7 7 7" />
+  </svg>
+</button>
+
+<script>
+  // Shows once the visitor has scrolled a bit, not from the very top of
+  // the page — matches the "no dropdowns/no clutter" spirit by staying
+  // out of the way until it's actually useful. Square, not circular
+  // (house style: no rounded corners), same gold/navy treatment as every
+  // other button on the site.
+  const btn = document.getElementById('backToTop') as HTMLButtonElement | null;
+  if (btn) {
+    const SHOW_AFTER_PX = 400;
+    const onScroll = () => {
+      btn.hidden = window.scrollY < SHOW_AFTER_PX;
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+    btn.addEventListener('click', () => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  }
+</script>

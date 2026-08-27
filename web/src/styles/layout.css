@@ -332,22 +332,54 @@
   margin-top: var(--s9);
   border-top: 4px solid var(--gold);
 }
+/* Flexbox with justify-content: space-between, not a grid of equal-width
+   columns — the five groups have very different content widths (Contact's
+   address is much narrower than E-Services' longest link), so equal-
+   WIDTH columns left uneven-looking gaps between the actual visible text.
+   space-between sizes each group to its own content and spreads the
+   leftover row width into genuinely equal gaps between them instead. */
 .site-footer .wrap {
   padding-block: var(--s7);
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: var(--s6);
-  grid-template-columns: 1fr;
   font-size: 0.88rem;
 }
 @media (min-width: 760px) {
   .site-footer .wrap {
-    grid-template-columns: repeat(2, 1fr);
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-between;
+  }
+  .site-footer .wrap > div {
+    flex: 0 1 auto;
+    max-width: 220px;
+  }
+  .footer-brand {
+    max-width: 300px !important;
   }
 }
-@media (min-width: 1024px) {
-  .site-footer .wrap {
-    grid-template-columns: repeat(5, 1fr);
-  }
+.footer-tagline {
+  margin: 0 0 var(--s4);
+  line-height: 1.5;
+}
+.footer-motto {
+  font-family: var(--font-serif);
+  font-style: italic;
+  color: #fff;
+  margin: 0;
+}
+.footer-contact li {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s2);
+}
+.footer-contact svg {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  color: var(--gold);
 }
 .site-footer h3 {
   color: #fff;
@@ -392,6 +424,54 @@
   margin-top: var(--s5);
   font-size: 0.78rem;
   color: #8e9ac0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+}
+@media (min-width: 760px) {
+  .site-footer .bottom {
+    flex-direction: row;
+    justify-content: space-between;
+  }
+}
+
+/* Back to top — a third named exception to "no fixed elements" (Style
+   Guide §09 previously named only the masthead and the bottom tab bar),
+   added deliberately per the project owner's reference rather than as an
+   oversight. Square, not circular — the mockup that prompted this used a
+   circular button, but this site's own rule is no rounded corners; kept
+   the function, not that specific shape. Sits above the mobile bottom
+   tab bar (which is itself fixed) so the two never overlap, and drops to
+   a lower, simpler offset once that bar disappears at 760px+. */
+.back-to-top {
+  position: fixed;
+  right: var(--s4);
+  bottom: 76px;
+  z-index: 45;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--gold);
+  color: var(--navy);
+  border: 0;
+  cursor: pointer;
+}
+.back-to-top[hidden] {
+  display: none;
+}
+.back-to-top:hover {
+  background: #ffc95c;
+}
+.back-to-top svg {
+  width: 20px;
+  height: 20px;
+}
+@media (min-width: 760px) {
+  .back-to-top {
+    bottom: var(--s5);
+  }
 }
 
 /* ---------- Mobile bottom tab bar (Stack doc §08 — named exception to
