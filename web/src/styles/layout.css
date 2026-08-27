@@ -263,12 +263,30 @@
   }
 }
 
+/* Slides open/closed via max-height rather than the panel just snapping
+   in and out (matches the transition duration constant in Header.astro's
+   script, which delays [hidden] until the close animation finishes).
+   border-bottom-width animates alongside height, not a flat 4px, so the
+   gold line doesn't render as a stray strip while the panel is collapsed
+   to zero height. Respects prefers-reduced-motion. */
 .mobile-menu {
   background: var(--navy);
-  border-bottom: 4px solid var(--gold);
+  border-bottom: 0 solid var(--gold);
+  overflow: hidden;
+  max-height: 0;
+  transition: max-height 0.3s ease, border-bottom-width 0.3s ease;
+}
+.mobile-menu.is-open {
+  max-height: 480px;
+  border-bottom-width: 4px;
 }
 .mobile-menu[hidden] {
   display: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .mobile-menu {
+    transition: none;
+  }
 }
 .mobile-menu ul {
   list-style: none;

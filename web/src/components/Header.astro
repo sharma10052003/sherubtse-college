@@ -71,9 +71,16 @@ const currentPath = Astro.url.pathname;
   // missing: focus trapped inside the panel while open, Escape closes it,
   // and focus returns to the toggle button afterward. Still no dropdowns,
   // no hover behaviour — matches the Style Guide's "no hover-dependent
-  // anything" rule and the 0KB-by-default JS budget.
+  // anything" rule and the 0KB-by-default JS budget. Opening/closing now
+  // animates (a slide via max-height, in layout.css) rather than the
+  // panel just snapping in and out — kept in sync with this constant so
+  // `hidden` is only applied once the closing transition has actually
+  // finished, not instantly.
+  const MOBILE_MENU_TRANSITION_MS = 300;
+
   const toggle = document.getElementById('mobileMenuToggle') as HTMLButtonElement | null;
   const menu = document.getElementById('mobileMenu') as HTMLElement | null;
+  let closeTimer: ReturnType<typeof setTimeout> | undefined;
 
   function focusableIn(el: HTMLElement): HTMLElement[] {
     return Array.from(el.querySelectorAll<HTMLElement>('a[href], button:not([disabled])'));
@@ -81,15 +88,25 @@ const currentPath = Astro.url.pathname;
 
   function openMenu() {
     if (!menu || !toggle) return;
+    clearTimeout(closeTimer);
     menu.hidden = false;
+    // Force a reflow between removing [hidden] and adding the class that
+    // drives the transition — otherwise the browser can coalesce both
+    // changes into one paint and the slide never plays.
+    void menu.offsetHeight;
+    menu.classList.add('is-open');
     toggle.setAttribute('aria-expanded', 'true');
     focusableIn(menu)[0]?.focus();
   }
 
   function closeMenu({ returnFocus = true } = {}) {
     if (!menu || !toggle) return;
-    menu.hidden = true;
+    menu.classList.remove('is-open');
     toggle.setAttribute('aria-expanded', 'false');
+    clearTimeout(closeTimer);
+    closeTimer = setTimeout(() => {
+      if (menu) menu.hidden = true;
+    }, MOBILE_MENU_TRANSITION_MS);
     if (returnFocus) toggle.focus();
   }
 
