@@ -120,7 +120,13 @@
   }
 }
 
-/* ---------- Header search — plain GET form, works with JS off ---------- */
+/* ---------- Header search — plain GET form, works with JS off. The
+   dropdown is a progressive-enhancement layer on top (see Header.astro's
+   second script) — everything here still degrades to a normal input +
+   submit button with no JS or before Pagefind's module loads. No rounded
+   corners or drop shadows anywhere (house style) — the "modern" feel
+   comes from the transition, the focus state, and the result list, not
+   from softening the site's own visual language. ---------- */
 .header-search {
   display: none;
 }
@@ -130,32 +136,45 @@
     align-items: stretch;
     flex-shrink: 0;
   }
+  .header-search-field {
+    position: relative;
+    flex: 1;
+  }
   .header-search input {
     font-family: var(--font-sans);
-    font-size: 0.85rem;
+    font-size: 0.88rem;
     width: 70px;
+    height: 100%;
+    min-height: 40px;
     border: 1px solid rgba(255, 255, 255, 0.4);
     border-right: 0;
     background: rgba(255, 255, 255, 0.08);
     color: #fff;
     padding: 0 var(--s3);
+    transition: background-color 0.15s ease, border-color 0.15s ease;
   }
   .header-search input::placeholder {
     color: #c9d0e4;
   }
   .header-search input:focus-visible {
+    outline: none;
     background: #fff;
     color: var(--ink);
+    border-color: var(--gold);
   }
   .header-search button {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 40px;
+    width: 42px;
     border: 1px solid rgba(255, 255, 255, 0.4);
     background: var(--gold);
     color: var(--navy);
     cursor: pointer;
+    transition: background-color 0.15s ease;
+  }
+  .header-search button:hover {
+    background: #ffc95c;
   }
   .header-search button svg {
     width: 18px;
@@ -166,6 +185,63 @@
   .header-search input {
     width: 140px;
   }
+}
+
+/* Live results dropdown — anchored to the input's right edge (not the
+   button's) so it never overhangs the viewport, since the search box
+   sits near the far right of the header at every width it's visible. */
+.header-search-results {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: var(--s2);
+  width: 320px;
+  max-width: calc(100vw - var(--s5) * 2);
+  max-height: 70vh;
+  overflow-y: auto;
+  background: #fff;
+  border: 1px solid var(--line-strong);
+  z-index: 60;
+}
+.header-search-results[hidden] {
+  display: none;
+}
+.header-search-result {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--s3) var(--s4);
+  color: var(--ink);
+  text-decoration: none;
+  border-bottom: 1px solid var(--line);
+}
+.header-search-result:last-child {
+  border-bottom: 0;
+}
+.header-search-result:hover,
+.header-search-result:focus-visible {
+  background: var(--paper-2);
+  outline: none;
+}
+.header-search-result-title {
+  font-weight: 700;
+  font-size: 0.88rem;
+}
+.header-search-result-excerpt {
+  font-size: 0.8rem;
+  color: var(--ink-2);
+  line-height: 1.4;
+}
+.header-search-result-excerpt mark {
+  background: none;
+  color: var(--gold-ink);
+  font-weight: 700;
+}
+.header-search-empty {
+  margin: 0;
+  padding: var(--s4);
+  font-size: 0.85rem;
+  color: var(--ink-2);
 }
 
 .menu-toggle {
