@@ -1365,3 +1365,48 @@ just written. What remains in Phase 6 is bounded to real infrastructure question
 (a Postgres server, an off-server backup destination, hosting/DNS access for cutover,
 and ownership of the live-site spam) that only IT Section/the hosting owner can answer
 or provide access to.
+
+---
+
+## 039 — Masthead rebuilt several times against a real reference, then the
+header search made live — a `__VITE_PRELOAD__` bug found and fixed along the way
+
+**Status:** Decided
+
+**Context:** The project owner supplied a real reference screenshot (RUB's own
+website header) and asked for the same navigation design, keeping this site's navy/
+gold palette. This went through several real, verified rounds rather than one guess:
+two-row layout matching the reference's row split → too dense compared to the
+reference's airy spacing → the reference's actual portal-link-free top row → too
+much vertical gap between the two rows once corrected → collapsed back to a single
+row with nav sitting beside search, which is where it settled. Each round was
+verified for real (no horizontal overflow at 375/760/1024/1280px, a clean production
+build) before moving to the next, and the removed subdomain/portal links were
+confirmed still live in the footer's Subdomains group rather than being silently
+dropped.
+
+**Then a genuine feature, not just a style pass:** the project owner asked for the
+search box to be "dynamic" and "modern." Built a real as-you-type results dropdown
+using Pagefind's own JS module (the same index `/search` already uses) — 2+
+characters triggers `pagefind.debouncedSearch()`, showing the top 6 real matches
+with title and highlighted excerpt. Still a plain GET form underneath: the dropdown
+is progressive enhancement, and submitting still works with JS off or before
+Pagefind's module loads.
+
+**A real bug, not a guess:** the dropdown silently did nothing on the first attempt.
+Isolated with real console logging (not assumption) down to `ReferenceError:
+__VITE_PRELOAD__ is not defined` — a known Vite behaviour where a dynamic `import()`
+of a path outside Vite's own module graph (Pagefind's build output isn't part of it)
+still gets rewritten by Vite's module-preload helper even with a `@vite-ignore`
+comment. Fixed with the documented workaround: wrapping the import in
+`new Function('specifier', 'return import(specifier)')` so Vite's static analysis
+never sees the `import(` token to rewrite. Verified end to end on a fresh browser tab
+(the stale-tab console was still showing the pre-fix error, caught before it was
+mistaken for a persisting bug) against a real `npm run build` on the
+`astro-web-preview` server: real results, the empty-state message, Escape-to-close,
+and click-outside-to-close all confirmed working.
+
+**Consequences:** None beyond the header — the search dropdown only appears at
+760px+ (matching where the search box itself has always been visible), and the
+`__VITE_PRELOAD__` workaround is specific to this one dynamic import; nothing else
+in the codebase does external dynamic imports the same way.
