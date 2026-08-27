@@ -22,7 +22,21 @@
    dead space. The old utility/portal links (Student Portal, VLE, etc.)
    stay removed from here — still real, findable content in the footer's
    Subdomains group. ---------- */
+/* Sticky, not fixed — the Style Guide already names the masthead as one
+   of only two permitted fixed/pinned elements on the site (the other is
+   the mobile bottom tab bar), this just turns that on. position: sticky
+   over position: fixed specifically because it needs no compensating
+   top-padding hack on <main> (a fixed header removes itself from the
+   document flow, which would need exact height math kept in sync at
+   every breakpoint as the masthead's own height changes across them —
+   sticky just keeps its normal place in the flow until you scroll past
+   it, then pins). The mobile menu panel is nested inside <header> (see
+   Header.astro) specifically so it stays attached to the pinned header
+   rather than opening wherever it would otherwise sit in the page. */
 .masthead {
+  position: sticky;
+  top: 0;
+  z-index: 50;
   background: var(--navy);
   color: #fff;
   border-bottom: 4px solid var(--gold);
@@ -351,6 +365,19 @@
 }
 .site-footer a:hover {
   color: #fff;
+}
+.footer-map-link {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--s2);
+  margin-top: var(--s4);
+}
+.footer-map-link img {
+  width: 100px;
+  height: auto;
+  display: block;
+  border: 1px solid rgba(255, 255, 255, 0.3);
 }
 .site-footer .bottom {
   border-top: 1px solid rgba(255, 255, 255, 0.15);

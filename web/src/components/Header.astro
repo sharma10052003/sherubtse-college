@@ -58,13 +58,18 @@ const currentPath = Astro.url.pathname;
       <span aria-hidden="true">&#9776;</span> Menu
     </button>
   </div>
-</header>
 
-<nav class="mobile-menu" id="mobileMenu" hidden>
-  <ul>
-    {menu.map((item) => <li><a href={item.url ?? '#'}>{item.label}</a></li>)}
-  </ul>
-</nav>
+  <!-- Nested inside <header>, not a page-level sibling, so it stays
+       attached to the masthead now that the masthead is sticky (position:
+       sticky in layout.css) — otherwise the panel would open wherever it
+       sits in the normal document flow, not under the visually-pinned
+       header. -->
+  <nav class="mobile-menu" id="mobileMenu" hidden>
+    <ul>
+      {menu.map((item) => <li><a href={item.url ?? '#'}>{item.label}</a></li>)}
+    </ul>
+  </nav>
+</header>
 
 <script>
   // Toggling the mobile menu panel, plus the three things Phase 3.3 found

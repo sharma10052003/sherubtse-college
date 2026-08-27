@@ -1,8 +1,14 @@
 ---
+import { Image } from 'astro:assets';
+import spatialMap from '../assets/spatial-map.jpg';
 import { getSiteSettings } from '../lib/content/site-settings';
 
 const settings = await getSiteSettings();
 const year = new Date().getFullYear();
+
+function isExternal(url: string) {
+  return url.startsWith('http://') || url.startsWith('https://');
+}
 ---
 <footer class="site-footer">
   <div class="wrap">
@@ -13,12 +19,24 @@ const year = new Date().getFullYear();
         {(settings.phones ?? []).map((p) => <li><a href={`tel:${p}`}>{p}</a></li>)}
         {(settings.official_emails ?? []).map((e) => <li><a href={`mailto:${e}`}>{e}</a></li>)}
       </ul>
+      <a href="https://finalmap.sherubtse.edu.bt/" target="_blank" rel="noopener" class="footer-map-link">
+        <Image src={spatialMap} alt="Sherubtse College campus spatial map" width={148} height={147} />
+        <span>Spatial Map</span>
+      </a>
     </div>
     {settings.footer_link_groups.map((group) => (
       <div>
         <h3>{group.label}</h3>
         <ul>
-          {group.links.map((l) => <li><a href={l.url}>{l.label}</a></li>)}
+          {group.links.map((l) => (
+            <li>
+              {isExternal(l.url) ? (
+                <a href={l.url} target="_blank" rel="noopener">{l.label}</a>
+              ) : (
+                <a href={l.url}>{l.label}</a>
+              )}
+            </li>
+          ))}
         </ul>
       </div>
     ))}
