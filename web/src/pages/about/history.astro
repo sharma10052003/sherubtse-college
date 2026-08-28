@@ -274,7 +274,7 @@ const presentCategories = [...new Set(galleryImages.map((g) => g.category))];
   /* ---- 1. Hero ---- */
   .history-hero {
     position: relative;
-    min-height: 50vh;
+    min-height: 480px;
     display: flex;
     align-items: center;
     background-color: var(--navy);
@@ -282,6 +282,16 @@ const presentCategories = [...new Set(galleryImages.map((g) => g.category))];
     background-position: center;
     color: #fff;
     padding-block: var(--s8);
+  }
+  @media (min-width: 760px) {
+    .history-hero {
+      min-height: 620px;
+    }
+  }
+  @media (min-width: 1024px) {
+    .history-hero {
+      min-height: 720px;
+    }
   }
   .history-hero-overlay {
     position: absolute;
@@ -291,6 +301,9 @@ const presentCategories = [...new Set(galleryImages.map((g) => g.category))];
   .history-hero-inner {
     position: relative;
     max-width: 46rem;
+  }
+  .history-hero-inner .h-display {
+    color: #fff;
   }
   /* .breadcrumb .current normally uses var(--ink) (near-black), correct
      on the white pages it was designed for but invisible here against
