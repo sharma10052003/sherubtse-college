@@ -42,8 +42,10 @@ const presentCategories = [...new Set(galleryImages.map((g) => g.category))];
       <!-- 1. Hero -->
       <section class="history-hero" style={history.hero_image_url ? `background-image:url(${history.hero_image_url});background-position:center ${history.hero_image_position}` : undefined}>
         <div class="history-hero-overlay"></div>
-        <div class="wrap history-hero-inner">
+        <div class="wrap history-hero-breadcrumb-row">
           <nav class="breadcrumb breadcrumb-on-dark" aria-label="Breadcrumb"><a href="/">Home</a> › <a href="/about">About</a> › <span class="current">History & Heritage</span></nav>
+        </div>
+        <div class="wrap history-hero-inner">
           <h1 class="h-display">{history.hero_title}</h1>
           <p class="history-hero-subtitle">{history.hero_subtitle}</p>
           <p class="history-hero-intro">{history.hero_intro}</p>
@@ -297,6 +299,12 @@ const presentCategories = [...new Set(galleryImages.map((g) => g.category))];
     position: absolute;
     inset: 0;
     background: linear-gradient(180deg, rgba(8, 18, 52, 0.75), rgba(8, 18, 52, 0.55));
+  }
+  .history-hero-breadcrumb-row {
+    position: absolute;
+    top: var(--s6);
+    left: 0;
+    right: 0;
   }
   .history-hero-inner {
     position: relative;
