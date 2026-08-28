@@ -84,14 +84,22 @@
     height: 140px;
   }
 }
+/* flex: 1 so this cluster actually claims the space between the logo and
+   the wrap's right edge, rather than sitting at its own natural width
+   and leaving a growing empty navy gap in the middle at wide viewports
+   (the "static, dead space" problem — .masthead .wrap's max-width is
+   1600px, and a right-aligned, natural-width cluster left most of that
+   unused on anything wider than a laptop). */
 .masthead-right {
   display: none;
 }
 @media (min-width: 760px) {
   .masthead-right {
     display: flex;
+    flex: 1;
     align-items: center;
-    gap: var(--s4);
+    justify-content: flex-end;
+    gap: var(--s6);
   }
 }
 .primary-nav {
@@ -100,12 +108,16 @@
 /* Breakpoint moved from 1024px to 760px (Style Guide Phase 3.1) — tablet
    users were falling through to the hamburger button with nothing between
    phone and laptop widths, the single biggest usability problem in the
-   bar. Sits directly beside the search box now (both inside
-   .masthead-right), not on its own row. */
+   bar. flex: 1 + justify-content: space-between spreads the links across
+   whatever room .masthead-right's own flex: 1 just claimed, instead of
+   clustering them at a fixed gap next to the search box — the links
+   themselves fill the width that used to sit empty. */
 @media (min-width: 760px) {
   .primary-nav {
     display: flex;
+    flex: 1;
     flex-wrap: wrap;
+    justify-content: space-between;
     gap: var(--s3);
     list-style: none;
     margin: 0;
