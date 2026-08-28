@@ -45,7 +45,10 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--s4);
+  /* No gap here — .primary-nav's own margin-left is the single source of
+     truth for the logo-to-nav distance (a wrap-level gap would just add
+     silently on top of it, which is exactly what happened before this
+     comment existed: 16px here + 64px margin-left measured as 80px). */
   padding-block: var(--s3);
 }
 @media (min-width: 760px) {
@@ -98,8 +101,6 @@
     display: flex;
     flex: 1;
     align-items: center;
-    justify-content: flex-end;
-    gap: var(--s6);
   }
 }
 .primary-nav {
@@ -108,19 +109,19 @@
 /* Breakpoint moved from 1024px to 760px (Style Guide Phase 3.1) — tablet
    users were falling through to the hamburger button with nothing between
    phone and laptop widths, the single biggest usability problem in the
-   bar. flex: 1 + justify-content: space-between spreads the links across
-   whatever room .masthead-right's own flex: 1 just claimed, instead of
-   clustering them at a fixed gap next to the search box — the links
-   themselves fill the width that used to sit empty. */
+   bar. Explicit fixed values per direct request: 64px (double the
+   previous 32px) between the logo and the first link, 8px between each
+   link. No longer flex: 1 + space-between (that filled the row's full
+   width by spreading the links apart) — a fixed 8px gap and this are
+   mutually exclusive, so the row may leave empty space before the search
+   box again at wide viewports; that's the tradeoff of this exact spacing. */
 @media (min-width: 760px) {
   .primary-nav {
     display: flex;
-    flex: 1;
     flex-wrap: wrap;
-    justify-content: space-between;
-    gap: var(--s3);
+    gap: 8px;
     list-style: none;
-    margin-left: var(--s6);
+    margin-left: var(--s8);
     margin-right: 0;
     padding: 0;
   }
@@ -139,9 +140,6 @@
   }
 }
 @media (min-width: 1024px) {
-  .primary-nav {
-    gap: var(--s5);
-  }
   .primary-nav a {
     font-size: 0.95rem;
   }
@@ -162,6 +160,13 @@
     display: flex;
     align-items: stretch;
     flex-shrink: 0;
+    /* .masthead-right no longer pushes this to the right itself (that
+       was justify-content: flex-end, removed so primary-nav's fixed 8px
+       item gaps aren't fought by a flex-end that assumed the nav grew
+       to fill the row) — pushing just this element right instead, so
+       the nav can sit at its natural, tightly-spaced width beside the
+       logo while search still pins to the row's right edge. */
+    margin-left: auto;
   }
   .header-search-field {
     position: relative;
