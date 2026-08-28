@@ -171,9 +171,6 @@ a:hover {
 .band {
   padding: var(--s7) 0; /* mobile base */
   background-color: var(--paper);
-  background-image: url('/patterns/knot-navy.svg');
-  background-repeat: repeat;
-  background-size: 110px;
 }
 @media (min-width: 760px) {
   .band {
@@ -185,7 +182,6 @@ a:hover {
 }
 .band-navy {
   background-color: var(--navy);
-  background-image: url('/patterns/knot-gold.svg');
   color: #fff;
 }
 .band-navy .h1,
