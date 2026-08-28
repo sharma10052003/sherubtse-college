@@ -46,16 +46,16 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--s4);
-  padding-block: var(--s4);
+  padding-block: var(--s3);
 }
 @media (min-width: 760px) {
   .masthead .wrap {
-    padding-block: var(--s5);
+    padding-block: var(--s3);
   }
 }
 @media (min-width: 1024px) {
   .masthead .wrap {
-    padding-block: var(--s6);
+    padding-block: var(--s3);
   }
 }
 .brand {
@@ -81,7 +81,7 @@
 }
 @media (min-width: 1024px) {
   .brand img {
-    height: 140px;
+    height: 100px;
   }
 }
 /* flex: 1 so this cluster actually claims the space between the logo and
@@ -120,7 +120,8 @@
     justify-content: space-between;
     gap: var(--s3);
     list-style: none;
-    margin: 0;
+    margin-left: var(--s6);
+    margin-right: 0;
     padding: 0;
   }
   .primary-nav a {
