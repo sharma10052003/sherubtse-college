@@ -354,29 +354,13 @@
 
 /* ---------- Footer ---------- */
 .site-footer {
-  position: relative;
-  overflow: hidden;
   background-color: var(--navy);
-  color: #c9d0e4;
-  margin-top: var(--s9);
-  border-top: 4px solid var(--gold);
-}
-/* Same oversized-rotated-layer technique as .band (tokens.css) — kept
-   as its own rule here since the footer isn't a .band. */
-.site-footer::before {
-  content: '';
-  position: absolute;
-  inset: -75%;
   background-image: url('/patterns/knot-gold.svg');
   background-repeat: repeat;
   background-size: 110px;
-  transform: rotate(45deg);
-  z-index: 0;
-  pointer-events: none;
-}
-.site-footer .wrap {
-  position: relative;
-  z-index: 1;
+  color: #c9d0e4;
+  margin-top: var(--s9);
+  border-top: 4px solid var(--gold);
 }
 /* Flexbox with justify-content: space-between, not a grid of equal-width
    columns — the five groups have very different content widths (Contact's
