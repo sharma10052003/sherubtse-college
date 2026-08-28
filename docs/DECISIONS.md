@@ -1410,3 +1410,88 @@ and click-outside-to-close all confirmed working.
 760px+ (matching where the search box itself has always been visible), and the
 `__VITE_PRELOAD__` workaround is specific to this one dynamic import; nothing else
 in the codebase does external dynamic imports the same way.
+
+---
+
+## 040 — Real navbar spacing fixes, a stale full-access API token discovered, and
+History & Heritage ported from the PHP prototype
+
+**Status:** Decided
+
+**Context:** Two direct pixel-value spacing requests (double the logo-to-nav gap,
+flat 8px between nav items) followed by a repositioning request (dead space should
+sit next to the logo, not next to search) — each verified with `getBoundingClientRect`
+after a hard reload, not assumed from the source. Caught two real bugs doing this: a
+leftover 1024px+ media query still overriding `.primary-nav`'s gap to 24px at exactly
+the widths being tested, and `.masthead .wrap`'s own flex `gap` silently adding on top
+of `.primary-nav`'s `margin-left` (64px + 16px measured as 80px, not 64px). Both fixed
+in the same pass, not left for a future "why is this still wrong" report.
+
+**A real credential problem, not a schema problem.** Writes to Strapi started
+returning 403 Forbidden mid-session — reads kept working. Traced it properly rather
+than guessing: hashed the API token this whole session has used with SHA-512 (Strapi's
+own hashing scheme) and confirmed it matches none of the four token records actually
+in `strapi_api_tokens`. Did not attempt to recover or decrypt the existing tokens'
+`encrypted_key` values — that's real stored-credential material, not something to
+reverse-engineer even in a local dev database. Asked the project owner to generate a
+replacement via the admin UI instead. Homepage hero fields (`hero_eyebrow`,
+`hero_heading`, `hero_badge`, `hero_buttons`) were built and verified against
+temporary test content in the meantime, but the real, sourced copy ("Founded in 1968,
+Sherubtse College is the oldest college in Bhutan…", verified against Wikipedia and
+RUB's own site before writing it) is not yet saved — blocked purely on getting a
+working token, not on anything left to build.
+
+**History & Heritage.** The project owner pointed at the PHP prototype's already-built
+`/about/history` page and asked for the same page, built the same way, in the Astro
+rebuild. Investigated before building: the prototype consumes five dedicated Strapi
+content types (`history-content` plus timeline/legacy/tradition/gallery collections)
+that were created during this project's earlier "Strapi content model rebuild" but
+were never connected to any Astro page — the Astro side had been serving History
+through the generic `Page` type instead (decision 035's simpler prose version). Built
+`web/src/pages/about/history.astro` as a route more specific than `about/[slug]`, so
+it takes priority for this exact path (same precedent as `about/units/index.astro`),
+porting the prototype's ten sections faithfully — restyled to this rebuild's locked
+navy/gold and no-rounded-corners/no-drop-shadow rules rather than the prototype's
+maroon/rounded/shadowed look, the same call made on every earlier maroon reference
+this session, not re-litigated each time.
+
+**Real content already existed — not written by me.** The five Strapi content types
+already held real, substantive content seeded 2026-08-04 (before this session):
+founding story, all 7 timeline milestones, King/Mackey portraits with real photos,
+motto/emblem/values text, 4 legacy and 5 tradition cards with icons, and a real
+then/now image pair. Verified this was genuine by reading the raw API response before
+assuming the page would need new content written. Only gallery images, the
+documentary video, and the brochure are empty — those sections correctly render
+nothing rather than a placeholder, matching the person-photo-consent precedent.
+Bootstrap Icons class names in that seeded data (`bi-trophy`, `bi-mortarboard-fill`,
+etc.) were mapped to inline SVG paths rather than adding an icon-font dependency, to
+match how every other icon on this site is built.
+
+**A real bug caught while building this, not after:** manually adding `class="reveal"`
+to specific elements (the portrait cards, individual headings) did nothing on its own
+— the site-wide scroll-reveal script only ever observes the fixed list of classes it
+already knows about, so a plain `.reveal` in a template's HTML gets the CSS's
+`opacity: 0` immediately (it's server-rendered) but is never picked up to receive
+`is-visible`, leaving the element permanently invisible. Fixed by adding a generic
+`#main-content .reveal` hook to Layout.astro's selector list — a real, reusable fix
+for any future page that wants one-off element-level reveal, not a one-page patch.
+
+**A second real bug, found while wiring navigation to the new page:** `about/index.astro`
+linked to four routes that don't exist at all (`/about/leadership`, `/about/campus`,
+`/about/affiliation`, `/about/directions`) and never linked to History. Corrected to
+the five real Page routes (decision 035/037) plus this new History page — found by
+checking actual file existence, not by assuming the landing page was already right.
+
+**Verification, not assumption, for the interactive pieces:** the Then/Now slider was
+confirmed to move via a real `input` event. The timeline's scroll-driven progress line
+could not be observed updating live (this environment's browser pane doesn't reliably
+fire scroll-driven paint updates — the same limitation already hit for CSS transitions
+and IntersectionObserver earlier this session) — instead of leaving it unverified, ran
+the exact update formula manually against the real DOM and confirmed it produces a
+correct, real intermediate value (not just 0% or 100%).
+
+**Consequences:** The old generic `Page` record for the "history" slug (decision 035)
+is now orphaned — still real content, just unreachable, since this new static route
+takes priority. Left in place rather than deleted (no write access to remove it
+cleanly right now, and it's harmless sitting unused). Gallery images, the documentary
+video, and the brochure remain open items for whoever manages Strapi content next.
