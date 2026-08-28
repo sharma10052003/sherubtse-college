@@ -170,6 +170,10 @@ a:hover {
 }
 .band {
   padding: var(--s7) 0; /* mobile base */
+  background-color: var(--paper);
+  background-image: url('/patterns/knot-navy.svg');
+  background-repeat: repeat;
+  background-size: 140px;
 }
 @media (min-width: 760px) {
   .band {
@@ -177,10 +181,16 @@ a:hover {
   }
 }
 .band-alt {
-  background: var(--paper-2);
+  background-color: var(--paper-2);
+  background-image: url('/patterns/knot-navy.svg');
+  background-repeat: repeat;
+  background-size: 140px;
 }
 .band-navy {
-  background: var(--navy);
+  background-color: var(--navy);
+  background-image: url('/patterns/knot-gold.svg');
+  background-repeat: repeat;
+  background-size: 140px;
   color: #fff;
 }
 .band-navy .h1,

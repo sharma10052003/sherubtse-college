@@ -354,7 +354,10 @@
 
 /* ---------- Footer ---------- */
 .site-footer {
-  background: var(--navy);
+  background-color: var(--navy);
+  background-image: url('/patterns/knot-gold.svg');
+  background-repeat: repeat;
+  background-size: 140px;
   color: #c9d0e4;
   margin-top: var(--s9);
   border-top: 4px solid var(--gold);
