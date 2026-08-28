@@ -308,8 +308,8 @@
     top: 50%;
     right: 6%;
     transform: translateY(-50%);
-    width: 180px;
-    height: 180px;
+    width: 220px;
+    height: 220px;
   }
   /* The ring is a separate layer from the icon so it can spin on its
      own — animating .faculty-hero-mark itself would carry the icon
@@ -317,7 +317,7 @@
   .faculty-hero-mark-ring {
     position: absolute;
     inset: 0;
-    border: 1.5px dashed rgba(240, 180, 41, 0.5);
+    border: 2px dashed rgba(240, 180, 41, 0.9);
     border-radius: 50%;
     animation: faculty-mark-spin 16s linear infinite;
   }
