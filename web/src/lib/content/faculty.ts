@@ -99,6 +99,7 @@ export interface FacultySetting {
   show_contact: boolean;
   show_office_hours: boolean;
   show_research: boolean;
+  hero_background_url: string | null;
 }
 
 function mapDepartment(row: any): Department {
@@ -136,7 +137,9 @@ function mediaUrls(media: StrapiMedia[] | null | undefined): string[] {
 }
 
 export async function getFacultySetting(): Promise<FacultySetting> {
-  const res = await strapiGet<StrapiSingleResponse<any>>('faculty-setting');
+  const res = await strapiGet<StrapiSingleResponse<any>>('faculty-setting', {
+    populate: ['hero_background'],
+  });
   const row = res?.data;
   return {
     card_style: row?.card_style ?? 'sharp',
@@ -151,6 +154,7 @@ export async function getFacultySetting(): Promise<FacultySetting> {
     show_contact: row?.show_contact ?? true,
     show_office_hours: row?.show_office_hours ?? true,
     show_research: row?.show_research ?? true,
+    hero_background_url: mediaUrl(row?.hero_background),
   };
 }
 

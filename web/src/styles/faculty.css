@@ -270,15 +270,55 @@
 
 /* ---------- Hero + stats (Astro-rendered, not React) ---------- */
 .faculty-hero {
-  background: var(--navy);
+  position: relative;
+  overflow: hidden;
+  background-color: var(--navy);
+  background-size: cover;
+  background-position: center;
   color: #fff;
   padding-block: var(--s8);
+}
+.faculty-hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(8, 18, 52, 0.92), rgba(8, 18, 52, 0.78) 60%, rgba(8, 18, 52, 0.9));
+}
+.faculty-hero > .wrap {
+  position: relative;
 }
 .faculty-hero .eyebrow {
   color: var(--gold);
 }
 .faculty-hero .h-display {
   color: #fff;
+}
+/* Decorative mark — a dashed ring around the graduation-cap glyph,
+   echoing the reference design's circular badge. Purely decorative
+   (aria-hidden), so it's fine that it disappears on narrow screens
+   where there's no room for it beside the text. */
+.faculty-hero-mark {
+  display: none;
+}
+@media (min-width: 900px) {
+  .faculty-hero-mark {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    top: 50%;
+    right: 6%;
+    transform: translateY(-50%);
+    width: 180px;
+    height: 180px;
+    border: 1.5px dashed rgba(240, 180, 41, 0.5);
+    border-radius: 50%;
+  }
+  .faculty-hero-mark svg {
+    width: 64px;
+    height: 64px;
+    color: var(--gold);
+    opacity: 0.9;
+  }
 }
 .faculty-hero-intro {
   max-width: 46rem;
