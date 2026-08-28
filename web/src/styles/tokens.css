@@ -188,7 +188,7 @@ a:hover {
   inset: -75%;
   background-image: url('/patterns/knot-navy.svg');
   background-repeat: repeat;
-  background-size: 180px;
+  background-size: 110px;
   transform: rotate(45deg);
   z-index: -1;
   pointer-events: none;

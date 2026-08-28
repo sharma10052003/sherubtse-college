@@ -369,7 +369,7 @@
   inset: -75%;
   background-image: url('/patterns/knot-gold.svg');
   background-repeat: repeat;
-  background-size: 180px;
+  background-size: 110px;
   transform: rotate(45deg);
   z-index: 0;
   pointer-events: none;

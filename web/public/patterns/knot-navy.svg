@@ -1,8 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180" width="180" height="180">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 110 110" width="110" height="110">
   <defs>
     <path id="d" d="M0 -9 L9 0 L0 9 L-9 0 Z" />
   </defs>
-  <g fill="none" stroke="#0d1b4b" stroke-width="1.6" stroke-linejoin="round" opacity="0.32" transform="translate(90,90)">
+  <g fill="none" stroke="#0d1b4b" stroke-width="1.6" stroke-linejoin="round" opacity="0.32" transform="translate(55,55)">
     <use href="#d" x="0" y="0" />
     <use href="#d" x="16" y="16" />
     <use href="#d" x="16" y="-16" />
