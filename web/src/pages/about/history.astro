@@ -59,7 +59,49 @@ const presentCategories = [...new Set(galleryImages.map((g) => g.category))];
         </div>
       </section>
 
-      <!-- 3. Historical Timeline -->
+      <!-- 3. Vision of the Third King (moved ahead of the Timeline per
+           direct request: King and Mackey now come right after the
+           founding story, milestones after them) -->
+      <section class="band band-alt">
+        <div class="wrap">
+          <div class="history-portrait-card history-portrait-card-reverse reveal">
+            <div class="history-portrait-photo">
+              {history.king_photo_url ? (
+                <img src={history.king_photo_url} alt="His Majesty Jigme Dorji Wangchuck, the Third Druk Gyalpo" loading="lazy" />
+              ) : (
+                <div class="history-portrait-placeholder">1:1</div>
+              )}
+            </div>
+            <div>
+              <p class="eyebrow">Vision of the Third King</p>
+              <h2 class="h2">His Majesty Jigme Dorji Wangchuck</h2>
+              <p class="history-prose">{history.vision_king_text}</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4. Father Mackey -->
+      <section class="band">
+        <div class="wrap">
+          <div class="history-portrait-card reveal">
+            <div class="history-portrait-photo">
+              {history.mackey_photo_url ? (
+                <img src={history.mackey_photo_url} alt={history.mackey_name} loading="lazy" />
+              ) : (
+                <div class="history-portrait-placeholder">1:1</div>
+              )}
+            </div>
+            <div>
+              <p class="eyebrow">Founding Principal</p>
+              <h2 class="h2">{history.mackey_name}</h2>
+              <p class="history-prose">{history.mackey_bio}</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 5. Historical Timeline -->
       {timeline.length > 0 && (
         <section class="band band-alt">
           <div class="wrap">
@@ -81,46 +123,6 @@ const presentCategories = [...new Set(galleryImages.map((g) => g.category))];
           </div>
         </section>
       )}
-
-      <!-- 4. Vision of the Third King -->
-      <section class="band">
-        <div class="wrap">
-          <div class="history-portrait-card history-portrait-card-reverse reveal">
-            <div class="history-portrait-photo">
-              {history.king_photo_url ? (
-                <img src={history.king_photo_url} alt="His Majesty Jigme Dorji Wangchuck, the Third Druk Gyalpo" loading="lazy" />
-              ) : (
-                <div class="history-portrait-placeholder">4:5</div>
-              )}
-            </div>
-            <div>
-              <p class="eyebrow">Vision of the Third King</p>
-              <h2 class="h2">His Majesty Jigme Dorji Wangchuck</h2>
-              <p class="history-prose">{history.vision_king_text}</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- 5. Father Mackey -->
-      <section class="band band-alt">
-        <div class="wrap">
-          <div class="history-portrait-card reveal">
-            <div class="history-portrait-photo">
-              {history.mackey_photo_url ? (
-                <img src={history.mackey_photo_url} alt={history.mackey_name} loading="lazy" />
-              ) : (
-                <div class="history-portrait-placeholder">4:5</div>
-              )}
-            </div>
-            <div>
-              <p class="eyebrow">Founding Principal</p>
-              <h2 class="h2">{history.mackey_name}</h2>
-              <p class="history-prose">{history.mackey_bio}</p>
-            </div>
-          </div>
-        </div>
-      </section>
 
       <!-- 6. Heritage Gallery -->
       {galleryImages.length > 0 && (
@@ -396,9 +398,16 @@ const presentCategories = [...new Set(galleryImages.map((g) => g.category))];
   }
   .history-portrait-card-reverse { grid-template-columns: minmax(0, 1.4fr) minmax(0, 0.6fr); }
   .history-portrait-card-reverse .history-portrait-photo { order: 2; }
+  /* Circular, per direct request specifically for these two portraits —
+     a deliberate, named exception to the site's own no-rounded-corners
+     rule, not applied anywhere else. Sized up from 16rem: at 4:5 the
+     photos were being cropped down to only showing about half of each
+     picture; 1:1 plus a larger box shows much more of the actual frame. */
   .history-portrait-photo {
-    aspect-ratio: 4 / 5;
-    max-width: 16rem;
+    aspect-ratio: 1 / 1;
+    max-width: 20rem;
+    border-radius: 50%;
+    overflow: hidden;
     margin: 0 auto;
   }
   .history-portrait-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
