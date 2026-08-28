@@ -75,6 +75,13 @@ const { title, description } = Astro.props;
     '#main-content .person',
     '#main-content .article-body',
     '#main-content .attachment',
+    // A generic opt-in for a page that wants a specific element revealed
+    // individually (not just the whole .band section) — e.g. History &
+    // Heritage's portrait cards. Marking an element .reveal in a
+    // template does nothing on its own without this: the CSS sets
+    // opacity: 0 immediately since it's in the server-rendered HTML, and
+    // only this script's own IntersectionObserver ever adds is-visible.
+    '#main-content .reveal',
   ].join(', ');
 
   const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;

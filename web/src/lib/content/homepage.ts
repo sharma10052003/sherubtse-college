@@ -3,7 +3,11 @@ import type { StrapiSingleResponse } from '../strapi';
 import type { LinkItem, StrapiMedia } from '../types';
 
 export interface Homepage {
+  hero_eyebrow?: string | null;
+  hero_heading?: string | null;
   statement?: string | null;
+  hero_badge?: string | null;
+  hero_buttons: LinkItem[];
   hero_image_urls: string[];
   hero_video_url: string | null;
   quick_links: LinkItem[];
@@ -15,7 +19,11 @@ export interface Homepage {
 }
 
 interface RawHomepage {
+  hero_eyebrow?: string | null;
+  hero_heading?: string | null;
   statement?: string | null;
+  hero_badge?: string | null;
+  hero_buttons?: LinkItem[];
   hero_images?: StrapiMedia[] | null;
   hero_video?: StrapiMedia | null;
   quick_links: LinkItem[];
@@ -27,7 +35,11 @@ interface RawHomepage {
 }
 
 const DEFAULTS: Homepage = {
+  hero_eyebrow: null,
+  hero_heading: null,
   statement: null,
+  hero_badge: null,
+  hero_buttons: [],
   hero_image_urls: [],
   hero_video_url: null,
   quick_links: [],
@@ -40,13 +52,21 @@ const DEFAULTS: Homepage = {
 
 export async function getHomepage(): Promise<Homepage> {
   const res = await strapiGet<StrapiSingleResponse<RawHomepage>>('homepage', {
-    populate: ['hero_images', 'hero_video', 'quick_links', 'featured_selections', 'president_photo'],
+    populate: ['hero_images', 'hero_video', 'hero_buttons', 'quick_links', 'featured_selections', 'president_photo'],
   });
   const row = res?.data;
   if (!row) return DEFAULTS;
 
   return {
+    // Hero eyebrow/heading/statement/badge/buttons — all editable from the
+    // same Homepage section as the video itself, per direct request. Each
+    // is independently optional so index.astro can fall back sensibly
+    // (e.g. the existing default statement) rather than show blank gaps.
+    hero_eyebrow: row.hero_eyebrow ?? null,
+    hero_heading: row.hero_heading ?? null,
     statement: row.statement ?? null,
+    hero_badge: row.hero_badge ?? null,
+    hero_buttons: row.hero_buttons ?? [],
     hero_image_urls: (row.hero_images ?? []).map((m) => mediaUrl(m)).filter((u): u is string => !!u),
     // The video is desktop/tablet only — see index.astro's <source media="">
     // gate. Mobile visitors on real mobile data (the site's stated primary

@@ -29,7 +29,29 @@ function formatDate(iso: string) {
       <video class="hero-video" poster={heroImage ?? undefined} muted loop playsinline preload="none" id="heroVideo" data-src={homepage.hero_video_url}></video>
     )}
     <div class="wrap">
-      <p class="hero-statement">{homepage.statement ?? 'Sherubtse College — the seat of learning in the eastern Himalayas.'}</p>
+      {homepage.hero_eyebrow && (
+        <p class="hero-eyebrow">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z" /></svg>
+          {homepage.hero_eyebrow}
+        </p>
+      )}
+      <h1 class="hero-heading">
+        {homepage.hero_heading ?? 'Sherubtse College — the seat of learning in the eastern Himalayas.'}
+      </h1>
+      {homepage.statement && <p class="hero-statement">{homepage.statement}</p>}
+      {homepage.hero_buttons.length > 0 && (
+        <div class="hero-buttons">
+          {homepage.hero_buttons.map((b, i) => (
+            <a href={b.url} class={i === 0 ? 'btn btn-primary' : 'btn btn-secondary btn-on-hero'}>{b.label}</a>
+          ))}
+        </div>
+      )}
+      {homepage.hero_badge && (
+        <p class="hero-badge">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2 2 7l10 5 10-5-10-5z" /><path d="M6 10v6c0 1.5 3 3 6 3s6-1.5 6-3v-6" /></svg>
+          {homepage.hero_badge}
+        </p>
+      )}
     </div>
   </section>
 
@@ -162,16 +184,81 @@ function formatDate(iso: string) {
   .hero .wrap {
     position: relative;
     padding-block: var(--s6);
-    background: linear-gradient(to top, rgba(8, 18, 52, 0.85), rgba(8, 18, 52, 0));
+    background: linear-gradient(to top, rgba(8, 18, 52, 0.85), rgba(8, 18, 52, 0.35));
     width: 100%;
   }
-  .hero-statement {
+  .hero-eyebrow {
+    display: flex;
+    align-items: center;
+    gap: var(--s2);
+    font-family: var(--font-sans);
+    font-weight: 700;
+    font-size: 0.78rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin: 0 0 var(--s3);
+  }
+  .hero-eyebrow svg {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+  }
+  .hero-heading {
     font-family: var(--font-serif);
     font-weight: 700;
     font-size: clamp(1.6rem, 4vw, 2.4rem);
     line-height: 1.2;
     max-width: 20ch;
     margin: 0;
+  }
+  .hero-statement {
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    line-height: 1.6;
+    max-width: 55ch;
+    color: #e4e8f5;
+    margin: var(--s4) 0 0;
+  }
+  .hero-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s4);
+    margin-top: var(--s5);
+  }
+  .hero-buttons .btn-primary {
+    background: var(--gold);
+    border-color: var(--gold);
+    color: var(--navy);
+  }
+  .hero-buttons .btn-primary:hover {
+    background: #ffc95c;
+    border-color: #ffc95c;
+  }
+  .hero-buttons .btn-on-hero {
+    border-color: #fff;
+    color: #fff;
+    background: transparent;
+  }
+  .hero-buttons .btn-on-hero:hover {
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+  }
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s2);
+    margin: var(--s5) 0 0;
+    padding: var(--s2) var(--s4);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    font-size: 0.82rem;
+    font-weight: 600;
+  }
+  .hero-badge svg {
+    width: 16px;
+    height: 16px;
+    color: var(--gold);
+    flex-shrink: 0;
   }
   @media (min-width: 760px) {
     .hero {

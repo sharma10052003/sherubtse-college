@@ -12,7 +12,15 @@
   "attributes": {
     "hero_images": { "type": "media", "multiple": true, "allowedTypes": ["images"] },
     "hero_video": { "type": "media", "multiple": false, "allowedTypes": ["videos"] },
+    "hero_eyebrow": { "type": "string" },
+    "hero_heading": { "type": "string" },
     "statement": { "type": "text" },
+    "hero_badge": { "type": "string" },
+    "hero_buttons": {
+      "type": "component",
+      "repeatable": true,
+      "component": "shared.link-item"
+    },
     "quick_links": {
       "type": "component",
       "repeatable": true,

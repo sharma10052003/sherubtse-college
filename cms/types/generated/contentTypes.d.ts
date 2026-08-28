@@ -2183,6 +2183,10 @@ export interface ApiHomepageHomepage extends Struct.SingleTypeSchema {
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     featured_selections: Schema.Attribute.Component<'shared.link-item', true>;
+    hero_badge: Schema.Attribute.String;
+    hero_buttons: Schema.Attribute.Component<'shared.link-item', true>;
+    hero_eyebrow: Schema.Attribute.String;
+    hero_heading: Schema.Attribute.String;
     hero_images: Schema.Attribute.Media<'images', true>;
     hero_video: Schema.Attribute.Media<'videos'>;
     locale: Schema.Attribute.String & Schema.Attribute.Private;

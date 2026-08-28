@@ -1,0 +1,690 @@
+---
+// History & Heritage — a dedicated, richer page than the generic Page
+// type used elsewhere in /about/[slug] (that route still exists for
+// other About pages; this file is more specific so Astro resolves it
+// first for exactly this path, same pattern already used by
+// about/units/index.astro). Ported from the PHP prototype's
+// about/history.php + includes/pages/history.php + assets/js/pages/
+// history.js, same ten sections and the same five dedicated Strapi
+// content types (history-content, history-timeline-items,
+// history-legacy-items, history-tradition-items, history-gallery-images)
+// — restyled to this rebuild's locked navy/gold, no-rounded-corners,
+// no-drop-shadow rules rather than the prototype's maroon/rounded/
+// shadowed look.
+import Layout from '../../layouts/Layout.astro';
+import {
+  getHistoryContent,
+  getHistoryTimeline,
+  getHistoryLegacyItems,
+  getHistoryTraditionItems,
+  getHistoryGalleryImages,
+  GALLERY_CATEGORY_LABELS,
+  iconPaths,
+} from '../../lib/content/history';
+
+const history = await getHistoryContent();
+const timeline = await getHistoryTimeline();
+const legacyItems = await getHistoryLegacyItems();
+const traditionItems = await getHistoryTraditionItems();
+const galleryImages = await getHistoryGalleryImages();
+
+const presentCategories = [...new Set(galleryImages.map((g) => g.category))];
+---
+<Layout title="History & Heritage" description={history?.hero_intro ?? 'The history of Sherubtse College.'}>
+  {!history ? (
+    <div class="wrap" style="padding-top:var(--s5);padding-bottom:var(--s7)">
+      <nav class="breadcrumb" aria-label="Breadcrumb"><a href="/">Home</a> › <a href="/about">About</a> › <span class="current">History & Heritage</span></nav>
+      <h1 class="h1">History & Heritage</h1>
+      <p class="small" style="margin-top:var(--s4)">This page will appear here once added in Strapi.</p>
+    </div>
+  ) : (
+    <article class="history-page">
+      <!-- 1. Hero -->
+      <section class="history-hero" style={history.hero_image_url ? `background-image:url(${history.hero_image_url});background-position:center ${history.hero_image_position}` : undefined}>
+        <div class="history-hero-overlay"></div>
+        <div class="wrap history-hero-inner">
+          <nav class="breadcrumb breadcrumb-on-dark" aria-label="Breadcrumb"><a href="/">Home</a> › <a href="/about">About</a> › <span class="current">History & Heritage</span></nav>
+          <h1 class="h-display">{history.hero_title}</h1>
+          <p class="history-hero-subtitle">{history.hero_subtitle}</p>
+          <p class="history-hero-intro">{history.hero_intro}</p>
+        </div>
+      </section>
+
+      <!-- 2. Founding Story -->
+      <section class="band">
+        <div class="wrap narrow reveal">
+          <p class="eyebrow">Founding Story</p>
+          <h2 class="h2">How It Began</h2>
+          <p class="history-prose">{history.founding_story}</p>
+        </div>
+      </section>
+
+      <!-- 3. Historical Timeline -->
+      {timeline.length > 0 && (
+        <section class="band band-alt">
+          <div class="wrap">
+            <p class="eyebrow">Historical Timeline</p>
+            <h2 class="h2 reveal">Milestones</h2>
+            <div class="history-timeline" id="historyTimeline">
+              <span class="history-timeline-progress" id="historyTimelineProgress" aria-hidden="true"></span>
+              {timeline.map((item, i) => (
+                <div class={`history-timeline-item history-timeline-item-${i % 2 === 0 ? 'left' : 'right'} reveal`} style={`--i:${i}`}>
+                  <span class="history-timeline-dot" aria-hidden="true"></span>
+                  <div class="history-timeline-card">
+                    <span class="history-timeline-year">{item.year}</span>
+                    <h3 class="h3">{item.event}</h3>
+                    {item.description && <p class="small">{item.description}</p>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      <!-- 4. Vision of the Third King -->
+      <section class="band">
+        <div class="wrap">
+          <div class="history-portrait-card history-portrait-card-reverse reveal">
+            <div class="history-portrait-photo">
+              {history.king_photo_url ? (
+                <img src={history.king_photo_url} alt="His Majesty Jigme Dorji Wangchuck, the Third Druk Gyalpo" loading="lazy" />
+              ) : (
+                <div class="history-portrait-placeholder">4:5</div>
+              )}
+            </div>
+            <div>
+              <p class="eyebrow">Vision of the Third King</p>
+              <h2 class="h2">His Majesty Jigme Dorji Wangchuck</h2>
+              <p class="history-prose">{history.vision_king_text}</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 5. Father Mackey -->
+      <section class="band band-alt">
+        <div class="wrap">
+          <div class="history-portrait-card reveal">
+            <div class="history-portrait-photo">
+              {history.mackey_photo_url ? (
+                <img src={history.mackey_photo_url} alt={history.mackey_name} loading="lazy" />
+              ) : (
+                <div class="history-portrait-placeholder">4:5</div>
+              )}
+            </div>
+            <div>
+              <p class="eyebrow">Founding Principal</p>
+              <h2 class="h2">{history.mackey_name}</h2>
+              <p class="history-prose">{history.mackey_bio}</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 6. Heritage Gallery -->
+      {galleryImages.length > 0 && (
+        <section class="band" id="heritage-gallery">
+          <div class="wrap">
+            <p class="eyebrow">Heritage Gallery</p>
+            <h2 class="h2 reveal">Moments from Our History</h2>
+
+            {presentCategories.length > 1 && (
+              <div class="history-gallery-filters" role="tablist" aria-label="Filter photos by category">
+                <button type="button" class="is-active" data-filter="all" role="tab" aria-selected="true">All</button>
+                {presentCategories.map((cat) => (
+                  <button type="button" data-filter={cat} role="tab" aria-selected="false">{GALLERY_CATEGORY_LABELS[cat]}</button>
+                ))}
+              </div>
+            )}
+
+            <div class="history-gallery-grid">
+              {galleryImages.map((img, i) => (
+                <button type="button" class="history-gallery-item reveal" data-category={img.category} data-index={i} style={`--i:${i % 6}`}>
+                  <img src={img.image_url ?? ''} alt={img.caption ?? ''} loading="lazy" />
+                  {img.caption && <span class="history-gallery-caption">{img.caption}</span>}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div class="history-lightbox" id="historyLightbox" hidden role="dialog" aria-modal="true" aria-label="Photo viewer">
+            <button type="button" class="history-lightbox-close" id="historyLightboxClose" aria-label="Close photo viewer">✕</button>
+            <button type="button" class="history-lightbox-nav history-lightbox-nav-prev" id="historyLightboxPrev" aria-label="Previous photo">‹</button>
+            <figure class="history-lightbox-figure">
+              <img src="" alt="" id="historyLightboxImage" />
+              <figcaption id="historyLightboxCaption"></figcaption>
+            </figure>
+            <button type="button" class="history-lightbox-nav history-lightbox-nav-next" id="historyLightboxNext" aria-label="Next photo">›</button>
+          </div>
+        </section>
+      )}
+
+      <!-- 7. Motto & Identity -->
+      <section class="band band-alt">
+        <div class="wrap narrow reveal">
+          <p class="eyebrow">Motto & Identity</p>
+          <h2 class="history-motto">&ldquo;{history.motto}&rdquo;</h2>
+          {history.motto_meaning && <p class="history-prose">{history.motto_meaning}</p>}
+          {history.emblem_meaning && (<><h3 class="h3">The Emblem</h3><p class="history-prose">{history.emblem_meaning}</p></>)}
+          {history.values_text && (<><h3 class="h3">Our Values</h3><p class="history-prose">{history.values_text}</p></>)}
+        </div>
+      </section>
+
+      <!-- 8. Legacy & Achievements -->
+      {legacyItems.length > 0 && (
+        <section class="band">
+          <div class="wrap">
+            <p class="eyebrow">Legacy & Achievements</p>
+            <h2 class="h2 reveal">Our Legacy</h2>
+            <div class="history-card-grid">
+              {legacyItems.map((item) => (
+                <div class="card">
+                  <svg class="history-card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" set:html={iconPaths(item.icon)} />
+                  <p>{item.text}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      <!-- 9. Traditions & Culture -->
+      {traditionItems.length > 0 && (
+        <section class="band band-alt">
+          <div class="wrap">
+            <p class="eyebrow">Traditions & Culture</p>
+            <h2 class="h2 reveal">Living Traditions</h2>
+            <div class="history-card-grid">
+              {traditionItems.map((item) => (
+                <div class="card">
+                  <svg class="history-card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" set:html={iconPaths(item.icon)} />
+                  <h3 class="h3">{item.title}</h3>
+                  {item.description && <p class="small">{item.description}</p>}
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      <!-- 10a. Then vs Now -->
+      {history.then_image_url && history.now_image_url && (
+        <section class="band">
+          <div class="wrap narrow">
+            <p class="eyebrow">Then vs Now</p>
+            <h2 class="h2 reveal">Decades of Growth</h2>
+            <div class="history-slider" id="historyThenNowSlider">
+              <img class="history-slider-now" src={history.now_image_url} alt="Sherubtse College today" />
+              <div class="history-slider-then-wrap">
+                <img class="history-slider-then" src={history.then_image_url} alt="Sherubtse College in its early years" />
+              </div>
+              <div class="history-slider-handle" aria-hidden="true"></div>
+              <label class="sr-only-focusable" for="historyThenNowRange">Drag to compare then and now</label>
+              <input type="range" id="historyThenNowRange" min="0" max="100" value="50" />
+              <span class="history-slider-label history-slider-label-then">Then</span>
+              <span class="history-slider-label history-slider-label-now">Now</span>
+            </div>
+          </div>
+        </section>
+      )}
+
+      <!-- 10b. Documentary -->
+      {history.video_url && (
+        <section class="band band-alt">
+          <div class="wrap narrow reveal">
+            <p class="eyebrow">Documentary</p>
+            <h2 class="h2">Watch Our Story</h2>
+            <div class="history-video-frame">
+              {/\.mp4($|\?)/i.test(history.video_url) ? (
+                <video controls src={history.video_url}></video>
+              ) : (
+                <iframe src={history.video_url} title="Sherubtse College documentary" allowfullscreen loading="lazy"></iframe>
+              )}
+            </div>
+          </div>
+        </section>
+      )}
+
+      <!-- 10c. Brochure -->
+      {history.brochure_url && (
+        <section class="band">
+          <div class="wrap narrow history-brochure-inner reveal">
+            <div>
+              <h2 class="h2">Download the Heritage Brochure</h2>
+              <p class="history-prose">A printable keepsake of Sherubtse College's history, milestones and legacy.</p>
+            </div>
+            <a class="btn btn-primary" href={history.brochure_url} download>Download Brochure</a>
+          </div>
+        </section>
+      )}
+    </article>
+  )}
+</Layout>
+
+<style>
+  .history-prose {
+    font-size: 1.05rem;
+    line-height: 1.7;
+    color: var(--ink-2);
+  }
+
+  /* ---- 1. Hero ---- */
+  .history-hero {
+    position: relative;
+    min-height: 50vh;
+    display: flex;
+    align-items: center;
+    background-color: var(--navy);
+    background-size: cover;
+    background-position: center;
+    color: #fff;
+    padding-block: var(--s8);
+  }
+  .history-hero-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(8, 18, 52, 0.75), rgba(8, 18, 52, 0.55));
+  }
+  .history-hero-inner {
+    position: relative;
+    max-width: 46rem;
+  }
+  .breadcrumb-on-dark, .breadcrumb-on-dark a { color: #c9d0e4; }
+  .history-hero-subtitle {
+    font-size: 1.2rem;
+    color: var(--gold-light);
+    font-weight: 600;
+    margin: var(--s3) 0 0;
+  }
+  .history-hero-intro {
+    font-size: 1.05rem;
+    line-height: 1.6;
+    color: rgba(255, 255, 255, 0.9);
+    margin: var(--s4) 0 0;
+  }
+
+  /* ---- 3. Timeline ---- */
+  .history-timeline {
+    position: relative;
+    max-width: 54rem;
+    margin: var(--s6) auto 0;
+  }
+  .history-timeline::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: var(--line-strong);
+    transform: translateX(-50%);
+  }
+  .history-timeline-progress {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: var(--gold);
+    transform: translateX(-50%);
+    clip-path: inset(0 0 100% 0);
+    transition: clip-path 120ms linear;
+  }
+  .history-timeline-item {
+    position: relative;
+    width: 50%;
+    padding: 0 var(--s7) var(--s7);
+  }
+  .history-timeline-item-left { left: 0; text-align: right; }
+  .history-timeline-item-right { left: 50%; text-align: left; }
+  .history-timeline-dot {
+    position: absolute;
+    top: 4px;
+    width: 16px;
+    height: 16px;
+    background: var(--gold);
+    border: 3px solid var(--paper-2);
+  }
+  .history-timeline-item-left .history-timeline-dot { right: -8px; }
+  .history-timeline-item-right .history-timeline-dot { left: -8px; }
+  .history-timeline-card {
+    display: inline-block;
+    max-width: 22rem;
+    text-align: left;
+    background: #fff;
+    border: 1px solid var(--line);
+    padding: var(--s4) var(--s5);
+  }
+  .history-timeline-year {
+    display: inline-block;
+    background: var(--navy);
+    color: #fff;
+    font-family: var(--font-serif);
+    font-weight: 700;
+    font-size: 0.85rem;
+    padding: 2px 12px;
+    margin-bottom: var(--s2);
+  }
+  @media (max-width: 700px) {
+    .history-timeline::before,
+    .history-timeline-progress { left: 20px; }
+    .history-timeline-item,
+    .history-timeline-item-left,
+    .history-timeline-item-right {
+      width: 100%;
+      left: 0;
+      text-align: left;
+      padding: 0 0 var(--s6) var(--s7);
+    }
+    .history-timeline-item-left .history-timeline-dot,
+    .history-timeline-item-right .history-timeline-dot { left: 14px; right: auto; }
+    .history-timeline-card { max-width: none; }
+  }
+
+  /* ---- 4/5. Portrait card ---- */
+  .history-portrait-card {
+    display: grid;
+    grid-template-columns: minmax(0, 0.6fr) minmax(0, 1.4fr);
+    gap: var(--s7);
+    align-items: center;
+  }
+  .history-portrait-card-reverse { grid-template-columns: minmax(0, 1.4fr) minmax(0, 0.6fr); }
+  .history-portrait-card-reverse .history-portrait-photo { order: 2; }
+  .history-portrait-photo {
+    aspect-ratio: 4 / 5;
+    max-width: 16rem;
+    margin: 0 auto;
+  }
+  .history-portrait-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .history-portrait-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--paper-2);
+    border: 1px solid var(--line);
+    color: var(--ink-2);
+  }
+  @media (max-width: 700px) {
+    .history-portrait-card,
+    .history-portrait-card-reverse { grid-template-columns: 1fr; text-align: center; }
+    .history-portrait-card-reverse .history-portrait-photo { order: 0; }
+  }
+
+  /* ---- 6. Gallery ---- */
+  .history-gallery-filters { display: flex; flex-wrap: wrap; gap: var(--s3); margin: var(--s5) 0; }
+  .history-gallery-filters button {
+    font-family: inherit;
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 8px 18px;
+    border: 1px solid var(--line-strong);
+    background: #fff;
+    color: var(--ink-2);
+    cursor: pointer;
+  }
+  .history-gallery-filters button.is-active { background: var(--navy); border-color: var(--navy); color: #fff; }
+  .history-gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-auto-rows: 130px;
+    gap: var(--s4);
+  }
+  @media (max-width: 900px) { .history-gallery-grid { grid-template-columns: repeat(3, 1fr); } }
+  @media (max-width: 560px) { .history-gallery-grid { grid-template-columns: repeat(2, 1fr); } }
+  .history-gallery-item {
+    display: block;
+    width: 100%;
+    height: 100%;
+    position: relative;
+    border: 0;
+    padding: 0;
+    background: none;
+    overflow: hidden;
+    cursor: pointer;
+  }
+  .history-gallery-item[hidden] { display: none; }
+  .history-gallery-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .history-gallery-caption {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: var(--s2) var(--s3);
+    background: linear-gradient(0deg, rgba(0, 0, 0, 0.72), rgba(0, 0, 0, 0));
+    color: #fff;
+    font-size: 0.8rem;
+  }
+  .history-lightbox {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    background: rgba(8, 10, 15, 0.94);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--s6);
+  }
+  .history-lightbox[hidden] { display: none; }
+  .history-lightbox-figure { max-width: 90vw; max-height: 85vh; margin: 0; display: flex; flex-direction: column; align-items: center; gap: var(--s3); }
+  .history-lightbox-figure img { max-width: 90vw; max-height: 75vh; object-fit: contain; }
+  .history-lightbox-figure figcaption { color: rgba(255, 255, 255, 0.85); font-size: 0.85rem; text-align: center; }
+  .history-lightbox-close, .history-lightbox-nav {
+    position: fixed;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #fff;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    cursor: pointer;
+  }
+  .history-lightbox-close { top: var(--s5); right: var(--s5); }
+  .history-lightbox-nav-prev { left: var(--s5); top: 50%; transform: translateY(-50%); }
+  .history-lightbox-nav-next { right: var(--s5); top: 50%; transform: translateY(-50%); }
+
+  /* ---- 7. Motto ---- */
+  .history-motto {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-weight: 700;
+    color: var(--navy);
+    font-size: clamp(1.6rem, 3.5vw, 2.2rem);
+    margin: 0 0 var(--s4);
+  }
+
+  /* ---- 8/9. Card grids ---- */
+  .history-card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--s5); margin-top: var(--s5); }
+  .history-card-icon { width: 28px; height: 28px; color: var(--gold-ink); margin: 0 0 var(--s2); display: block; }
+
+  /* ---- 10a. Then/Now slider ---- */
+  .history-slider {
+    position: relative;
+    aspect-ratio: 16 / 10;
+    overflow: hidden;
+    user-select: none;
+    margin-top: var(--s5);
+  }
+  .history-slider-now, .history-slider-then { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .history-slider-now { position: absolute; inset: 0; }
+  .history-slider-then-wrap {
+    position: absolute;
+    inset: 0;
+    clip-path: inset(0 calc(100% - var(--slider-pos, 50%)) 0 0);
+  }
+  .history-slider-handle {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: var(--slider-pos, 50%);
+    width: 3px;
+    background: #fff;
+    transform: translateX(-50%);
+    pointer-events: none;
+  }
+  .history-slider input[type='range'] {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    opacity: 0;
+    cursor: ew-resize;
+  }
+  .history-slider-label {
+    position: absolute;
+    bottom: var(--s3);
+    padding: 4px 12px;
+    background: rgba(0, 0, 0, 0.6);
+    color: #fff;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+  .history-slider-label-then { left: var(--s3); }
+  .history-slider-label-now { right: var(--s3); }
+
+  /* ---- 10b. Video ---- */
+  .history-video-frame { position: relative; width: 100%; aspect-ratio: 16 / 9; overflow: hidden; background: #000; margin-top: var(--s5); }
+  .history-video-frame iframe, .history-video-frame video { width: 100%; height: 100%; border: none; display: block; }
+
+  /* ---- 10c. Brochure ---- */
+  .history-brochure-inner { display: flex; align-items: center; justify-content: space-between; gap: var(--s5); flex-wrap: wrap; }
+</style>
+
+<script>
+  // Timeline scroll-driven progress line, Heritage Gallery filter +
+  // lightbox, and the Then/Now comparison slider. Ported from the PHP
+  // prototype's history.js — same behaviour, no view-transitions API
+  // dependency (kept simple: instant swap, since this rebuild's JS
+  // budget is deliberately minimal). The fade/slide-in reveal itself is
+  // handled by the site-wide scroll-reveal in Layout.astro (this page's
+  // .reveal / .card elements are already covered by it), not duplicated
+  // here.
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // ---- Timeline progress ----
+  const timelineEl = document.getElementById('historyTimeline');
+  const progressEl = document.getElementById('historyTimelineProgress');
+  if (timelineEl && progressEl) {
+    if (reduceMotion) {
+      progressEl.style.clipPath = 'inset(0 0 0% 0)';
+    } else {
+      let ticking = false;
+      const updateProgress = () => {
+        const rect = timelineEl.getBoundingClientRect();
+        const vh = window.innerHeight;
+        const total = rect.height + vh * 0.5;
+        const scrolled = vh * 0.5 - rect.top;
+        const pct = Math.max(0, Math.min(1, total > 0 ? scrolled / total : 0));
+        (progressEl as HTMLElement).style.clipPath = `inset(0 0 ${(1 - pct) * 100}% 0)`;
+        ticking = false;
+      };
+      window.addEventListener(
+        'scroll',
+        () => {
+          if (!ticking) {
+            window.requestAnimationFrame(updateProgress);
+            ticking = true;
+          }
+        },
+        { passive: true }
+      );
+      window.addEventListener('resize', updateProgress);
+      updateProgress();
+    }
+  }
+
+  // ---- Gallery filter + lightbox ----
+  const gallerySection = document.querySelector('.history-gallery-grid');
+  if (gallerySection) {
+    const images = Array.from(document.querySelectorAll<HTMLButtonElement>('.history-gallery-item')).map((el) => ({
+      src: el.querySelector('img')?.getAttribute('src') ?? '',
+      caption: el.querySelector('img')?.getAttribute('alt') ?? '',
+      category: el.dataset.category ?? '',
+    }));
+    const filterButtons = document.querySelectorAll<HTMLButtonElement>('.history-gallery-filters button');
+    const items = document.querySelectorAll<HTMLButtonElement>('.history-gallery-item');
+
+    filterButtons.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        filterButtons.forEach((b) => {
+          b.classList.remove('is-active');
+          b.setAttribute('aria-selected', 'false');
+        });
+        btn.classList.add('is-active');
+        btn.setAttribute('aria-selected', 'true');
+        const filter = btn.dataset.filter;
+        items.forEach((item) => {
+          item.hidden = !(filter === 'all' || item.dataset.category === filter);
+        });
+      });
+    });
+
+    const lightbox = document.getElementById('historyLightbox');
+    if (lightbox && images.length) {
+      const lbImage = document.getElementById('historyLightboxImage') as HTMLImageElement | null;
+      const lbCaption = document.getElementById('historyLightboxCaption');
+      const closeBtn = document.getElementById('historyLightboxClose');
+      const prevBtn = document.getElementById('historyLightboxPrev');
+      const nextBtn = document.getElementById('historyLightboxNext');
+      let currentIndex = 0;
+      let lastFocused: HTMLElement | null = null;
+
+      const setContent = (index: number) => {
+        currentIndex = (index + images.length) % images.length;
+        const img = images[currentIndex];
+        if (lbImage) {
+          lbImage.src = img.src;
+          lbImage.alt = img.caption;
+        }
+        if (lbCaption) lbCaption.textContent = img.caption;
+      };
+
+      const open = (index: number) => {
+        lastFocused = document.activeElement as HTMLElement | null;
+        setContent(index);
+        lightbox.hidden = false;
+        document.body.style.overflow = 'hidden';
+        closeBtn?.focus();
+      };
+
+      const close = () => {
+        lightbox.hidden = true;
+        document.body.style.overflow = '';
+        lastFocused?.focus();
+      };
+
+      items.forEach((item) => {
+        item.addEventListener('click', () => open(parseInt(item.dataset.index ?? '0', 10)));
+      });
+
+      closeBtn?.addEventListener('click', close);
+      prevBtn?.addEventListener('click', () => setContent(currentIndex - 1));
+      nextBtn?.addEventListener('click', () => setContent(currentIndex + 1));
+      lightbox.addEventListener('click', (e) => {
+        if (e.target === lightbox) close();
+      });
+      document.addEventListener('keydown', (e) => {
+        if (lightbox.hidden) return;
+        if (e.key === 'Escape') close();
+        if (e.key === 'ArrowLeft') setContent(currentIndex - 1);
+        if (e.key === 'ArrowRight') setContent(currentIndex + 1);
+      });
+    }
+  }
+
+  // ---- Then/Now slider ----
+  const slider = document.getElementById('historyThenNowSlider') as HTMLElement | null;
+  const range = document.getElementById('historyThenNowRange') as HTMLInputElement | null;
+  if (slider && range) {
+    const update = () => slider.style.setProperty('--slider-pos', `${range.value}%`);
+    range.addEventListener('input', update);
+    update();
+  }
+</script>
