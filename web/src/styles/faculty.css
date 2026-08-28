@@ -310,14 +310,28 @@
     transform: translateY(-50%);
     width: 180px;
     height: 180px;
+  }
+  /* The ring is a separate layer from the icon so it can spin on its
+     own — animating .faculty-hero-mark itself would carry the icon
+     around with it. */
+  .faculty-hero-mark-ring {
+    position: absolute;
+    inset: 0;
     border: 1.5px dashed rgba(240, 180, 41, 0.5);
     border-radius: 50%;
+    animation: faculty-mark-spin 16s linear infinite;
   }
   .faculty-hero-mark svg {
+    position: relative;
     width: 64px;
     height: 64px;
     color: var(--gold);
     opacity: 0.9;
+  }
+}
+@keyframes faculty-mark-spin {
+  to {
+    transform: rotate(360deg);
   }
 }
 .faculty-hero-intro {
