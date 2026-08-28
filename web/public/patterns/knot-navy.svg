@@ -1,10 +1,20 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 140" width="140" height="140">
-  <g fill="none" stroke="#0d1b4b" stroke-width="1.6" stroke-linecap="round" opacity="0.3" transform="translate(70,70)">
-    <path d="M0 -26c6 0 6 8 12 8s6-8 12-8M0 -26c-6 0-6 8-12 8s-6-8-12-8" />
-    <path d="M0 26c6 0 6-8 12-8s6 8 12 8M0 26c-6 0-6-8-12-8s-6 8-12 8" />
-    <path d="M-26 0c0-6 8-6 8-12s-8-6-8-12M-26 0c0 6 8 6 8 12s-8 6-8 12" />
-    <path d="M26 0c0-6-8-6-8-12s8-6 8-12M26 0c0 6-8 6-8 12s8 6 8 12" />
-    <circle cx="0" cy="0" r="7" />
-    <rect x="-4.5" y="-4.5" width="9" height="9" transform="rotate(45)" />
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180" width="180" height="180">
+  <defs>
+    <path id="d" d="M0 -9 L9 0 L0 9 L-9 0 Z" />
+  </defs>
+  <g fill="none" stroke="#0d1b4b" stroke-width="1.6" stroke-linejoin="round" opacity="0.32" transform="translate(90,90)">
+    <use href="#d" x="0" y="0" />
+    <use href="#d" x="16" y="16" />
+    <use href="#d" x="16" y="-16" />
+    <use href="#d" x="-16" y="16" />
+    <use href="#d" x="-16" y="-16" />
+    <use href="#d" x="0" y="-32" />
+    <use href="#d" x="0" y="32" />
+    <use href="#d" x="-32" y="0" />
+    <use href="#d" x="32" y="0" />
+    <circle cx="0" cy="-44" r="3" fill="#0d1b4b" stroke="none" />
+    <circle cx="0" cy="44" r="3" fill="#0d1b4b" stroke="none" />
+    <circle cx="-44" cy="0" r="3" fill="#0d1b4b" stroke="none" />
+    <circle cx="44" cy="0" r="3" fill="#0d1b4b" stroke="none" />
   </g>
 </svg>
