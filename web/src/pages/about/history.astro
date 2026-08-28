@@ -290,7 +290,12 @@ const presentCategories = [...new Set(galleryImages.map((g) => g.category))];
     position: relative;
     max-width: 46rem;
   }
+  /* .breadcrumb .current normally uses var(--ink) (near-black), correct
+     on the white pages it was designed for but invisible here against
+     the hero's dark navy overlay — needs its own override, not just the
+     link colour. */
   .breadcrumb-on-dark, .breadcrumb-on-dark a { color: #c9d0e4; }
+  .breadcrumb-on-dark .current { color: #fff; }
   .history-hero-subtitle {
     font-size: 1.2rem;
     color: var(--gold-light);
