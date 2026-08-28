@@ -1,0 +1,74 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import FacultyDirectory from '../../../components/faculty/FacultyDirectory.tsx';
+import { getFacultyDirectory, getDepartments, getFacultySetting, getResearchPublicationCount } from '../../../lib/content/faculty';
+import '../../../styles/faculty.css';
+
+const [people, departments, settings, researchCount] = await Promise.all([
+  getFacultyDirectory(),
+  getDepartments(),
+  getFacultySetting(),
+  getResearchPublicationCount(),
+]);
+
+const departmentCount = new Set(people.map((p) => p.department_slug).filter(Boolean)).size;
+
+const stats = [
+  { label: 'Faculty Members', value: `${people.length}+` },
+  { label: 'Departments', value: `${departmentCount}` },
+  { label: 'Students', value: settings.student_count > 0 ? `${settings.student_count}+` : null },
+  { label: 'Research Papers', value: researchCount > 0 ? `${researchCount}+` : null },
+].filter((s) => s.value !== null) as { label: string; value: string }[];
+---
+
+<Layout title="Faculty" description="Meet the scholars, mentors and researchers of Sherubtse College, across every department.">
+  <section class="faculty-hero">
+    <div class="wrap">
+      <nav class="breadcrumb breadcrumb-on-dark" aria-label="Breadcrumb">
+        <a href="/">Home</a> › <a href="/about">About</a> › <span class="current">Faculty</span>
+      </nav>
+      <p class="eyebrow">Sherubtse College</p>
+      <h1 class="h-display">Our Faculty</h1>
+      <p class="faculty-hero-intro">
+        Meet the scholars, mentors and researchers shaping Bhutan's oldest seat of higher learning — across every
+        department, from the humanities to the sciences.
+      </p>
+      {
+        settings.show_statistics && stats.length > 0 && (
+          <div class="faculty-stats">
+            {stats.map((s) => (
+              <div>
+                <p class="faculty-stat-value">{s.value}</p>
+                <p class="faculty-stat-label">{s.label}</p>
+              </div>
+            ))}
+          </div>
+        )
+      }
+    </div>
+  </section>
+
+  <div class="wrap" style="padding-bottom:var(--s9)">
+    <FacultyDirectory
+      client:load
+      people={people}
+      departments={departments.map((d) => ({ name: d.name, slug: d.slug }))}
+      cardStyle={settings.card_style}
+      animationStyle={settings.animation_style}
+      cardsPerRow={settings.cards_per_row}
+    />
+  </div>
+</Layout>
+
+<style>
+  .breadcrumb-on-dark {
+    margin-bottom: var(--s5);
+  }
+  .breadcrumb-on-dark,
+  .breadcrumb-on-dark a {
+    color: #c9d0e4;
+  }
+  .breadcrumb-on-dark .current {
+    color: #fff;
+  }
+</style>

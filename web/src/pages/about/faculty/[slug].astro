@@ -1,0 +1,379 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import { strapiGet } from '../../../lib/strapi';
+import type { StrapiListResponse } from '../../../lib/strapi';
+import { getFacultyBySlug, getFacultySetting } from '../../../lib/content/faculty';
+import '../../../styles/faculty.css';
+
+export async function getStaticPaths() {
+  const res = await strapiGet<StrapiListResponse<{ slug: string }>>('faculty-profiles', {
+    fields: ['slug'],
+    pagination: { pageSize: 200 },
+  });
+  return (res?.data ?? []).map((p) => ({ params: { slug: p.slug } }));
+}
+
+const { slug } = Astro.params;
+const [person, settings] = await Promise.all([getFacultyBySlug(slug as string), getFacultySetting()]);
+if (!person) return Astro.redirect('/about/faculty', 404);
+
+const fact = [person.highest_qualification, person.university].filter(Boolean).join(', ');
+
+const galleryGroups = [
+  { label: 'Conferences', images: person.conference_images },
+  { label: 'Research', images: person.research_photos },
+  { label: 'Department Events', images: person.department_event_photos },
+  { label: 'Workshops', images: person.workshop_photos },
+].filter((g) => g.images.length > 0);
+const hasGallery = settings.show_gallery && galleryGroups.length > 0;
+
+const socialLinks = [
+  { label: 'LinkedIn', url: person.linkedin_url },
+  { label: 'Google Scholar', url: person.google_scholar_url },
+  { label: 'ResearchGate', url: person.researchgate_url },
+  { label: 'ORCID', url: person.orcid_url },
+  { label: 'Website', url: person.personal_website_url },
+].filter((s) => s.url) as { label: string; url: string }[];
+---
+
+<Layout title={`${person.full_name} — Faculty Profile`} description={person.short_biography ?? `${person.full_name}, ${person.position ?? 'faculty'} at Sherubtse College.`}>
+  <section
+    class="faculty-profile-hero"
+    style={person.cover_image_url ? `background-image:url(${person.cover_image_url})` : undefined}
+  >
+    <div class="faculty-profile-hero-overlay"></div>
+    <div class="wrap">
+      <nav class="breadcrumb breadcrumb-on-dark" aria-label="Breadcrumb">
+        <a href="/">Home</a> › <a href="/about/faculty">Faculty</a> › <span class="current">{person.full_name}</span>
+      </nav>
+      <div class="faculty-profile-hero-inner">
+        {
+          person.photo_url ? (
+            <img src={person.photo_url} alt="" class="faculty-profile-photo" />
+          ) : (
+            <div class="faculty-profile-photo-placeholder" aria-hidden="true">
+              {person.full_name
+                .replace(/^Dr\.?\s+/i, '')
+                .split(' ')
+                .filter(Boolean)
+                .map((w) => w[0])
+                .slice(0, 2)
+                .join('')
+                .toUpperCase()}
+            </div>
+          )
+        }
+        <div>
+          <h1 class="h-display faculty-profile-name">{person.full_name}</h1>
+          {person.position && <p class="faculty-profile-position">{person.position}</p>}
+          {person.department_name && (
+            <p class="faculty-profile-dept">
+              {person.department_slug ? (
+                <a href={`/academics/departments/${person.department_slug}`}>{person.department_name}</a>
+              ) : (
+                person.department_name
+              )}
+            </p>
+          )}
+          {socialLinks.length > 0 && (
+            <div class="faculty-profile-social">
+              {socialLinks.map((s) => (
+                <a href={s.url} target="_blank" rel="noopener noreferrer">
+                  {s.label}
+                </a>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="wrap" style="padding-block:var(--s8)">
+    <div class="faculty-profile-grid">
+      <div>
+        <section class="faculty-profile-section">
+          <p class="eyebrow">Biography</p>
+          <h2 class="h2">About</h2>
+          {person.short_biography && <p>{person.short_biography}</p>}
+          {fact && <p class="faculty-profile-fact">{fact}</p>}
+          {person.work_experience && (
+            <>
+              <h3 class="h3" style="margin-top:var(--s5)">
+                Experience
+              </h3>
+              <p>{person.work_experience}</p>
+            </>
+          )}
+          {person.languages.length > 0 && (
+            <>
+              <h3 class="h3" style="margin-top:var(--s5)">
+                Languages
+              </h3>
+              <ul class="faculty-profile-tags">
+                {person.languages.map((l) => (
+                  <li>{l}</li>
+                ))}
+              </ul>
+            </>
+          )}
+          {!person.short_biography && !person.work_experience && !fact && person.languages.length === 0 && (
+            <p class="small">No biography has been added yet.</p>
+          )}
+        </section>
+
+        {settings.show_research && (
+          <section class="faculty-profile-section">
+            <p class="eyebrow">Research</p>
+            <h2 class="h2">Research &amp; Publications</h2>
+            {person.specialization && <p><strong>Specialization:</strong> {person.specialization}</p>}
+            {person.research_areas.length > 0 && (
+              <ul class="faculty-profile-tags">
+                {person.research_areas.map((r) => (
+                  <li>{r}</li>
+                ))}
+              </ul>
+            )}
+            {settings.show_publications && person.publications.length > 0 && (
+              <div style="margin-top:var(--s5)">
+                <h3 class="h3">Publications</h3>
+                {person.publications.map((pub) => (
+                  <div class="faculty-publication">
+                    <p class="faculty-publication-title">{pub.title}</p>
+                    <p class="faculty-publication-meta">
+                      {[pub.journal, pub.publication_year].filter(Boolean).join(' · ')}
+                      {pub.authors && ` — ${pub.authors}`}
+                    </p>
+                    <p class="faculty-publication-meta">
+                      {pub.doi && <span>DOI: {pub.doi} </span>}
+                      {pub.pdf_url && <a href={pub.pdf_url}>PDF</a>}
+                      {pub.pdf_url && pub.external_link && ' · '}
+                      {pub.external_link && <a href={pub.external_link}>Link</a>}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+        )}
+
+        <section class="faculty-profile-section">
+          <p class="eyebrow">Teaching</p>
+          <h2 class="h2">Teaching</h2>
+          {person.teaching_subjects.length > 0 ? (
+            <ul class="faculty-profile-tags">
+              {person.teaching_subjects.map((t) => (
+                <li>{t}</li>
+              ))}
+            </ul>
+          ) : (
+            <p class="small">No courses have been listed yet.</p>
+          )}
+          {settings.show_office_hours && person.office_hours && (
+            <p style="margin-top:var(--s4)">
+              <strong>Office hours:</strong> {person.office_hours}
+            </p>
+          )}
+        </section>
+
+        {settings.show_awards && person.awards.length > 0 && (
+          <section class="faculty-profile-section">
+            <p class="eyebrow">Achievements</p>
+            <h2 class="h2">Awards &amp; Recognition</h2>
+            {person.awards.map((a) => (
+              <div class="faculty-award">
+                <p class="faculty-award-name">
+                  {a.award_name}
+                  {a.year && ` (${a.year})`}
+                </p>
+                {a.description && <p class="faculty-award-meta">{a.description}</p>}
+                {a.certificate_url && <a href={a.certificate_url}>View certificate</a>}
+              </div>
+            ))}
+          </section>
+        )}
+
+        {hasGallery && (
+          <section class="faculty-profile-section">
+            <p class="eyebrow">Gallery</p>
+            <h2 class="h2">Photo Gallery</h2>
+            {galleryGroups.map((g) => (
+              <div class="faculty-gallery-group">
+                <h4>{g.label}</h4>
+                <div class="faculty-gallery-grid">
+                  {g.images.map((src) => (
+                    <button type="button" data-lightbox-trigger data-src={src}>
+                      <img src={src} alt="" loading="lazy" />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </section>
+        )}
+      </div>
+
+      {settings.show_contact && (person.college_email || person.phone_number || person.office_location || person.office_hours) && (
+        <aside>
+          <div class="faculty-contact-card">
+            <h2 class="h2">Get in Touch</h2>
+            <ul class="faculty-contact-list">
+              {person.college_email && (
+                <li>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="0"/><path d="m2 7 10 6 10-6"/></svg>
+                  <a href={`mailto:${person.college_email}`}>{person.college_email}</a>
+                </li>
+              )}
+              {person.phone_number && (
+                <li>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                  <a href={`tel:${person.phone_number}`}>{person.phone_number}</a>
+                </li>
+              )}
+              {person.office_location && (
+                <li>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                  <span>{person.office_location}</span>
+                </li>
+              )}
+              {settings.show_office_hours && person.office_hours && (
+                <li>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                  <span>{person.office_hours}</span>
+                </li>
+              )}
+            </ul>
+            {person.google_maps_link && (
+              <a href={person.google_maps_link} target="_blank" rel="noopener noreferrer" class="btn btn-secondary faculty-map-btn">
+                View on Map
+              </a>
+            )}
+          </div>
+        </aside>
+      )}
+    </div>
+  </div>
+
+  {
+    hasGallery && (
+      <div class="faculty-lightbox" id="facultyLightbox" hidden role="dialog" aria-modal="true" aria-label="Photo viewer">
+        <button type="button" class="faculty-lightbox-close" id="facultyLightboxClose" aria-label="Close photo viewer">
+          ✕
+        </button>
+        <button type="button" class="faculty-lightbox-nav faculty-lightbox-nav-prev" id="facultyLightboxPrev" aria-label="Previous photo">
+          ‹
+        </button>
+        <img src="" alt="" id="facultyLightboxImage" />
+        <button type="button" class="faculty-lightbox-nav faculty-lightbox-nav-next" id="facultyLightboxNext" aria-label="Next photo">
+          ›
+        </button>
+      </div>
+    )
+  }
+</Layout>
+
+<style>
+  .breadcrumb-on-dark,
+  .breadcrumb-on-dark a {
+    color: #c9d0e4;
+  }
+  .breadcrumb-on-dark .current {
+    color: #fff;
+  }
+  .faculty-lightbox {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    background: rgba(8, 18, 52, 0.94);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .faculty-lightbox[hidden] {
+    display: none;
+  }
+  .faculty-lightbox img {
+    max-width: 88vw;
+    max-height: 82vh;
+    object-fit: contain;
+  }
+  .faculty-lightbox-close,
+  .faculty-lightbox-nav {
+    position: absolute;
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    color: #fff;
+    width: 44px;
+    height: 44px;
+    font-size: 1.3rem;
+    cursor: pointer;
+  }
+  .faculty-lightbox-close:hover,
+  .faculty-lightbox-nav:hover {
+    border-color: var(--gold);
+    color: var(--gold);
+  }
+  .faculty-lightbox-close {
+    top: var(--s5);
+    right: var(--s5);
+  }
+  .faculty-lightbox-nav-prev {
+    left: var(--s5);
+    top: 50%;
+    transform: translateY(-50%);
+  }
+  .faculty-lightbox-nav-next {
+    right: var(--s5);
+    top: 50%;
+    transform: translateY(-50%);
+  }
+</style>
+
+<script>
+  // Simple accessible lightbox for the profile photo gallery — same
+  // pattern as History & Heritage's gallery lightbox (focus trap while
+  // open, Escape/backdrop-click to close), scoped locally here since
+  // Astro's per-component <style>/<script> means it can't just be
+  // reused across pages without duplicating it anyway.
+  const triggers = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-lightbox-trigger]'));
+  const lightbox = document.getElementById('facultyLightbox');
+  if (lightbox && triggers.length) {
+    const lbImage = document.getElementById('facultyLightboxImage') as HTMLImageElement | null;
+    const closeBtn = document.getElementById('facultyLightboxClose');
+    const prevBtn = document.getElementById('facultyLightboxPrev');
+    const nextBtn = document.getElementById('facultyLightboxNext');
+    const sources = triggers.map((t) => t.dataset.src || '');
+    let index = 0;
+    let lastFocused: HTMLElement | null = null;
+
+    function show(i: number) {
+      index = (i + sources.length) % sources.length;
+      if (lbImage) lbImage.src = sources[index];
+    }
+    function open(i: number) {
+      lastFocused = document.activeElement as HTMLElement;
+      show(i);
+      lightbox!.hidden = false;
+      closeBtn?.focus();
+      document.addEventListener('keydown', onKeydown);
+    }
+    function close() {
+      lightbox!.hidden = true;
+      document.removeEventListener('keydown', onKeydown);
+      lastFocused?.focus();
+    }
+    function onKeydown(e: KeyboardEvent) {
+      if (e.key === 'Escape') close();
+      if (e.key === 'ArrowLeft') show(index - 1);
+      if (e.key === 'ArrowRight') show(index + 1);
+    }
+
+    triggers.forEach((t, i) => t.addEventListener('click', () => open(i)));
+    closeBtn?.addEventListener('click', close);
+    prevBtn?.addEventListener('click', () => show(index - 1));
+    nextBtn?.addEventListener('click', () => show(index + 1));
+    lightbox.addEventListener('click', (e) => {
+      if (e.target === lightbox) close();
+    });
+  }
+</script>

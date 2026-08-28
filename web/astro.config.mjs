@@ -2,6 +2,8 @@
 import { defineConfig } from 'astro/config';
 import redirectMap from './src/data/redirects.json' with { type: 'json' };
 
+import react from '@astrojs/react';
+
 // Old-site → new-site redirect map (Working Plan Phase 2.5 / decision 025).
 // 203 entries generated from docs/Sherubtse-Content-Audit-v5.xlsx — every
 // real URL from www.sherubtse.edu.bt's actual sitemap, classified Move/
@@ -10,4 +12,5 @@ import redirectMap from './src/data/redirects.json' with { type: 'json' };
 // duplicate-homepage URL, which genuinely belongs there.
 export default defineConfig({
   redirects: redirectMap,
+  integrations: [react()],
 });

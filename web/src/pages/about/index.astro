@@ -1,13 +1,10 @@
 ---
-import SectionLanding from '../../components/templates/SectionLanding.astro';
----
----
 // Children list previously pointed at routes that don't exist
 // (/about/leadership, /about/campus, /about/affiliation, /about/directions
 // — none of those page files exist) and never linked to History at all.
 // Corrected to the real, built pages: the 5 Page records from decision
-// 035/037, the dedicated History & Heritage page, and Administrative
-// Units.
+// 035/037, the dedicated History & Heritage page, Faculty, and
+// Administrative Units.
 import SectionLanding from '../../components/templates/SectionLanding.astro';
 ---
 <SectionLanding
@@ -17,6 +14,7 @@ import SectionLanding from '../../components/templates/SectionLanding.astro';
     { label: 'About the College', url: '/about/about-the-college', description: 'Leadership and how the College is organised.' },
     { label: 'History & Heritage', url: '/about/history', description: 'The founding story, milestones, and the traditions that continue today.' },
     { label: 'Vision, Mission & Core Values', url: '/about/vision-mission-core-values', description: 'What the College is working toward, and why.' },
+    { label: 'Faculty', url: '/about/faculty', description: 'Meet the scholars, mentors and researchers across every department.' },
     { label: 'Campus Facilities', url: '/about/campus-facilities', description: 'The library, laboratories and the Kanglung campus.' },
     { label: 'Administrative Units', url: '/about/units', description: 'Registry, finance, HR and the offices that keep the College running.' },
     { label: 'Contact', url: '/about/contact', description: 'Addresses, phone numbers and email for every office.' },
