@@ -101,6 +101,13 @@
     display: flex;
     flex: 1;
     align-items: center;
+    /* Nav + search sit together as one cluster, anchored to the right —
+       any leftover space (the row's width minus the logo and this
+       cluster's own natural width) shows up between the logo and the
+       nav, not split off as a gap floating between the nav and search
+       right next to it. Direct feedback: the dead space should read as
+       "next to the logo", not "next to the search box". */
+    justify-content: flex-end;
   }
 }
 .primary-nav {
@@ -121,8 +128,12 @@
     flex-wrap: wrap;
     gap: 8px;
     list-style: none;
-    margin-left: var(--s8);
-    margin-right: 0;
+    /* No margin-left here — the nav now sits right next to the search
+       box (both pushed to the row's right edge by .masthead-right's
+       justify-content: flex-end), so whatever space is left over shows
+       up between the logo and the nav instead. A fixed margin here
+       would just be extra space added on top of that, not instead of it. */
+    margin: 0;
     padding: 0;
   }
   .primary-nav a {
@@ -160,13 +171,11 @@
     display: flex;
     align-items: stretch;
     flex-shrink: 0;
-    /* .masthead-right no longer pushes this to the right itself (that
-       was justify-content: flex-end, removed so primary-nav's fixed 8px
-       item gaps aren't fought by a flex-end that assumed the nav grew
-       to fill the row) — pushing just this element right instead, so
-       the nav can sit at its natural, tightly-spaced width beside the
-       logo while search still pins to the row's right edge. */
-    margin-left: auto;
+    /* .masthead-right's justify-content: flex-end pins the nav+search
+       cluster to the row's right edge as one unit — this fixed gap is
+       just the space between the nav and the search box within that
+       cluster, not a push-to-the-edge margin. */
+    margin-left: var(--s6);
   }
   .header-search-field {
     position: relative;
