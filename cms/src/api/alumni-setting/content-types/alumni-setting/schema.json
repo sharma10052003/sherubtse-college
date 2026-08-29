@@ -1,0 +1,24 @@
+{
+  "kind": "singleType",
+  "collectionName": "alumni_settings",
+  "info": {
+    "singularName": "alumni-setting",
+    "pluralName": "alumni-settings",
+    "displayName": "Alumni Settings"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "attributes": {
+    "hero_background": { "type": "media", "multiple": false, "allowedTypes": ["images", "videos"] },
+    "years_of_legacy": { "type": "integer" },
+    "countries_represented": { "type": "integer" },
+    "total_alumni_override": { "type": "integer" },
+    "show_statistics": { "type": "boolean", "default": true },
+    "show_events": { "type": "boolean", "default": true },
+    "show_gallery": { "type": "boolean", "default": true },
+    "show_achievements": { "type": "boolean", "default": true },
+    "show_chapters": { "type": "boolean", "default": true },
+    "show_newsletter": { "type": "boolean", "default": true }
+  }
+}

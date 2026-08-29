@@ -1,0 +1,36 @@
+{
+  "kind": "collectionType",
+  "collectionName": "alumni_registrations",
+  "info": {
+    "singularName": "alumni-registration",
+    "pluralName": "alumni-registrations",
+    "displayName": "Alumni Registration"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "attributes": {
+    "full_name": { "type": "string", "required": true },
+    "email": { "type": "string", "required": true },
+    "phone": { "type": "string" },
+
+    "programme": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::programme.programme"
+    },
+    "graduation_year": { "type": "integer" },
+    "academic_period": { "type": "string" },
+
+    "organization": { "type": "string" },
+    "designation": { "type": "string" },
+    "industry": { "type": "string" },
+    "country": { "type": "string" },
+    "city": { "type": "string" },
+
+    "interests": { "type": "text" },
+    "consent_directory": { "type": "boolean", "default": false },
+
+    "reviewed": { "type": "boolean", "default": false }
+  }
+}

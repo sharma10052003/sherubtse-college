@@ -28,6 +28,27 @@
       "target": "api::unit.unit",
       "required": true
     },
-    "last_reviewed": { "type": "date", "required": true }
+    "last_reviewed": { "type": "date", "required": true },
+
+    "is_featured": { "type": "boolean", "default": false },
+    "excerpt": { "type": "text", "maxLength": 280 },
+    "category": {
+      "type": "enumeration",
+      "enum": [
+        "sherubtse_journey",
+        "career_journey",
+        "student_memories",
+        "leadership",
+        "entrepreneurship",
+        "research",
+        "community_service",
+        "international_journey"
+      ]
+    },
+    "email": { "type": "string" },
+    "organization": { "type": "string" },
+    "article_title": { "type": "string" },
+    "supporting_images": { "type": "media", "multiple": true, "allowedTypes": ["images"] },
+    "country": { "type": "string" }
   }
 }

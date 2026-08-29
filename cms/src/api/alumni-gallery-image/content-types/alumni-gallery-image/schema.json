@@ -1,0 +1,30 @@
+{
+  "kind": "collectionType",
+  "collectionName": "alumni_gallery_images",
+  "info": {
+    "singularName": "alumni-gallery-image",
+    "pluralName": "alumni-gallery-images",
+    "displayName": "Alumni Gallery Image"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "attributes": {
+    "image": { "type": "media", "multiple": false, "allowedTypes": ["images"], "required": true },
+    "caption": { "type": "string" },
+    "category": {
+      "type": "enumeration",
+      "enum": [
+        "old_sherubtse",
+        "campus_memories",
+        "student_life",
+        "graduation",
+        "alumni_reunions",
+        "college_events",
+        "historical_moments"
+      ],
+      "default": "campus_memories"
+    },
+    "sort_order": { "type": "integer", "default": 0 }
+  }
+}

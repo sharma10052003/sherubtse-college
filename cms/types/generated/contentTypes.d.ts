@@ -585,6 +585,215 @@ export interface ApiAcademicsItemAcademicsItem
   };
 }
 
+export interface ApiAlumniAchievementAlumniAchievement
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'alumni_achievements';
+  info: {
+    displayName: 'Alumni Achievement';
+    pluralName: 'alumni-achievements';
+    singularName: 'alumni-achievement';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    alumni: Schema.Attribute.Relation<'manyToOne', 'api::alumni.alumni'>;
+    alumni_name: Schema.Attribute.String & Schema.Attribute.Required;
+    category: Schema.Attribute.Enumeration<
+      [
+        'award',
+        'leadership',
+        'research',
+        'publication',
+        'entrepreneurship',
+        'community_service',
+        'international',
+        'professional_recognition',
+      ]
+    > &
+      Schema.Attribute.Required;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    description: Schema.Attribute.Text;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::alumni-achievement.alumni-achievement'
+    > &
+      Schema.Attribute.Private;
+    publishedAt: Schema.Attribute.DateTime;
+    title: Schema.Attribute.String & Schema.Attribute.Required;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    year: Schema.Attribute.Integer;
+  };
+}
+
+export interface ApiAlumniChapterAlumniChapter
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'alumni_chapters';
+  info: {
+    displayName: 'Alumni Chapter';
+    pluralName: 'alumni-chapters';
+    singularName: 'alumni-chapter';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    contact_email: Schema.Attribute.String;
+    country: Schema.Attribute.String & Schema.Attribute.Required;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    description: Schema.Attribute.Text;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::alumni-chapter.alumni-chapter'
+    > &
+      Schema.Attribute.Private;
+    logo: Schema.Attribute.Media<'images'>;
+    name: Schema.Attribute.String & Schema.Attribute.Required;
+    publishedAt: Schema.Attribute.DateTime;
+    sort_order: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiAlumniGalleryImageAlumniGalleryImage
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'alumni_gallery_images';
+  info: {
+    displayName: 'Alumni Gallery Image';
+    pluralName: 'alumni-gallery-images';
+    singularName: 'alumni-gallery-image';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    caption: Schema.Attribute.String;
+    category: Schema.Attribute.Enumeration<
+      [
+        'old_sherubtse',
+        'campus_memories',
+        'student_life',
+        'graduation',
+        'alumni_reunions',
+        'college_events',
+        'historical_moments',
+      ]
+    > &
+      Schema.Attribute.DefaultTo<'campus_memories'>;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    image: Schema.Attribute.Media<'images'> & Schema.Attribute.Required;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::alumni-gallery-image.alumni-gallery-image'
+    > &
+      Schema.Attribute.Private;
+    publishedAt: Schema.Attribute.DateTime;
+    sort_order: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiAlumniRegistrationAlumniRegistration
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'alumni_registrations';
+  info: {
+    displayName: 'Alumni Registration';
+    pluralName: 'alumni-registrations';
+    singularName: 'alumni-registration';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    academic_period: Schema.Attribute.String;
+    city: Schema.Attribute.String;
+    consent_directory: Schema.Attribute.Boolean &
+      Schema.Attribute.DefaultTo<false>;
+    country: Schema.Attribute.String;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    designation: Schema.Attribute.String;
+    email: Schema.Attribute.String & Schema.Attribute.Required;
+    full_name: Schema.Attribute.String & Schema.Attribute.Required;
+    graduation_year: Schema.Attribute.Integer;
+    industry: Schema.Attribute.String;
+    interests: Schema.Attribute.Text;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::alumni-registration.alumni-registration'
+    > &
+      Schema.Attribute.Private;
+    organization: Schema.Attribute.String;
+    phone: Schema.Attribute.String;
+    programme: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::programme.programme'
+    >;
+    publishedAt: Schema.Attribute.DateTime;
+    reviewed: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiAlumniSettingAlumniSetting extends Struct.SingleTypeSchema {
+  collectionName: 'alumni_settings';
+  info: {
+    displayName: 'Alumni Settings';
+    pluralName: 'alumni-settings';
+    singularName: 'alumni-setting';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    countries_represented: Schema.Attribute.Integer;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    hero_background: Schema.Attribute.Media<'images' | 'videos'>;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::alumni-setting.alumni-setting'
+    > &
+      Schema.Attribute.Private;
+    publishedAt: Schema.Attribute.DateTime;
+    show_achievements: Schema.Attribute.Boolean &
+      Schema.Attribute.DefaultTo<true>;
+    show_chapters: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
+    show_events: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
+    show_gallery: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
+    show_newsletter: Schema.Attribute.Boolean &
+      Schema.Attribute.DefaultTo<true>;
+    show_statistics: Schema.Attribute.Boolean &
+      Schema.Attribute.DefaultTo<true>;
+    total_alumni_override: Schema.Attribute.Integer;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    years_of_legacy: Schema.Attribute.Integer;
+  };
+}
+
 export interface ApiAlumniAlumni extends Struct.CollectionTypeSchema {
   collectionName: 'alumni_profiles';
   info: {
@@ -596,13 +805,33 @@ export interface ApiAlumniAlumni extends Struct.CollectionTypeSchema {
     draftAndPublish: true;
   };
   attributes: {
+    article_title: Schema.Attribute.String;
+    category: Schema.Attribute.Enumeration<
+      [
+        'sherubtse_journey',
+        'career_journey',
+        'student_memories',
+        'leadership',
+        'entrepreneurship',
+        'research',
+        'community_service',
+        'international_journey',
+      ]
+    >;
     consent: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    country: Schema.Attribute.String;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     current_role: Schema.Attribute.String;
+    email: Schema.Attribute.String;
+    excerpt: Schema.Attribute.Text &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 280;
+      }>;
     full_name: Schema.Attribute.String & Schema.Attribute.Required;
     graduation_year: Schema.Attribute.Integer;
+    is_featured: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
     last_reviewed: Schema.Attribute.Date & Schema.Attribute.Required;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
@@ -610,6 +839,7 @@ export interface ApiAlumniAlumni extends Struct.CollectionTypeSchema {
       'api::alumni.alumni'
     > &
       Schema.Attribute.Private;
+    organization: Schema.Attribute.String;
     owning_unit: Schema.Attribute.Relation<'manyToOne', 'api::unit.unit'> &
       Schema.Attribute.Required;
     photo: Schema.Attribute.Media<'images'>;
@@ -620,6 +850,7 @@ export interface ApiAlumniAlumni extends Struct.CollectionTypeSchema {
     publishedAt: Schema.Attribute.DateTime;
     slug: Schema.Attribute.UID<'full_name'>;
     story: Schema.Attribute.RichText;
+    supporting_images: Schema.Attribute.Media<'images', true>;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -1167,6 +1398,7 @@ export interface ApiEventEvent extends Struct.CollectionTypeSchema {
     description: Schema.Attribute.RichText;
     ends_at: Schema.Attribute.DateTime;
     expires_at: Schema.Attribute.DateTime & Schema.Attribute.Required;
+    image: Schema.Attribute.Media<'images'>;
     last_reviewed: Schema.Attribute.Date & Schema.Attribute.Required;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<'oneToMany', 'api::event.event'> &
@@ -2399,6 +2631,38 @@ export interface ApiNewsNews extends Struct.CollectionTypeSchema {
     tags: Schema.Attribute.String;
     title: Schema.Attribute.String & Schema.Attribute.Required;
     unit: Schema.Attribute.Relation<'manyToOne', 'api::unit.unit'>;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiNewsletterSubscriberNewsletterSubscriber
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'newsletter_subscribers';
+  info: {
+    displayName: 'Newsletter Subscriber';
+    pluralName: 'newsletter-subscribers';
+    singularName: 'newsletter-subscriber';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    consent: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    email: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Unique;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::newsletter-subscriber.newsletter-subscriber'
+    > &
+      Schema.Attribute.Private;
+    publishedAt: Schema.Attribute.DateTime;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -4043,6 +4307,11 @@ declare module '@strapi/strapi' {
       'api::academic-guide.academic-guide': ApiAcademicGuideAcademicGuide;
       'api::academics-content.academics-content': ApiAcademicsContentAcademicsContent;
       'api::academics-item.academics-item': ApiAcademicsItemAcademicsItem;
+      'api::alumni-achievement.alumni-achievement': ApiAlumniAchievementAlumniAchievement;
+      'api::alumni-chapter.alumni-chapter': ApiAlumniChapterAlumniChapter;
+      'api::alumni-gallery-image.alumni-gallery-image': ApiAlumniGalleryImageAlumniGalleryImage;
+      'api::alumni-registration.alumni-registration': ApiAlumniRegistrationAlumniRegistration;
+      'api::alumni-setting.alumni-setting': ApiAlumniSettingAlumniSetting;
       'api::alumni.alumni': ApiAlumniAlumni;
       'api::announcement.announcement': ApiAnnouncementAnnouncement;
       'api::award.award': ApiAwardAward;
@@ -4081,6 +4350,7 @@ declare module '@strapi/strapi' {
       'api::news-content.news-content': ApiNewsContentNewsContent;
       'api::news-item.news-item': ApiNewsItemNewsItem;
       'api::news.news': ApiNewsNews;
+      'api::newsletter-subscriber.newsletter-subscriber': ApiNewsletterSubscriberNewsletterSubscriber;
       'api::notice.notice': ApiNoticeNotice;
       'api::page.page': ApiPagePage;
       'api::partners-content.partners-content': ApiPartnersContentPartnersContent;

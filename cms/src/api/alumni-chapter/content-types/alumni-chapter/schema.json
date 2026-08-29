@@ -1,0 +1,20 @@
+{
+  "kind": "collectionType",
+  "collectionName": "alumni_chapters",
+  "info": {
+    "singularName": "alumni-chapter",
+    "pluralName": "alumni-chapters",
+    "displayName": "Alumni Chapter"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "attributes": {
+    "name": { "type": "string", "required": true },
+    "country": { "type": "string", "required": true },
+    "description": { "type": "text" },
+    "contact_email": { "type": "string" },
+    "logo": { "type": "media", "multiple": false, "allowedTypes": ["images"] },
+    "sort_order": { "type": "integer", "default": 0 }
+  }
+}

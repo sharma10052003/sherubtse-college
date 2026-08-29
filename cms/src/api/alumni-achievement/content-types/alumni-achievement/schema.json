@@ -1,0 +1,37 @@
+{
+  "kind": "collectionType",
+  "collectionName": "alumni_achievements",
+  "info": {
+    "singularName": "alumni-achievement",
+    "pluralName": "alumni-achievements",
+    "displayName": "Alumni Achievement"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "attributes": {
+    "alumni_name": { "type": "string", "required": true },
+    "alumni": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::alumni.alumni"
+    },
+    "title": { "type": "string", "required": true },
+    "description": { "type": "text" },
+    "category": {
+      "type": "enumeration",
+      "enum": [
+        "award",
+        "leadership",
+        "research",
+        "publication",
+        "entrepreneurship",
+        "community_service",
+        "international",
+        "professional_recognition"
+      ],
+      "required": true
+    },
+    "year": { "type": "integer" }
+  }
+}
