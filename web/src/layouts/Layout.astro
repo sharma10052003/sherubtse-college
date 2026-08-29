@@ -18,16 +18,32 @@ import BottomTabs from '../components/BottomTabs.astro';
 interface Props {
   title: string;
   description?: string;
+  /** Absolute image URL for social share previews — omit on pages with
+   * nothing worth previewing (most of the site); pass it on pages built
+   * around one real image, e.g. a newsletter cover. */
+  ogImage?: string;
+  /** Overrides the auto-computed canonical (Astro.url) — only needed
+   * when a page is reachable at more than one path. */
+  canonicalUrl?: string;
 }
-const { title, description } = Astro.props;
+const { title, description, ogImage, canonicalUrl } = Astro.props;
+const canonical = canonicalUrl ?? Astro.url.href;
+const pageTitle = `${title} — Sherubtse College`;
 ---
 <!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>{title} — Sherubtse College</title>
+    <title>{pageTitle}</title>
     {description && <meta name="description" content={description} />}
+    <link rel="canonical" href={canonical} />
+    <meta property="og:title" content={pageTitle} />
+    {description && <meta property="og:description" content={description} />}
+    <meta property="og:url" content={canonical} />
+    <meta property="og:type" content="website" />
+    {ogImage && <meta property="og:image" content={ogImage} />}
+    <meta name="twitter:card" content={ogImage ? 'summary_large_image' : 'summary'} />
     <link rel="icon" href="/favicon.svg" />
   </head>
   <body>

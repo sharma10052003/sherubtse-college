@@ -1,0 +1,15 @@
+{
+  "kind": "collectionType",
+  "collectionName": "newsletter_topics_list",
+  "info": {
+    "singularName": "newsletter-topic",
+    "pluralName": "newsletter-topics",
+    "displayName": "Newsletter Topic"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "attributes": {
+    "name": { "type": "string", "required": true, "unique": true }
+  }
+}

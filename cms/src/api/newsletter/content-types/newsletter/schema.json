@@ -1,0 +1,43 @@
+{
+  "kind": "collectionType",
+  "collectionName": "newsletters",
+  "info": {
+    "singularName": "newsletter",
+    "pluralName": "newsletters",
+    "displayName": "Newsletter"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "attributes": {
+    "title": { "type": "string", "required": true, "default": "The Tower" },
+    "slug": { "type": "uid" },
+    "edition": {
+      "type": "enumeration",
+      "enum": ["spring", "summer", "autumn", "winter"],
+      "required": true
+    },
+    "year": { "type": "integer", "required": true },
+    "publication_date": { "type": "date" },
+    "description": { "type": "text" },
+    "closing_message": { "type": "string" },
+    "cover_image": { "type": "media", "multiple": false, "allowedTypes": ["images"] },
+    "pdf": { "type": "media", "multiple": false, "allowedTypes": ["files"], "required": true },
+    "topics": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::newsletter-topic.newsletter-topic"
+    },
+    "is_featured": { "type": "boolean", "default": false },
+    "display_order": { "type": "integer", "default": 0 },
+    "view_count": { "type": "integer", "default": 0, "min": 0 },
+    "download_count": { "type": "integer", "default": 0, "min": 0 },
+    "owning_unit": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::unit.unit",
+      "required": true
+    },
+    "last_reviewed": { "type": "date", "required": true }
+  }
+}

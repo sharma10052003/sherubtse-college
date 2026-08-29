@@ -1,0 +1,225 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { strapiGet } from '../../lib/strapi';
+import type { StrapiListResponse } from '../../lib/strapi';
+import { getNewsletterBySlug, getRelatedNewsletters, EDITION_LABELS } from '../../lib/content/newsletter';
+import '../../styles/newsletter.css';
+
+export async function getStaticPaths() {
+  const res = await strapiGet<StrapiListResponse<{ slug: string }>>('newsletters', {
+    fields: ['slug'],
+    pagination: { pageSize: 200 },
+  });
+  return (res?.data ?? []).map((n) => ({ params: { slug: n.slug } }));
+}
+
+const { slug } = Astro.params;
+const newsletter = await getNewsletterBySlug(slug as string);
+if (!newsletter) return Astro.redirect('/newsletter', 404);
+
+const related = await getRelatedNewsletters(newsletter);
+
+function initials(title: string): string {
+  const parts = title.split(' ').filter(Boolean);
+  return (parts.length > 1 ? parts.map((w) => w[0]).slice(0, 2).join('') : title.slice(0, 2)).toUpperCase();
+}
+
+const editionLabel = EDITION_LABELS[newsletter.edition];
+const publishedYear = newsletter.publication_date ? new Date(newsletter.publication_date).getFullYear() : newsletter.year;
+const pageTitle = `${newsletter.title} — ${editionLabel} Edition ${newsletter.year}`;
+const pageDescription =
+  newsletter.description ??
+  `Read the ${editionLabel} Edition ${newsletter.year} of ${newsletter.title}, the official Sherubtse College newsletter.`;
+const downloadFilename = `The-Tower-${editionLabel}-${newsletter.year}.pdf`;
+---
+
+<Layout title={pageTitle} description={pageDescription} ogImage={newsletter.cover_image_url ?? undefined}>
+  <section class="nl-detail-hero">
+    <div class="wrap">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="/">Home</a> › <a href="/newsletter">Newsletter</a> ›{' '}
+        <span class="current">
+          {editionLabel} {newsletter.year}
+        </span>
+      </nav>
+      <div class="nl-detail-grid" style="margin-top:var(--s6)">
+        <div>
+          {newsletter.cover_image_url ? (
+            <img src={newsletter.cover_image_url} alt="" class="nl-detail-cover" />
+          ) : (
+            <div class="nl-detail-cover-placeholder" aria-hidden="true">
+              <span>{initials(newsletter.title)}</span>
+            </div>
+          )}
+        </div>
+        <div>
+          <h1 class="h-display" style="color:#fff">
+            {newsletter.title}
+          </h1>
+          <p class="nl-detail-edition">
+            {editionLabel} Edition {newsletter.year}
+          </p>
+          <p class="nl-detail-sub">Official Newsletter of Sherubtse College</p>
+          <p class="nl-detail-sub">Published: {publishedYear}</p>
+          <div class="nl-detail-actions">
+            <a href="#reader" class="btn btn-primary" id="readOnlineBtn">
+              Read Newsletter
+            </a>
+            {newsletter.pdf_url && (
+              <a href={newsletter.pdf_url} download={downloadFilename} class="btn btn-secondary btn-on-hero" id="downloadBtn">
+                Download PDF
+              </a>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="wrap" style="padding-block:var(--s8)">
+    <div class="nl-detail-body reveal">
+      <h2 class="h2">About This Edition</h2>
+      {newsletter.description && <p class="lede">{newsletter.description}</p>}
+
+      {newsletter.topics.length > 0 && (
+        <>
+          <h3 class="h3" style="margin-top:var(--s6)">
+            Featured Topics
+          </h3>
+          <ul class="nl-detail-topics">
+            {newsletter.topics.map((t) => (
+              <li>{t}</li>
+            ))}
+          </ul>
+        </>
+      )}
+
+      {newsletter.closing_message && <p style="margin-top:var(--s6);font-style:italic;color:var(--ink-2)">{newsletter.closing_message}</p>}
+
+      <div class="nl-share-row">
+        <span>Share this edition</span>
+        <button type="button" class="nl-share-btn" id="shareCopyLink" title="Copy link" aria-label="Copy link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" /><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" /></svg>
+        </button>
+        <a class="nl-share-btn" id="shareEmail" title="Share by email" aria-label="Share by email" href="#">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="0" /><path d="m2 7 10 6 10-6" /></svg>
+        </a>
+        <a class="nl-share-btn" id="shareWhatsapp" title="Share on WhatsApp" aria-label="Share on WhatsApp" href="#" target="_blank" rel="noopener noreferrer">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.5 8.5 0 0 1-11.83 7.82L4 21l1.68-5.17A8.5 8.5 0 1 1 21 11.5z" /></svg>
+        </a>
+        <a class="nl-share-btn" id="shareFacebook" title="Share on Facebook" aria-label="Share on Facebook" href="#" target="_blank" rel="noopener noreferrer">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" /></svg>
+        </a>
+        <a class="nl-share-btn" id="shareX" title="Share on X" aria-label="Share on X" href="#" target="_blank" rel="noopener noreferrer">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4l16 16M20 4 4 20" /></svg>
+        </a>
+      </div>
+
+      {newsletter.pdf_url && (
+        <div class="nl-reader" id="reader">
+          <div class="nl-reader-toolbar">
+            <strong>{newsletter.title} — {editionLabel} {newsletter.year}</strong>
+            <div class="nl-reader-toolbar-actions">
+              <a href={newsletter.pdf_url} target="_blank" rel="noopener noreferrer" class="btn btn-secondary" id="openNewTabBtn">
+                Open in New Tab
+              </a>
+              <a href={newsletter.pdf_url} download={downloadFilename} class="btn btn-secondary" id="downloadBtn2">
+                Download
+              </a>
+            </div>
+          </div>
+          <iframe src={`${newsletter.pdf_url}#view=FitH`} title={`${newsletter.title} PDF viewer`} loading="lazy" />
+        </div>
+      )}
+    </div>
+
+    {related.length > 0 && (
+      <div class="reveal" style="margin-top:var(--s8)">
+        <p class="eyebrow">Explore More Editions</p>
+        <h2 class="h2">Related Newsletters</h2>
+        <div class="nl-related-grid">
+          {related.map((n) => (
+            <article class="nl-card">
+              {n.cover_image_url ? (
+                <img src={n.cover_image_url} alt="" class="nl-card-cover" />
+              ) : (
+                <div class="nl-card-cover-placeholder" aria-hidden="true">
+                  <span>{initials(n.title)}</span>
+                  <span class="nl-card-cover-sub">
+                    {EDITION_LABELS[n.edition]} {n.year}
+                  </span>
+                </div>
+              )}
+              <div class="nl-card-body">
+                <h3>{n.title}</h3>
+                <p class="nl-card-edition">
+                  {EDITION_LABELS[n.edition]} Edition {n.year}
+                </p>
+                <div class="nl-card-actions">
+                  <a href={`/newsletter/${n.slug}`} class="btn btn-secondary">
+                    View Details
+                  </a>
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
+      </div>
+    )}
+  </div>
+</Layout>
+
+<script define:vars={{
+  strapiUrl: import.meta.env.PUBLIC_STRAPI_URL || 'http://localhost:1337',
+  newsletterDocId: newsletter.documentId,
+  pageUrl: Astro.url.href,
+  pageTitle,
+}} is:inline>
+  // ---- View/download tracking — fire-and-forget, narrow public
+  // endpoints that only increment a counter (see cms/src/api/newsletter
+  // /routes/newsletter.ts). Never blocks the actual read/download.
+  function track(kind) {
+    if (!newsletterDocId) return;
+    fetch(`${strapiUrl}/api/newsletters/${newsletterDocId}/track-${kind}`, { method: 'POST' }).catch(() => {});
+  }
+
+  let viewTracked = false;
+  function trackViewOnce() {
+    if (viewTracked) return;
+    viewTracked = true;
+    track('view');
+  }
+  document.getElementById('readOnlineBtn')?.addEventListener('click', trackViewOnce);
+  document.getElementById('openNewTabBtn')?.addEventListener('click', trackViewOnce);
+
+  ['downloadBtn', 'downloadBtn2'].forEach((id) => {
+    document.getElementById(id)?.addEventListener('click', () => track('download'));
+  });
+
+  // ---- Share ----
+  document.getElementById('shareCopyLink')?.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(pageUrl);
+      const btn = document.getElementById('shareCopyLink');
+      const original = btn.innerHTML;
+      btn.textContent = '✓';
+      setTimeout(() => {
+        btn.innerHTML = original;
+      }, 1500);
+    } catch {
+      window.prompt('Copy this link:', pageUrl);
+    }
+  });
+
+  const emailLink = document.getElementById('shareEmail');
+  if (emailLink) emailLink.href = `mailto:?subject=${encodeURIComponent(pageTitle)}&body=${encodeURIComponent(pageUrl)}`;
+
+  const whatsappLink = document.getElementById('shareWhatsapp');
+  if (whatsappLink) whatsappLink.href = `https://wa.me/?text=${encodeURIComponent(pageTitle + ' — ' + pageUrl)}`;
+
+  const fbLink = document.getElementById('shareFacebook');
+  if (fbLink) fbLink.href = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(pageUrl)}`;
+
+  const xLink = document.getElementById('shareX');
+  if (xLink) xLink.href = `https://twitter.com/intent/tweet?text=${encodeURIComponent(pageTitle)}&url=${encodeURIComponent(pageUrl)}`;
+</script>

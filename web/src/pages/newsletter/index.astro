@@ -1,0 +1,295 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import NewsletterArchive from '../../components/newsletter/NewsletterArchive.tsx';
+import { getNewsletters, getFeaturedNewsletter, getNewsletterStats, EDITION_LABELS } from '../../lib/content/newsletter';
+import '../../styles/newsletter.css';
+
+const [newsletters, featured, stats] = await Promise.all([getNewsletters(), getFeaturedNewsletter(), getNewsletterStats()]);
+
+function initials(title: string): string {
+  const parts = title.split(' ').filter(Boolean);
+  return (parts.length > 1 ? parts.map((w) => w[0]).slice(0, 2).join('') : title.slice(0, 2)).toUpperCase();
+}
+
+// Timeline: group by year, newest first (newsletters is already sorted newest-first).
+const years = Array.from(new Set(newsletters.map((n) => n.year)));
+const timeline = years.map((year) => ({
+  year,
+  editions: newsletters.filter((n) => n.year === year),
+}));
+
+// Only worth showing once there's real signal — a single edition with
+// zero views yet isn't "popular", it's just the only thing that exists.
+const popular = [...newsletters]
+  .filter((n) => n.view_count > 0 || n.download_count > 0)
+  .sort((a, b) => b.view_count + b.download_count - (a.view_count + a.download_count))
+  .slice(0, 5);
+---
+
+<Layout
+  title="Newsletter — The Tower"
+  description="The Tower, Sherubtse College's official newsletter — read the latest edition online, download past issues, and browse the full archive."
+  ogImage={featured?.cover_image_url ?? undefined}
+>
+  <!-- 1. Hero -->
+  <section class="nl-hero">
+    <div class="nl-hero-overlay"></div>
+    <div class="wrap">
+      <nav class="breadcrumb breadcrumb-on-dark" aria-label="Breadcrumb">
+        <a href="/">Home</a> › <a href="/news-notices">News &amp; Notices</a> › <span class="current">Newsletter</span>
+      </nav>
+      <span class="nl-hero-kicker">The Tower</span>
+      <h1 class="h-display nl-hero-title">Sherubtse College Newsletter</h1>
+      {
+        featured && (
+          <p class="nl-hero-edition">
+            {EDITION_LABELS[featured.edition]} Edition {featured.year}
+          </p>
+        )
+      }
+      <p class="nl-hero-tags">Stories · Achievements · Research · Community</p>
+      <div class="nl-hero-buttons">
+        {
+          featured && (
+            <>
+              <a href={`/newsletter/${featured.slug}#reader`} class="btn btn-primary">
+                Read Latest Edition
+              </a>
+              <a href={`/newsletter/${featured.slug}`} class="btn btn-secondary btn-on-hero">
+                Download PDF
+              </a>
+            </>
+          )
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- 2 & 3. Latest Newsletter + Introduction -->
+  {
+    featured && (
+      <section class="band">
+        <div class="wrap reveal">
+          <p class="eyebrow">Latest Edition</p>
+          <div class="nl-latest-grid" style="margin-top:var(--s6)">
+            {featured.cover_image_url ? (
+              <img src={featured.cover_image_url} alt="" class="nl-latest-cover" />
+            ) : (
+              <div class="nl-latest-cover-placeholder" aria-hidden="true">
+                <span class="nl-mark">{initials(featured.title)}</span>
+                <span class="nl-sub">
+                  {EDITION_LABELS[featured.edition]} {featured.year}
+                </span>
+              </div>
+            )}
+            <div class="nl-latest-info">
+              <h2 class="h1">{featured.title}</h2>
+              <p class="nl-latest-meta">
+                {EDITION_LABELS[featured.edition]} Edition {featured.year}
+                {featured.publication_date && ` · Published ${new Date(featured.publication_date).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })}`}
+              </p>
+              {featured.description && <p class="lede">{featured.description}</p>}
+              {featured.topics.length > 0 && (
+                <ul class="nl-latest-topics">
+                  {featured.topics.map((t) => (
+                    <li>{t}</li>
+                  ))}
+                </ul>
+              )}
+              <div class="nl-latest-actions">
+                <a href={`/newsletter/${featured.slug}#reader`} class="btn btn-primary">
+                  Read Online
+                </a>
+                <a href={`/newsletter/${featured.slug}`} class="btn btn-secondary">
+                  Download PDF
+                </a>
+                <a href={`/newsletter/${featured.slug}`} class="btn btn-secondary">
+                  View Details
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  <!-- 4. Community Highlights -->
+  <section class="band band-alt">
+    <div class="wrap reveal">
+      <p class="eyebrow">Community Highlights</p>
+      <h2 class="h2">Featuring Students, Faculty and the Wider College Community</h2>
+      <p class="lede" style="margin-top:var(--s3)">
+        Featuring students, faculty, international partnerships, research engagement and cultural activities across
+        the college.
+      </p>
+      <div class="nl-highlights-grid">
+        <div class="nl-highlight-card">
+          <div class="nl-highlight-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 2 7l10 5 10-5-10-5z" /><path d="M6 10v6c0 1.5 3 3 6 3s6-1.5 6-3v-6" /></svg>
+          </div>
+          <h3 class="h3">Students &amp; Faculty</h3>
+          <p>The people behind every story — student milestones and faculty achievements across departments.</p>
+        </div>
+        <div class="nl-highlight-card">
+          <div class="nl-highlight-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><path d="M2 12h20" /><path d="M12 2a15 15 0 0 1 0 20 15 15 0 0 1 0-20z" /></svg>
+          </div>
+          <h3 class="h3">International Partnerships</h3>
+          <p>Collaborations and research engagement connecting Sherubtse to institutions beyond Bhutan.</p>
+        </div>
+        <div class="nl-highlight-card">
+          <div class="nl-highlight-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.4 1.6 2.8-.3 1 2.6 2.6 1-.3 2.8L22 12l-1.6 2.4.3 2.8-2.6 1-1 2.6-2.8-.3L12 22l-2.4-1.6-2.8.3-1-2.6-2.6-1 .3-2.8L2 12l1.6-2.4-.3-2.8 2.6-1 1-2.6 2.8.3z" /></svg>
+          </div>
+          <h3 class="h3">Cultural &amp; College Activities</h3>
+          <p>Celebrations, gatherings and campus life that make up the rhythm of the college year.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5 & 6. Newsletter Archive + Search & Filters -->
+  <section class="band" id="archive">
+    <div class="wrap reveal">
+      <p class="eyebrow">Newsletter Archive</p>
+      <h2 class="h2">Browse Previous Editions</h2>
+      <NewsletterArchive client:load items={newsletters} />
+    </div>
+  </section>
+
+  <!-- 7. Timeline -->
+  {
+    timeline.length > 1 && (
+      <section class="band band-alt">
+        <div class="wrap reveal">
+          <p class="eyebrow">Newsletter Timeline</p>
+          <h2 class="h2">A History in Print</h2>
+          <div class="nl-timeline">
+            {timeline.map((group) => (
+              <div class="nl-timeline-year">
+                <h3>{group.year}</h3>
+                <div class="nl-timeline-editions">
+                  {group.editions.map((n) => (
+                    <a href={`/newsletter/${n.slug}`}>{EDITION_LABELS[n.edition]} Edition</a>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  <!-- 8. Statistics -->
+  <section class="band nl-stats-band">
+    <div class="wrap reveal">
+      <p class="eyebrow" style="color:var(--gold)">Newsletter Archive</p>
+      <h2 class="h2">Building a Lasting Record</h2>
+      <div class="nl-stats-grid">
+        <div>
+          <p class="nl-stat-value">{stats.totalEditions}</p>
+          <p class="nl-stat-label">Edition{stats.totalEditions === 1 ? '' : 's'}</p>
+        </div>
+        <div>
+          <p class="nl-stat-value">{stats.totalYears}</p>
+          <p class="nl-stat-label">Year{stats.totalYears === 1 ? '' : 's'} of Publication</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 9. Popular editions -->
+  {
+    popular.length > 1 && (
+      <section class="band">
+        <div class="wrap reveal">
+          <p class="eyebrow">Popular Editions</p>
+          <h2 class="h2">Most Read</h2>
+          <div class="nl-popular-list">
+            {popular.map((n, i) => (
+              <a href={`/newsletter/${n.slug}`} class="nl-popular-row">
+                <span class="nl-popular-rank">{i + 1}</span>
+                <div>
+                  <h3>
+                    {n.title} — {EDITION_LABELS[n.edition]} {n.year}
+                  </h3>
+                </div>
+                <span class="nl-popular-meta">
+                  {n.view_count} views · {n.download_count} downloads
+                </span>
+              </a>
+            ))}
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  <!-- 10. Subscribe -->
+  <section class="band nl-subscribe-band">
+    <div class="wrap narrow reveal">
+      <p class="eyebrow" style="color:var(--gold)">Stay Updated</p>
+      <h2 class="h2">Never Miss an Edition</h2>
+      <p style="color:#c9d0e4;margin-top:var(--s3)">
+        Never miss the latest stories, achievements and activities from Sherubtse College.
+      </p>
+      <form class="nl-subscribe-form" id="newsletterSubscribeForm">
+        <input type="email" name="email" placeholder="Your email address" required aria-label="Email address" />
+        <button type="submit" class="btn btn-primary">Subscribe</button>
+      </form>
+      <div class="form-status" id="newsletterSubscribeStatus" role="status"></div>
+    </div>
+  </section>
+
+  <!-- 11. RUB / Sherubtse attribution -->
+  <section class="band">
+    <div class="wrap reveal nl-attribution">
+      <strong>Royal University of Bhutan</strong>
+      <p>Published by Sherubtse College under the Royal University of Bhutan, fostering academic excellence and innovation.</p>
+    </div>
+  </section>
+</Layout>
+
+<style>
+  .breadcrumb-on-dark,
+  .breadcrumb-on-dark a {
+    color: #c9d0e4;
+  }
+  .breadcrumb-on-dark .current {
+    color: #fff;
+  }
+</style>
+
+<script is:inline define:vars={{ strapiUrl: import.meta.env.PUBLIC_STRAPI_URL || 'http://localhost:1337' }}>
+  const form = document.getElementById('newsletterSubscribeForm');
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const status = document.getElementById('newsletterSubscribeStatus');
+    const email = new FormData(form).get('email');
+    status.className = 'form-status is-visible loading';
+    status.textContent = 'Subscribing…';
+    try {
+      const res = await fetch(`${strapiUrl}/api/newsletter-subscribers`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ data: { email, consent: true } }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        const already = /already|unique/i.test(body?.error?.message || '');
+        status.className = `form-status is-visible ${already ? 'success' : 'error'}`;
+        status.textContent = already ? "You're already subscribed — thank you!" : `Something went wrong: ${body?.error?.message || res.status}.`;
+        if (already) form.reset();
+        return;
+      }
+      status.className = 'form-status is-visible success';
+      status.textContent = "You're subscribed — thank you!";
+      form.reset();
+    } catch (err) {
+      status.className = 'form-status is-visible error';
+      status.textContent = 'Something went wrong. Please try again.';
+    }
+  });
+</script>

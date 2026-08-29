@@ -2662,6 +2662,103 @@ export interface ApiNewsletterSubscriberNewsletterSubscriber
   };
 }
 
+export interface ApiNewsletterTopicNewsletterTopic
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'newsletter_topics_list';
+  info: {
+    displayName: 'Newsletter Topic';
+    pluralName: 'newsletter-topics';
+    singularName: 'newsletter-topic';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::newsletter-topic.newsletter-topic'
+    > &
+      Schema.Attribute.Private;
+    name: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Unique;
+    publishedAt: Schema.Attribute.DateTime;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiNewsletterNewsletter extends Struct.CollectionTypeSchema {
+  collectionName: 'newsletters';
+  info: {
+    displayName: 'Newsletter';
+    pluralName: 'newsletters';
+    singularName: 'newsletter';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    closing_message: Schema.Attribute.String;
+    cover_image: Schema.Attribute.Media<'images'>;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    description: Schema.Attribute.Text;
+    display_order: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
+    download_count: Schema.Attribute.Integer &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 0;
+        },
+        number
+      > &
+      Schema.Attribute.DefaultTo<0>;
+    edition: Schema.Attribute.Enumeration<
+      ['spring', 'summer', 'autumn', 'winter']
+    > &
+      Schema.Attribute.Required;
+    is_featured: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    last_reviewed: Schema.Attribute.Date & Schema.Attribute.Required;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::newsletter.newsletter'
+    > &
+      Schema.Attribute.Private;
+    owning_unit: Schema.Attribute.Relation<'manyToOne', 'api::unit.unit'> &
+      Schema.Attribute.Required;
+    pdf: Schema.Attribute.Media<'files'> & Schema.Attribute.Required;
+    publication_date: Schema.Attribute.Date;
+    publishedAt: Schema.Attribute.DateTime;
+    slug: Schema.Attribute.UID;
+    title: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'The Tower'>;
+    topics: Schema.Attribute.Relation<
+      'manyToMany',
+      'api::newsletter-topic.newsletter-topic'
+    >;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    view_count: Schema.Attribute.Integer &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 0;
+        },
+        number
+      > &
+      Schema.Attribute.DefaultTo<0>;
+    year: Schema.Attribute.Integer & Schema.Attribute.Required;
+  };
+}
+
 export interface ApiNoticeNotice extends Struct.CollectionTypeSchema {
   collectionName: 'notices';
   info: {
@@ -4344,6 +4441,8 @@ declare module '@strapi/strapi' {
       'api::news-item.news-item': ApiNewsItemNewsItem;
       'api::news.news': ApiNewsNews;
       'api::newsletter-subscriber.newsletter-subscriber': ApiNewsletterSubscriberNewsletterSubscriber;
+      'api::newsletter-topic.newsletter-topic': ApiNewsletterTopicNewsletterTopic;
+      'api::newsletter.newsletter': ApiNewsletterNewsletter;
       'api::notice.notice': ApiNoticeNotice;
       'api::page.page': ApiPagePage;
       'api::partners-content.partners-content': ApiPartnersContentPartnersContent;
