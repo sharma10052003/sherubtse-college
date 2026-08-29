@@ -1,0 +1,110 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import { strapiGet } from '../../../lib/strapi';
+import type { StrapiListResponse } from '../../../lib/strapi';
+import { getAlumniBySlug, ALUMNI_CATEGORY_LABELS } from '../../../lib/content/alumni';
+import '../../../styles/alumni.css';
+
+export async function getStaticPaths() {
+  const res = await strapiGet<StrapiListResponse<{ slug: string }>>('alumnis', {
+    fields: ['slug'],
+    pagination: { pageSize: 200 },
+  });
+  return (res?.data ?? []).map((a) => ({ params: { slug: a.slug } }));
+}
+
+const { slug } = Astro.params;
+const alumnus = await getAlumniBySlug(slug as string);
+if (!alumnus) return Astro.redirect('/about/alumni', 404);
+
+const paragraphs = (alumnus.story ?? '').split(/\n{2,}/).map((p) => p.trim()).filter(Boolean);
+---
+
+<Layout
+  title={alumnus.article_title ?? alumnus.full_name}
+  description={alumnus.excerpt ?? `${alumnus.full_name}, a Sherubtse College alumnus/alumna.`}
+>
+  <div class="wrap" style="padding-top:var(--s5);padding-bottom:var(--s9)">
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <a href="/">Home</a> › <a href="/about/alumni">Alumni</a> ›{' '}
+      <span class="current">{alumnus.article_title ?? alumnus.full_name}</span>
+    </nav>
+
+    <div class="profile-grid">
+      <div>
+        {alumnus.is_featured && <p class="eyebrow">Distinguished Alumni</p>}
+        {alumnus.category && !alumnus.is_featured && <p class="eyebrow">{ALUMNI_CATEGORY_LABELS[alumnus.category] ?? alumnus.category}</p>}
+        <h1 class="h1">{alumnus.article_title ?? alumnus.full_name}</h1>
+        <p class="lede" style="margin-top:var(--s2)">
+          {alumnus.full_name}
+          {alumnus.current_role ? ` · ${alumnus.current_role}` : ''}
+        </p>
+        {(alumnus.programme || alumnus.graduation_year) && (
+          <p class="small">
+            {[alumnus.programme, alumnus.graduation_year ? `Class of ${alumnus.graduation_year}` : null].filter(Boolean).join(' · ')}
+          </p>
+        )}
+
+        {paragraphs.length > 0 ? (
+          <div class="article-body" style="margin-top:var(--s6)">
+            {paragraphs.map((p) => (
+              <p>{p}</p>
+            ))}
+          </div>
+        ) : (
+          <p class="small" style="margin-top:var(--s6)">No article content has been added yet.</p>
+        )}
+      </div>
+      <div>
+        {alumnus.photo_url ? (
+          <img src={alumnus.photo_url} alt="" class="portrait" />
+        ) : (
+          <div class="portrait portrait-placeholder" aria-hidden="true">
+            {alumnus.full_name
+              .replace(/^Dasho\s+|^Dr\.?\s+/gi, '')
+              .split(' ')
+              .filter(Boolean)
+              .map((w) => w[0])
+              .slice(0, 2)
+              .join('')
+              .toUpperCase()}
+          </div>
+        )}
+      </div>
+    </div>
+
+    <div style="margin-top:var(--s7)">
+      <a href="/about/alumni#stories" class="btn btn-secondary">← Back to Alumni Stories</a>
+    </div>
+  </div>
+</Layout>
+
+<style>
+  .profile-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--s6);
+  }
+  @media (min-width: 760px) {
+    .profile-grid {
+      grid-template-columns: 2fr 1fr;
+    }
+  }
+  .portrait {
+    width: 100%;
+    max-width: 260px;
+    aspect-ratio: 1;
+    object-fit: cover;
+    border: 4px solid var(--gold);
+  }
+  .portrait-placeholder {
+    background: var(--navy);
+    color: var(--gold);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-serif);
+    font-weight: 700;
+    font-size: 2.4rem;
+  }
+</style>

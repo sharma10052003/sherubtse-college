@@ -11,11 +11,6 @@
   },
   "attributes": {
     "alumni_name": { "type": "string", "required": true },
-    "alumni": {
-      "type": "relation",
-      "relation": "manyToOne",
-      "target": "api::alumni.alumni"
-    },
     "title": { "type": "string", "required": true },
     "description": { "type": "text" },
     "category": {

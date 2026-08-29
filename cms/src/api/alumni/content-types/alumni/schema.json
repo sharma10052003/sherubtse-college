@@ -13,11 +13,7 @@
     "full_name": { "type": "string", "required": true },
     "slug": { "type": "uid", "targetField": "full_name" },
     "graduation_year": { "type": "integer" },
-    "programme": {
-      "type": "relation",
-      "relation": "manyToOne",
-      "target": "api::programme.programme"
-    },
+    "programme": { "type": "string" },
     "current_role": { "type": "string" },
     "story": { "type": "richtext" },
     "consent": { "type": "boolean", "default": false },

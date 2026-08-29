@@ -597,7 +597,6 @@ export interface ApiAlumniAchievementAlumniAchievement
     draftAndPublish: true;
   };
   attributes: {
-    alumni: Schema.Attribute.Relation<'manyToOne', 'api::alumni.alumni'>;
     alumni_name: Schema.Attribute.String & Schema.Attribute.Required;
     category: Schema.Attribute.Enumeration<
       [
@@ -742,10 +741,7 @@ export interface ApiAlumniRegistrationAlumniRegistration
       Schema.Attribute.Private;
     organization: Schema.Attribute.String;
     phone: Schema.Attribute.String;
-    programme: Schema.Attribute.Relation<
-      'manyToOne',
-      'api::programme.programme'
-    >;
+    programme: Schema.Attribute.String;
     publishedAt: Schema.Attribute.DateTime;
     reviewed: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
     updatedAt: Schema.Attribute.DateTime;
@@ -843,10 +839,7 @@ export interface ApiAlumniAlumni extends Struct.CollectionTypeSchema {
     owning_unit: Schema.Attribute.Relation<'manyToOne', 'api::unit.unit'> &
       Schema.Attribute.Required;
     photo: Schema.Attribute.Media<'images'>;
-    programme: Schema.Attribute.Relation<
-      'manyToOne',
-      'api::programme.programme'
-    >;
+    programme: Schema.Attribute.String;
     publishedAt: Schema.Attribute.DateTime;
     slug: Schema.Attribute.UID<'full_name'>;
     story: Schema.Attribute.RichText;

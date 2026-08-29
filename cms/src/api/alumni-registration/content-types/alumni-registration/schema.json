@@ -14,11 +14,7 @@
     "email": { "type": "string", "required": true },
     "phone": { "type": "string" },
 
-    "programme": {
-      "type": "relation",
-      "relation": "manyToOne",
-      "target": "api::programme.programme"
-    },
+    "programme": { "type": "string" },
     "graduation_year": { "type": "integer" },
     "academic_period": { "type": "string" },
 

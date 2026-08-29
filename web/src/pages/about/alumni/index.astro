@@ -1,0 +1,842 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import '../../../styles/alumni.css';
+import {
+  getAlumniSetting,
+  getDistinguishedAlumni,
+  getAlumniStories,
+  getAlumniCount,
+  getAlumniEvents,
+  getAlumniChapters,
+  getAlumniChapterCount,
+  getAlumniAchievements,
+  getAlumniGallery,
+  ALUMNI_CATEGORY_LABELS,
+  ACHIEVEMENT_CATEGORY_LABELS,
+  GALLERY_CATEGORY_LABELS,
+} from '../../../lib/content/alumni';
+
+const [settings, distinguished, stories, alumniCount, events, chapters, chapterCount, achievements, gallery] =
+  await Promise.all([
+    getAlumniSetting(),
+    getDistinguishedAlumni(),
+    getAlumniStories(9),
+    getAlumniCount(),
+    getAlumniEvents(),
+    getAlumniChapters(),
+    getAlumniChapterCount(),
+    getAlumniAchievements(),
+    getAlumniGallery(),
+  ]);
+
+const upcomingEvents = events.filter((e) => !e.is_past);
+const pastEvents = events.filter((e) => e.is_past);
+
+const stats = [
+  { label: 'Total Alumni', value: `${settings.total_alumni_override ?? alumniCount}+` },
+  settings.years_of_legacy ? { label: 'Years of Sherubtse Legacy', value: `${settings.years_of_legacy}` } : null,
+  settings.countries_represented ? { label: 'Countries Represented', value: `${settings.countries_represented}` } : null,
+  { label: 'Alumni Stories', value: `${stories.length + distinguished.length}+` },
+].filter((s): s is { label: string; value: string } => !!s);
+
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+function formatTime(iso: string) {
+  return new Date(iso).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+}
+
+const galleryCategories = Array.from(new Set(gallery.map((g) => g.category)));
+---
+
+<Layout title="Alumni" description="Sherubtse College's home for its alumni community — stories, events, achievements, and ways to stay connected.">
+  <!-- 1. Hero / Welcome -->
+  <section class="alumni-hero">
+    <div class="alumni-hero-overlay"></div>
+    <div class="wrap">
+      <nav class="breadcrumb breadcrumb-on-dark" aria-label="Breadcrumb">
+        <a href="/">Home</a> › <a href="/about">About</a> › <span class="current">Alumni</span>
+      </nav>
+      <p class="eyebrow">Sherubtse College</p>
+      <h1 class="h-display">Welcome Home, Sherubtseans</h1>
+      <p class="alumni-hero-intro">
+        No matter where life has taken you — across Bhutan or around the world — Sherubtse College will always
+        remain your academic home. We have missed you, and we are glad to reconnect. This alumni space is created
+        to bring our graduates together, celebrate shared journeys, and strengthen lifelong bonds with the College
+        and with one another.
+      </p>
+      <p class="alumni-hero-tagline">"Once a Sherubtsean, Always a Sherubtsean."</p>
+      <div class="alumni-hero-buttons">
+        <a href="#register" class="btn btn-primary">Join the Alumni Community</a>
+        <a href="#stories" class="btn btn-secondary btn-on-hero">Explore Alumni Stories</a>
+      </div>
+
+      <!-- 2. Alumni Statistics -->
+      {
+        settings.show_statistics && (
+          <div class="alumni-stats">
+            {stats.map((s) => (
+              <div>
+                <p class="alumni-stat-value">{s.value}</p>
+                <p class="alumni-stat-label">{s.label}</p>
+              </div>
+            ))}
+          </div>
+        )
+      }
+    </div>
+  </section>
+
+  <!-- 3. About Sherubtse Alumni Association -->
+  <section class="band">
+    <div class="wrap narrow reveal">
+      <p class="eyebrow">Sherubtse Alumni</p>
+      <h2 class="h2">About the Sherubtse Alumni Association</h2>
+      <p class="lede" style="margin-top:var(--s4)">
+        The Sherubtse Alumni Association welcomes all alumni — staff, faculty, students, and graduates of Sherubtse
+        College — to maintain a mutually beneficial and lifelong relationship among Sherubtse alumni and Sherubtse
+        College.
+      </p>
+      <p>
+        Your connection with Sherubtse College does not end when you graduate, stop working, or resign from the
+        College. The Sherubtse Alumni Association ensures that you stay connected through alumni matters so that
+        you can remain a part of the Sherubtse family forever.
+      </p>
+      <p>
+        The College would like to register all of you with the Sherubtse Alumni Association and be part of the
+        Sherubtse family, fostering a lifelong relationship and connection.
+      </p>
+      <a href="#register" class="btn btn-primary" style="margin-top:var(--s3)">Register as Alumni</a>
+    </div>
+  </section>
+
+  <!-- 4. Why Alumni Matters -->
+  <section class="band band-alt">
+    <div class="wrap reveal">
+      <p class="eyebrow">Why Alumni Matters</p>
+      <h2 class="h2">The Sherubtse Family Never Stops Growing</h2>
+      <div class="alumni-matters-grid">
+        <div class="alumni-matters-card">
+          <div class="alumni-matters-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 2 7l10 5 10-5-10-5z" /><path d="M6 10v6c0 1.5 3 3 6 3s6-1.5 6-3v-6" /></svg>
+          </div>
+          <p class="alumni-matters-num">01</p>
+          <h3 class="h3">Inspire Current Students</h3>
+          <p>
+            Your journey after Sherubtse, whether in Bhutan or beyond, is a source of inspiration for our current
+            students. By sharing your experiences, you show them what is possible and encourage them to pursue
+            their dreams with confidence.
+          </p>
+        </div>
+        <div class="alumni-matters-card">
+          <div class="alumni-matters-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>
+          </div>
+          <p class="alumni-matters-num">02</p>
+          <h3 class="h3">Strengthen the Sherubtse Family</h3>
+          <p>
+            Every Sherubtse graduate is a thread in our family's fabric. Staying connected helps support each
+            other, celebrate successes, and create friendships and professional networks that last a lifetime.
+          </p>
+        </div>
+        <div class="alumni-matters-card">
+          <div class="alumni-matters-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z" /><path d="M9 12l2 2 4-4" /></svg>
+          </div>
+          <p class="alumni-matters-num">03</p>
+          <h3 class="h3">Represent Sherubtse with Pride</h3>
+          <p>
+            Wherever life takes you, you carry the spirit of Sherubtse College. Your achievements shine a light on
+            the College and make all of us proud to be part of this community.
+          </p>
+        </div>
+        <div class="alumni-matters-card">
+          <div class="alumni-matters-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><path d="M16.24 7.76l-2.12 6.36-6.36 2.12 2.12-6.36 6.36-2.12z" /></svg>
+          </div>
+          <p class="alumni-matters-num">04</p>
+          <h3 class="h3">Shape the Future of Sherubtse</h3>
+          <p>
+            Your ideas, feedback, and engagement help shape opportunities for the next generations of Sherubtse
+            students. Together, we ensure the College continues to grow and thrive.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. Distinguished Alumni -->
+  {
+    distinguished.length > 0 && (
+      <section class="band">
+        <div class="wrap reveal">
+          <p class="eyebrow">Distinguished Alumni</p>
+          <h2 class="h2">Sherubtseans Leading the Way</h2>
+          <div class="distinguished-grid">
+            {distinguished.map((a) => (
+              <article class="distinguished-card">
+                {a.photo_url ? (
+                  <img src={a.photo_url} alt="" class="distinguished-photo" />
+                ) : (
+                  <div class="distinguished-photo-placeholder" aria-hidden="true">
+                    {a.full_name
+                      .replace(/^Dasho\s+|^Dr\.?\s+/gi, '')
+                      .split(' ')
+                      .filter(Boolean)
+                      .map((w) => w[0])
+                      .slice(0, 2)
+                      .join('')
+                      .toUpperCase()}
+                  </div>
+                )}
+                <div class="distinguished-body">
+                  <h3>{a.full_name}</h3>
+                  {a.current_role && <p class="distinguished-role">{a.current_role}</p>}
+                  {a.excerpt && <p class="distinguished-quote">"{a.excerpt}"</p>}
+                  <a href={`/about/alumni/${a.slug}`} class="read-more">
+                    Read More <span aria-hidden="true">→</span>
+                  </a>
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  <!-- 6. Alumni Stories -->
+  <section class="band band-alt" id="stories">
+    <div class="wrap reveal">
+      <p class="eyebrow">Alumni Stories</p>
+      <h2 class="h2">Journeys Worth Sharing</h2>
+      <p class="alumni-section-intro" style="margin-top:var(--s3)">
+        Alumni can write about their life experiences, their journey to and through Sherubtse, their professional
+        path, or anything they would like to share with fellow Sherubtseans and current students.
+      </p>
+      {
+        stories.length > 0 ? (
+          <div class="stories-grid">
+            {stories.map((s) => (
+              <article class="story-card">
+                {s.photo_url ? (
+                  <img src={s.photo_url} alt="" class="story-photo" />
+                ) : (
+                  <div class="story-photo-placeholder" aria-hidden="true">
+                    {s.full_name
+                      .split(' ')
+                      .filter(Boolean)
+                      .map((w) => w[0])
+                      .slice(0, 2)
+                      .join('')
+                      .toUpperCase()}
+                  </div>
+                )}
+                <div class="story-body">
+                  {s.category && <p class="story-category">{ALUMNI_CATEGORY_LABELS[s.category] ?? s.category}</p>}
+                  <h3>
+                    <a href={`/about/alumni/${s.slug}`}>{s.article_title ?? s.full_name}</a>
+                  </h3>
+                  <p class="story-meta">
+                    {s.full_name}
+                    {s.current_role ? ` · ${s.current_role}` : ''}
+                  </p>
+                  {s.excerpt && <p class="story-excerpt">{s.excerpt}</p>}
+                  <a href={`/about/alumni/${s.slug}`} class="read-more">
+                    Read More <span aria-hidden="true">→</span>
+                  </a>
+                </div>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <p class="small" style="margin-top:var(--s5)">No alumni stories have been published yet.</p>
+        )
+      }
+    </div>
+  </section>
+
+  <!-- 7. Submit a story -->
+  <section class="band">
+    <div class="wrap narrow reveal">
+      <p class="eyebrow">Share Your Story</p>
+      <h2 class="h2">Submit Your Story</h2>
+      <p class="alumni-section-intro" style="margin-top:var(--s3)">
+        Every submission is reviewed by the Alumni Office before it's published — you'll see it here once it's
+        approved.
+      </p>
+      <form class="alumni-form" id="storyForm">
+        <div class="form-grid cols-2">
+          <div class="form-field">
+            <label for="story-name">Full Name *</label>
+            <input type="text" id="story-name" name="full_name" required />
+          </div>
+          <div class="form-field">
+            <label for="story-email">Email *</label>
+            <input type="email" id="story-email" name="email" required />
+          </div>
+          <div class="form-field">
+            <label for="story-year">Graduation Year</label>
+            <input type="number" id="story-year" name="graduation_year" min="1968" max="2100" />
+          </div>
+          <div class="form-field">
+            <label for="story-programme">Programme</label>
+            <input type="text" id="story-programme" name="programme" />
+          </div>
+          <div class="form-field">
+            <label for="story-role">Current Designation</label>
+            <input type="text" id="story-role" name="current_role" />
+          </div>
+          <div class="form-field">
+            <label for="story-org">Organization</label>
+            <input type="text" id="story-org" name="organization" />
+          </div>
+          <div class="form-field span-2">
+            <label for="story-title">Article Title *</label>
+            <input type="text" id="story-title" name="article_title" required />
+          </div>
+          <div class="form-field span-2">
+            <label for="story-content">Article Content *</label>
+            <textarea id="story-content" name="story" required rows="8"></textarea>
+          </div>
+          <div class="form-field span-2">
+            <label for="story-category">Category</label>
+            <select id="story-category" name="category">
+              <option value="">Choose a category</option>
+              {Object.entries(ALUMNI_CATEGORY_LABELS).map(([value, label]) => (
+                <option value={value}>{label}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+        <label class="form-consent" style="margin-top:var(--s4)">
+          <input type="checkbox" name="consent" required />
+          <span>I agree that Sherubtse College may review and publish this story on the Alumni page, with my name and designation.</span>
+        </label>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">Submit Your Story</button>
+        </div>
+        <div class="form-status" id="storyFormStatus" role="status"></div>
+      </form>
+    </div>
+  </section>
+
+  <!-- 8. Alumni Events -->
+  {
+    settings.show_events && (
+      <section class="band band-alt">
+        <div class="wrap reveal">
+          <p class="eyebrow">Alumni Events</p>
+          <h2 class="h2">Reunions, Talks &amp; Gatherings</h2>
+          <div class="events-tabs" role="tablist">
+            <button type="button" class="events-tab" role="tab" aria-selected="true" aria-controls="upcoming-events-panel" id="upcomingEventsTab">
+              Upcoming Events
+            </button>
+            <button type="button" class="events-tab" role="tab" aria-selected="false" aria-controls="past-events-panel" id="pastEventsTab">
+              Past Events
+            </button>
+          </div>
+          <div id="upcoming-events-panel" class="events-panel" role="tabpanel" aria-labelledby="upcomingEventsTab">
+            {upcomingEvents.length > 0 ? (
+              <div class="events-grid">
+                {upcomingEvents.map((e) => (
+                  <article class="event-card">
+                    {e.image_url ? (
+                      <img src={e.image_url} alt="" class="event-photo" />
+                    ) : (
+                      <div class="event-photo-placeholder" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="1" /><path d="M8 3v4M16 3v4M3 10h18" /></svg>
+                      </div>
+                    )}
+                    <div class="event-body">
+                      <p class="event-date">{formatDate(e.starts_at)} · {formatTime(e.starts_at)}</p>
+                      <h3>{e.title}</h3>
+                      {e.venue && (
+                        <p class="event-venue">
+                          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" /></svg>
+                          {e.venue}
+                        </p>
+                      )}
+                      {e.description && <p class="event-desc">{e.description}</p>}
+                      {e.registration_link && (
+                        <a href={e.registration_link} class="btn btn-secondary" target="_blank" rel="noopener noreferrer">
+                          Register
+                        </a>
+                      )}
+                    </div>
+                  </article>
+                ))}
+              </div>
+            ) : (
+              <p class="small" style="margin-top:var(--s5)">No upcoming events have been announced yet.</p>
+            )}
+          </div>
+          <div id="past-events-panel" class="events-panel" role="tabpanel" aria-labelledby="pastEventsTab" hidden>
+            {pastEvents.length > 0 ? (
+              <div class="events-grid">
+                {pastEvents.map((e) => (
+                  <article class="event-card">
+                    {e.image_url ? (
+                      <img src={e.image_url} alt="" class="event-photo" />
+                    ) : (
+                      <div class="event-photo-placeholder" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="1" /><path d="M8 3v4M16 3v4M3 10h18" /></svg>
+                      </div>
+                    )}
+                    <div class="event-body">
+                      <p class="event-date">{formatDate(e.starts_at)}</p>
+                      <h3>{e.title}</h3>
+                      {e.venue && <p class="event-venue">{e.venue}</p>}
+                      {e.description && <p class="event-desc">{e.description}</p>}
+                    </div>
+                  </article>
+                ))}
+              </div>
+            ) : (
+              <p class="small" style="margin-top:var(--s5)">No past events on record yet.</p>
+            )}
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  <!-- 9. Career & Mentorship / Give Back -->
+  <section class="band">
+    <div class="wrap narrow reveal">
+      <p class="eyebrow">Career &amp; Mentorship</p>
+      <h2 class="h2">Give Back to Sherubtse</h2>
+      <p class="lede" style="margin-top:var(--s4)">
+        The most valuable thing many alumni give back is time: mentoring a current student, speaking to a class
+        about your field, or simply being someone a Sherubtsean can reach out to.
+      </p>
+      <p>
+        When you register below, tell us where you'd like to help — mentorship, guest lectures, career support,
+        internship opportunities, or volunteering — and the Alumni Office will reach out when a matching
+        opportunity comes up.
+      </p>
+      <div class="mentorship-buttons">
+        <a href="#register" class="btn btn-primary">Offer to Mentor</a>
+        <a href="#register" class="btn btn-secondary">Ask for Guidance</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- 11. Sherubteans Around the World + Chapters -->
+  <section class="band world-band">
+    <div class="wrap reveal">
+      <p class="eyebrow" style="color:var(--gold)">Global Reach</p>
+      <h2 class="h2">Sherubtseans Around the World</h2>
+      <div class="world-stats">
+        <div>
+          <p class="world-stat-value">{settings.total_alumni_override ?? alumniCount}+</p>
+          <p class="world-stat-label">Alumni</p>
+        </div>
+        {settings.countries_represented && (
+          <div>
+            <p class="world-stat-value">{settings.countries_represented}</p>
+            <p class="world-stat-label">Countries Represented</p>
+          </div>
+        )}
+        {settings.show_chapters && chapterCount > 0 && (
+          <div>
+            <p class="world-stat-value">{chapterCount}</p>
+            <p class="world-stat-label">Alumni Chapters</p>
+          </div>
+        )}
+      </div>
+
+      {
+        settings.show_chapters && chapters.length > 0 && (
+          <div class="chapters-grid">
+            {chapters.map((c) => (
+              <div class="chapter-card">
+                <p class="chapter-country">{c.country}</p>
+                <h3>{c.name}</h3>
+                {c.description && <p>{c.description}</p>}
+                {c.contact_email && <a href={`mailto:${c.contact_email}`}>{c.contact_email}</a>}
+              </div>
+            ))}
+          </div>
+        )
+      }
+    </div>
+  </section>
+
+  <!-- 12. Sherubtse Memories -->
+  {
+    settings.show_gallery && gallery.length > 0 && (
+      <section class="band band-alt">
+        <div class="wrap reveal">
+          <p class="eyebrow">Sherubtse Memories</p>
+          <h2 class="h2">Moments Worth Remembering</h2>
+          <div class="alumni-gallery-filters" id="alumniGalleryFilters">
+            <button type="button" data-filter="all" aria-pressed="true">
+              All
+            </button>
+            {galleryCategories.map((cat) => (
+              <button type="button" data-filter={cat} aria-pressed="false">
+                {GALLERY_CATEGORY_LABELS[cat] ?? cat}
+              </button>
+            ))}
+          </div>
+          <div class="alumni-gallery-grid" id="alumniGalleryGrid">
+            {gallery.map((img) => (
+              <button type="button" data-lightbox-trigger data-src={img.image_url} data-category={img.category}>
+                <img src={img.image_url} alt={img.caption ?? ''} loading="lazy" />
+              </button>
+            ))}
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  <!-- 13. Alumni Achievements -->
+  {
+    settings.show_achievements && achievements.length > 0 && (
+      <section class="band">
+        <div class="wrap reveal">
+          <p class="eyebrow">Alumni Achievements</p>
+          <h2 class="h2">Sherubtseans Making a Difference</h2>
+          <div class="achievements-grid">
+            {achievements.map((a) => (
+              <div class="achievement-card">
+                <div class="achievement-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4h8v6a4 4 0 0 1-8 0z" /><path d="M8 5H4v2a4 4 0 0 0 4 4" /><path d="M16 5h4v2a4 4 0 0 1-4 4" /><path d="M12 14v4" /><path d="M8 22h8" /><path d="M9 18h6l1 4H8z" /></svg>
+                </div>
+                <div>
+                  <p class="achievement-name">
+                    {a.alumni_name}
+                    {a.year && ` · ${a.year}`}
+                  </p>
+                  <h3>{a.title}</h3>
+                  <p class="small" style="margin:0 0 var(--s1)">{ACHIEVEMENT_CATEGORY_LABELS[a.category] ?? a.category}</p>
+                  {a.description && <p>{a.description}</p>}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  <!-- 15. Join / Register as Alumni -->
+  <section class="band band-alt" id="register">
+    <div class="wrap narrow reveal">
+      <p class="eyebrow">Register</p>
+      <h2 class="h2">Join the Sherubtse Alumni Community</h2>
+      <p class="lede" style="margin-top:var(--s3)">
+        Stay connected with Sherubtse College and fellow Sherubtseans locally and globally.
+      </p>
+      <form class="alumni-form" id="registerForm">
+        <h3 class="h3">Personal Information</h3>
+        <div class="form-grid cols-2" style="margin-top:var(--s4)">
+          <div class="form-field">
+            <label for="reg-name">Full Name *</label>
+            <input type="text" id="reg-name" name="full_name" required />
+          </div>
+          <div class="form-field">
+            <label for="reg-email">Email *</label>
+            <input type="email" id="reg-email" name="email" required />
+          </div>
+          <div class="form-field">
+            <label for="reg-phone">Phone Number</label>
+            <input type="tel" id="reg-phone" name="phone" />
+          </div>
+        </div>
+
+        <h3 class="h3" style="margin-top:var(--s6)">Academic Information</h3>
+        <div class="form-grid cols-2" style="margin-top:var(--s4)">
+          <div class="form-field">
+            <label for="reg-programme">Programme</label>
+            <input type="text" id="reg-programme" name="programme" />
+          </div>
+          <div class="form-field">
+            <label for="reg-year">Graduation Year</label>
+            <input type="number" id="reg-year" name="graduation_year" min="1968" max="2100" />
+          </div>
+          <div class="form-field span-2">
+            <label for="reg-period">Academic Period (e.g. 2005–2011)</label>
+            <input type="text" id="reg-period" name="academic_period" />
+          </div>
+        </div>
+
+        <h3 class="h3" style="margin-top:var(--s6)">Professional Information</h3>
+        <div class="form-grid cols-2" style="margin-top:var(--s4)">
+          <div class="form-field">
+            <label for="reg-org">Current Organization</label>
+            <input type="text" id="reg-org" name="organization" />
+          </div>
+          <div class="form-field">
+            <label for="reg-designation">Current Designation</label>
+            <input type="text" id="reg-designation" name="designation" />
+          </div>
+          <div class="form-field">
+            <label for="reg-industry">Industry</label>
+            <input type="text" id="reg-industry" name="industry" />
+          </div>
+          <div class="form-field">
+            <label for="reg-country">Country</label>
+            <input type="text" id="reg-country" name="country" />
+          </div>
+          <div class="form-field">
+            <label for="reg-city">City</label>
+            <input type="text" id="reg-city" name="city" />
+          </div>
+        </div>
+
+        <h3 class="h3" style="margin-top:var(--s6)">Engagement Interests</h3>
+        <div class="form-checkboxes" style="margin-top:var(--s4)">
+          {
+            ['Mentorship', 'Guest Lectures', 'Career Support', 'Internship Opportunities', 'Alumni Events', 'Volunteering', 'Supporting Students'].map(
+              (interest) => (
+                <label class="form-checkbox-item">
+                  <input type="checkbox" name="interests" value={interest} />
+                  <span>{interest}</span>
+                </label>
+              )
+            )
+          }
+        </div>
+
+        <label class="form-consent" style="margin-top:var(--s5)">
+          <input type="checkbox" name="consent_directory" />
+          <span>I'm open to being listed in a future public alumni directory (name, graduation year, and profession only — never contact details).</span>
+        </label>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">Register as Alumni</button>
+        </div>
+        <div class="form-status" id="registerFormStatus" role="status"></div>
+      </form>
+    </div>
+  </section>
+
+  <!-- 16. Alumni Newsletter -->
+  {
+    settings.show_newsletter && (
+      <section class="band newsletter-band">
+        <div class="wrap narrow reveal">
+          <p class="eyebrow" style="color:var(--gold)">Stay in the Loop</p>
+          <h2 class="h2">Sherubtse Alumni Newsletter</h2>
+          <p style="color:#c9d0e4;margin-top:var(--s3)">
+            Get alumni news, events, stories and opportunities straight to your inbox.
+          </p>
+          <form class="newsletter-form" id="newsletterForm">
+            <input type="email" name="email" placeholder="Your email address" required aria-label="Email address" />
+            <button type="submit" class="btn btn-primary">Subscribe</button>
+          </form>
+          <div class="form-status" id="newsletterFormStatus" role="status"></div>
+        </div>
+      </section>
+    )
+  }
+
+  <!-- 17. Contact Alumni Office -->
+  <section class="band">
+    <div class="wrap narrow reveal">
+      <p class="eyebrow">Get in Touch</p>
+      <h2 class="h2">Contact the Alumni Office</h2>
+      <p class="lede" style="margin-top:var(--s3)">Stay connected and contact us for any information or support.</p>
+      <div class="alumni-contact-grid">
+        <div class="alumni-contact-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" /></svg>
+          <a href="tel:04-535171">04-535171</a>
+        </div>
+        <div class="alumni-contact-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" /></svg>
+          <a href="tel:+97517562455">+975 17562455</a>
+        </div>
+        <div class="alumni-contact-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="0" /><path d="m2 7 10 6 10-6" /></svg>
+          <a href="mailto:lo.sherubtse@rub.edu.bt">lo.sherubtse@rub.edu.bt</a>
+        </div>
+        <div class="alumni-contact-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
+          <span>Office of the Dean of Research and Industrial Linkages</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {
+    gallery.length > 0 && (
+      <div class="alumni-lightbox" id="alumniLightbox" hidden role="dialog" aria-modal="true" aria-label="Photo viewer">
+        <button type="button" class="alumni-lightbox-close" id="alumniLightboxClose" aria-label="Close photo viewer">
+          ✕
+        </button>
+        <img src="" alt="" id="alumniLightboxImage" />
+      </div>
+    )
+  }
+</Layout>
+
+<style>
+  .breadcrumb-on-dark,
+  .breadcrumb-on-dark a {
+    color: #c9d0e4;
+  }
+  .breadcrumb-on-dark .current {
+    color: #fff;
+  }
+</style>
+
+<script is:inline define:vars={{ strapiUrl: import.meta.env.PUBLIC_STRAPI_URL || 'http://localhost:1337' }}>
+  // ---- Events tabs ----
+  const upcomingTab = document.getElementById('upcomingEventsTab');
+  const pastTab = document.getElementById('pastEventsTab');
+  const upcomingPanel = document.getElementById('upcoming-events-panel');
+  const pastPanel = document.getElementById('past-events-panel');
+  if (upcomingTab && pastTab && upcomingPanel && pastPanel) {
+    const activate = (tab, panel, otherTab, otherPanel) => {
+      tab.setAttribute('aria-selected', 'true');
+      otherTab.setAttribute('aria-selected', 'false');
+      panel.hidden = false;
+      otherPanel.hidden = true;
+    };
+    upcomingTab.addEventListener('click', () => activate(upcomingTab, upcomingPanel, pastTab, pastPanel));
+    pastTab.addEventListener('click', () => activate(pastTab, pastPanel, upcomingTab, upcomingPanel));
+  }
+
+  // ---- Gallery filter + lightbox ----
+  const galleryFilters = document.getElementById('alumniGalleryFilters');
+  const galleryGrid = document.getElementById('alumniGalleryGrid');
+  if (galleryFilters && galleryGrid) {
+    const buttons = Array.from(galleryFilters.querySelectorAll('button'));
+    const items = Array.from(galleryGrid.querySelectorAll('[data-lightbox-trigger]'));
+    galleryFilters.addEventListener('click', (e) => {
+      const btn = e.target.closest('button');
+      if (!btn) return;
+      buttons.forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
+      const filter = btn.dataset.filter;
+      items.forEach((item) => {
+        const show = filter === 'all' || item.dataset.category === filter;
+        item.style.display = show ? '' : 'none';
+      });
+    });
+  }
+
+  const lightbox = document.getElementById('alumniLightbox');
+  if (lightbox) {
+    const lbImage = document.getElementById('alumniLightboxImage');
+    const closeBtn = document.getElementById('alumniLightboxClose');
+    const triggers = Array.from(document.querySelectorAll('[data-lightbox-trigger]'));
+    let lastFocused = null;
+    function open(src) {
+      lastFocused = document.activeElement;
+      lbImage.src = src;
+      lightbox.hidden = false;
+      closeBtn.focus();
+      document.addEventListener('keydown', onKeydown);
+    }
+    function close() {
+      lightbox.hidden = true;
+      document.removeEventListener('keydown', onKeydown);
+      lastFocused?.focus();
+    }
+    function onKeydown(e) {
+      if (e.key === 'Escape') close();
+    }
+    triggers.forEach((t) => t.addEventListener('click', () => open(t.dataset.src)));
+    closeBtn.addEventListener('click', close);
+    lightbox.addEventListener('click', (e) => {
+      if (e.target === lightbox) close();
+    });
+  }
+
+  // ---- Forms: POST straight to Strapi's narrow public create-only
+  // endpoints (Public role has create-only on these three, nothing
+  // else — see cms/src/index.ts). Every submission lands as an
+  // unpublished draft server-side regardless of what's sent here. ----
+  function setStatus(el, kind, message) {
+    el.className = `form-status is-visible ${kind}`;
+    el.textContent = message;
+  }
+
+  async function postToStrapi(path, data) {
+    const res = await fetch(`${strapiUrl}/api/${path}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ data }),
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => null);
+      throw new Error(body?.error?.message || `Request failed (${res.status})`);
+    }
+    return res.json();
+  }
+
+  const storyForm = document.getElementById('storyForm');
+  storyForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const status = document.getElementById('storyFormStatus');
+    const fd = new FormData(storyForm);
+    setStatus(status, 'loading', 'Submitting your story…');
+    try {
+      await postToStrapi('alumnis?status=draft', {
+        full_name: fd.get('full_name'),
+        email: fd.get('email'),
+        graduation_year: fd.get('graduation_year') ? Number(fd.get('graduation_year')) : null,
+        programme: fd.get('programme') || null,
+        current_role: fd.get('current_role') || null,
+        organization: fd.get('organization') || null,
+        article_title: fd.get('article_title'),
+        story: fd.get('story'),
+        category: fd.get('category') || null,
+        consent: fd.get('consent') === 'on',
+      });
+      setStatus(status, 'success', "Thank you — your story has been submitted and is pending review by the Alumni Office. We'll publish it here once it's approved.");
+      storyForm.reset();
+    } catch (err) {
+      setStatus(status, 'error', `Something went wrong: ${err.message}. Please try again or email lo.sherubtse@rub.edu.bt.`);
+    }
+  });
+
+  const registerForm = document.getElementById('registerForm');
+  registerForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const status = document.getElementById('registerFormStatus');
+    const fd = new FormData(registerForm);
+    const interests = fd.getAll('interests').join(', ');
+    setStatus(status, 'loading', 'Submitting your registration…');
+    try {
+      await postToStrapi('alumni-registrations', {
+        full_name: fd.get('full_name'),
+        email: fd.get('email'),
+        phone: fd.get('phone') || null,
+        programme: fd.get('programme') || null,
+        graduation_year: fd.get('graduation_year') ? Number(fd.get('graduation_year')) : null,
+        academic_period: fd.get('academic_period') || null,
+        organization: fd.get('organization') || null,
+        designation: fd.get('designation') || null,
+        industry: fd.get('industry') || null,
+        country: fd.get('country') || null,
+        city: fd.get('city') || null,
+        interests: interests || null,
+        consent_directory: fd.get('consent_directory') === 'on',
+      });
+      setStatus(status, 'success', 'Welcome home! Your registration has been received — the Alumni Office will be in touch.');
+      registerForm.reset();
+    } catch (err) {
+      setStatus(status, 'error', `Something went wrong: ${err.message}. Please try again or email lo.sherubtse@rub.edu.bt.`);
+    }
+  });
+
+  const newsletterForm = document.getElementById('newsletterForm');
+  newsletterForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const status = document.getElementById('newsletterFormStatus');
+    const fd = new FormData(newsletterForm);
+    setStatus(status, 'loading', 'Subscribing…');
+    try {
+      await postToStrapi('newsletter-subscribers', { email: fd.get('email'), consent: true });
+      setStatus(status, 'success', "You're subscribed — thank you!");
+      newsletterForm.reset();
+    } catch (err) {
+      const already = /already|unique/i.test(err.message);
+      setStatus(status, already ? 'success' : 'error', already ? "You're already subscribed — thank you!" : `Something went wrong: ${err.message}.`);
+    }
+  });
+</script>
