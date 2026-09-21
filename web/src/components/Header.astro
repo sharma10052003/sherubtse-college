@@ -3,7 +3,7 @@ import { Image } from 'astro:assets';
 import logo from '../assets/sherubtse-logo.png';
 import { getNavigation } from '../lib/content/navigation';
 
-const { menu } = await getNavigation();
+const { menu, logo_url, logo_alt, search_placeholder, menu_button_label } = await getNavigation();
 const currentPath = Astro.url.pathname;
 ---
 <header class="masthead">
@@ -12,8 +12,12 @@ const currentPath = Astro.url.pathname;
        version left too much vertical gap between the nav and the search
        box sitting right above it. -->
   <div class="wrap">
-    <a href="/" class="brand" aria-label="Sherubtse College — home">
-      <Image src={logo} alt="Sherubtse College" width={150} height={150} />
+    <a href="/" class="brand" aria-label={`${logo_alt} — home`}>
+      {logo_url ? (
+        <img src={logo_url} alt={logo_alt} width="150" height="150" decoding="async" />
+      ) : (
+        <Image src={logo} alt={logo_alt} width={150} height={150} />
+      )}
     </a>
 
     <div class="masthead-right">
@@ -36,7 +40,7 @@ const currentPath = Astro.url.pathname;
             type="search"
             name="q"
             id="headerSearchInput"
-            placeholder="Search"
+            placeholder={search_placeholder}
             aria-label="Search the site"
             aria-expanded="false"
             aria-controls="headerSearchResults"
@@ -55,7 +59,7 @@ const currentPath = Astro.url.pathname;
     </div>
 
     <button type="button" class="menu-toggle" id="mobileMenuToggle" aria-expanded="false" aria-controls="mobileMenu">
-      <span aria-hidden="true">&#9776;</span> Menu
+      <span aria-hidden="true">&#9776;</span> {menu_button_label}
     </button>
   </div>
 

@@ -1,15 +1,4 @@
 ---
-import SectionLanding from '../../components/templates/SectionLanding.astro';
+import SectionOverview from '../../components/templates/SectionOverview.astro';
 ---
-<SectionLanding
-  title="Student Life"
-  intro="Hostels, clubs, sport and support services — life at Sherubtse outside the classroom."
-  children={[
-    { label: 'Student Services & Counselling', url: '/student-life/services', description: 'Support services available to every student.' },
-    { label: 'Hostels & Residence', url: '/student-life/hostels', description: 'On-campus accommodation and residence rules.' },
-    { label: 'Clubs & Societies', url: '/student-life/clubs', description: 'Student-run clubs, from debate to environmental action.' },
-    { label: 'Sports & Recreation', url: '/student-life/sports', description: 'Sports facilities, teams and inter-college competitions.' },
-    { label: 'Student Handbook', url: '/student-life/handbook', description: 'Rules, rights and responsibilities for every student.' },
-    { label: 'Alumni', url: '/student-life/alumni', description: 'Staying connected with Sherubtse after graduation.' },
-  ]}
-/>
+<SectionOverview type="student-life-overview" title="Student Life" />

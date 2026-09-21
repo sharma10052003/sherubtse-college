@@ -1,9 +1,9 @@
 ---
 import { Image } from 'astro:assets';
 import spatialMap from '../assets/spatial-map.jpg';
-import { getSiteSettings } from '../lib/content/site-settings';
+import { getSiteSettings, getFooter } from '../lib/content/site-settings';
 
-const settings = await getSiteSettings();
+const [settings, footer] = await Promise.all([getSiteSettings(), getFooter()]);
 const year = new Date().getFullYear();
 const mapsUrl = settings.address
   ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(settings.address)}`
@@ -16,11 +16,8 @@ function isExternal(url: string) {
 <footer class="site-footer">
   <div class="wrap footer-grid">
     <div class="footer-brand">
-      <p class="footer-tagline">
-        Founded in 1968, Sherubtse College is a constituent college of the Royal University of
-        Bhutan, seated in the eastern hills of Kanglung.
-      </p>
-      <p class="footer-motto">&ldquo;The Seat of Learning&rdquo;</p>
+      {footer.tagline && <p class="footer-tagline">{footer.tagline}</p>}
+      {footer.motto && <p class="footer-motto">{footer.motto}</p>}
       <!-- No social icons here: the live site has none to source (checked
            its real homepage HTML directly — no Facebook/Instagram/X
            account links exist anywhere on it, only generic share-button
@@ -28,13 +25,19 @@ function isExternal(url: string) {
            icons linking to guessed accounts would be fabricating an
            official presence that may not exist; real accounts can be
            added here once someone confirms them. -->
-      <a href="https://finalmap.sherubtse.edu.bt/" target="_blank" rel="noopener" class="footer-map-link">
-        <Image src={spatialMap} alt="Sherubtse College campus spatial map" width={148} height={147} />
-        <span>Spatial Map</span>
-      </a>
+      {footer.map_url && (
+        <a href={footer.map_url} target="_blank" rel="noopener" class="footer-map-link">
+          {footer.map_image_url ? (
+            <img src={footer.map_image_url} alt={footer.map_label ?? 'Campus map'} width="148" height="147" loading="lazy" />
+          ) : (
+            <Image src={spatialMap} alt={footer.map_label ?? 'Campus map'} width={148} height={147} />
+          )}
+          {footer.map_label && <span>{footer.map_label}</span>}
+        </a>
+      )}
     </div>
 
-    {settings.footer_link_groups.map((group) => (
+    {footer.link_groups.map((group) => (
       <div>
         <h3>{group.label}</h3>
         <ul>
@@ -52,7 +55,7 @@ function isExternal(url: string) {
     ))}
 
     <div>
-      <h3>Contact</h3>
+      <h3>{footer.contact_heading}</h3>
       <ul class="footer-contact">
         {settings.address && (
           <li>
@@ -82,8 +85,14 @@ function isExternal(url: string) {
     </div>
   </div>
   <div class="wrap bottom">
-    <p>&copy; {year} Sherubtse College, Royal University of Bhutan.</p>
-    <p><a href="/about/privacy">Privacy Policy</a> &middot; <a href="/about/accessibility">Accessibility</a></p>
+    <p>&copy; {year} {footer.copyright_text}</p>
+    {footer.bottom_links.length > 0 && (
+      <p>
+        {footer.bottom_links.map((l, i) => (
+          <>{i > 0 && ' · '}<a href={l.url}>{l.label}</a></>
+        ))}
+      </p>
+    )}
   </div>
 </footer>
 

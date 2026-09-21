@@ -1,17 +1,4 @@
 ---
-import SectionLanding from '../../components/templates/SectionLanding.astro';
+import SectionOverview from '../../components/templates/SectionOverview.astro';
 ---
-<SectionLanding
-  title="News & Notices"
-  intro="Announcements, news, events, recruitment and tenders — everything time-bound the College publishes."
-  children={[
-    { label: 'Announcements', url: '/news-notices/announcements', description: 'Admissions, registration, results and general notices.' },
-    { label: 'News', url: '/news-notices/news', description: 'What has happened at the College recently.' },
-    { label: 'Newsletter', url: '/newsletter', description: 'The Tower — read the latest edition, browse past issues, and download PDFs.' },
-    { label: 'Events', url: '/news-notices/events', description: 'Upcoming and past events at the College.' },
-    { label: 'Recruitment', url: '/news-notices/recruitment', description: 'Current staff vacancies and their status.' },
-    { label: 'Tenders', url: '/news-notices/tenders', description: 'Open invitations for bids and procurement notices.' },
-    { label: 'Downloads & Forms', url: '/news-notices/downloads', description: 'Forms, policies and other documents for download.' },
-    { label: 'Archive', url: '/news-notices/archive', description: 'Expired notices, kept findable rather than deleted.' },
-  ]}
-/>
+<SectionOverview type="news-notices-overview" title="News & Notices" />

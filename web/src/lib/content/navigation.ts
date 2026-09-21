@@ -1,4 +1,4 @@
-import { strapiGet } from '../strapi';
+import { strapiGet, mediaUrl } from '../strapi';
 import type { StrapiSingleResponse } from '../strapi';
 import type { LinkItem } from '../types';
 
@@ -10,18 +10,30 @@ export interface NavItem {
 
 export interface Navigation {
   menu: NavItem[];
+  logo_url: string | null;
+  logo_alt: string;
+  search_placeholder: string;
+  menu_button_label: string;
 }
 
 /**
- * No hardcoded fallback (Phase 3.4) — navigation is seeded in Strapi now
- * (decision 023), so an empty response means something is actually wrong
- * (Strapi down, the record cleared) and the menu should show as empty
- * rather than quietly substituting a plausible-looking fake one. A fake
- * fallback here would hide exactly the failure this step exists to surface.
+ * No hardcoded fallback for the menu itself (Phase 3.4) — navigation is
+ * seeded in Strapi (decision 023), so an empty response means something is
+ * actually wrong (Strapi down, the record cleared) and the menu should show
+ * as empty rather than quietly substituting a plausible-looking fake one.
+ * The small labels around it (logo alt, search placeholder, menu button) do
+ * have neutral defaults, since a blank button label is worse than "Menu".
  */
 export async function getNavigation(): Promise<Navigation> {
-  const res = await strapiGet<StrapiSingleResponse<Navigation>>('navigation', {
-    populate: ['menu', 'menu.children'],
+  const res = await strapiGet<StrapiSingleResponse<any>>('navigation', {
+    populate: ['menu', 'menu.children', 'logo'],
   });
-  return { menu: res?.data?.menu ?? [] };
+  const row = res?.data;
+  return {
+    menu: row?.menu ?? [],
+    logo_url: mediaUrl(row?.logo),
+    logo_alt: row?.logo_alt || 'Sherubtse College',
+    search_placeholder: row?.search_placeholder || 'Search',
+    menu_button_label: row?.menu_button_label || 'Menu',
+  };
 }

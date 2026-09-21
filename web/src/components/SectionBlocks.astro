@@ -1,0 +1,41 @@
+---
+// Renders the editor-built "sections" dynamic zone of an overview page.
+import type { Block } from '../lib/content/landing';
+
+interface Props {
+  blocks: Block[];
+}
+const { blocks } = Astro.props;
+---
+{blocks.length > 0 && (
+  <div class="sl-blocks">
+    {blocks.map((b) => {
+      if (b.kind === 'text') {
+        return (
+          <section class="sl-block reveal">
+            {b.heading && <h2 class="sl-block-heading">{b.heading}</h2>}
+            {b.paragraphs.map((p) => <p>{p}</p>)}
+          </section>
+        );
+      }
+      if (b.kind === 'image-text') {
+        return (
+          <section class:list={['sl-block', 'sl-block-media', 'reveal', b.side === 'right' && 'is-right']}>
+            {b.image_url && <img src={b.image_url} alt={b.image_alt} loading="lazy" decoding="async" />}
+            <div>
+              {b.heading && <h2 class="sl-block-heading">{b.heading}</h2>}
+              {b.paragraphs.map((p) => <p>{p}</p>)}
+            </div>
+          </section>
+        );
+      }
+      return (
+        <section class="sl-block sl-block-cta reveal">
+          <h2 class="sl-block-heading">{b.heading}</h2>
+          {b.text && <p>{b.text}</p>}
+          {b.button_label && b.button_url && <a class="btn btn-primary" href={b.button_url}>{b.button_label}</a>}
+        </section>
+      );
+    })}
+  </div>
+)}

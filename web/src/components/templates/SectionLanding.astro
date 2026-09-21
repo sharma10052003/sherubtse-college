@@ -9,7 +9,9 @@
 // gap — the final card simply stretches to fill it. Nothing here is specific
 // to one section, so callers only pass data.
 import Layout from '../../layouts/Layout.astro';
+import SectionBlocks from '../SectionBlocks.astro';
 import '../../styles/section-landing.css';
+import type { Block } from '../../lib/content/landing';
 
 interface Child {
   label: string;
@@ -28,8 +30,12 @@ interface Props {
   heading?: string;
   /** Show the first child as a wide featured panel (needs 4+ children). */
   featured?: boolean;
+  /** Editor-built sections shown below the cards. */
+  blocks?: Block[];
+  /** Meta description; defaults to the intro. */
+  description?: string;
 }
-const { title, intro, children, eyebrow, heading, featured = true } = Astro.props;
+const { title, intro, children, eyebrow, heading, featured = true, blocks = [], description } = Astro.props;
 
 const ICONS: Record<string, string> = {
   college: '<path d="M3 21h18M5 21V9l7-5 7 5v12M9 21v-6h6v6"/>',
@@ -91,7 +97,7 @@ const lastSpanMd = rest.length % 2 === 0 ? 1 : 2;
 const eyebrowText = eyebrow ?? title;
 const headingText = heading ?? title;
 ---
-<Layout title={title} description={intro}>
+<Layout title={title} description={description ?? intro}>
   <div class="sl-page">
     <header class="sl-head">
       <div class="wrap">
@@ -131,6 +137,7 @@ const headingText = heading ?? title;
             </article>
           ))}
         </div>
+        <SectionBlocks blocks={blocks} />
       </div>
     </div>
   </div>

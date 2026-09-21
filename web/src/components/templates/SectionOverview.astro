@@ -1,0 +1,34 @@
+---
+// One overview page (About, Academics, …), fully driven by its Strapi single
+// type. The page files just say which type to read.
+import Layout from '../../layouts/Layout.astro';
+import SectionLanding from './SectionLanding.astro';
+import { getLandingPage, type OverviewType } from '../../lib/content/landing';
+
+interface Props {
+  type: OverviewType;
+  /** Breadcrumb / <title> label — the section's short name. */
+  title: string;
+}
+const { type, title } = Astro.props;
+const page = await getLandingPage(type);
+---
+{page ? (
+  <SectionLanding
+    title={title}
+    eyebrow={page.eyebrow ?? undefined}
+    heading={page.heading}
+    intro={page.intro}
+    children={page.cards}
+    featured={page.featured}
+    blocks={page.blocks}
+    description={page.seo_description ?? undefined}
+  />
+) : (
+  <Layout title={title}>
+    <div class="wrap" style="padding-block:var(--s8)">
+      <h1 class="h1">{title}</h1>
+      <p class="lede">This page is temporarily unavailable. Please check back shortly.</p>
+    </div>
+  </Layout>
+)}
