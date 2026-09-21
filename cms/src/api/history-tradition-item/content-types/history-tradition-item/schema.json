@@ -4,7 +4,7 @@
   "info": {
     "singularName": "history-tradition-item",
     "pluralName": "history-tradition-items",
-    "displayName": "History Tradition Item"
+    "displayName": "About – History Traditions"
   },
   "options": {
     "draftAndPublish": false

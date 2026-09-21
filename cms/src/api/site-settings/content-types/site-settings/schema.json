@@ -4,15 +4,21 @@
   "info": {
     "singularName": "site-settings",
     "pluralName": "site-settings-collection",
-    "displayName": "Site Settings"
+    "displayName": "Global – Site Settings"
   },
   "options": {
     "draftAndPublish": false
   },
   "attributes": {
-    "address": { "type": "text" },
-    "phones": { "type": "json" },
-    "official_emails": { "type": "json" },
+    "address": {
+      "type": "text"
+    },
+    "phones": {
+      "type": "json"
+    },
+    "official_emails": {
+      "type": "json"
+    },
     "footer_link_groups": {
       "type": "component",
       "repeatable": true,
@@ -22,6 +28,28 @@
       "type": "component",
       "repeatable": true,
       "component": "shared.link-item"
+    },
+    "site_name": {
+      "type": "string",
+      "default": "Sherubtse College"
+    },
+    "site_tagline": {
+      "type": "string"
+    },
+    "default_meta_description": {
+      "type": "text"
+    },
+    "default_og_image": {
+      "type": "media",
+      "multiple": false,
+      "allowedTypes": [
+        "images"
+      ]
+    },
+    "social_links": {
+      "type": "component",
+      "repeatable": true,
+      "component": "shared.social-link"
     }
   }
 }

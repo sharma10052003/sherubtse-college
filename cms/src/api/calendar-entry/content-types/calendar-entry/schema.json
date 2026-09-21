@@ -4,7 +4,7 @@
   "info": {
     "singularName": "calendar-entry",
     "pluralName": "calendar-entries",
-    "displayName": "Calendar Entry"
+    "displayName": "Academics – Calendar Entries"
   },
   "options": {
     "draftAndPublish": true

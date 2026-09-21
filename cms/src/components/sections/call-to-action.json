@@ -1,0 +1,23 @@
+{
+  "collectionName": "components_sections_call_to_actions",
+  "info": {
+    "displayName": "Call to Action",
+    "icon": "cursor"
+  },
+  "options": {},
+  "attributes": {
+    "heading": {
+      "type": "string",
+      "required": true
+    },
+    "text": {
+      "type": "text"
+    },
+    "button_label": {
+      "type": "string"
+    },
+    "button_url": {
+      "type": "string"
+    }
+  }
+}

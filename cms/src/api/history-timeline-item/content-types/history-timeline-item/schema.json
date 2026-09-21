@@ -4,7 +4,7 @@
   "info": {
     "singularName": "history-timeline-item",
     "pluralName": "history-timeline-items",
-    "displayName": "History Timeline Item"
+    "displayName": "About – History Timeline"
   },
   "options": {
     "draftAndPublish": false

@@ -1,0 +1,17 @@
+{
+  "collectionName": "components_sections_rich_texts",
+  "info": {
+    "displayName": "Text Block",
+    "icon": "align-left"
+  },
+  "options": {},
+  "attributes": {
+    "heading": {
+      "type": "string"
+    },
+    "body": {
+      "type": "richtext",
+      "required": true
+    }
+  }
+}

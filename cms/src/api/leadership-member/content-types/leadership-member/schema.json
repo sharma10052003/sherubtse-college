@@ -4,7 +4,7 @@
   "info": {
     "singularName": "leadership-member",
     "pluralName": "leadership-members",
-    "displayName": "Leadership Member"
+    "displayName": "About – Leadership"
   },
   "options": { "draftAndPublish": false },
   "attributes": {

@@ -1,5 +1,6 @@
 import type { Core } from '@strapi/strapi';
 import registerFacultyImport from './faculty-import';
+import { ensureAdminRoles } from './admin-roles';
 
 /**
  * The Alumni and Contact pages have public-facing forms (submit a
@@ -61,5 +62,6 @@ export default {
    */
   async bootstrap({ strapi }: { strapi: Core.Strapi }) {
     await grantPublicCreatePermissions({ strapi });
+    await ensureAdminRoles({ strapi });
   },
 };

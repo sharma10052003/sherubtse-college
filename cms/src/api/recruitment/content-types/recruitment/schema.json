@@ -4,7 +4,7 @@
   "info": {
     "singularName": "recruitment",
     "pluralName": "recruitments",
-    "displayName": "Recruitment"
+    "displayName": "News & Notices – Recruitment"
   },
   "options": {
     "draftAndPublish": true

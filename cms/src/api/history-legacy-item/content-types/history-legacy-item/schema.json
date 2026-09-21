@@ -4,7 +4,7 @@
   "info": {
     "singularName": "history-legacy-item",
     "pluralName": "history-legacy-items",
-    "displayName": "History Legacy Item"
+    "displayName": "About – History Legacy"
   },
   "options": {
     "draftAndPublish": false

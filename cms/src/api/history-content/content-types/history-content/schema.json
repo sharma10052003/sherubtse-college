@@ -4,7 +4,7 @@
   "info": {
     "singularName": "history-content",
     "pluralName": "history-contents",
-    "displayName": "History Content"
+    "displayName": "About – History Page"
   },
   "options": {
     "draftAndPublish": false

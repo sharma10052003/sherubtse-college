@@ -4,7 +4,7 @@
   "info": {
     "singularName": "contact-person",
     "pluralName": "contact-people",
-    "displayName": "Contact Directory Entry"
+    "displayName": "Contact – Offices"
   },
   "options": {
     "draftAndPublish": true

@@ -4,7 +4,7 @@
   "info": {
     "singularName": "alumni-setting",
     "pluralName": "alumni-settings",
-    "displayName": "Alumni Settings"
+    "displayName": "Alumni – Page"
   },
   "options": {
     "draftAndPublish": false

@@ -4,7 +4,7 @@
   "info": {
     "singularName": "news",
     "pluralName": "news-entries",
-    "displayName": "News"
+    "displayName": "News & Notices – News"
   },
   "options": {
     "draftAndPublish": true

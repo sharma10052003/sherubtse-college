@@ -4,7 +4,7 @@
   "info": {
     "singularName": "faculty-setting",
     "pluralName": "faculty-settings",
-    "displayName": "Faculty Settings"
+    "displayName": "About – Faculty Page"
   },
   "options": {
     "draftAndPublish": false

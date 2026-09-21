@@ -25,6 +25,48 @@ export interface ProgrammeCurriculumBlock extends Struct.ComponentSchema {
   };
 }
 
+export interface SectionsCallToAction extends Struct.ComponentSchema {
+  collectionName: 'components_sections_call_to_actions';
+  info: {
+    displayName: 'Call to Action';
+    icon: 'cursor';
+  };
+  attributes: {
+    button_label: Schema.Attribute.String;
+    button_url: Schema.Attribute.String;
+    heading: Schema.Attribute.String & Schema.Attribute.Required;
+    text: Schema.Attribute.Text;
+  };
+}
+
+export interface SectionsImageText extends Struct.ComponentSchema {
+  collectionName: 'components_sections_image_texts';
+  info: {
+    displayName: 'Image and Text';
+    icon: 'picture';
+  };
+  attributes: {
+    body: Schema.Attribute.RichText;
+    heading: Schema.Attribute.String;
+    image: Schema.Attribute.Media<'images'>;
+    image_alt: Schema.Attribute.String;
+    image_side: Schema.Attribute.Enumeration<['left', 'right']> &
+      Schema.Attribute.DefaultTo<'left'>;
+  };
+}
+
+export interface SectionsRichText extends Struct.ComponentSchema {
+  collectionName: 'components_sections_rich_texts';
+  info: {
+    displayName: 'Text Block';
+    icon: 'align-left';
+  };
+  attributes: {
+    body: Schema.Attribute.RichText & Schema.Attribute.Required;
+    heading: Schema.Attribute.String;
+  };
+}
+
 export interface SharedAttachment extends Struct.ComponentSchema {
   collectionName: 'components_shared_attachments';
   info: {
@@ -72,6 +114,20 @@ export interface SharedFaqItem extends Struct.ComponentSchema {
   attributes: {
     answer: Schema.Attribute.Text & Schema.Attribute.Required;
     question: Schema.Attribute.String & Schema.Attribute.Required;
+  };
+}
+
+export interface SharedLandingCard extends Struct.ComponentSchema {
+  collectionName: 'components_shared_landing_cards';
+  info: {
+    displayName: 'Landing Card';
+    icon: 'apps';
+  };
+  attributes: {
+    description: Schema.Attribute.Text;
+    icon: Schema.Attribute.String;
+    label: Schema.Attribute.String & Schema.Attribute.Required;
+    url: Schema.Attribute.String & Schema.Attribute.Required;
   };
 }
 
@@ -125,6 +181,18 @@ export interface SharedSeo extends Struct.ComponentSchema {
   };
 }
 
+export interface SharedSocialLink extends Struct.ComponentSchema {
+  collectionName: 'components_shared_social_links';
+  info: {
+    displayName: 'Social Link';
+    icon: 'earth';
+  };
+  attributes: {
+    platform: Schema.Attribute.String & Schema.Attribute.Required;
+    url: Schema.Attribute.String & Schema.Attribute.Required;
+  };
+}
+
 export interface SharedStageDocument extends Struct.ComponentSchema {
   collectionName: 'components_shared_stage_documents';
   info: {
@@ -144,14 +212,19 @@ declare module '@strapi/strapi' {
     export interface ComponentSchemas {
       'navigation.nav-item': NavigationNavItem;
       'programme.curriculum-block': ProgrammeCurriculumBlock;
+      'sections.call-to-action': SectionsCallToAction;
+      'sections.image-text': SectionsImageText;
+      'sections.rich-text': SectionsRichText;
       'shared.attachment': SharedAttachment;
       'shared.button': SharedButton;
       'shared.contact-block': SharedContactBlock;
       'shared.faq-item': SharedFaqItem;
+      'shared.landing-card': SharedLandingCard;
       'shared.link-group': SharedLinkGroup;
       'shared.link-item': SharedLinkItem;
       'shared.publication': SharedPublication;
       'shared.seo': SharedSeo;
+      'shared.social-link': SharedSocialLink;
       'shared.stage-document': SharedStageDocument;
     }
   }

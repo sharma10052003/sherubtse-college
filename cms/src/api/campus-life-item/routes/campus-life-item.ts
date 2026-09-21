@@ -1,3 +1,0 @@
-import { factories } from '@strapi/strapi';
-
-export default factories.createCoreRouter('api::campus-life-item.campus-life-item');

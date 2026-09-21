@@ -443,10 +443,46 @@ export interface AdminUser extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiAboutOverviewAboutOverview extends Struct.SingleTypeSchema {
+  collectionName: 'about_overview';
+  info: {
+    displayName: 'About \u2013 Overview';
+    pluralName: 'about-overviews';
+    singularName: 'about-overview';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    cards: Schema.Attribute.Component<'shared.landing-card', true>;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    eyebrow: Schema.Attribute.String;
+    featured: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
+    heading: Schema.Attribute.String & Schema.Attribute.Required;
+    intro: Schema.Attribute.Text & Schema.Attribute.Required;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::about-overview.about-overview'
+    > &
+      Schema.Attribute.Private;
+    publishedAt: Schema.Attribute.DateTime;
+    sections: Schema.Attribute.DynamicZone<
+      ['sections.rich-text', 'sections.image-text', 'sections.call-to-action']
+    >;
+    seo: Schema.Attribute.Component<'shared.seo', false>;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiAboutPageAboutPage extends Struct.SingleTypeSchema {
   collectionName: 'about_page';
   info: {
-    displayName: 'About the College Page';
+    displayName: 'About \u2013 The College';
     pluralName: 'about-pages';
     singularName: 'about-page';
   };
@@ -476,42 +512,10 @@ export interface ApiAboutPageAboutPage extends Struct.SingleTypeSchema {
   };
 }
 
-export interface ApiAcademicCalendarAcademicCalendar
-  extends Struct.SingleTypeSchema {
-  collectionName: 'academic_calendar';
-  info: {
-    displayName: 'Academic Calendar';
-    pluralName: 'academic-calendars';
-    singularName: 'academic-calendar';
-  };
-  options: {
-    draftAndPublish: false;
-  };
-  attributes: {
-    academic_year: Schema.Attribute.String;
-    calendar_pdf: Schema.Attribute.Media<'files'>;
-    createdAt: Schema.Attribute.DateTime;
-    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-    description: Schema.Attribute.Text;
-    locale: Schema.Attribute.String & Schema.Attribute.Private;
-    localizations: Schema.Attribute.Relation<
-      'oneToMany',
-      'api::academic-calendar.academic-calendar'
-    > &
-      Schema.Attribute.Private;
-    publishedAt: Schema.Attribute.DateTime;
-    title: Schema.Attribute.String & Schema.Attribute.Required;
-    updatedAt: Schema.Attribute.DateTime;
-    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-  };
-}
-
 export interface ApiAcademicGuideAcademicGuide extends Struct.SingleTypeSchema {
   collectionName: 'academic_guide';
   info: {
-    displayName: 'Academic Guide';
+    displayName: 'Academics \u2013 Guide';
     pluralName: 'academic-guides';
     singularName: 'academic-guide';
   };
@@ -538,80 +542,74 @@ export interface ApiAcademicGuideAcademicGuide extends Struct.SingleTypeSchema {
   };
 }
 
-export interface ApiAcademicsContentAcademicsContent
+export interface ApiAcademicsOverviewAcademicsOverview
   extends Struct.SingleTypeSchema {
-  collectionName: 'academics_content';
+  collectionName: 'academics_overview';
   info: {
-    displayName: 'Academics Content';
-    pluralName: 'academics-contents';
-    singularName: 'academics-content';
+    displayName: 'Academics \u2013 Overview';
+    pluralName: 'academics-overviews';
+    singularName: 'academics-overview';
   };
   options: {
     draftAndPublish: false;
   };
   attributes: {
+    cards: Schema.Attribute.Component<'shared.landing-card', true>;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    eyebrow: Schema.Attribute.String;
+    featured: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
+    heading: Schema.Attribute.String & Schema.Attribute.Required;
+    intro: Schema.Attribute.Text & Schema.Attribute.Required;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
-      'api::academics-content.academics-content'
+      'api::academics-overview.academics-overview'
     > &
       Schema.Attribute.Private;
     publishedAt: Schema.Attribute.DateTime;
-    subtitle: Schema.Attribute.Text & Schema.Attribute.Required;
-    title: Schema.Attribute.String & Schema.Attribute.Required;
+    sections: Schema.Attribute.DynamicZone<
+      ['sections.rich-text', 'sections.image-text', 'sections.call-to-action']
+    >;
+    seo: Schema.Attribute.Component<'shared.seo', false>;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
   };
 }
 
-export interface ApiAcademicsItemAcademicsItem
-  extends Struct.CollectionTypeSchema {
-  collectionName: 'academics_items';
+export interface ApiAdmissionsOverviewAdmissionsOverview
+  extends Struct.SingleTypeSchema {
+  collectionName: 'admissions_overview';
   info: {
-    displayName: 'Academics Item';
-    pluralName: 'academics-items';
-    singularName: 'academics-item';
+    displayName: 'Admissions \u2013 Overview';
+    pluralName: 'admissions-overviews';
+    singularName: 'admissions-overview';
   };
   options: {
     draftAndPublish: false;
   };
-  pluginOptions: {
-    i18n: {
-      localized: true;
-    };
-  };
   attributes: {
-    button_url: Schema.Attribute.String;
+    cards: Schema.Attribute.Component<'shared.landing-card', true>;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
-    description: Schema.Attribute.Text &
-      Schema.Attribute.Required &
-      Schema.Attribute.SetPluginOptions<{
-        i18n: {
-          localized: true;
-        };
-      }>;
-    icon: Schema.Attribute.String & Schema.Attribute.Required;
-    image: Schema.Attribute.Media<'images'>;
-    locale: Schema.Attribute.String;
+    eyebrow: Schema.Attribute.String;
+    featured: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
+    heading: Schema.Attribute.String & Schema.Attribute.Required;
+    intro: Schema.Attribute.Text & Schema.Attribute.Required;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
-      'api::academics-item.academics-item'
-    >;
+      'api::admissions-overview.admissions-overview'
+    > &
+      Schema.Attribute.Private;
     publishedAt: Schema.Attribute.DateTime;
-    sort_order: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
-    title: Schema.Attribute.String &
-      Schema.Attribute.Required &
-      Schema.Attribute.SetPluginOptions<{
-        i18n: {
-          localized: true;
-        };
-      }>;
+    sections: Schema.Attribute.DynamicZone<
+      ['sections.rich-text', 'sections.image-text', 'sections.call-to-action']
+    >;
+    seo: Schema.Attribute.Component<'shared.seo', false>;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -622,7 +620,7 @@ export interface ApiAlumniAchievementAlumniAchievement
   extends Struct.CollectionTypeSchema {
   collectionName: 'alumni_achievements';
   info: {
-    displayName: 'Alumni Achievement';
+    displayName: 'Alumni \u2013 Achievements';
     pluralName: 'alumni-achievements';
     singularName: 'alumni-achievement';
   };
@@ -667,7 +665,7 @@ export interface ApiAlumniChapterAlumniChapter
   extends Struct.CollectionTypeSchema {
   collectionName: 'alumni_chapters';
   info: {
-    displayName: 'Alumni Chapter';
+    displayName: 'Alumni \u2013 Chapters';
     pluralName: 'alumni-chapters';
     singularName: 'alumni-chapter';
   };
@@ -701,7 +699,7 @@ export interface ApiAlumniGalleryImageAlumniGalleryImage
   extends Struct.CollectionTypeSchema {
   collectionName: 'alumni_gallery_images';
   info: {
-    displayName: 'Alumni Gallery Image';
+    displayName: 'Alumni \u2013 Gallery';
     pluralName: 'alumni-gallery-images';
     singularName: 'alumni-gallery-image';
   };
@@ -744,7 +742,7 @@ export interface ApiAlumniRegistrationAlumniRegistration
   extends Struct.CollectionTypeSchema {
   collectionName: 'alumni_registrations';
   info: {
-    displayName: 'Alumni Registration';
+    displayName: 'Alumni \u2013 Registrations';
     pluralName: 'alumni-registrations';
     singularName: 'alumni-registration';
   };
@@ -786,7 +784,7 @@ export interface ApiAlumniRegistrationAlumniRegistration
 export interface ApiAlumniSettingAlumniSetting extends Struct.SingleTypeSchema {
   collectionName: 'alumni_settings';
   info: {
-    displayName: 'Alumni Settings';
+    displayName: 'Alumni \u2013 Page';
     pluralName: 'alumni-settings';
     singularName: 'alumni-setting';
   };
@@ -826,7 +824,7 @@ export interface ApiAlumniSettingAlumniSetting extends Struct.SingleTypeSchema {
 export interface ApiAlumniAlumni extends Struct.CollectionTypeSchema {
   collectionName: 'alumni_profiles';
   info: {
-    displayName: 'Alumni';
+    displayName: 'Alumni \u2013 Profiles & Stories';
     pluralName: 'alumnis';
     singularName: 'alumni';
   };
@@ -887,7 +885,7 @@ export interface ApiAnnouncementAnnouncement
   extends Struct.CollectionTypeSchema {
   collectionName: 'announcements';
   info: {
-    displayName: 'Announcement';
+    displayName: 'News & Notices \u2013 Announcements';
     pluralName: 'announcements';
     singularName: 'announcement';
   };
@@ -944,7 +942,7 @@ export interface ApiAnnouncementAnnouncement
 export interface ApiAwardAward extends Struct.CollectionTypeSchema {
   collectionName: 'awards';
   info: {
-    displayName: 'Award';
+    displayName: 'About \u2013 Faculty Awards';
     pluralName: 'awards';
     singularName: 'award';
   };
@@ -977,7 +975,7 @@ export interface ApiCalendarEntryCalendarEntry
   extends Struct.CollectionTypeSchema {
   collectionName: 'calendar_entries';
   info: {
-    displayName: 'Calendar Entry';
+    displayName: 'Academics \u2013 Calendar Entries';
     pluralName: 'calendar-entries';
     singularName: 'calendar-entry';
   };
@@ -1031,89 +1029,10 @@ export interface ApiCalendarEntryCalendarEntry
   };
 }
 
-export interface ApiCampusLifeContentCampusLifeContent
-  extends Struct.SingleTypeSchema {
-  collectionName: 'campus_life_content';
-  info: {
-    displayName: 'Campus Life Content';
-    pluralName: 'campus-life-contents';
-    singularName: 'campus-life-content';
-  };
-  options: {
-    draftAndPublish: false;
-  };
-  attributes: {
-    createdAt: Schema.Attribute.DateTime;
-    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-    locale: Schema.Attribute.String & Schema.Attribute.Private;
-    localizations: Schema.Attribute.Relation<
-      'oneToMany',
-      'api::campus-life-content.campus-life-content'
-    > &
-      Schema.Attribute.Private;
-    publishedAt: Schema.Attribute.DateTime;
-    subtitle: Schema.Attribute.Text & Schema.Attribute.Required;
-    title: Schema.Attribute.String & Schema.Attribute.Required;
-    updatedAt: Schema.Attribute.DateTime;
-    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-  };
-}
-
-export interface ApiCampusLifeItemCampusLifeItem
-  extends Struct.CollectionTypeSchema {
-  collectionName: 'campus_life_items';
-  info: {
-    displayName: 'Campus Life Item';
-    pluralName: 'campus-life-items';
-    singularName: 'campus-life-item';
-  };
-  options: {
-    draftAndPublish: false;
-  };
-  pluginOptions: {
-    i18n: {
-      localized: true;
-    };
-  };
-  attributes: {
-    createdAt: Schema.Attribute.DateTime;
-    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-    description: Schema.Attribute.Text &
-      Schema.Attribute.Required &
-      Schema.Attribute.SetPluginOptions<{
-        i18n: {
-          localized: true;
-        };
-      }>;
-    image: Schema.Attribute.Media<'images'>;
-    link_url: Schema.Attribute.String;
-    locale: Schema.Attribute.String;
-    localizations: Schema.Attribute.Relation<
-      'oneToMany',
-      'api::campus-life-item.campus-life-item'
-    >;
-    publishedAt: Schema.Attribute.DateTime;
-    sort_order: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
-    title: Schema.Attribute.String &
-      Schema.Attribute.Required &
-      Schema.Attribute.SetPluginOptions<{
-        i18n: {
-          localized: true;
-        };
-      }>;
-    updatedAt: Schema.Attribute.DateTime;
-    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-  };
-}
-
 export interface ApiClubClub extends Struct.CollectionTypeSchema {
   collectionName: 'clubs';
   info: {
-    displayName: 'Club';
+    displayName: 'Student Life \u2013 Clubs';
     pluralName: 'clubs';
     singularName: 'club';
   };
@@ -1154,7 +1073,7 @@ export interface ApiContactEnquiryContactEnquiry
   extends Struct.CollectionTypeSchema {
   collectionName: 'contact_enquiries';
   info: {
-    displayName: 'Contact Enquiry';
+    displayName: 'Contact \u2013 Enquiries';
     pluralName: 'contact-enquiries';
     singularName: 'contact-enquiry';
   };
@@ -1189,7 +1108,7 @@ export interface ApiContactPageContentContactPageContent
   extends Struct.SingleTypeSchema {
   collectionName: 'contact_page_content';
   info: {
-    displayName: 'Contact Page Content';
+    displayName: 'Contact \u2013 Page';
     pluralName: 'contact-page-contents';
     singularName: 'contact-page-content';
   };
@@ -1251,7 +1170,7 @@ export interface ApiContactPersonContactPerson
   extends Struct.CollectionTypeSchema {
   collectionName: 'contact_people';
   info: {
-    displayName: 'Contact Directory Entry';
+    displayName: 'Contact \u2013 Offices';
     pluralName: 'contact-people';
     singularName: 'contact-person';
   };
@@ -1287,46 +1206,10 @@ export interface ApiContactPersonContactPerson
   };
 }
 
-export interface ApiCtaContentCtaContent extends Struct.SingleTypeSchema {
-  collectionName: 'cta_content';
-  info: {
-    displayName: 'CTA Content';
-    pluralName: 'cta-contents';
-    singularName: 'cta-content';
-  };
-  options: {
-    draftAndPublish: false;
-  };
-  attributes: {
-    buttons: Schema.Attribute.Component<'shared.button', true> &
-      Schema.Attribute.SetMinMax<
-        {
-          max: 4;
-        },
-        number
-      >;
-    createdAt: Schema.Attribute.DateTime;
-    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-    locale: Schema.Attribute.String & Schema.Attribute.Private;
-    localizations: Schema.Attribute.Relation<
-      'oneToMany',
-      'api::cta-content.cta-content'
-    > &
-      Schema.Attribute.Private;
-    publishedAt: Schema.Attribute.DateTime;
-    subtitle: Schema.Attribute.Text & Schema.Attribute.Required;
-    title: Schema.Attribute.String & Schema.Attribute.Required;
-    updatedAt: Schema.Attribute.DateTime;
-    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-  };
-}
-
 export interface ApiDepartmentDepartment extends Struct.CollectionTypeSchema {
   collectionName: 'departments';
   info: {
-    displayName: 'Department';
+    displayName: 'Academics \u2013 Departments';
     pluralName: 'departments';
     singularName: 'department';
   };
@@ -1401,7 +1284,7 @@ export interface ApiDepartmentDepartment extends Struct.CollectionTypeSchema {
 export interface ApiDocumentDocument extends Struct.CollectionTypeSchema {
   collectionName: 'documents';
   info: {
-    displayName: 'Document';
+    displayName: 'News & Notices \u2013 Downloads & Forms';
     pluralName: 'documents';
     singularName: 'document';
   };
@@ -1446,7 +1329,7 @@ export interface ApiDocumentDocument extends Struct.CollectionTypeSchema {
 export interface ApiEventEvent extends Struct.CollectionTypeSchema {
   collectionName: 'events';
   info: {
-    displayName: 'Event';
+    displayName: 'News & Notices \u2013 Events';
     pluralName: 'events';
     singularName: 'event';
   };
@@ -1485,94 +1368,10 @@ export interface ApiEventEvent extends Struct.CollectionTypeSchema {
   };
 }
 
-export interface ApiEventsContentEventsContent extends Struct.SingleTypeSchema {
-  collectionName: 'events_content';
-  info: {
-    displayName: 'Events Content';
-    pluralName: 'events-contents';
-    singularName: 'events-content';
-  };
-  options: {
-    draftAndPublish: false;
-  };
-  attributes: {
-    createdAt: Schema.Attribute.DateTime;
-    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-    locale: Schema.Attribute.String & Schema.Attribute.Private;
-    localizations: Schema.Attribute.Relation<
-      'oneToMany',
-      'api::events-content.events-content'
-    > &
-      Schema.Attribute.Private;
-    publishedAt: Schema.Attribute.DateTime;
-    subtitle: Schema.Attribute.Text & Schema.Attribute.Required;
-    title: Schema.Attribute.String & Schema.Attribute.Required;
-    updatedAt: Schema.Attribute.DateTime;
-    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-  };
-}
-
-export interface ApiEventsItemEventsItem extends Struct.CollectionTypeSchema {
-  collectionName: 'events_items';
-  info: {
-    displayName: 'Events Item';
-    pluralName: 'events-items';
-    singularName: 'events-item';
-  };
-  options: {
-    draftAndPublish: false;
-  };
-  pluginOptions: {
-    i18n: {
-      localized: true;
-    };
-  };
-  attributes: {
-    button_url: Schema.Attribute.String;
-    category: Schema.Attribute.String;
-    createdAt: Schema.Attribute.DateTime;
-    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-    description: Schema.Attribute.Text &
-      Schema.Attribute.Required &
-      Schema.Attribute.SetPluginOptions<{
-        i18n: {
-          localized: true;
-        };
-      }>;
-    event_date: Schema.Attribute.Date & Schema.Attribute.Required;
-    event_time: Schema.Attribute.String;
-    image: Schema.Attribute.Media<'images'>;
-    is_featured: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
-    locale: Schema.Attribute.String;
-    localizations: Schema.Attribute.Relation<
-      'oneToMany',
-      'api::events-item.events-item'
-    >;
-    location: Schema.Attribute.String;
-    publishedAt: Schema.Attribute.DateTime;
-    sort_order: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
-    status: Schema.Attribute.Enumeration<['upcoming', 'ongoing', 'past']> &
-      Schema.Attribute.DefaultTo<'upcoming'>;
-    title: Schema.Attribute.String &
-      Schema.Attribute.Required &
-      Schema.Attribute.SetPluginOptions<{
-        i18n: {
-          localized: true;
-        };
-      }>;
-    updatedAt: Schema.Attribute.DateTime;
-    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-  };
-}
-
 export interface ApiExpertiseExpertise extends Struct.CollectionTypeSchema {
   collectionName: 'expertise_areas';
   info: {
-    displayName: 'Expertise';
+    displayName: 'About \u2013 Faculty Expertise';
     pluralName: 'expertises';
     singularName: 'expertise';
   };
@@ -1604,7 +1403,7 @@ export interface ApiFacultyProfileFacultyProfile
   extends Struct.CollectionTypeSchema {
   collectionName: 'faculty_profiles';
   info: {
-    displayName: 'Faculty Profile';
+    displayName: 'About \u2013 Faculty Profiles';
     pluralName: 'faculty-profiles';
     singularName: 'faculty-profile';
   };
@@ -1675,7 +1474,7 @@ export interface ApiFacultySettingFacultySetting
   extends Struct.SingleTypeSchema {
   collectionName: 'faculty_settings';
   info: {
-    displayName: 'Faculty Settings';
+    displayName: 'About \u2013 Faculty Page';
     pluralName: 'faculty-settings';
     singularName: 'faculty-setting';
   };
@@ -1726,7 +1525,7 @@ export interface ApiFacultySettingFacultySetting
 export interface ApiFeatureFeature extends Struct.CollectionTypeSchema {
   collectionName: 'features';
   info: {
-    displayName: 'Feature';
+    displayName: 'News & Notices \u2013 Features';
     pluralName: 'features';
     singularName: 'feature';
   };
@@ -1768,345 +1567,37 @@ export interface ApiFeatureFeature extends Struct.CollectionTypeSchema {
   };
 }
 
-export interface ApiGalleryContentGalleryContent
-  extends Struct.SingleTypeSchema {
-  collectionName: 'gallery_content';
+export interface ApiFooterFooter extends Struct.SingleTypeSchema {
+  collectionName: 'footer';
   info: {
-    displayName: 'Gallery Content';
-    pluralName: 'gallery-contents';
-    singularName: 'gallery-content';
-  };
-  options: {
-    draftAndPublish: false;
-  };
-  pluginOptions: {
-    i18n: {
-      localized: true;
-    };
-  };
-  attributes: {
-    createdAt: Schema.Attribute.DateTime;
-    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-    locale: Schema.Attribute.String;
-    localizations: Schema.Attribute.Relation<
-      'oneToMany',
-      'api::gallery-content.gallery-content'
-    >;
-    publishedAt: Schema.Attribute.DateTime;
-    subtitle: Schema.Attribute.Text &
-      Schema.Attribute.Required &
-      Schema.Attribute.SetPluginOptions<{
-        i18n: {
-          localized: true;
-        };
-      }>;
-    title: Schema.Attribute.String &
-      Schema.Attribute.Required &
-      Schema.Attribute.SetPluginOptions<{
-        i18n: {
-          localized: true;
-        };
-      }>;
-    updatedAt: Schema.Attribute.DateTime;
-    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-  };
-}
-
-export interface ApiGalleryImageGalleryImage
-  extends Struct.CollectionTypeSchema {
-  collectionName: 'gallery_images';
-  info: {
-    displayName: 'Gallery Image';
-    pluralName: 'gallery-images';
-    singularName: 'gallery-image';
-  };
-  options: {
-    draftAndPublish: false;
-  };
-  pluginOptions: {
-    i18n: {
-      localized: true;
-    };
-  };
-  attributes: {
-    caption: Schema.Attribute.String &
-      Schema.Attribute.SetPluginOptions<{
-        i18n: {
-          localized: true;
-        };
-      }>;
-    category: Schema.Attribute.Enumeration<
-      ['campus', 'academics', 'events', 'sports', 'culture']
-    > &
-      Schema.Attribute.DefaultTo<'campus'>;
-    createdAt: Schema.Attribute.DateTime;
-    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-    image: Schema.Attribute.Media<'images'> & Schema.Attribute.Required;
-    locale: Schema.Attribute.String;
-    localizations: Schema.Attribute.Relation<
-      'oneToMany',
-      'api::gallery-image.gallery-image'
-    >;
-    publishedAt: Schema.Attribute.DateTime;
-    sort_order: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
-    updatedAt: Schema.Attribute.DateTime;
-    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-  };
-}
-
-export interface ApiHeaderSettingHeaderSetting extends Struct.SingleTypeSchema {
-  collectionName: 'header_settings';
-  info: {
-    displayName: 'Header Settings';
-    pluralName: 'header-settings';
-    singularName: 'header-setting';
-  };
-  options: {
-    draftAndPublish: false;
-  };
-  pluginOptions: {
-    i18n: {
-      localized: true;
-    };
-  };
-  attributes: {
-    address: Schema.Attribute.Text;
-    college_name: Schema.Attribute.String &
-      Schema.Attribute.Required &
-      Schema.Attribute.SetPluginOptions<{
-        i18n: {
-          localized: true;
-        };
-      }>;
-    contact_email: Schema.Attribute.String;
-    contact_phone: Schema.Attribute.String;
-    createdAt: Schema.Attribute.DateTime;
-    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-    favicon: Schema.Attribute.Media<'images'>;
-    locale: Schema.Attribute.String;
-    localizations: Schema.Attribute.Relation<
-      'oneToMany',
-      'api::header-setting.header-setting'
-    >;
-    logo: Schema.Attribute.Media<'images'>;
-    motto: Schema.Attribute.String &
-      Schema.Attribute.SetPluginOptions<{
-        i18n: {
-          localized: true;
-        };
-      }>;
-    office_hours: Schema.Attribute.String;
-    publishedAt: Schema.Attribute.DateTime;
-    updatedAt: Schema.Attribute.DateTime;
-    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-  };
-}
-
-export interface ApiHeroContentHeroContent extends Struct.SingleTypeSchema {
-  collectionName: 'hero_content';
-  info: {
-    description: 'Homepage hero banner';
-    displayName: 'Hero Content';
-    pluralName: 'hero-contents';
-    singularName: 'hero-content';
-  };
-  options: {
-    draftAndPublish: false;
-  };
-  pluginOptions: {
-    i18n: {
-      localized: true;
-    };
-  };
-  attributes: {
-    background_type: Schema.Attribute.Enumeration<
-      ['gradient', 'image', 'video']
-    > &
-      Schema.Attribute.DefaultTo<'gradient'>;
-    createdAt: Schema.Attribute.DateTime;
-    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-    cta1_text: Schema.Attribute.String &
-      Schema.Attribute.SetPluginOptions<{
-        i18n: {
-          localized: true;
-        };
-      }>;
-    cta1_url: Schema.Attribute.String;
-    cta2_text: Schema.Attribute.String &
-      Schema.Attribute.SetPluginOptions<{
-        i18n: {
-          localized: true;
-        };
-      }>;
-    cta2_url: Schema.Attribute.String;
-    locale: Schema.Attribute.String;
-    localizations: Schema.Attribute.Relation<
-      'oneToMany',
-      'api::hero-content.hero-content'
-    >;
-    media: Schema.Attribute.Media<'images' | 'videos'>;
-    overlay_opacity: Schema.Attribute.Integer &
-      Schema.Attribute.SetMinMax<
-        {
-          max: 100;
-          min: 0;
-        },
-        number
-      > &
-      Schema.Attribute.DefaultTo<55>;
-    overlay_style: Schema.Attribute.Enumeration<['maroon', 'dark', 'light']> &
-      Schema.Attribute.DefaultTo<'maroon'>;
-    publishedAt: Schema.Attribute.DateTime;
-    subtitle: Schema.Attribute.Text &
-      Schema.Attribute.Required &
-      Schema.Attribute.SetPluginOptions<{
-        i18n: {
-          localized: true;
-        };
-      }>;
-    title: Schema.Attribute.String &
-      Schema.Attribute.Required &
-      Schema.Attribute.SetPluginOptions<{
-        i18n: {
-          localized: true;
-        };
-      }>;
-    updatedAt: Schema.Attribute.DateTime;
-    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-  };
-}
-
-export interface ApiHeroItemHeroItem extends Struct.CollectionTypeSchema {
-  collectionName: 'hero_items';
-  info: {
-    displayName: 'Hero Item';
-    pluralName: 'hero-items';
-    singularName: 'hero-item';
-  };
-  options: {
-    draftAndPublish: false;
-  };
-  pluginOptions: {
-    i18n: {
-      localized: true;
-    };
-  };
-  attributes: {
-    createdAt: Schema.Attribute.DateTime;
-    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-    icon: Schema.Attribute.String & Schema.Attribute.Required;
-    item_type: Schema.Attribute.Enumeration<['stat', 'badge']> &
-      Schema.Attribute.Required;
-    label: Schema.Attribute.String &
-      Schema.Attribute.Required &
-      Schema.Attribute.SetPluginOptions<{
-        i18n: {
-          localized: true;
-        };
-      }>;
-    locale: Schema.Attribute.String;
-    localizations: Schema.Attribute.Relation<
-      'oneToMany',
-      'api::hero-item.hero-item'
-    >;
-    publishedAt: Schema.Attribute.DateTime;
-    sort_order: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
-    suffix: Schema.Attribute.String;
-    updatedAt: Schema.Attribute.DateTime;
-    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-    value: Schema.Attribute.String;
-  };
-}
-
-export interface ApiHighlightsContentHighlightsContent
-  extends Struct.SingleTypeSchema {
-  collectionName: 'highlights_content';
-  info: {
-    displayName: 'Highlights Content';
-    pluralName: 'highlights-contents';
-    singularName: 'highlights-content';
+    displayName: 'Global \u2013 Footer';
+    pluralName: 'footers';
+    singularName: 'footer';
   };
   options: {
     draftAndPublish: false;
   };
   attributes: {
+    bottom_links: Schema.Attribute.Component<'shared.link-item', true>;
+    contact_heading: Schema.Attribute.String &
+      Schema.Attribute.DefaultTo<'Contact'>;
+    copyright_text: Schema.Attribute.String;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    link_groups: Schema.Attribute.Component<'shared.link-group', true>;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
-      'api::highlights-content.highlights-content'
+      'api::footer.footer'
     > &
       Schema.Attribute.Private;
+    map_image: Schema.Attribute.Media<'images'>;
+    map_label: Schema.Attribute.String;
+    map_url: Schema.Attribute.String;
+    motto: Schema.Attribute.String;
     publishedAt: Schema.Attribute.DateTime;
-    subtitle: Schema.Attribute.Text & Schema.Attribute.Required;
-    title: Schema.Attribute.String & Schema.Attribute.Required;
-    updatedAt: Schema.Attribute.DateTime;
-    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-  };
-}
-
-export interface ApiHighlightsItemHighlightsItem
-  extends Struct.CollectionTypeSchema {
-  collectionName: 'highlights_items';
-  info: {
-    displayName: 'Highlights Item';
-    pluralName: 'highlights-items';
-    singularName: 'highlights-item';
-  };
-  options: {
-    draftAndPublish: false;
-  };
-  pluginOptions: {
-    i18n: {
-      localized: true;
-    };
-  };
-  attributes: {
-    button_text: Schema.Attribute.String &
-      Schema.Attribute.SetPluginOptions<{
-        i18n: {
-          localized: true;
-        };
-      }>;
-    button_url: Schema.Attribute.String;
-    createdAt: Schema.Attribute.DateTime;
-    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-    description: Schema.Attribute.Text &
-      Schema.Attribute.Required &
-      Schema.Attribute.SetPluginOptions<{
-        i18n: {
-          localized: true;
-        };
-      }>;
-    icon: Schema.Attribute.String & Schema.Attribute.Required;
-    locale: Schema.Attribute.String;
-    localizations: Schema.Attribute.Relation<
-      'oneToMany',
-      'api::highlights-item.highlights-item'
-    >;
-    publishedAt: Schema.Attribute.DateTime;
-    sort_order: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
-    title: Schema.Attribute.String &
-      Schema.Attribute.Required &
-      Schema.Attribute.SetPluginOptions<{
-        i18n: {
-          localized: true;
-        };
-      }>;
+    tagline: Schema.Attribute.Text;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -2117,7 +1608,7 @@ export interface ApiHistoryContentHistoryContent
   extends Struct.SingleTypeSchema {
   collectionName: 'history_content';
   info: {
-    displayName: 'History Content';
+    displayName: 'About \u2013 History Page';
     pluralName: 'history-contents';
     singularName: 'history-content';
   };
@@ -2234,7 +1725,7 @@ export interface ApiHistoryGalleryImageHistoryGalleryImage
   extends Struct.CollectionTypeSchema {
   collectionName: 'history_gallery_images';
   info: {
-    displayName: 'History Gallery Image';
+    displayName: 'About \u2013 History Gallery';
     pluralName: 'history-gallery-images';
     singularName: 'history-gallery-image';
   };
@@ -2285,7 +1776,7 @@ export interface ApiHistoryLegacyItemHistoryLegacyItem
   extends Struct.CollectionTypeSchema {
   collectionName: 'history_legacy_items';
   info: {
-    displayName: 'History Legacy Item';
+    displayName: 'About \u2013 History Legacy';
     pluralName: 'history-legacy-items';
     singularName: 'history-legacy-item';
   };
@@ -2326,7 +1817,7 @@ export interface ApiHistoryTimelineItemHistoryTimelineItem
   extends Struct.CollectionTypeSchema {
   collectionName: 'history_timeline_items';
   info: {
-    displayName: 'History Timeline Item';
+    displayName: 'About \u2013 History Timeline';
     pluralName: 'history-timeline-items';
     singularName: 'history-timeline-item';
   };
@@ -2373,7 +1864,7 @@ export interface ApiHistoryTraditionItemHistoryTraditionItem
   extends Struct.CollectionTypeSchema {
   collectionName: 'history_tradition_items';
   info: {
-    displayName: 'History Tradition Item';
+    displayName: 'About \u2013 History Traditions';
     pluralName: 'history-tradition-items';
     singularName: 'history-tradition-item';
   };
@@ -2416,56 +1907,10 @@ export interface ApiHistoryTraditionItemHistoryTraditionItem
   };
 }
 
-export interface ApiHomepageSectionHomepageSection
-  extends Struct.CollectionTypeSchema {
-  collectionName: 'homepage_sections';
-  info: {
-    displayName: 'Homepage Section';
-    pluralName: 'homepage-sections';
-    singularName: 'homepage-section';
-  };
-  options: {
-    draftAndPublish: false;
-  };
-  pluginOptions: {
-    i18n: {
-      localized: true;
-    };
-  };
-  attributes: {
-    createdAt: Schema.Attribute.DateTime;
-    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-    is_enabled: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
-    label: Schema.Attribute.String &
-      Schema.Attribute.Required &
-      Schema.Attribute.SetPluginOptions<{
-        i18n: {
-          localized: true;
-        };
-      }>;
-    locale: Schema.Attribute.String;
-    localizations: Schema.Attribute.Relation<
-      'oneToMany',
-      'api::homepage-section.homepage-section'
-    >;
-    publish_at: Schema.Attribute.DateTime;
-    publishedAt: Schema.Attribute.DateTime;
-    section_key: Schema.Attribute.String &
-      Schema.Attribute.Required &
-      Schema.Attribute.Unique;
-    sort_order: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
-    unpublish_at: Schema.Attribute.DateTime;
-    updatedAt: Schema.Attribute.DateTime;
-    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-  };
-}
-
 export interface ApiHomepageHomepage extends Struct.SingleTypeSchema {
   collectionName: 'homepage';
   info: {
-    displayName: 'Homepage';
+    displayName: 'Home \u2013 Page';
     pluralName: 'homepages';
     singularName: 'homepage';
   };
@@ -2506,7 +1951,7 @@ export interface ApiLeadershipMemberLeadershipMember
   extends Struct.CollectionTypeSchema {
   collectionName: 'leadership_members';
   info: {
-    displayName: 'Leadership Member';
+    displayName: 'About \u2013 Leadership';
     pluralName: 'leadership-members';
     singularName: 'leadership-member';
   };
@@ -2539,62 +1984,10 @@ export interface ApiLeadershipMemberLeadershipMember
   };
 }
 
-export interface ApiMenuItemMenuItem extends Struct.CollectionTypeSchema {
-  collectionName: 'menu_items';
-  info: {
-    displayName: 'Menu Item';
-    pluralName: 'menu-items';
-    singularName: 'menu-item';
-  };
-  options: {
-    draftAndPublish: false;
-  };
-  pluginOptions: {
-    i18n: {
-      localized: true;
-    };
-  };
-  attributes: {
-    children: Schema.Attribute.Relation<
-      'oneToMany',
-      'api::menu-item.menu-item'
-    >;
-    createdAt: Schema.Attribute.DateTime;
-    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-    icon: Schema.Attribute.String;
-    is_active: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
-    is_external: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
-    is_mega_menu: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
-    locale: Schema.Attribute.String;
-    localizations: Schema.Attribute.Relation<
-      'oneToMany',
-      'api::menu-item.menu-item'
-    >;
-    mega_menu_content: Schema.Attribute.Text;
-    menu_order: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
-    parent: Schema.Attribute.Relation<'manyToOne', 'api::menu-item.menu-item'>;
-    publishedAt: Schema.Attribute.DateTime;
-    roles: Schema.Attribute.Text;
-    target: Schema.Attribute.String & Schema.Attribute.DefaultTo<'_self'>;
-    title: Schema.Attribute.String &
-      Schema.Attribute.Required &
-      Schema.Attribute.SetPluginOptions<{
-        i18n: {
-          localized: true;
-        };
-      }>;
-    updatedAt: Schema.Attribute.DateTime;
-    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-    url: Schema.Attribute.String;
-  };
-}
-
 export interface ApiNavigationNavigation extends Struct.SingleTypeSchema {
   collectionName: 'navigation';
   info: {
-    displayName: 'Navigation';
+    displayName: 'Global \u2013 Header & Navigation';
     pluralName: 'navigations';
     singularName: 'navigation';
   };
@@ -2611,87 +2004,52 @@ export interface ApiNavigationNavigation extends Struct.SingleTypeSchema {
       'api::navigation.navigation'
     > &
       Schema.Attribute.Private;
+    logo: Schema.Attribute.Media<'images'>;
+    logo_alt: Schema.Attribute.String &
+      Schema.Attribute.DefaultTo<'Sherubtse College'>;
     menu: Schema.Attribute.Component<'navigation.nav-item', true>;
+    menu_button_label: Schema.Attribute.String &
+      Schema.Attribute.DefaultTo<'Menu'>;
     publishedAt: Schema.Attribute.DateTime;
+    search_placeholder: Schema.Attribute.String &
+      Schema.Attribute.DefaultTo<'Search'>;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
   };
 }
 
-export interface ApiNewsContentNewsContent extends Struct.SingleTypeSchema {
-  collectionName: 'news_content';
+export interface ApiNewsNoticesOverviewNewsNoticesOverview
+  extends Struct.SingleTypeSchema {
+  collectionName: 'news_notices_overview';
   info: {
-    displayName: 'News Content';
-    pluralName: 'news-contents';
-    singularName: 'news-content';
+    displayName: 'News & Notices \u2013 Overview';
+    pluralName: 'news-notices-overviews';
+    singularName: 'news-notices-overview';
   };
   options: {
     draftAndPublish: false;
   };
   attributes: {
+    cards: Schema.Attribute.Component<'shared.landing-card', true>;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    eyebrow: Schema.Attribute.String;
+    featured: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
+    heading: Schema.Attribute.String & Schema.Attribute.Required;
+    intro: Schema.Attribute.Text & Schema.Attribute.Required;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
-      'api::news-content.news-content'
+      'api::news-notices-overview.news-notices-overview'
     > &
       Schema.Attribute.Private;
     publishedAt: Schema.Attribute.DateTime;
-    subtitle: Schema.Attribute.Text & Schema.Attribute.Required;
-    title: Schema.Attribute.String & Schema.Attribute.Required;
-    updatedAt: Schema.Attribute.DateTime;
-    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-  };
-}
-
-export interface ApiNewsItemNewsItem extends Struct.CollectionTypeSchema {
-  collectionName: 'news_items';
-  info: {
-    displayName: 'News Item';
-    pluralName: 'news-items';
-    singularName: 'news-item';
-  };
-  options: {
-    draftAndPublish: false;
-  };
-  pluginOptions: {
-    i18n: {
-      localized: true;
-    };
-  };
-  attributes: {
-    button_url: Schema.Attribute.String;
-    category: Schema.Attribute.String;
-    createdAt: Schema.Attribute.DateTime;
-    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-    image: Schema.Attribute.Media<'images'>;
-    locale: Schema.Attribute.String;
-    localizations: Schema.Attribute.Relation<
-      'oneToMany',
-      'api::news-item.news-item'
+    sections: Schema.Attribute.DynamicZone<
+      ['sections.rich-text', 'sections.image-text', 'sections.call-to-action']
     >;
-    published_date: Schema.Attribute.Date & Schema.Attribute.Required;
-    publishedAt: Schema.Attribute.DateTime;
-    sort_order: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
-    summary: Schema.Attribute.Text &
-      Schema.Attribute.Required &
-      Schema.Attribute.SetPluginOptions<{
-        i18n: {
-          localized: true;
-        };
-      }>;
-    title: Schema.Attribute.String &
-      Schema.Attribute.Required &
-      Schema.Attribute.SetPluginOptions<{
-        i18n: {
-          localized: true;
-        };
-      }>;
+    seo: Schema.Attribute.Component<'shared.seo', false>;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -2701,7 +2059,7 @@ export interface ApiNewsItemNewsItem extends Struct.CollectionTypeSchema {
 export interface ApiNewsNews extends Struct.CollectionTypeSchema {
   collectionName: 'news_entries';
   info: {
-    displayName: 'News';
+    displayName: 'News & Notices \u2013 News';
     pluralName: 'news-entries';
     singularName: 'news';
   };
@@ -2740,7 +2098,7 @@ export interface ApiNewsletterSubscriberNewsletterSubscriber
   extends Struct.CollectionTypeSchema {
   collectionName: 'newsletter_subscribers';
   info: {
-    displayName: 'Newsletter Subscriber';
+    displayName: 'Newsletter \u2013 Subscribers';
     pluralName: 'newsletter-subscribers';
     singularName: 'newsletter-subscriber';
   };
@@ -2772,7 +2130,7 @@ export interface ApiNewsletterTopicNewsletterTopic
   extends Struct.CollectionTypeSchema {
   collectionName: 'newsletter_topics_list';
   info: {
-    displayName: 'Newsletter Topic';
+    displayName: 'Newsletter \u2013 Topics';
     pluralName: 'newsletter-topics';
     singularName: 'newsletter-topic';
   };
@@ -2802,7 +2160,7 @@ export interface ApiNewsletterTopicNewsletterTopic
 export interface ApiNewsletterNewsletter extends Struct.CollectionTypeSchema {
   collectionName: 'newsletters';
   info: {
-    displayName: 'Newsletter';
+    displayName: 'Newsletter \u2013 Editions';
     pluralName: 'newsletters';
     singularName: 'newsletter';
   };
@@ -2868,7 +2226,7 @@ export interface ApiNewsletterNewsletter extends Struct.CollectionTypeSchema {
 export interface ApiNoticeNotice extends Struct.CollectionTypeSchema {
   collectionName: 'notices';
   info: {
-    displayName: 'Notice';
+    displayName: 'News & Notices \u2013 Notices';
     pluralName: 'notices';
     singularName: 'notice';
   };
@@ -2916,7 +2274,7 @@ export interface ApiNoticeNotice extends Struct.CollectionTypeSchema {
 export interface ApiPagePage extends Struct.CollectionTypeSchema {
   collectionName: 'pages';
   info: {
-    displayName: 'Page';
+    displayName: 'About \u2013 Text Pages';
     pluralName: 'pages';
     singularName: 'page';
   };
@@ -2947,82 +2305,10 @@ export interface ApiPagePage extends Struct.CollectionTypeSchema {
   };
 }
 
-export interface ApiPartnersContentPartnersContent
-  extends Struct.SingleTypeSchema {
-  collectionName: 'partners_content';
-  info: {
-    displayName: 'Partners Content';
-    pluralName: 'partners-contents';
-    singularName: 'partners-content';
-  };
-  options: {
-    draftAndPublish: false;
-  };
-  attributes: {
-    createdAt: Schema.Attribute.DateTime;
-    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-    locale: Schema.Attribute.String & Schema.Attribute.Private;
-    localizations: Schema.Attribute.Relation<
-      'oneToMany',
-      'api::partners-content.partners-content'
-    > &
-      Schema.Attribute.Private;
-    publishedAt: Schema.Attribute.DateTime;
-    subtitle: Schema.Attribute.Text & Schema.Attribute.Required;
-    title: Schema.Attribute.String & Schema.Attribute.Required;
-    updatedAt: Schema.Attribute.DateTime;
-    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-  };
-}
-
-export interface ApiPartnersItemPartnersItem
-  extends Struct.CollectionTypeSchema {
-  collectionName: 'partners_items';
-  info: {
-    displayName: 'Partners Item';
-    pluralName: 'partners-items';
-    singularName: 'partners-item';
-  };
-  options: {
-    draftAndPublish: false;
-  };
-  pluginOptions: {
-    i18n: {
-      localized: true;
-    };
-  };
-  attributes: {
-    createdAt: Schema.Attribute.DateTime;
-    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-    locale: Schema.Attribute.String;
-    localizations: Schema.Attribute.Relation<
-      'oneToMany',
-      'api::partners-item.partners-item'
-    >;
-    logo: Schema.Attribute.Media<'images'> & Schema.Attribute.Required;
-    name: Schema.Attribute.String &
-      Schema.Attribute.Required &
-      Schema.Attribute.SetPluginOptions<{
-        i18n: {
-          localized: true;
-        };
-      }>;
-    publishedAt: Schema.Attribute.DateTime;
-    sort_order: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
-    updatedAt: Schema.Attribute.DateTime;
-    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-    url: Schema.Attribute.String;
-  };
-}
-
 export interface ApiPersonPerson extends Struct.CollectionTypeSchema {
   collectionName: 'people';
   info: {
-    displayName: 'Person';
+    displayName: 'About \u2013 People Directory';
     pluralName: 'people';
     singularName: 'person';
   };
@@ -3073,110 +2359,10 @@ export interface ApiPersonPerson extends Struct.CollectionTypeSchema {
   };
 }
 
-export interface ApiPresidentContentPresidentContent
-  extends Struct.SingleTypeSchema {
-  collectionName: 'president_content';
-  info: {
-    displayName: 'President Content';
-    pluralName: 'president-contents';
-    singularName: 'president-content';
-  };
-  options: {
-    draftAndPublish: false;
-  };
-  pluginOptions: {
-    i18n: {
-      localized: true;
-    };
-  };
-  attributes: {
-    button_text: Schema.Attribute.String &
-      Schema.Attribute.SetPluginOptions<{
-        i18n: {
-          localized: true;
-        };
-      }> &
-      Schema.Attribute.DefaultTo<'Read Full Message'>;
-    button_url: Schema.Attribute.String &
-      Schema.Attribute.DefaultTo<'/about/president'>;
-    createdAt: Schema.Attribute.DateTime;
-    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-    locale: Schema.Attribute.String;
-    localizations: Schema.Attribute.Relation<
-      'oneToMany',
-      'api::president-content.president-content'
-    >;
-    message: Schema.Attribute.Text &
-      Schema.Attribute.Required &
-      Schema.Attribute.SetPluginOptions<{
-        i18n: {
-          localized: true;
-        };
-      }>;
-    name: Schema.Attribute.String &
-      Schema.Attribute.Required &
-      Schema.Attribute.SetPluginOptions<{
-        i18n: {
-          localized: true;
-        };
-      }>;
-    photo: Schema.Attribute.Media<'images'>;
-    position: Schema.Attribute.String &
-      Schema.Attribute.Required &
-      Schema.Attribute.SetPluginOptions<{
-        i18n: {
-          localized: true;
-        };
-      }>;
-    publishedAt: Schema.Attribute.DateTime;
-    signature: Schema.Attribute.Media<'images'>;
-    updatedAt: Schema.Attribute.DateTime;
-    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-  };
-}
-
-export interface ApiProgrammeTimetableProgrammeTimetable
-  extends Struct.CollectionTypeSchema {
-  collectionName: 'programme_timetables';
-  info: {
-    displayName: 'Programme Timetable';
-    pluralName: 'programme-timetables';
-    singularName: 'programme-timetable';
-  };
-  options: {
-    draftAndPublish: false;
-  };
-  attributes: {
-    createdAt: Schema.Attribute.DateTime;
-    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-    locale: Schema.Attribute.String & Schema.Attribute.Private;
-    localizations: Schema.Attribute.Relation<
-      'oneToMany',
-      'api::programme-timetable.programme-timetable'
-    > &
-      Schema.Attribute.Private;
-    programme: Schema.Attribute.Relation<
-      'manyToOne',
-      'api::programme.programme'
-    > &
-      Schema.Attribute.Required;
-    publishedAt: Schema.Attribute.DateTime;
-    semester: Schema.Attribute.String & Schema.Attribute.Required;
-    timetable_file: Schema.Attribute.Media<'files'>;
-    updatedAt: Schema.Attribute.DateTime;
-    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-    year: Schema.Attribute.String & Schema.Attribute.Required;
-  };
-}
-
 export interface ApiProgrammeProgramme extends Struct.CollectionTypeSchema {
   collectionName: 'programmes';
   info: {
-    displayName: 'Programme';
+    displayName: 'Academics \u2013 Programmes';
     pluralName: 'programmes';
     singularName: 'programme';
   };
@@ -3237,46 +2423,10 @@ export interface ApiProgrammeProgramme extends Struct.CollectionTypeSchema {
   };
 }
 
-export interface ApiReassessmentTimetableReassessmentTimetable
-  extends Struct.CollectionTypeSchema {
-  collectionName: 'reassessment_timetables';
-  info: {
-    displayName: 'Reassessment Timetable';
-    pluralName: 'reassessment-timetables';
-    singularName: 'reassessment-timetable';
-  };
-  options: {
-    draftAndPublish: false;
-  };
-  attributes: {
-    createdAt: Schema.Attribute.DateTime;
-    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-    document: Schema.Attribute.Media<'files'>;
-    locale: Schema.Attribute.String & Schema.Attribute.Private;
-    localizations: Schema.Attribute.Relation<
-      'oneToMany',
-      'api::reassessment-timetable.reassessment-timetable'
-    > &
-      Schema.Attribute.Private;
-    programme: Schema.Attribute.Relation<
-      'manyToOne',
-      'api::programme.programme'
-    >;
-    published_date: Schema.Attribute.Date;
-    publishedAt: Schema.Attribute.DateTime;
-    semester: Schema.Attribute.String;
-    title: Schema.Attribute.String & Schema.Attribute.Required;
-    updatedAt: Schema.Attribute.DateTime;
-    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-  };
-}
-
 export interface ApiRecruitmentRecruitment extends Struct.CollectionTypeSchema {
   collectionName: 'recruitments';
   info: {
-    displayName: 'Recruitment';
+    displayName: 'News & Notices \u2013 Recruitment';
     pluralName: 'recruitments';
     singularName: 'recruitment';
   };
@@ -3332,7 +2482,7 @@ export interface ApiResearchCentreResearchCentre
   extends Struct.CollectionTypeSchema {
   collectionName: 'research_centres';
   info: {
-    displayName: 'Research Centre';
+    displayName: 'Research \u2013 Centres';
     pluralName: 'research-centres';
     singularName: 'research-centre';
   };
@@ -3374,80 +2524,37 @@ export interface ApiResearchCentreResearchCentre
   };
 }
 
-export interface ApiResearchContentResearchContent
+export interface ApiResearchOverviewResearchOverview
   extends Struct.SingleTypeSchema {
-  collectionName: 'research_content';
+  collectionName: 'research_overview';
   info: {
-    displayName: 'Research Content';
-    pluralName: 'research-contents';
-    singularName: 'research-content';
+    displayName: 'Research \u2013 Overview';
+    pluralName: 'research-overviews';
+    singularName: 'research-overview';
   };
   options: {
     draftAndPublish: false;
   };
   attributes: {
+    cards: Schema.Attribute.Component<'shared.landing-card', true>;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    eyebrow: Schema.Attribute.String;
+    featured: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
+    heading: Schema.Attribute.String & Schema.Attribute.Required;
+    intro: Schema.Attribute.Text & Schema.Attribute.Required;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
-      'api::research-content.research-content'
+      'api::research-overview.research-overview'
     > &
       Schema.Attribute.Private;
     publishedAt: Schema.Attribute.DateTime;
-    subtitle: Schema.Attribute.Text & Schema.Attribute.Required;
-    title: Schema.Attribute.String & Schema.Attribute.Required;
-    updatedAt: Schema.Attribute.DateTime;
-    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-  };
-}
-
-export interface ApiResearchItemResearchItem
-  extends Struct.CollectionTypeSchema {
-  collectionName: 'research_items';
-  info: {
-    displayName: 'Research Item';
-    pluralName: 'research-items';
-    singularName: 'research-item';
-  };
-  options: {
-    draftAndPublish: false;
-  };
-  pluginOptions: {
-    i18n: {
-      localized: true;
-    };
-  };
-  attributes: {
-    category: Schema.Attribute.String;
-    createdAt: Schema.Attribute.DateTime;
-    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-    description: Schema.Attribute.Text &
-      Schema.Attribute.Required &
-      Schema.Attribute.SetPluginOptions<{
-        i18n: {
-          localized: true;
-        };
-      }>;
-    icon: Schema.Attribute.String & Schema.Attribute.Required;
-    link_url: Schema.Attribute.String;
-    locale: Schema.Attribute.String;
-    localizations: Schema.Attribute.Relation<
-      'oneToMany',
-      'api::research-item.research-item'
+    sections: Schema.Attribute.DynamicZone<
+      ['sections.rich-text', 'sections.image-text', 'sections.call-to-action']
     >;
-    publishedAt: Schema.Attribute.DateTime;
-    sort_order: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
-    title: Schema.Attribute.String &
-      Schema.Attribute.Required &
-      Schema.Attribute.SetPluginOptions<{
-        i18n: {
-          localized: true;
-        };
-      }>;
+    seo: Schema.Attribute.Component<'shared.seo', false>;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -3458,7 +2565,7 @@ export interface ApiResearchPublicationResearchPublication
   extends Struct.CollectionTypeSchema {
   collectionName: 'research_publications';
   info: {
-    displayName: 'Research Publication';
+    displayName: 'Research \u2013 Publications';
     pluralName: 'research-publications';
     singularName: 'research-publication';
   };
@@ -3496,7 +2603,7 @@ export interface ApiResearchPublicationResearchPublication
 export interface ApiSiteSettingsSiteSettings extends Struct.SingleTypeSchema {
   collectionName: 'site_settings';
   info: {
-    displayName: 'Site Settings';
+    displayName: 'Global \u2013 Site Settings';
     pluralName: 'site-settings-collection';
     singularName: 'site-settings';
   };
@@ -3508,6 +2615,8 @@ export interface ApiSiteSettingsSiteSettings extends Struct.SingleTypeSchema {
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    default_meta_description: Schema.Attribute.Text;
+    default_og_image: Schema.Attribute.Media<'images'>;
     footer_link_groups: Schema.Attribute.Component<'shared.link-group', true>;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
@@ -3518,6 +2627,10 @@ export interface ApiSiteSettingsSiteSettings extends Struct.SingleTypeSchema {
     official_emails: Schema.Attribute.JSON;
     phones: Schema.Attribute.JSON;
     publishedAt: Schema.Attribute.DateTime;
+    site_name: Schema.Attribute.String &
+      Schema.Attribute.DefaultTo<'Sherubtse College'>;
+    site_tagline: Schema.Attribute.String;
+    social_links: Schema.Attribute.Component<'shared.social-link', true>;
     subdomain_links: Schema.Attribute.Component<'shared.link-item', true>;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
@@ -3525,308 +2638,47 @@ export interface ApiSiteSettingsSiteSettings extends Struct.SingleTypeSchema {
   };
 }
 
-export interface ApiSocialLinkSocialLink extends Struct.CollectionTypeSchema {
-  collectionName: 'social_links';
-  info: {
-    displayName: 'Social Link';
-    pluralName: 'social-links';
-    singularName: 'social-link';
-  };
-  options: {
-    draftAndPublish: false;
-  };
-  attributes: {
-    createdAt: Schema.Attribute.DateTime;
-    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-    display_order: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
-    is_active: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
-    locale: Schema.Attribute.String & Schema.Attribute.Private;
-    localizations: Schema.Attribute.Relation<
-      'oneToMany',
-      'api::social-link.social-link'
-    > &
-      Schema.Attribute.Private;
-    platform: Schema.Attribute.String & Schema.Attribute.Required;
-    platform_icon: Schema.Attribute.String;
-    publishedAt: Schema.Attribute.DateTime;
-    updatedAt: Schema.Attribute.DateTime;
-    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-    url: Schema.Attribute.String & Schema.Attribute.Required;
-  };
-}
-
-export interface ApiStatisticsContentStatisticsContent
+export interface ApiStudentLifeOverviewStudentLifeOverview
   extends Struct.SingleTypeSchema {
-  collectionName: 'statistics_content';
+  collectionName: 'student_life_overview';
   info: {
-    displayName: 'Statistics Content';
-    pluralName: 'statistics-contents';
-    singularName: 'statistics-content';
+    displayName: 'Student Life \u2013 Overview';
+    pluralName: 'student-life-overviews';
+    singularName: 'student-life-overview';
   };
   options: {
     draftAndPublish: false;
   };
   attributes: {
+    cards: Schema.Attribute.Component<'shared.landing-card', true>;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    eyebrow: Schema.Attribute.String;
+    featured: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
+    heading: Schema.Attribute.String & Schema.Attribute.Required;
+    intro: Schema.Attribute.Text & Schema.Attribute.Required;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
-      'api::statistics-content.statistics-content'
+      'api::student-life-overview.student-life-overview'
     > &
       Schema.Attribute.Private;
     publishedAt: Schema.Attribute.DateTime;
-    subtitle: Schema.Attribute.Text & Schema.Attribute.Required;
-    title: Schema.Attribute.String & Schema.Attribute.Required;
-    updatedAt: Schema.Attribute.DateTime;
-    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-  };
-}
-
-export interface ApiStatisticsItemStatisticsItem
-  extends Struct.CollectionTypeSchema {
-  collectionName: 'statistics_items';
-  info: {
-    displayName: 'Statistics Item';
-    pluralName: 'statistics-items';
-    singularName: 'statistics-item';
-  };
-  options: {
-    draftAndPublish: false;
-  };
-  pluginOptions: {
-    i18n: {
-      localized: true;
-    };
-  };
-  attributes: {
-    createdAt: Schema.Attribute.DateTime;
-    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-    icon: Schema.Attribute.String & Schema.Attribute.Required;
-    label: Schema.Attribute.String &
-      Schema.Attribute.Required &
-      Schema.Attribute.SetPluginOptions<{
-        i18n: {
-          localized: true;
-        };
-      }>;
-    locale: Schema.Attribute.String;
-    localizations: Schema.Attribute.Relation<
-      'oneToMany',
-      'api::statistics-item.statistics-item'
+    sections: Schema.Attribute.DynamicZone<
+      ['sections.rich-text', 'sections.image-text', 'sections.call-to-action']
     >;
-    publishedAt: Schema.Attribute.DateTime;
-    sort_order: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
-    suffix: Schema.Attribute.String;
+    seo: Schema.Attribute.Component<'shared.seo', false>;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
-    value: Schema.Attribute.String & Schema.Attribute.Required;
-  };
-}
-
-export interface ApiTestimonialsContentTestimonialsContent
-  extends Struct.SingleTypeSchema {
-  collectionName: 'testimonials_content';
-  info: {
-    displayName: 'Testimonials Content';
-    pluralName: 'testimonials-contents';
-    singularName: 'testimonials-content';
-  };
-  options: {
-    draftAndPublish: false;
-  };
-  attributes: {
-    createdAt: Schema.Attribute.DateTime;
-    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-    locale: Schema.Attribute.String & Schema.Attribute.Private;
-    localizations: Schema.Attribute.Relation<
-      'oneToMany',
-      'api::testimonials-content.testimonials-content'
-    > &
-      Schema.Attribute.Private;
-    publishedAt: Schema.Attribute.DateTime;
-    subtitle: Schema.Attribute.Text & Schema.Attribute.Required;
-    title: Schema.Attribute.String & Schema.Attribute.Required;
-    updatedAt: Schema.Attribute.DateTime;
-    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-  };
-}
-
-export interface ApiTestimonialsItemTestimonialsItem
-  extends Struct.CollectionTypeSchema {
-  collectionName: 'testimonials_items';
-  info: {
-    displayName: 'Testimonials Item';
-    pluralName: 'testimonials-items';
-    singularName: 'testimonials-item';
-  };
-  options: {
-    draftAndPublish: false;
-  };
-  pluginOptions: {
-    i18n: {
-      localized: true;
-    };
-  };
-  attributes: {
-    createdAt: Schema.Attribute.DateTime;
-    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-    locale: Schema.Attribute.String;
-    localizations: Schema.Attribute.Relation<
-      'oneToMany',
-      'api::testimonials-item.testimonials-item'
-    >;
-    name: Schema.Attribute.String & Schema.Attribute.Required;
-    photo: Schema.Attribute.Media<'images'>;
-    publishedAt: Schema.Attribute.DateTime;
-    quote: Schema.Attribute.Text &
-      Schema.Attribute.Required &
-      Schema.Attribute.SetPluginOptions<{
-        i18n: {
-          localized: true;
-        };
-      }>;
-    rating: Schema.Attribute.Integer &
-      Schema.Attribute.SetMinMax<
-        {
-          max: 5;
-          min: 1;
-        },
-        number
-      >;
-    role: Schema.Attribute.Enumeration<
-      ['student', 'faculty', 'alumni', 'industry']
-    > &
-      Schema.Attribute.DefaultTo<'student'>;
-    sort_order: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
-    updatedAt: Schema.Attribute.DateTime;
-    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-  };
-}
-
-export interface ApiThemeSettingThemeSetting extends Struct.SingleTypeSchema {
-  collectionName: 'theme_settings';
-  info: {
-    displayName: 'Theme Settings';
-    pluralName: 'theme-settings';
-    singularName: 'theme-setting';
-  };
-  options: {
-    draftAndPublish: false;
-  };
-  attributes: {
-    animation_speed: Schema.Attribute.String;
-    animations_enabled: Schema.Attribute.Boolean &
-      Schema.Attribute.DefaultTo<true>;
-    color_accent: Schema.Attribute.String;
-    color_accent_light: Schema.Attribute.String;
-    color_background: Schema.Attribute.String;
-    color_background_alt: Schema.Attribute.String;
-    color_border: Schema.Attribute.String;
-    color_button_text: Schema.Attribute.String;
-    color_card: Schema.Attribute.String;
-    color_hover: Schema.Attribute.String;
-    color_primary: Schema.Attribute.String;
-    color_secondary: Schema.Attribute.String;
-    color_text: Schema.Attribute.String;
-    color_text_soft: Schema.Attribute.String;
-    container_width: Schema.Attribute.Integer;
-    createdAt: Schema.Attribute.DateTime;
-    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-    dark_background: Schema.Attribute.String;
-    dark_background_alt: Schema.Attribute.String;
-    dark_card: Schema.Attribute.String;
-    dark_text: Schema.Attribute.String;
-    dark_text_soft: Schema.Attribute.String;
-    font_body: Schema.Attribute.String;
-    font_heading: Schema.Attribute.String;
-    gradient_end: Schema.Attribute.String;
-    gradient_start: Schema.Attribute.String;
-    hero_overlay_color: Schema.Attribute.String;
-    hero_overlay_opacity: Schema.Attribute.Integer;
-    locale: Schema.Attribute.String & Schema.Attribute.Private;
-    localizations: Schema.Attribute.Relation<
-      'oneToMany',
-      'api::theme-setting.theme-setting'
-    > &
-      Schema.Attribute.Private;
-    publishedAt: Schema.Attribute.DateTime;
-    radius_button: Schema.Attribute.Integer;
-    radius_card: Schema.Attribute.Integer;
-    shadow_style: Schema.Attribute.String;
-    spacing_scale: Schema.Attribute.String;
-    updatedAt: Schema.Attribute.DateTime;
-    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-  };
-}
-
-export interface ApiUiStringUiString extends Struct.CollectionTypeSchema {
-  collectionName: 'ui_strings';
-  info: {
-    displayName: 'UI String';
-    pluralName: 'ui-strings';
-    singularName: 'ui-string';
-  };
-  options: {
-    draftAndPublish: false;
-  };
-  pluginOptions: {
-    i18n: {
-      localized: true;
-    };
-  };
-  attributes: {
-    createdAt: Schema.Attribute.DateTime;
-    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-    group_name: Schema.Attribute.String &
-      Schema.Attribute.SetPluginOptions<{
-        i18n: {
-          localized: false;
-        };
-      }>;
-    key: Schema.Attribute.String &
-      Schema.Attribute.Required &
-      Schema.Attribute.Unique &
-      Schema.Attribute.SetPluginOptions<{
-        i18n: {
-          localized: false;
-        };
-      }>;
-    locale: Schema.Attribute.String;
-    localizations: Schema.Attribute.Relation<
-      'oneToMany',
-      'api::ui-string.ui-string'
-    >;
-    publishedAt: Schema.Attribute.DateTime;
-    updatedAt: Schema.Attribute.DateTime;
-    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-    value: Schema.Attribute.Text &
-      Schema.Attribute.SetPluginOptions<{
-        i18n: {
-          localized: true;
-        };
-      }>;
   };
 }
 
 export interface ApiUnitUnit extends Struct.CollectionTypeSchema {
   collectionName: 'units';
   info: {
-    displayName: 'Unit';
+    displayName: 'About \u2013 Administrative Units';
     pluralName: 'units';
     singularName: 'unit';
   };
@@ -3859,132 +2711,6 @@ export interface ApiUnitUnit extends Struct.CollectionTypeSchema {
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
-  };
-}
-
-export interface ApiUtilityLinkUtilityLink extends Struct.CollectionTypeSchema {
-  collectionName: 'utility_links';
-  info: {
-    displayName: 'Utility Link';
-    pluralName: 'utility-links';
-    singularName: 'utility-link';
-  };
-  options: {
-    draftAndPublish: false;
-  };
-  pluginOptions: {
-    i18n: {
-      localized: true;
-    };
-  };
-  attributes: {
-    createdAt: Schema.Attribute.DateTime;
-    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-    display_order: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
-    icon: Schema.Attribute.String;
-    is_active: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
-    is_external: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
-    locale: Schema.Attribute.String;
-    localizations: Schema.Attribute.Relation<
-      'oneToMany',
-      'api::utility-link.utility-link'
-    >;
-    publishedAt: Schema.Attribute.DateTime;
-    title: Schema.Attribute.String &
-      Schema.Attribute.Required &
-      Schema.Attribute.SetPluginOptions<{
-        i18n: {
-          localized: true;
-        };
-      }>;
-    updatedAt: Schema.Attribute.DateTime;
-    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-    url: Schema.Attribute.String & Schema.Attribute.Required;
-  };
-}
-
-export interface ApiVisionMissionContentVisionMissionContent
-  extends Struct.SingleTypeSchema {
-  collectionName: 'vision_mission_content';
-  info: {
-    displayName: 'Vision & Mission Content';
-    pluralName: 'vision-mission-contents';
-    singularName: 'vision-mission-content';
-  };
-  options: {
-    draftAndPublish: false;
-  };
-  pluginOptions: {
-    i18n: {
-      localized: true;
-    };
-  };
-  attributes: {
-    createdAt: Schema.Attribute.DateTime;
-    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-    locale: Schema.Attribute.String;
-    localizations: Schema.Attribute.Relation<
-      'oneToMany',
-      'api::vision-mission-content.vision-mission-content'
-    >;
-    mission_button_text: Schema.Attribute.String &
-      Schema.Attribute.SetPluginOptions<{
-        i18n: {
-          localized: true;
-        };
-      }> &
-      Schema.Attribute.DefaultTo<'View More'>;
-    mission_button_url: Schema.Attribute.String &
-      Schema.Attribute.DefaultTo<'/about/mission'>;
-    mission_icon: Schema.Attribute.String &
-      Schema.Attribute.DefaultTo<'bi-bullseye'>;
-    mission_text: Schema.Attribute.Text &
-      Schema.Attribute.Required &
-      Schema.Attribute.SetPluginOptions<{
-        i18n: {
-          localized: true;
-        };
-      }>;
-    mission_title: Schema.Attribute.String &
-      Schema.Attribute.Required &
-      Schema.Attribute.SetPluginOptions<{
-        i18n: {
-          localized: true;
-        };
-      }> &
-      Schema.Attribute.DefaultTo<'Our Mission'>;
-    publishedAt: Schema.Attribute.DateTime;
-    updatedAt: Schema.Attribute.DateTime;
-    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-    vision_button_text: Schema.Attribute.String &
-      Schema.Attribute.SetPluginOptions<{
-        i18n: {
-          localized: true;
-        };
-      }> &
-      Schema.Attribute.DefaultTo<'View More'>;
-    vision_button_url: Schema.Attribute.String &
-      Schema.Attribute.DefaultTo<'/about/vision'>;
-    vision_icon: Schema.Attribute.String & Schema.Attribute.DefaultTo<'bi-eye'>;
-    vision_text: Schema.Attribute.Text &
-      Schema.Attribute.Required &
-      Schema.Attribute.SetPluginOptions<{
-        i18n: {
-          localized: true;
-        };
-      }>;
-    vision_title: Schema.Attribute.String &
-      Schema.Attribute.Required &
-      Schema.Attribute.SetPluginOptions<{
-        i18n: {
-          localized: true;
-        };
-      }> &
-      Schema.Attribute.DefaultTo<'Our Vision'>;
   };
 }
 
@@ -4499,11 +3225,11 @@ declare module '@strapi/strapi' {
       'admin::transfer-token': AdminTransferToken;
       'admin::transfer-token-permission': AdminTransferTokenPermission;
       'admin::user': AdminUser;
+      'api::about-overview.about-overview': ApiAboutOverviewAboutOverview;
       'api::about-page.about-page': ApiAboutPageAboutPage;
-      'api::academic-calendar.academic-calendar': ApiAcademicCalendarAcademicCalendar;
       'api::academic-guide.academic-guide': ApiAcademicGuideAcademicGuide;
-      'api::academics-content.academics-content': ApiAcademicsContentAcademicsContent;
-      'api::academics-item.academics-item': ApiAcademicsItemAcademicsItem;
+      'api::academics-overview.academics-overview': ApiAcademicsOverviewAcademicsOverview;
+      'api::admissions-overview.admissions-overview': ApiAdmissionsOverviewAdmissionsOverview;
       'api::alumni-achievement.alumni-achievement': ApiAlumniAchievementAlumniAchievement;
       'api::alumni-chapter.alumni-chapter': ApiAlumniChapterAlumniChapter;
       'api::alumni-gallery-image.alumni-gallery-image': ApiAlumniGalleryImageAlumniGalleryImage;
@@ -4513,70 +3239,42 @@ declare module '@strapi/strapi' {
       'api::announcement.announcement': ApiAnnouncementAnnouncement;
       'api::award.award': ApiAwardAward;
       'api::calendar-entry.calendar-entry': ApiCalendarEntryCalendarEntry;
-      'api::campus-life-content.campus-life-content': ApiCampusLifeContentCampusLifeContent;
-      'api::campus-life-item.campus-life-item': ApiCampusLifeItemCampusLifeItem;
       'api::club.club': ApiClubClub;
       'api::contact-enquiry.contact-enquiry': ApiContactEnquiryContactEnquiry;
       'api::contact-page-content.contact-page-content': ApiContactPageContentContactPageContent;
       'api::contact-person.contact-person': ApiContactPersonContactPerson;
-      'api::cta-content.cta-content': ApiCtaContentCtaContent;
       'api::department.department': ApiDepartmentDepartment;
       'api::document.document': ApiDocumentDocument;
       'api::event.event': ApiEventEvent;
-      'api::events-content.events-content': ApiEventsContentEventsContent;
-      'api::events-item.events-item': ApiEventsItemEventsItem;
       'api::expertise.expertise': ApiExpertiseExpertise;
       'api::faculty-profile.faculty-profile': ApiFacultyProfileFacultyProfile;
       'api::faculty-setting.faculty-setting': ApiFacultySettingFacultySetting;
       'api::feature.feature': ApiFeatureFeature;
-      'api::gallery-content.gallery-content': ApiGalleryContentGalleryContent;
-      'api::gallery-image.gallery-image': ApiGalleryImageGalleryImage;
-      'api::header-setting.header-setting': ApiHeaderSettingHeaderSetting;
-      'api::hero-content.hero-content': ApiHeroContentHeroContent;
-      'api::hero-item.hero-item': ApiHeroItemHeroItem;
-      'api::highlights-content.highlights-content': ApiHighlightsContentHighlightsContent;
-      'api::highlights-item.highlights-item': ApiHighlightsItemHighlightsItem;
+      'api::footer.footer': ApiFooterFooter;
       'api::history-content.history-content': ApiHistoryContentHistoryContent;
       'api::history-gallery-image.history-gallery-image': ApiHistoryGalleryImageHistoryGalleryImage;
       'api::history-legacy-item.history-legacy-item': ApiHistoryLegacyItemHistoryLegacyItem;
       'api::history-timeline-item.history-timeline-item': ApiHistoryTimelineItemHistoryTimelineItem;
       'api::history-tradition-item.history-tradition-item': ApiHistoryTraditionItemHistoryTraditionItem;
-      'api::homepage-section.homepage-section': ApiHomepageSectionHomepageSection;
       'api::homepage.homepage': ApiHomepageHomepage;
       'api::leadership-member.leadership-member': ApiLeadershipMemberLeadershipMember;
-      'api::menu-item.menu-item': ApiMenuItemMenuItem;
       'api::navigation.navigation': ApiNavigationNavigation;
-      'api::news-content.news-content': ApiNewsContentNewsContent;
-      'api::news-item.news-item': ApiNewsItemNewsItem;
+      'api::news-notices-overview.news-notices-overview': ApiNewsNoticesOverviewNewsNoticesOverview;
       'api::news.news': ApiNewsNews;
       'api::newsletter-subscriber.newsletter-subscriber': ApiNewsletterSubscriberNewsletterSubscriber;
       'api::newsletter-topic.newsletter-topic': ApiNewsletterTopicNewsletterTopic;
       'api::newsletter.newsletter': ApiNewsletterNewsletter;
       'api::notice.notice': ApiNoticeNotice;
       'api::page.page': ApiPagePage;
-      'api::partners-content.partners-content': ApiPartnersContentPartnersContent;
-      'api::partners-item.partners-item': ApiPartnersItemPartnersItem;
       'api::person.person': ApiPersonPerson;
-      'api::president-content.president-content': ApiPresidentContentPresidentContent;
-      'api::programme-timetable.programme-timetable': ApiProgrammeTimetableProgrammeTimetable;
       'api::programme.programme': ApiProgrammeProgramme;
-      'api::reassessment-timetable.reassessment-timetable': ApiReassessmentTimetableReassessmentTimetable;
       'api::recruitment.recruitment': ApiRecruitmentRecruitment;
       'api::research-centre.research-centre': ApiResearchCentreResearchCentre;
-      'api::research-content.research-content': ApiResearchContentResearchContent;
-      'api::research-item.research-item': ApiResearchItemResearchItem;
+      'api::research-overview.research-overview': ApiResearchOverviewResearchOverview;
       'api::research-publication.research-publication': ApiResearchPublicationResearchPublication;
       'api::site-settings.site-settings': ApiSiteSettingsSiteSettings;
-      'api::social-link.social-link': ApiSocialLinkSocialLink;
-      'api::statistics-content.statistics-content': ApiStatisticsContentStatisticsContent;
-      'api::statistics-item.statistics-item': ApiStatisticsItemStatisticsItem;
-      'api::testimonials-content.testimonials-content': ApiTestimonialsContentTestimonialsContent;
-      'api::testimonials-item.testimonials-item': ApiTestimonialsItemTestimonialsItem;
-      'api::theme-setting.theme-setting': ApiThemeSettingThemeSetting;
-      'api::ui-string.ui-string': ApiUiStringUiString;
+      'api::student-life-overview.student-life-overview': ApiStudentLifeOverviewStudentLifeOverview;
       'api::unit.unit': ApiUnitUnit;
-      'api::utility-link.utility-link': ApiUtilityLinkUtilityLink;
-      'api::vision-mission-content.vision-mission-content': ApiVisionMissionContentVisionMissionContent;
       'plugin::content-releases.release': PluginContentReleasesRelease;
       'plugin::content-releases.release-action': PluginContentReleasesReleaseAction;
       'plugin::i18n.locale': PluginI18NLocale;
