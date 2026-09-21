@@ -1,0 +1,38 @@
+---
+// One leader. `featured` renders the wide President panel; otherwise a
+// portrait card for the Deans grid. Reusable for any leadership listing.
+import type { Leader } from '../lib/content/leadership';
+
+interface Props {
+  leader: Leader;
+  featured?: boolean;
+  /** Where the "Contact office" link goes; omit to hide it. */
+  contactHref?: string;
+}
+const { leader, featured = false, contactHref } = Astro.props;
+---
+<article class:list={['leader', featured ? 'leader-featured' : 'leader-card', 'reveal']}>
+  <div class="leader-photo">
+    {leader.photo_url ? (
+      <img
+        src={leader.photo_url}
+        alt={leader.alt}
+        width={leader.photo_width ?? 440}
+        height={leader.photo_height ?? 566}
+        loading={featured ? 'eager' : 'lazy'}
+        decoding="async"
+      />
+    ) : (
+      <span class="leader-initials" role="img" aria-label={leader.alt}>{leader.initials}</span>
+    )}
+  </div>
+  <div class="leader-body">
+    <p class="leader-role">{leader.role_title}</p>
+    <h3 class="leader-name">{leader.name}</h3>
+    {contactHref && (
+      <a class="leader-link" href={contactHref}>
+        Contact office <span class="leader-arrow" aria-hidden="true">→</span>
+      </a>
+    )}
+  </div>
+</article>

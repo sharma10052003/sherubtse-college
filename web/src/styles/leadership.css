@@ -1,0 +1,289 @@
+/**
+ * About the College — leadership. Page-specific stylesheet (same convention as
+ * section-landing.css). Navy + gold, square corners, flat borders; the lift and
+ * gold accent on hover match the section pages.
+ */
+
+/* ---------- Introduction ---------- */
+.lead-head {
+  position: relative;
+  overflow: hidden;
+  padding-block: var(--s5) var(--s7);
+  background: var(--paper);
+}
+.lead-head::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: min(46%, 520px);
+  height: 100%;
+  background-image: url('/patterns/knot-navy.svg');
+  background-size: 120px;
+  opacity: 0.045;
+  -webkit-mask-image: linear-gradient(to left, #000 20%, transparent);
+  mask-image: linear-gradient(to left, #000 20%, transparent);
+  pointer-events: none;
+}
+.lead-head .wrap {
+  position: relative;
+}
+.lead-eyebrow {
+  font-weight: 700;
+  font-size: 0.75rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--gold-ink);
+  margin: var(--s5) 0 var(--s3);
+}
+.lead-title {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: clamp(2.1rem, 5.2vw, 3.6rem);
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+  color: var(--navy);
+  margin: 0;
+}
+.lead-rule {
+  display: block;
+  width: 72px;
+  height: 3px;
+  margin: var(--s5) 0;
+  background: linear-gradient(to right, var(--gold) 0, var(--gold) 24px, var(--navy) 24px);
+}
+.lead-intro {
+  max-width: 44rem;
+  font-size: 1.15rem;
+  line-height: 1.65;
+  color: var(--ink-2);
+  margin: 0;
+}
+
+/* ---------- Body ---------- */
+.lead-body {
+  background: var(--paper-2);
+  border-top: 1px solid var(--line);
+  padding-block: var(--s8) var(--s9);
+}
+.lead-body .wrap {
+  max-width: 1200px;
+}
+.lead-section {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  font-size: 1.3rem;
+  color: var(--navy);
+  margin: 0 0 var(--s5);
+  padding-bottom: var(--s3);
+  border-bottom: 1px solid var(--line-strong);
+}
+.lead-body section + section {
+  margin-top: var(--s8);
+}
+.lead-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--s6);
+}
+.lead-fallback {
+  padding: var(--s6);
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--gold);
+}
+
+/* ---------- Photo (4:5, never distorted) ---------- */
+.leader-photo {
+  position: relative;
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  background: var(--navy);
+}
+.leader-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+  display: block;
+  transition: transform 0.5s ease;
+}
+/* No photo: navy block with initials, never a broken image. */
+.leader-initials {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: clamp(2.5rem, 8vw, 4rem);
+  letter-spacing: 0.04em;
+  color: var(--gold);
+}
+
+/* ---------- Text ---------- */
+.leader-role {
+  font-weight: 700;
+  font-size: 0.75rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--gold-ink);
+  margin: 0 0 var(--s2);
+}
+.leader-name {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  font-size: 1.35rem;
+  line-height: 1.25;
+  color: var(--navy);
+  margin: 0;
+}
+.leader-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s2);
+  margin-top: var(--s4);
+  font-weight: 700;
+  font-size: 0.78rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--navy-mid);
+  min-height: 44px;
+}
+.leader-link:hover {
+  color: var(--gold-ink);
+}
+.leader-arrow {
+  display: inline-block;
+  transition: transform 0.25s ease;
+}
+.leader:hover .leader-arrow,
+.leader-link:hover .leader-arrow,
+.leader-link:focus-visible .leader-arrow {
+  transform: translateX(6px);
+}
+
+/* ---------- Dean card ---------- */
+.leader-card {
+  display: flex;
+  flex-direction: column;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-top: 3px solid var(--navy);
+  transition: opacity 0.5s ease, transform 0.25s ease, border-color 0.25s ease;
+}
+.leader-card .leader-body {
+  padding: var(--s5);
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+.leader-card .leader-link {
+  margin-top: auto;
+  padding-top: var(--s4);
+}
+.leader-card:hover,
+.leader-card:focus-within {
+  transform: translateY(-5px);
+  border-color: var(--gold-deep);
+  border-top-color: var(--gold);
+}
+.leader-card:hover .leader-photo img {
+  transform: scale(1.03);
+}
+
+/* ---------- Featured President ---------- */
+.leader-featured {
+  display: grid;
+  grid-template-columns: 1fr;
+  background: var(--navy);
+  color: #fff;
+  border-bottom: 4px solid var(--gold);
+  position: relative;
+  overflow: hidden;
+  transition: opacity 0.5s ease, transform 0.25s ease;
+}
+.leader-featured::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url('/patterns/knot-gold.svg');
+  background-size: 120px;
+  opacity: 0.06;
+  pointer-events: none;
+}
+.leader-featured > * {
+  position: relative;
+}
+.leader-featured .leader-body {
+  padding: var(--s6) var(--s5);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.leader-featured .leader-role {
+  color: var(--gold);
+}
+.leader-featured .leader-name {
+  color: #fff;
+  font-size: clamp(1.8rem, 4vw, 2.6rem);
+}
+.leader-featured .leader-link {
+  color: var(--gold-light);
+}
+.leader-featured:hover {
+  transform: translateY(-4px);
+}
+.leader-featured:hover .leader-photo img {
+  transform: scale(1.03);
+}
+
+/* ---------- Closing note ---------- */
+.lead-note {
+  margin-top: var(--s8);
+  padding-top: var(--s5);
+  border-top: 1px solid var(--line-strong);
+}
+.lead-note p {
+  margin: 0;
+  color: var(--ink-2);
+}
+
+/* ---------- Breakpoints ---------- */
+@media (min-width: 760px) {
+  .lead-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--s7);
+  }
+  .leader-featured {
+    grid-template-columns: minmax(240px, 340px) 1fr;
+  }
+  .leader-featured .leader-body {
+    padding: var(--s7);
+  }
+  .lead-head {
+    padding-block: var(--s6) var(--s8);
+  }
+}
+@media (min-width: 1024px) {
+  .lead-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .leader,
+  .leader-photo img,
+  .leader-arrow {
+    transition: none;
+  }
+  .leader-card:hover,
+  .leader-card:focus-within,
+  .leader-featured:hover,
+  .leader-card:hover .leader-photo img,
+  .leader-featured:hover .leader-photo img {
+    transform: none;
+  }
+}

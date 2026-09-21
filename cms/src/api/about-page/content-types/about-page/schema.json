@@ -1,0 +1,16 @@
+{
+  "kind": "singleType",
+  "collectionName": "about_page",
+  "info": {
+    "singularName": "about-page",
+    "pluralName": "about-pages",
+    "displayName": "About the College Page"
+  },
+  "options": { "draftAndPublish": false },
+  "attributes": {
+    "heading": { "type": "string", "required": true, "default": "About the College" },
+    "intro": { "type": "text", "required": true },
+    "contact_note": { "type": "string" },
+    "seo_description": { "type": "string" }
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "kind": "collectionType",
+  "collectionName": "leadership_members",
+  "info": {
+    "singularName": "leadership-member",
+    "pluralName": "leadership-members",
+    "displayName": "Leadership Member"
+  },
+  "options": { "draftAndPublish": false },
+  "attributes": {
+    "full_name": { "type": "string", "required": true },
+    "honorific": { "type": "string" },
+    "role_title": { "type": "string", "required": true },
+    "category": { "type": "enumeration", "enum": ["president", "dean"], "default": "dean", "required": true },
+    "display_order": { "type": "integer", "default": 0 },
+    "photo": { "type": "media", "multiple": false, "allowedTypes": ["images"] },
+    "active": { "type": "boolean", "default": true }
+  }
+}

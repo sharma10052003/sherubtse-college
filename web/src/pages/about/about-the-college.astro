@@ -1,0 +1,58 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import LeaderCard from '../../components/LeaderCard.astro';
+import { getAboutPage, getLeaders } from '../../lib/content/leadership';
+import '../../styles/leadership.css';
+
+const [page, leaders] = await Promise.all([getAboutPage(), getLeaders()]);
+const president = leaders.find((l) => l.category === 'president');
+const deans = leaders.filter((l) => l.category === 'dean');
+const CONTACT = '/about/contact';
+---
+<Layout title="About the College" description={page.seo_description ?? page.intro}>
+  <header class="lead-head">
+    <div class="wrap">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="/">Home</a> › <a href="/about">About</a> › <span class="current">About the College</span>
+      </nav>
+      <p class="lead-eyebrow">Leadership</p>
+      <h1 class="lead-title">{page.heading}</h1>
+      <span class="lead-rule" aria-hidden="true"></span>
+      {page.intro && <p class="lead-intro">{page.intro}</p>}
+    </div>
+  </header>
+
+  <div class="lead-body">
+    <div class="wrap">
+      {leaders.length === 0 ? (
+        <p class="lead-fallback">
+          Our leadership profiles are temporarily unavailable. Please check back shortly, or visit the
+          <a href={CONTACT}>Contact page</a>.
+        </p>
+      ) : (
+        <>
+          {president && (
+            <section aria-labelledby="president-heading">
+              <h2 class="lead-section" id="president-heading">President</h2>
+              <LeaderCard leader={president} featured contactHref={CONTACT} />
+            </section>
+          )}
+
+          {deans.length > 0 && (
+            <section aria-labelledby="deans-heading">
+              <h2 class="lead-section" id="deans-heading">Deans</h2>
+              <div class="lead-grid">
+                {deans.map((d) => <LeaderCard leader={d} contactHref={CONTACT} />)}
+              </div>
+            </section>
+          )}
+        </>
+      )}
+
+      <div class="lead-note">
+        <p>{page.contact_note}</p>
+        <a class="leader-link" href={CONTACT}>Go to the Contact page <span class="leader-arrow" aria-hidden="true">→</span></a>
+      </div>
+    </div>
+  </div>
+</Layout>

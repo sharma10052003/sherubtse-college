@@ -443,6 +443,39 @@ export interface AdminUser extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiAboutPageAboutPage extends Struct.SingleTypeSchema {
+  collectionName: 'about_page';
+  info: {
+    displayName: 'About the College Page';
+    pluralName: 'about-pages';
+    singularName: 'about-page';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    contact_note: Schema.Attribute.String;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    heading: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'About the College'>;
+    intro: Schema.Attribute.Text & Schema.Attribute.Required;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::about-page.about-page'
+    > &
+      Schema.Attribute.Private;
+    publishedAt: Schema.Attribute.DateTime;
+    seo_description: Schema.Attribute.String;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiAcademicCalendarAcademicCalendar
   extends Struct.SingleTypeSchema {
   collectionName: 'academic_calendar';
@@ -2469,6 +2502,43 @@ export interface ApiHomepageHomepage extends Struct.SingleTypeSchema {
   };
 }
 
+export interface ApiLeadershipMemberLeadershipMember
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'leadership_members';
+  info: {
+    displayName: 'Leadership Member';
+    pluralName: 'leadership-members';
+    singularName: 'leadership-member';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    active: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
+    category: Schema.Attribute.Enumeration<['president', 'dean']> &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'dean'>;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    display_order: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
+    full_name: Schema.Attribute.String & Schema.Attribute.Required;
+    honorific: Schema.Attribute.String;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::leadership-member.leadership-member'
+    > &
+      Schema.Attribute.Private;
+    photo: Schema.Attribute.Media<'images'>;
+    publishedAt: Schema.Attribute.DateTime;
+    role_title: Schema.Attribute.String & Schema.Attribute.Required;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiMenuItemMenuItem extends Struct.CollectionTypeSchema {
   collectionName: 'menu_items';
   info: {
@@ -4429,6 +4499,7 @@ declare module '@strapi/strapi' {
       'admin::transfer-token': AdminTransferToken;
       'admin::transfer-token-permission': AdminTransferTokenPermission;
       'admin::user': AdminUser;
+      'api::about-page.about-page': ApiAboutPageAboutPage;
       'api::academic-calendar.academic-calendar': ApiAcademicCalendarAcademicCalendar;
       'api::academic-guide.academic-guide': ApiAcademicGuideAcademicGuide;
       'api::academics-content.academics-content': ApiAcademicsContentAcademicsContent;
@@ -4472,6 +4543,7 @@ declare module '@strapi/strapi' {
       'api::history-tradition-item.history-tradition-item': ApiHistoryTraditionItemHistoryTraditionItem;
       'api::homepage-section.homepage-section': ApiHomepageSectionHomepageSection;
       'api::homepage.homepage': ApiHomepageHomepage;
+      'api::leadership-member.leadership-member': ApiLeadershipMemberLeadershipMember;
       'api::menu-item.menu-item': ApiMenuItemMenuItem;
       'api::navigation.navigation': ApiNavigationNavigation;
       'api::news-content.news-content': ApiNewsContentNewsContent;
