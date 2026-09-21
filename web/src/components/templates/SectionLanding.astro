@@ -1,35 +1,137 @@
 ---
-// Section landing — one of 6. Does real navigational work: lists every
-// child page with a description, since there are no dropdown menus
-// (Stack doc §07, the Stanford-derived rule).
+// Section landing — reusable for every top-level section (About, Academics,
+// Research, Student Life, Admissions, News & Notices …). Does real
+// navigational work: lists every child page with a description, since there
+// are no dropdown menus (Stack doc §07, the Stanford-derived rule).
+//
+// Layout: the first child is an optional wide "featured" panel; the rest form
+// a grid whose column count is picked so the last row never leaves an orphan
+// gap — the final card simply stretches to fill it. Nothing here is specific
+// to one section, so callers only pass data.
 import Layout from '../../layouts/Layout.astro';
+import '../../styles/section-landing.css';
 
 interface Child {
   label: string;
   url: string;
   description: string;
+  /** Optional icon key from ICONS below; guessed from the label when omitted. */
+  icon?: string;
 }
 interface Props {
   title: string;
   intro: string;
   children: Child[];
+  /** Small label above the heading. Defaults to the section title. */
+  eyebrow?: string;
+  /** Large on-page heading. Defaults to `title`. */
+  heading?: string;
+  /** Show the first child as a wide featured panel (needs 4+ children). */
+  featured?: boolean;
 }
-const { title, intro, children } = Astro.props;
+const { title, intro, children, eyebrow, heading, featured = true } = Astro.props;
+
+const ICONS: Record<string, string> = {
+  college: '<path d="M3 21h18M5 21V9l7-5 7 5v12M9 21v-6h6v6"/>',
+  history: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/>',
+  vision: '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+  people: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14.4c2 .7 3.5 2.6 3.5 5.6"/>',
+  cap: '<path d="M12 3 2 8l10 5 10-5-10-5z"/><path d="M6 11v5c0 1.4 2.7 3 6 3s6-1.6 6-3v-5"/>',
+  book: '<path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v17H6.5A2.5 2.5 0 0 0 4 21.5z"/><path d="M4 21.5V4.5M8 7h8"/>',
+  flask: '<path d="M9 3h6M10 3v6l-5.5 9.5A1.7 1.7 0 0 0 6 21h12a1.7 1.7 0 0 0 1.5-2.5L14 9V3"/><path d="M7.5 15h9"/>',
+  briefcase: '<rect x="3" y="7" width="18" height="13"/><path d="M8 7V4h8v3M3 13h18"/>',
+  mail: '<rect x="3" y="5" width="18" height="14"/><path d="M3 6l9 7 9-7"/>',
+  calendar: '<rect x="3" y="5" width="18" height="16"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+  bell: '<path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4z"/><path d="M10 21h4"/>',
+  doc: '<path d="M6 2h9l5 5v15H6z"/><path d="M14 2v6h6M9 13h8M9 17h8"/>',
+  pin: '<path d="M12 21s-7-6.1-7-11a7 7 0 0 1 14 0c0 4.9-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/>',
+  star: '<path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/>',
+  page: '<path d="M6 2h9l5 5v15H6z"/><path d="M14 2v6h6"/>',
+};
+
+const GUESS: [RegExp, string][] = [
+  [/history|heritage|timeline|archive/i, 'history'],
+  [/vision|mission|value/i, 'vision'],
+  [/faculty|alumni|people|staff|student association|club/i, 'people'],
+  [/programme|admission|apply|academic|course|department|calendar|international/i, 'cap'],
+  [/library|guide|handbook|prospectus|journal|publication/i, 'book'],
+  [/research|lab|grant|incubation|innovation/i, 'flask'],
+  [/unit|administration|recruit|vacanc|career|tender/i, 'briefcase'],
+  [/contact|email|newsletter/i, 'mail'],
+  [/event|calendar|schedule|timetable/i, 'calendar'],
+  [/announce|notice|news/i, 'bell'],
+  [/download|form|polic|document/i, 'doc'],
+  [/campus|facilit|location|visit/i, 'pin'],
+  [/about|college|leadership/i, 'college'],
+];
+
+function iconFor(c: Child): string {
+  if (c.icon && ICONS[c.icon]) return c.icon;
+  return GUESS.find(([re]) => re.test(c.label))?.[1] ?? 'page';
+}
+
+const items = children.map((c) => ({ ...c, icon: iconFor(c) }));
+
+const useFeatured = featured && items.length >= 4;
+const feature = useFeatured ? items[0] : null;
+const rest = useFeatured ? items.slice(1) : items;
+
+// Pick 3 or 4 columns so the last row leaves the smallest gap, then let the
+// last card stretch across whatever is left (never an empty hole).
+function pickCols(n: number): number {
+  if (n <= 2) return Math.max(n, 1);
+  const gap = (c: number) => (n % c === 0 ? 0 : c - (n % c));
+  return gap(4) <= gap(3) ? 4 : 3;
+}
+const cols = pickCols(rest.length);
+const lastSpanLg = rest.length % cols === 0 ? 1 : cols - (rest.length % cols) + 1;
+const lastSpan3 = rest.length % 3 === 0 ? 1 : 3 - (rest.length % 3) + 1;
+const lastSpanMd = rest.length % 2 === 0 ? 1 : 2;
+
+const eyebrowText = eyebrow ?? title;
+const headingText = heading ?? title;
 ---
 <Layout title={title} description={intro}>
-  <div class="wrap" style="padding-top:var(--s5);padding-bottom:var(--s7)">
-    <nav class="breadcrumb" aria-label="Breadcrumb"><a href="/">Home</a> › <span class="current">{title}</span></nav>
-    <h1 class="h1">{title}</h1>
-    <p class="lede" style="margin-top:var(--s3);max-width:var(--measure)">{intro}</p>
+  <div class="sl-page">
+    <header class="sl-head">
+      <div class="wrap">
+        <nav class="breadcrumb" aria-label="Breadcrumb"><a href="/">Home</a> › <span class="current">{title}</span></nav>
+        <p class="sl-eyebrow">{eyebrowText}</p>
+        <h1 class="sl-title">{headingText}</h1>
+        <span class="sl-rule" aria-hidden="true"></span>
+        <p class="sl-intro">{intro}</p>
+      </div>
+    </header>
 
-    <div class="cards" style="margin-top:var(--s6)">
-      {children.map((c) => (
-        <div class="card">
-          <h3 class="h3"><a href={c.url} style="text-decoration:none;color:inherit">{c.label}</a></h3>
-          <p>{c.description}</p>
-          <a href={c.url} class="btn-quiet">Open</a>
+    <div class="sl-body">
+      <div class="wrap">
+        {feature && (
+          <article class="sl-feature reveal">
+            <svg class="sl-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" set:html={ICONS[feature.icon]} />
+            <div class="sl-feature-main">
+              <h2 class="sl-card-title"><a href={feature.url} class="sl-link">{feature.label}</a></h2>
+              <p class="sl-desc">{feature.description}</p>
+            </div>
+            <span class="sl-cta" aria-hidden="true">Explore <span class="sl-arrow">→</span></span>
+          </article>
+        )}
+
+        <div
+          class="sl-grid"
+          style={`--sl-cols:${cols};--sl-last-lg:${lastSpanLg};--sl-last-md:${lastSpanMd};--sl-last-3:${lastSpan3}`}
+        >
+          {rest.map((c) => (
+            <article class="sl-card reveal">
+              <div class="sl-card-top">
+                <svg class="sl-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" set:html={ICONS[c.icon]} />
+              </div>
+              <h2 class="sl-card-title"><a href={c.url} class="sl-link">{c.label}</a></h2>
+              <p class="sl-desc">{c.description}</p>
+              <span class="sl-cta" aria-hidden="true">Explore <span class="sl-arrow">→</span></span>
+            </article>
+          ))}
         </div>
-      ))}
+      </div>
     </div>
   </div>
 </Layout>
