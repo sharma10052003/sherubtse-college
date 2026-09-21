@@ -5,15 +5,6 @@
 .DS_Store
 Thumbs.db
 
-# Tailwind build tooling (root package.json) — devDependency only
-node_modules/
-
-# Local secrets - never commit
-includes/config.local.php
-
-# Generated nav cache (see includes/navigation.php) — rebuilt automatically
-includes/cache/
-
 # --- Strapi CMS (cms/) ---
 cms/node_modules
 # cms/.tmp/data.db is intentionally tracked (see decision log) so the
