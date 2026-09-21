@@ -1,0 +1,388 @@
+/**
+ * Contact Us — a fresh page-specific stylesheet (mirrors the alumni.css /
+ * newsletter.css / faculty.css convention: components.css is a closed,
+ * signed-off set per its own header comment, so page-only classes live
+ * here instead of growing that file). Reuses tokens.css variables and the
+ * global .wrap/.band/.breadcrumb/.btn/.eyebrow/.reveal/.form-* system
+ * rather than reinventing them.
+ */
+
+/* ---------- Hero ---------- */
+.contact-hero {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(160deg, var(--navy) 0%, var(--navy-deep) 100%);
+  color: #fff;
+  padding-block: var(--s8);
+}
+.contact-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url('/patterns/knot-gold.svg');
+  background-repeat: repeat;
+  background-size: 130px;
+  opacity: 0.06;
+}
+.contact-hero > .wrap {
+  position: relative;
+}
+.contact-hero .eyebrow {
+  color: var(--gold);
+}
+.contact-hero .h-display {
+  color: #fff;
+}
+.contact-hero-sub {
+  max-width: 46rem;
+  color: #c9d0e4;
+  font-size: 1.12rem;
+  line-height: 1.6;
+  margin: var(--s3) 0 0;
+}
+.contact-hero-content > * {
+  opacity: 0;
+  transform: translateY(14px);
+  animation: contact-hero-in 0.6s ease forwards;
+}
+.contact-hero-content > *:nth-child(1) {
+  animation-delay: 0s;
+}
+.contact-hero-content > *:nth-child(2) {
+  animation-delay: 0.08s;
+}
+.contact-hero-content > *:nth-child(3) {
+  animation-delay: 0.16s;
+}
+.contact-hero-content > *:nth-child(4) {
+  animation-delay: 0.24s;
+}
+@keyframes contact-hero-in {
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .contact-hero-content > * {
+    opacity: 1;
+    transform: none;
+    animation: none;
+  }
+}
+
+/* ---------- Section heading ---------- */
+.contact-section-head {
+  max-width: var(--measure);
+  margin-bottom: var(--s6);
+}
+.contact-section-head p.lede {
+  margin-top: var(--s2);
+}
+
+/* ---------- Find the Right Office — contact cards ---------- */
+.contact-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--s5);
+}
+@media (min-width: 640px) {
+  .contact-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (min-width: 1024px) {
+  .contact-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+.contact-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--line);
+  border-top: 3px solid var(--navy);
+  padding: var(--s5);
+  background: var(--paper);
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+.contact-card:hover,
+.contact-card:focus-within {
+  transform: translateY(-6px);
+  border-top-color: var(--gold);
+  border-color: var(--gold-deep);
+}
+.contact-card-icon {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line-strong);
+  color: var(--navy);
+  margin-bottom: var(--s4);
+  transition: transform 0.25s ease, background-color 0.25s ease, color 0.25s ease;
+}
+.contact-card-icon svg {
+  width: 24px;
+  height: 24px;
+}
+.contact-card:hover .contact-card-icon {
+  background: var(--navy);
+  color: var(--gold-light);
+  transform: scale(1.08) rotate(-4deg);
+}
+.contact-card h3 {
+  margin-bottom: var(--s2);
+}
+.contact-card-desc {
+  font-size: 0.9rem;
+  color: var(--ink-2);
+  margin-bottom: var(--s4);
+}
+.contact-card-person {
+  font-size: 0.88rem;
+  margin-bottom: var(--s4);
+  padding-top: var(--s3);
+  border-top: 1px solid var(--line);
+}
+.contact-card-person .name {
+  font-weight: 700;
+  color: var(--ink);
+  display: block;
+}
+.contact-card-person .role {
+  color: var(--ink-2);
+}
+.contact-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s3);
+  margin-top: auto;
+}
+.contact-card-actions .btn {
+  padding: 8px 14px;
+  font-size: 0.85rem;
+}
+
+/* ---------- How Can We Help? ---------- */
+.help-selector {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s3);
+  margin-bottom: var(--s6);
+}
+.help-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s2);
+  font-family: var(--font-sans);
+  font-size: 0.88rem;
+  font-weight: 600;
+  border: 2px solid var(--navy);
+  background: var(--paper);
+  color: var(--navy);
+  padding: 10px 16px;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+  min-height: 44px;
+}
+.help-chip:hover {
+  transform: translateY(-2px);
+}
+.help-chip[aria-pressed='true'] {
+  background: var(--navy);
+  color: #fff;
+}
+.help-chip-emoji {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+.help-result {
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--gold);
+  background: var(--paper-2);
+  padding: var(--s5);
+  display: grid;
+  gap: var(--s2);
+  transition: opacity 0.25s ease;
+}
+.help-result[hidden] {
+  display: none;
+}
+.help-result.is-switching {
+  opacity: 0;
+}
+.help-result-office {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  font-size: 1.15rem;
+  color: var(--ink);
+}
+.help-result-desc {
+  color: var(--ink-2);
+  font-size: 0.92rem;
+}
+.help-result-contact {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s3) var(--s6);
+  margin-top: var(--s2);
+  font-size: 0.9rem;
+}
+.help-result-contact a {
+  font-weight: 600;
+}
+
+/* ---------- Have a Question? (Enquiry form) ---------- */
+.contact-form {
+  max-width: 640px;
+}
+
+/* ---------- Contact Information Highlight ---------- */
+.contact-info-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--s6);
+}
+@media (min-width: 640px) {
+  .contact-info-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (min-width: 1024px) {
+  .contact-info-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+.contact-info-item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s3);
+}
+.contact-info-item svg {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  color: var(--gold);
+}
+.contact-info-item h3 {
+  color: #fff;
+  font-size: 1rem;
+  margin-bottom: var(--s1);
+}
+.contact-info-item p {
+  color: #c9d0e4;
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+/* ---------- Interactive map ---------- */
+.map-panel {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  background: var(--paper-2);
+  padding: var(--s7) var(--s5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--s3);
+}
+.map-panel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url('/patterns/knot-navy.svg');
+  background-repeat: repeat;
+  background-size: 110px;
+  opacity: 0.05;
+}
+.map-panel > * {
+  position: relative;
+}
+.map-pin {
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--navy);
+  color: var(--gold);
+  animation: map-pin-bob 2.6s ease-in-out infinite;
+}
+.map-pin svg {
+  width: 28px;
+  height: 28px;
+}
+@keyframes map-pin-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .map-pin {
+    animation: none;
+  }
+}
+.map-panel-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--s3);
+  margin-top: var(--s2);
+}
+
+/* ---------- ICT Support highlight ---------- */
+.ict-support {
+  border: 2px solid var(--gold-deep);
+  background: #fffaf0;
+  padding: var(--s6) var(--s5);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s5);
+}
+.ict-support-icon {
+  width: 56px;
+  height: 56px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--gold-light);
+  color: var(--navy);
+}
+.ict-support-icon svg {
+  width: 28px;
+  height: 28px;
+}
+.ict-support-body {
+  flex: 1;
+  min-width: 240px;
+}
+.ict-support-body h2 {
+  margin-bottom: var(--s2);
+}
+.ict-support-body p {
+  color: var(--ink-2);
+  font-size: 0.92rem;
+  margin: 0;
+}
+
+/* ---------- Mobile ---------- */
+@media (max-width: 639px) {
+  .contact-card-actions {
+    flex-direction: column;
+  }
+  .contact-card-actions .btn {
+    width: 100%;
+    text-align: center;
+  }
+}

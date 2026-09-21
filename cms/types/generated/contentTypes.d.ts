@@ -1117,6 +1117,41 @@ export interface ApiClubClub extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiContactEnquiryContactEnquiry
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'contact_enquiries';
+  info: {
+    displayName: 'Contact Enquiry';
+    pluralName: 'contact-enquiries';
+    singularName: 'contact-enquiry';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    department: Schema.Attribute.String;
+    email: Schema.Attribute.String & Schema.Attribute.Required;
+    full_name: Schema.Attribute.String & Schema.Attribute.Required;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::contact-enquiry.contact-enquiry'
+    > &
+      Schema.Attribute.Private;
+    message: Schema.Attribute.Text & Schema.Attribute.Required;
+    phone: Schema.Attribute.String;
+    publishedAt: Schema.Attribute.DateTime;
+    reviewed: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    subject: Schema.Attribute.String & Schema.Attribute.Required;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiContactPageContentContactPageContent
   extends Struct.SingleTypeSchema {
   collectionName: 'contact_page_content';
@@ -1197,7 +1232,8 @@ export interface ApiContactPersonContactPerson
       Schema.Attribute.Private;
     display_order: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
     email: Schema.Attribute.Email;
-    full_name: Schema.Attribute.String & Schema.Attribute.Required;
+    full_name: Schema.Attribute.String;
+    group_description: Schema.Attribute.Text;
     group_icon: Schema.Attribute.String;
     group_order: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
     group_title: Schema.Attribute.String & Schema.Attribute.Required;
@@ -1211,7 +1247,7 @@ export interface ApiContactPersonContactPerson
     phone: Schema.Attribute.String;
     photo: Schema.Attribute.Media<'images'>;
     publishedAt: Schema.Attribute.DateTime;
-    role_title: Schema.Attribute.String & Schema.Attribute.Required;
+    role_title: Schema.Attribute.String;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -4409,6 +4445,7 @@ declare module '@strapi/strapi' {
       'api::campus-life-content.campus-life-content': ApiCampusLifeContentCampusLifeContent;
       'api::campus-life-item.campus-life-item': ApiCampusLifeItemCampusLifeItem;
       'api::club.club': ApiClubClub;
+      'api::contact-enquiry.contact-enquiry': ApiContactEnquiryContactEnquiry;
       'api::contact-page-content.contact-page-content': ApiContactPageContentContactPageContent;
       'api::contact-person.contact-person': ApiContactPersonContactPerson;
       'api::cta-content.cta-content': ApiCtaContentCtaContent;

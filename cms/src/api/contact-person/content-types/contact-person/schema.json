@@ -10,9 +10,10 @@
     "draftAndPublish": true
   },
   "attributes": {
-    "full_name": { "type": "string", "required": true },
-    "role_title": { "type": "string", "required": true },
+    "full_name": { "type": "string" },
+    "role_title": { "type": "string" },
     "group_title": { "type": "string", "required": true },
+    "group_description": { "type": "text" },
     "group_icon": { "type": "string" },
     "group_order": { "type": "integer", "default": 0 },
     "display_order": { "type": "integer", "default": 0 },
