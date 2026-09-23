@@ -37,7 +37,7 @@
       "type": "date",
       "required": true
     },
-    "deadline_or_interview_date": {
+    "application_deadline": {
       "type": "date"
     },
     "description": {
@@ -60,12 +60,6 @@
       "default": "open",
       "required": true
     },
-    "interview_time": {
-      "type": "string"
-    },
-    "interview_venue": {
-      "type": "string"
-    },
     "additional_notes": {
       "type": "richtext"
     },
@@ -74,7 +68,38 @@
       "repeatable": true,
       "component": "announcements.position-opening"
     },
-    "shortlisted_candidates": {
+    "written_exam_date": {
+      "type": "date"
+    },
+    "written_exam_time": {
+      "type": "string"
+    },
+    "written_exam_venue": {
+      "type": "string"
+    },
+    "written_exam_shortlist": {
+      "type": "component",
+      "repeatable": true,
+      "component": "announcements.shortlist-row"
+    },
+    "viva_date": {
+      "type": "date"
+    },
+    "viva_time": {
+      "type": "string"
+    },
+    "viva_venue": {
+      "type": "string"
+    },
+    "viva_shortlist": {
+      "type": "component",
+      "repeatable": true,
+      "component": "announcements.shortlist-row"
+    },
+    "result_date": {
+      "type": "date"
+    },
+    "final_selected": {
       "type": "component",
       "repeatable": true,
       "component": "announcements.shortlist-row"

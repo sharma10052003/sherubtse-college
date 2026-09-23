@@ -1,10 +1,12 @@
 ---
 // Detail page for one announcement. Two sources share this route:
-//  - the new fixed-template Vacancy Announcements (slug-based) — the ones
-//    the "Announcements" listing page shows, rendered below as a hero,
-//    a recruitment-stage indicator, a two-column body (position-openings
-//    table, shortlisted-candidate groups and a PDF viewer/download in the
-//    main column; key dates and notes in the sidebar);
+//  - the fixed-template Vacancy Announcements (slug-based) — the ones the
+//    "Announcements" listing page shows. One record covers a posting's
+//    whole lifecycle: advertised, shortlisted for the written exam,
+//    shortlisted for the viva, result declared — each stage has its own
+//    date/venue and candidate list on the *same* record (see
+//    vacancy-announcements.ts), so every stage that's happened stays
+//    visible on this one page even after a later stage is filled in;
 //  - the older Notice records (numeric id) that Tenders still links to
 //    (cms/src/api/notice's category "tender"), reusing this same route
 //    rather than duplicating an article page, per the existing decision
@@ -45,8 +47,8 @@ function formatDate(iso: string) {
 }
 
 // The source notices group shortlisted candidates under their own position
-// heading when an announcement covers more than one post — same here,
-// grouped in the order each position first appears rather than re-sorted.
+// heading when a stage covers more than one post — same here, grouped in
+// the order each position first appears rather than re-sorted.
 function groupByPosition(rows: ShortlistRow[]): { position: string; rows: ShortlistRow[] }[] {
   const groups: { position: string; rows: ShortlistRow[] }[] = [];
   for (const row of rows) {
@@ -60,28 +62,61 @@ function groupByPosition(rows: ShortlistRow[]): { position: string; rows: Shortl
   return groups;
 }
 
-const shortlistGroups = announcement ? groupByPosition(announcement.shortlisted_candidates) : [];
+const writtenGroups = announcement ? groupByPosition(announcement.written_exam.candidates) : [];
+const vivaGroups = announcement ? groupByPosition(announcement.viva.candidates) : [];
+const resultGroups = announcement ? groupByPosition(announcement.result.candidates) : [];
 
-// The "positions" a heading lists — preferring whichever source is
-// structured data rather than re-splitting free text, falling back to
-// splitting position_name on commas only when nothing structured exists.
+// The "positions" a heading lists — preferring structured data (the
+// advertised openings, then whichever stage has candidates) over
+// re-splitting the free-text position_name.
 function splitPositions(name: string | null): string[] {
   if (!name) return [];
   return name.split(',').map((s) => s.trim()).filter(Boolean);
 }
+const allCandidateRows = announcement
+  ? [...announcement.written_exam.candidates, ...announcement.viva.candidates, ...announcement.result.candidates]
+  : [];
 const positionList = announcement
-  ? shortlistGroups.length > 0
-    ? shortlistGroups.map((g) => g.position)
-    : announcement.position_openings.length > 0
-      ? [...new Set(announcement.position_openings.map((p) => p.position_title))]
+  ? announcement.position_openings.length > 0
+    ? [...new Set(announcement.position_openings.map((p) => p.position_title))]
+    : allCandidateRows.length > 0
+      ? [...new Set(allCandidateRows.map((r) => r.position_title))]
       : splitPositions(announcement.position_name)
   : [];
 
-const isInterviewType = announcement?.type === 'shortlisted_viva' || announcement?.type === 'shortlisted_written';
-const dateFieldLabel = announcement?.deadline_or_interview_date ? (isInterviewType ? 'Interview' : 'Deadline') : null;
-const dateFieldValue = announcement?.deadline_or_interview_date
-  ? formatDate(announcement.deadline_or_interview_date) + (announcement.interview_time ? ` at ${announcement.interview_time}` : '')
+// The hero/sidebar "key info" card shows wherever the posting currently
+// stands — the full stage-by-stage history lives in the main column below
+// regardless, so this is a summary, not the only place a date appears.
+function formatDateTime(date: string, time: string | null) {
+  return formatDate(date) + (time ? ` at ${time}` : '');
+}
+const dateFieldLabel = announcement
+  ? announcement.type === 'shortlisted_written'
+    ? 'Written Exam'
+    : announcement.type === 'shortlisted_viva'
+      ? 'Viva-Voce'
+      : announcement.type === 'selection_result'
+        ? 'Result Declared'
+        : announcement.type === 'vacancy_announcement' || announcement.type === 're_vacancy_announcement'
+          ? 'Application Deadline'
+          : null
   : null;
+const dateFieldValue =
+  announcement && announcement.type === 'shortlisted_written' && announcement.written_exam.date
+    ? formatDateTime(announcement.written_exam.date, announcement.written_exam.time)
+    : announcement && announcement.type === 'shortlisted_viva' && announcement.viva.date
+      ? formatDateTime(announcement.viva.date, announcement.viva.time)
+      : announcement && announcement.type === 'selection_result' && announcement.result.date
+        ? formatDate(announcement.result.date)
+        : announcement && announcement.application_deadline
+          ? formatDate(announcement.application_deadline)
+          : null;
+const venue =
+  announcement?.type === 'shortlisted_written'
+    ? announcement.written_exam.venue
+    : announcement?.type === 'shortlisted_viva'
+      ? announcement.viva.venue
+      : null;
 
 const KEY_INFO_TITLES: Record<string, string> = {
   shortlisted_written: 'Interview Information',
@@ -109,7 +144,7 @@ const keyInfoTitle = announcement ? (KEY_INFO_TITLES[announcement.type] ?? null)
       datePosted={formatDate(announcement.date_posted)}
       dateFieldLabel={dateFieldLabel}
       dateFieldValue={dateFieldValue}
-      venue={announcement.interview_venue}
+      venue={venue}
     />
 
     <div class="ls-body">
@@ -126,11 +161,42 @@ const keyInfoTitle = announcement ? (KEY_INFO_TITLES[announcement.type] ?? null)
               <PositionOpeningsTable positions={announcement.position_openings} />
             )}
 
-            {shortlistGroups.length > 0 && (
+            {writtenGroups.length > 0 && (
               <section class="an-table-section">
-                <h2 class="an-table-heading">Shortlisted Candidates</h2>
-                {shortlistGroups.map((group) => (
-                  <CandidateGroup position={group.position} rows={group.rows} showHeading={shortlistGroups.length > 1} />
+                <h2 class="an-table-heading">Shortlisted for Written Exam</h2>
+                {announcement.written_exam.date && (
+                  <p class="small an-stage-meta">
+                    {formatDateTime(announcement.written_exam.date, announcement.written_exam.time)}
+                    {announcement.written_exam.venue && <> &middot; {announcement.written_exam.venue}</>}
+                  </p>
+                )}
+                {writtenGroups.map((group) => (
+                  <CandidateGroup position={group.position} rows={group.rows} showHeading={writtenGroups.length > 1} />
+                ))}
+              </section>
+            )}
+
+            {vivaGroups.length > 0 && (
+              <section class="an-table-section">
+                <h2 class="an-table-heading">Shortlisted for Viva-Voce</h2>
+                {announcement.viva.date && (
+                  <p class="small an-stage-meta">
+                    {formatDateTime(announcement.viva.date, announcement.viva.time)}
+                    {announcement.viva.venue && <> &middot; {announcement.viva.venue}</>}
+                  </p>
+                )}
+                {vivaGroups.map((group) => (
+                  <CandidateGroup position={group.position} rows={group.rows} showHeading={vivaGroups.length > 1} />
+                ))}
+              </section>
+            )}
+
+            {resultGroups.length > 0 && (
+              <section class="an-table-section">
+                <h2 class="an-table-heading">Selection Result</h2>
+                {announcement.result.date && <p class="small an-stage-meta">Declared {formatDate(announcement.result.date)}</p>}
+                {resultGroups.map((group) => (
+                  <CandidateGroup position={group.position} rows={group.rows} showHeading={resultGroups.length > 1} />
                 ))}
               </section>
             )}
@@ -145,7 +211,7 @@ const keyInfoTitle = announcement ? (KEY_INFO_TITLES[announcement.type] ?? null)
             datePosted={formatDate(announcement.date_posted)}
             dateFieldLabel={dateFieldLabel}
             dateFieldValue={dateFieldValue}
-            venue={announcement.interview_venue}
+            venue={venue}
             additionalNotes={announcement.additional_notes}
           />
         </div>
