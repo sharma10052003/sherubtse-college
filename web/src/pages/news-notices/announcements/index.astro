@@ -1,20 +1,36 @@
 ---
-import ListingTemplate from '../../../components/templates/ListingTemplate.astro';
-import { getAllCurrentNotices } from '../../../lib/content/notices';
+// Announcements — one fixed template (Strapi: News & Notices – Vacancy
+// Announcements) drives this whole page. Staff create an entry in the admin
+// and it appears here automatically, newest first — no separate publish
+// step (draftAndPublish is off on that type). Search and type filtering are
+// client-side (AnnouncementsBoard), since the full list is small enough to
+// ship in one page load, matching the Faculty/Newsletter directory pattern.
+import Layout from '../../../layouts/Layout.astro';
+import AnnouncementsBoard from '../../../components/announcements/AnnouncementsBoard.tsx';
+import '../../../styles/section-landing.css';
+import '../../../styles/listing.css';
+import '../../../styles/announcements.css';
+import { getVacancyAnnouncements, TYPE_LABELS } from '../../../lib/content/vacancy-announcements';
 
-const notices = await getAllCurrentNotices();
-const rows = notices.map((n) => ({
-  id: n.id,
-  href: `/news-notices/announcements/${n.id}`,
-  date: new Date(n.publish_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
-  title: n.title,
-  tags: [n.category, ...(n.urgency === 'urgent' ? ['Urgent'] : [])],
-  meta: n.owning_unit_name ?? undefined,
-}));
+const announcements = await getVacancyAnnouncements();
+const typeOptions = Object.entries(TYPE_LABELS).map(([value, label]) => ({ value, label }));
 ---
-<ListingTemplate
-  title="Announcements"
-  breadcrumb={[{ label: 'Home', url: '/' }, { label: 'News & Notices', url: '/news-notices' }, { label: 'Announcements', url: '/news-notices/announcements' }]}
-  rows={rows}
-  archiveHref="/news-notices/archive"
-/>
+<Layout title="Announcements" description="Vacancy announcements, shortlisted candidates, selection results and general notices from Sherubtse College.">
+  <header class="sl-head">
+    <div class="wrap">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="/">Home</a> › <a href="/news-notices">News & Notices</a> › <span class="current">Announcements</span>
+      </nav>
+      <p class="sl-eyebrow">News & Notices</p>
+      <h1 class="sl-title">Announcements</h1>
+      <span class="sl-rule" aria-hidden="true"></span>
+      <p class="sl-intro">Vacancy announcements, shortlisted candidates, selection results and general notices — newest first.</p>
+    </div>
+  </header>
+
+  <div class="ls-body">
+    <div class="wrap an-wrap">
+      <AnnouncementsBoard client:load items={announcements} typeOptions={typeOptions} />
+    </div>
+  </div>
+</Layout>
