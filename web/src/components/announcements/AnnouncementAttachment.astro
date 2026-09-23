@@ -1,0 +1,16 @@
+---
+interface Props {
+  url: string;
+  name: string | null;
+  title: string;
+}
+const { url, name, title } = Astro.props;
+---
+<div class="an-attachment">
+  <a href={url} class="attachment" target="_blank" rel="noopener">
+    <span aria-hidden="true">&#128206;</span> {name ?? 'Download attachment'}
+  </a>
+  <div class="an-pdf-frame">
+    <iframe src={`${url}#view=FitH`} title={`${title} — attachment`} loading="lazy" />
+  </div>
+</div>

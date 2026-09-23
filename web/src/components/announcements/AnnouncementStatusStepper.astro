@@ -1,0 +1,31 @@
+---
+// A subtle recruitment-pipeline indicator: Application → Shortlisted →
+// Viva-Voce → Result. Only meaningful for the vacancy-lifecycle types —
+// general_notice doesn't belong on any stage, so it renders nothing.
+import type { AnnouncementType } from '../../lib/content/vacancy-announcements';
+
+interface Props {
+  type: AnnouncementType;
+}
+const { type } = Astro.props;
+
+const STAGES = ['Application', 'Shortlisted', 'Viva-Voce', 'Result'];
+const STAGE_INDEX: Partial<Record<AnnouncementType, number>> = {
+  vacancy_announcement: 0,
+  re_vacancy_announcement: 0,
+  shortlisted_written: 1,
+  shortlisted_viva: 2,
+  selection_result: 3,
+};
+const current = STAGE_INDEX[type];
+---
+{current !== undefined && (
+  <ol class="an-steps" aria-label="Recruitment stage">
+    {STAGES.map((stage, i) => (
+      <li class={`an-step${i < current ? ' is-done' : ''}${i === current ? ' is-current' : ''}`} aria-current={i === current ? 'step' : undefined}>
+        <span class="an-step-dot" aria-hidden="true"></span>
+        <span class="an-step-label">{stage}</span>
+      </li>
+    ))}
+  </ol>
+)}

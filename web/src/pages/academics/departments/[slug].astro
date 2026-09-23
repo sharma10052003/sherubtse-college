@@ -1,34 +1,57 @@
 ---
+// Detail page for one department. Sourced from the "department" content
+// type (see departments.ts) rather than the generic Unit template's usual
+// "units" source — that relation has no academic-kind records right now,
+// so this is what actually carries department data. Still rendered with
+// the unchanged, sitewide UnitTemplate: this page's redesign work is
+// scoped to the /academics/departments listing, not its detail template.
 import UnitTemplate from '../../../components/templates/UnitTemplate.astro';
-import { getUnits, getUnitBySlug } from '../../../lib/content/units';
-import { getProgrammesByUnit } from '../../../lib/content/programmes';
-import { getPeopleByUnit } from '../../../lib/content/people';
+import { getDepartments, getDepartmentBySlug } from '../../../lib/content/departments';
+import type { ProgrammeCard } from '../../../lib/content/programmes';
 import { getNoticesByUnit } from '../../../lib/content/notices';
 
 export async function getStaticPaths() {
-  const units = await getUnits('academic');
-  return units.map((u) => ({ params: { slug: u.slug } }));
+  const departments = await getDepartments();
+  return departments.map((d) => ({ params: { slug: d.slug } }));
 }
 
 const { slug } = Astro.params;
-const unit = await getUnitBySlug(slug as string);
-if (!unit) return Astro.redirect('/academics/departments', 404);
+const department = await getDepartmentBySlug(slug as string);
+if (!department) return Astro.redirect('/academics/departments', 404);
 
-const [programmes, people, notices] = await Promise.all([
-  getProgrammesByUnit(unit.slug),
-  getPeopleByUnit(unit.slug),
-  getNoticesByUnit(unit.slug),
-]);
+const programmes: ProgrammeCard[] = department.programmes.map((p) => ({
+  id: p.id,
+  slug: p.slug,
+  programme_name: p.programme_name,
+  level: p.level,
+  degree_type: null,
+  duration: null,
+  short_description: null,
+  department_name: department.name,
+  hero_image_url: null,
+}));
+
+const notices = await getNoticesByUnit(department.slug);
 ---
 <UnitTemplate
-  unit={unit}
+  unit={{
+    kind: 'academic',
+    id: department.id,
+    name: department.name,
+    slug: department.slug,
+    description: department.description ?? department.short_description,
+    photo_url: department.banner_url,
+    head: department.head ? { full_name: department.head.full_name, slug: department.head.slug } : null,
+    contact: null,
+    last_reviewed: department.updated_at,
+  }}
   programmes={programmes}
-  people={people}
+  people={[]}
   notices={notices}
   breadcrumb={[
     { label: 'Home', url: '/' },
     { label: 'Academics', url: '/academics' },
     { label: 'Departments', url: '/academics/departments' },
-    { label: unit.name, url: `/academics/departments/${unit.slug}` },
+    { label: department.name, url: `/academics/departments/${department.slug}` },
   ]}
 />

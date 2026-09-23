@@ -1,0 +1,171 @@
+---
+// Detail page for one announcement. Two sources share this route:
+//  - the new fixed-template Vacancy Announcements (slug-based) — the ones
+//    the "Announcements" listing page shows, rendered below as a hero,
+//    a recruitment-stage indicator, a two-column body (position-openings
+//    table, shortlisted-candidate groups and a PDF viewer/download in the
+//    main column; key dates and notes in the sidebar);
+//  - the older Notice records (numeric id) that Tenders still links to
+//    (cms/src/api/notice's category "tender"), reusing this same route
+//    rather than duplicating an article page, per the existing decision
+//    recorded in tenders/index.astro — rendered with the plain ArticleTemplate.
+// The param is named "slug" but happily matches either shape.
+import Layout from '../../../layouts/Layout.astro';
+import ArticleTemplate from '../../../components/templates/ArticleTemplate.astro';
+import AnnouncementHero from '../../../components/announcements/AnnouncementHero.astro';
+import AnnouncementStatusStepper from '../../../components/announcements/AnnouncementStatusStepper.astro';
+import AnnouncementSidebar from '../../../components/announcements/AnnouncementSidebar.astro';
+import PositionOpeningsTable from '../../../components/announcements/PositionOpeningsTable.astro';
+import CandidateGroup from '../../../components/announcements/CandidateGroup.astro';
+import AnnouncementAttachment from '../../../components/announcements/AnnouncementAttachment.astro';
+import '../../../styles/section-landing.css';
+import '../../../styles/listing.css';
+import '../../../styles/announcements.css';
+import { getVacancyAnnouncementSlugs, getVacancyAnnouncementBySlug, type ShortlistRow } from '../../../lib/content/vacancy-announcements';
+import { getAllNoticeIds, getNoticeById } from '../../../lib/content/notices';
+
+export async function getStaticPaths() {
+  const [slugs, noticeIds] = await Promise.all([getVacancyAnnouncementSlugs(), getAllNoticeIds()]);
+  return [
+    ...slugs.map((slug) => ({ params: { slug } })),
+    ...noticeIds.map((id) => ({ params: { slug: String(id) } })),
+  ];
+}
+
+const { slug } = Astro.params as { slug: string };
+const announcement = await getVacancyAnnouncementBySlug(slug);
+const notice = !announcement && /^\d+$/.test(slug) ? await getNoticeById(Number(slug)) : null;
+
+if (!announcement && !notice) {
+  return Astro.redirect('/news-notices/announcements', 404);
+}
+
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+}
+
+// The source notices group shortlisted candidates under their own position
+// heading when an announcement covers more than one post — same here,
+// grouped in the order each position first appears rather than re-sorted.
+function groupByPosition(rows: ShortlistRow[]): { position: string; rows: ShortlistRow[] }[] {
+  const groups: { position: string; rows: ShortlistRow[] }[] = [];
+  for (const row of rows) {
+    let group = groups.find((g) => g.position === row.position_title);
+    if (!group) {
+      group = { position: row.position_title, rows: [] };
+      groups.push(group);
+    }
+    group.rows.push(row);
+  }
+  return groups;
+}
+
+const shortlistGroups = announcement ? groupByPosition(announcement.shortlisted_candidates) : [];
+
+// The "positions" a heading lists — preferring whichever source is
+// structured data rather than re-splitting free text, falling back to
+// splitting position_name on commas only when nothing structured exists.
+function splitPositions(name: string | null): string[] {
+  if (!name) return [];
+  return name.split(',').map((s) => s.trim()).filter(Boolean);
+}
+const positionList = announcement
+  ? shortlistGroups.length > 0
+    ? shortlistGroups.map((g) => g.position)
+    : announcement.position_openings.length > 0
+      ? [...new Set(announcement.position_openings.map((p) => p.position_title))]
+      : splitPositions(announcement.position_name)
+  : [];
+
+const isInterviewType = announcement?.type === 'shortlisted_viva' || announcement?.type === 'shortlisted_written';
+const dateFieldLabel = announcement?.deadline_or_interview_date ? (isInterviewType ? 'Interview' : 'Deadline') : null;
+const dateFieldValue = announcement?.deadline_or_interview_date
+  ? formatDate(announcement.deadline_or_interview_date) + (announcement.interview_time ? ` at ${announcement.interview_time}` : '')
+  : null;
+
+const KEY_INFO_TITLES: Record<string, string> = {
+  shortlisted_written: 'Interview Information',
+  shortlisted_viva: 'Interview Information',
+  vacancy_announcement: 'Application Details',
+  re_vacancy_announcement: 'Application Details',
+  selection_result: 'Key Dates',
+};
+const keyInfoTitle = announcement ? (KEY_INFO_TITLES[announcement.type] ?? null) : null;
+---
+{announcement && (
+  <Layout title={announcement.title} description={announcement.description}>
+    <AnnouncementHero
+      breadcrumb={[
+        { label: 'Home', url: '/' },
+        { label: 'News & Notices', url: '/news-notices' },
+        { label: 'Announcements', url: '/news-notices/announcements' },
+        { label: announcement.title, url: `/news-notices/announcements/${announcement.slug}` },
+      ]}
+      type={announcement.type}
+      typeLabel={announcement.type_label}
+      status={announcement.status}
+      title={announcement.title}
+      positions={positionList}
+      datePosted={formatDate(announcement.date_posted)}
+      dateFieldLabel={dateFieldLabel}
+      dateFieldValue={dateFieldValue}
+      venue={announcement.interview_venue}
+    />
+
+    <div class="ls-body">
+      <div class="wrap an-detail-wrap">
+        <AnnouncementStatusStepper type={announcement.type} />
+
+        <div class="an-detail-grid">
+          <div class="an-intro-panel">
+            <div class="article-body" set:html={announcement.description.replace(/\n/g, '<br>')} />
+          </div>
+
+          <div class="an-detail-main">
+            {announcement.position_openings.length > 0 && (
+              <PositionOpeningsTable positions={announcement.position_openings} />
+            )}
+
+            {shortlistGroups.length > 0 && (
+              <section class="an-table-section">
+                <h2 class="an-table-heading">Shortlisted Candidates</h2>
+                {shortlistGroups.map((group) => (
+                  <CandidateGroup position={group.position} rows={group.rows} showHeading={shortlistGroups.length > 1} />
+                ))}
+              </section>
+            )}
+
+            {announcement.attachment_url && (
+              <AnnouncementAttachment url={announcement.attachment_url} name={announcement.attachment_name} title={announcement.title} />
+            )}
+          </div>
+
+          <AnnouncementSidebar
+            keyInfoTitle={keyInfoTitle}
+            datePosted={formatDate(announcement.date_posted)}
+            dateFieldLabel={dateFieldLabel}
+            dateFieldValue={dateFieldValue}
+            venue={announcement.interview_venue}
+            additionalNotes={announcement.additional_notes}
+          />
+        </div>
+      </div>
+    </div>
+  </Layout>
+)}
+{notice && (
+  <ArticleTemplate
+    eyebrow={`${notice.category}${notice.owning_unit_name ? ' · ' + notice.owning_unit_name : ''}`}
+    title={notice.title}
+    meta={`${formatDate(notice.publish_at)} · closes ${formatDate(notice.expires_at)}`}
+    body={notice.body}
+    urgent={notice.urgency === 'urgent'}
+    attachments={notice.attachments}
+    breadcrumb={[
+      { label: 'Home', url: '/' },
+      { label: 'News & Notices', url: '/news-notices' },
+      { label: 'Announcements', url: '/news-notices/announcements' },
+      { label: notice.title, url: `/news-notices/announcements/${notice.id}` },
+    ]}
+  />
+)}

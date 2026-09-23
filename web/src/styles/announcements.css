@@ -1,0 +1,995 @@
+/**
+ * Announcements — the vacancy-announcement board and its detail page.
+ * Page-specific stylesheet (components.css stays closed), built on top of
+ * section-landing.css (header) and listing.css (.ls-body band). Navy + gold,
+ * square corners, no shadows.
+ */
+
+/* Wider than the default 1140px content column specifically for the board —
+   at desktop widths the fixed-width column left large empty gutters on
+   both sides with only 3 narrow cards floating in the middle. */
+.an-wrap {
+  max-width: 1400px;
+}
+
+/* ---------- Stat tiles (double as the type/status filter) ---------- */
+.an-tiles {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--s3);
+  margin-bottom: var(--s6);
+}
+@media (min-width: 640px) {
+  .an-tiles {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+@media (min-width: 1024px) {
+  .an-tiles {
+    grid-template-columns: repeat(8, 1fr);
+  }
+}
+.an-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  font-family: var(--font-sans);
+  text-align: left;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-bottom: 3px solid var(--line-strong);
+  padding: var(--s3) var(--s3);
+  cursor: pointer;
+  transition: border-color 0.2s ease, transform 0.2s ease, background-color 0.2s ease;
+}
+.an-tile:hover:not(:disabled) {
+  transform: translateY(-3px);
+  border-bottom-color: var(--gold-deep);
+}
+.an-tile:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.an-tile.is-active {
+  background: var(--navy);
+  border-color: var(--navy);
+  border-bottom-color: var(--gold);
+}
+.an-tile-icon {
+  color: var(--navy);
+  margin-bottom: 2px;
+}
+.an-tile-icon svg {
+  width: 18px;
+  height: 18px;
+}
+.an-tile.is-active .an-tile-icon {
+  color: var(--gold);
+}
+.an-tile-num {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: 1.5rem;
+  color: var(--navy);
+  line-height: 1.1;
+}
+.an-tile.is-active .an-tile-num {
+  color: #fff;
+}
+.an-tile-open .an-tile-num {
+  color: var(--open);
+}
+.an-tile-open.is-active .an-tile-num {
+  color: var(--gold-light);
+}
+.an-tile-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--ink-2);
+  letter-spacing: 0.02em;
+}
+.an-tile.is-active .an-tile-label {
+  color: #c9d0e4;
+}
+
+/* ---------- Spotlight (the latest posting, shown only in the default view) ---------- */
+.an-spotlight {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--s5);
+  background: var(--navy);
+  color: #fff;
+  border-bottom: 4px solid var(--gold);
+  padding: var(--s6) var(--s5);
+  margin-bottom: var(--s7);
+  overflow: hidden;
+  animation: an-card-in 0.4s ease both;
+}
+.an-spotlight::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url('/patterns/knot-gold.svg');
+  background-size: 120px;
+  opacity: 0.05;
+  pointer-events: none;
+}
+.an-spotlight-tag {
+  position: absolute;
+  top: var(--s4);
+  right: var(--s5);
+  font-weight: 700;
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+.an-spotlight-icon {
+  position: relative;
+  display: none;
+}
+.an-spotlight-body {
+  position: relative;
+}
+.an-spotlight-title {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  font-size: clamp(1.4rem, 3vw, 1.9rem);
+  line-height: 1.25;
+  margin: var(--s3) 0 var(--s2);
+}
+.an-spotlight-title a {
+  color: #fff;
+  text-decoration: none;
+}
+.an-spotlight-title a:hover {
+  color: var(--gold-light);
+}
+.an-spotlight-position {
+  font-weight: 600;
+  color: var(--gold-light);
+  margin: 0 0 var(--s3);
+}
+.an-spotlight-desc {
+  color: #c9d0e4;
+  max-width: 60ch;
+  margin: 0 0 var(--s4);
+}
+.an-spotlight-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s3) var(--s5);
+  align-items: center;
+  margin-bottom: var(--s5);
+}
+.an-spotlight .an-dates,
+.an-spotlight .an-relative {
+  color: #c9d0e4;
+  margin: 0;
+}
+.an-spotlight .an-pill {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.25);
+  color: #fff;
+}
+.an-spotlight .an-pill-soon {
+  background: rgba(179, 38, 30, 0.35);
+  border-color: var(--urgent);
+  color: #fff;
+}
+.an-spotlight .btn-primary {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: var(--navy);
+}
+@media (min-width: 760px) {
+  .an-spotlight {
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    padding: var(--s7);
+  }
+  .an-spotlight-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 88px;
+    height: 88px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    flex-shrink: 0;
+  }
+  .an-spotlight-icon svg {
+    width: 40px;
+    height: 40px;
+    color: var(--gold);
+  }
+}
+
+/* ---------- Filter bar ---------- */
+.an-filterbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s3);
+  margin-bottom: var(--s5);
+}
+.an-search {
+  position: relative;
+  flex: 1 1 240px;
+}
+.an-search svg {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  width: 18px;
+  height: 18px;
+  transform: translateY(-50%);
+  color: var(--ink-2);
+  pointer-events: none;
+}
+.an-search input {
+  width: 100%;
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  padding: 11px 12px 11px 38px;
+  border: 1px solid var(--line-strong);
+  background: var(--paper);
+  color: var(--ink);
+}
+.an-filterbar select {
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  padding: 0 var(--s3);
+  border: 1px solid var(--line-strong);
+  background: var(--paper);
+  color: var(--ink);
+  min-width: 168px;
+}
+.an-search input:focus-visible,
+.an-filterbar select:focus-visible {
+  outline: 3px solid var(--gold);
+  outline-offset: -1px;
+}
+.an-clear {
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--navy-mid);
+  background: none;
+  border: 1px solid var(--line-strong);
+  padding: 0 var(--s4);
+  cursor: pointer;
+}
+.an-clear:hover {
+  color: var(--gold-ink);
+  border-color: var(--gold-deep);
+}
+.an-count {
+  font-size: 0.85rem;
+  color: var(--ink-2);
+  margin: 0 0 var(--s5);
+}
+.an-empty {
+  padding: var(--s6);
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--gold);
+  color: var(--ink-2);
+}
+
+/* ---------- Card grid ---------- */
+.an-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--s5);
+}
+@media (min-width: 640px) {
+  .an-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (min-width: 1024px) {
+  .an-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+@media (min-width: 1360px) {
+  .an-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* ---------- Card ---------- */
+@keyframes an-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.an-card {
+  display: flex;
+  flex-direction: column;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-top: 3px solid var(--navy);
+  padding: var(--s5);
+  transition: transform 0.25s ease, border-color 0.25s ease;
+  animation: an-card-in 0.35s ease both;
+}
+.an-card:hover,
+.an-card:focus-within {
+  transform: translateY(-5px);
+  border-color: var(--gold-deep);
+  border-top-color: var(--gold);
+}
+.an-card-top {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s3);
+  margin-bottom: var(--s4);
+}
+.an-icon {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line-strong);
+  color: var(--navy);
+  transition: transform 0.25s ease, background-color 0.25s ease, color 0.25s ease;
+}
+.an-icon svg {
+  width: 18px;
+  height: 18px;
+}
+.an-card:hover .an-icon {
+  background: var(--navy);
+  color: var(--gold-light);
+  transform: scale(1.08) rotate(-4deg);
+}
+.an-badge-row {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+.an-status {
+  flex-shrink: 0;
+  font-weight: 700;
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 3px 10px;
+}
+.an-status-open {
+  background: var(--open);
+  color: #fff;
+}
+.an-status-closed {
+  background: var(--line-strong);
+  color: var(--ink-2);
+}
+
+/* ---------- Badges ---------- */
+.an-badge {
+  display: inline-block;
+  font-weight: 700;
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 3px 10px;
+  border: 1px solid var(--navy);
+  color: var(--navy);
+}
+/* Every type badge stays within navy + gold — the icon tells types apart,
+   not a rainbow of border colours. Only two treatments: a plain navy
+   outline for "in progress" postings, and a solid gold fill reserved for
+   the two that mark something concluding (a result, or a fresh listing).
+   Green and red are never used here — they stay reserved for the real
+   Open/Closed status and the deadline-soon warning below. */
+.an-badge-vacancy_announcement,
+.an-badge-re_vacancy_announcement,
+.an-badge-shortlisted_written,
+.an-badge-shortlisted_viva,
+.an-badge-general_notice {
+  border-color: var(--navy);
+  color: var(--navy);
+}
+.an-badge-selection_result {
+  border-color: var(--gold-deep);
+  background: var(--gold);
+  color: var(--navy);
+}
+.an-badge-new {
+  border-color: var(--gold-deep);
+  background: var(--gold);
+  color: var(--navy);
+}
+
+.an-card-title {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  font-size: 1.12rem;
+  line-height: 1.3;
+  margin: 0 0 var(--s2);
+}
+.an-card-title a {
+  color: var(--navy);
+  text-decoration: none;
+}
+.an-card:hover .an-card-title a {
+  color: var(--navy-mid);
+}
+.an-position {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--ink);
+  margin: 0 0 var(--s2);
+}
+.an-dates {
+  font-size: 0.82rem;
+  color: var(--ink-2);
+  margin: 0 0 var(--s4);
+}
+.an-relative {
+  color: var(--ink-2);
+}
+
+/* ---------- Footer: deadline / attachment pills + View ---------- */
+.an-card-footer {
+  margin-top: auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s3);
+  padding-top: var(--s3);
+  border-top: 1px solid var(--line);
+}
+.an-footer-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2);
+}
+.an-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--ink-2);
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  padding: 3px 8px;
+}
+.an-pill svg {
+  width: 12px;
+  height: 12px;
+}
+.an-pill-soon {
+  color: var(--urgent);
+  border-color: var(--urgent);
+  background: #fbebea;
+}
+.an-pill-file {
+  color: var(--navy-mid);
+}
+.an-view {
+  padding: 8px 16px;
+  font-size: 0.85rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.an-view-arrow {
+  transition: transform 0.25s ease;
+}
+.an-card:hover .an-view-arrow {
+  transform: translateX(4px);
+}
+
+/* ---------- Detail header ----------
+   Sits on the same .sl-head hero used by full section landing pages, but an
+   announcement is a single article, not a section with its own sub-nav —
+   tighten the padding and rhythm so it doesn't read as a half-empty landing
+   band above a short notice. */
+.an-detail-head {
+  padding-block: var(--s5) var(--s6);
+}
+/* A tighter, centred column than the 1400px board — this page is read top
+   to bottom, not scanned as a grid, so the extra width just left the intro
+   text and sidebar cards awkwardly stretched. */
+.an-detail-wrap {
+  max-width: 1240px;
+}
+.an-detail-badges {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s2);
+  margin-top: var(--s4);
+}
+.an-detail-badges .an-icon {
+  margin-right: 2px;
+}
+.an-detail-title {
+  margin-top: var(--s3);
+}
+/* The position(s) a posting covers, as a short list — a single sentence
+   read badly once a posting named three long titles in a row. */
+.an-detail-positions {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s1);
+  margin: var(--s3) 0 0;
+  padding: 0;
+}
+.an-detail-positions li {
+  position: relative;
+  padding-left: var(--s4);
+  font-weight: 600;
+  color: var(--ink);
+}
+.an-detail-positions li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.6em;
+  width: 6px;
+  height: 6px;
+  background: var(--gold-deep);
+}
+.an-detail-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2);
+  margin-top: var(--s5);
+}
+.an-detail-meta .an-pill-label {
+  font-weight: 700;
+  color: var(--ink);
+}
+
+/* ---------- Recruitment-stage indicator ----------
+   A subtle horizontal enhancement, not a section of its own — sits above
+   the two-column body, full width. */
+.an-steps {
+  display: flex;
+  list-style: none;
+  gap: var(--s3);
+  margin: 0 0 var(--s7);
+  padding: 0;
+}
+.an-step {
+  flex: 1;
+  min-width: 0;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--s2);
+  padding-top: 10px;
+  border-top: 2px solid var(--line);
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+.an-step-dot {
+  position: absolute;
+  top: -6px;
+  left: 0;
+  width: 10px;
+  height: 10px;
+  background: var(--paper);
+  border: 2px solid var(--line-strong);
+}
+.an-step.is-done {
+  border-top-color: var(--navy);
+  color: var(--navy);
+}
+.an-step.is-done .an-step-dot {
+  background: var(--navy);
+  border-color: var(--navy);
+}
+.an-step.is-current {
+  border-top-color: var(--gold-deep);
+  color: var(--navy);
+}
+.an-step.is-current .an-step-dot {
+  background: var(--gold);
+  border-color: var(--gold-deep);
+  width: 12px;
+  height: 12px;
+  top: -7px;
+}
+.an-step-label {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+@media (max-width: 560px) {
+  .an-step-label {
+    font-size: 0.68rem;
+    letter-spacing: 0;
+  }
+}
+
+/* ---------- Two-column body ----------
+   Three grid children — the intro panel, the rest of the main column, and
+   the sidebar — so the sidebar can sit beside both on desktop but still
+   fall right after the intro (not after the whole candidate list) once
+   everything stacks to one column on narrow screens. */
+.an-detail-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--s7);
+}
+.an-intro-panel {
+  order: 1;
+}
+.an-detail-sidebar {
+  order: 2;
+}
+.an-detail-main {
+  order: 3;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s8);
+  min-width: 0;
+}
+@media (min-width: 1024px) {
+  .an-detail-grid {
+    grid-template-columns: minmax(0, 7fr) minmax(0, 3fr);
+    grid-template-areas:
+      'intro   sidebar'
+      'main    sidebar';
+    gap: var(--s7);
+    align-items: start;
+  }
+  .an-intro-panel {
+    grid-area: intro;
+    order: initial;
+  }
+  .an-detail-main {
+    grid-area: main;
+    order: initial;
+  }
+  .an-detail-sidebar {
+    grid-area: sidebar;
+    order: initial;
+  }
+}
+
+/* ---------- Intro panel ---------- */
+.an-intro-panel {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--navy);
+  padding: var(--s5);
+  max-width: 68ch;
+}
+.an-intro-panel .article-body {
+  margin: 0;
+  color: var(--ink);
+}
+
+/* ---------- Sidebar cards ---------- */
+.an-detail-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s5);
+}
+.an-side-card {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-top: 3px solid var(--navy);
+  padding: var(--s5);
+}
+.an-side-heading {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  font-size: 1.02rem;
+  color: var(--navy);
+  margin: 0 0 var(--s4);
+}
+.an-side-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s4);
+  margin: 0;
+}
+.an-side-list dt {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  margin: 0 0 2px;
+}
+.an-side-list dd {
+  margin: 0;
+  font-weight: 600;
+  color: var(--ink);
+}
+.an-side-card-notes {
+  border-top-color: var(--gold-deep);
+}
+.an-side-notes {
+  font-size: 0.92rem;
+  line-height: 1.6;
+  color: var(--ink-2);
+}
+
+/* ---------- Candidate list ---------- */
+.an-candidate-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-top: 3px solid var(--navy);
+}
+.an-candidate {
+  display: flex;
+  align-items: center;
+  gap: var(--s4);
+  padding: var(--s4) var(--s5);
+  border-bottom: 1px solid var(--line);
+}
+.an-candidate:last-child {
+  border-bottom: none;
+}
+.an-candidate:nth-child(even) {
+  background: var(--paper-2);
+}
+.an-candidate.is-highlight {
+  border-left: 3px solid var(--gold);
+}
+.an-candidate-no {
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--navy);
+  border: 1px solid var(--line-strong);
+}
+.an-candidate-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s3) var(--s4);
+}
+.an-candidate-ids {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2) var(--s5);
+}
+.an-candidate-id {
+  font-size: 0.88rem;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.an-candidate-id-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  margin-right: 4px;
+}
+.an-candidate-remark {
+  flex-shrink: 0;
+}
+.an-candidate-score {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: 1.15rem;
+  color: var(--navy);
+  line-height: 1.1;
+}
+.an-candidate-score-label {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 0.65rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+/* Nested flex-wrap (badge + wrapping id row + score, all wrapping
+   independently) reflowed unpredictably at phone widths — badge ending up
+   vertically stranded between two lines of text. A small grid pins each
+   piece to a fixed cell instead. */
+@media (max-width: 560px) {
+  .an-candidate {
+    display: grid;
+    grid-template-columns: 34px 1fr auto;
+    grid-template-areas:
+      'no ids score'
+      'no remark remark';
+    align-items: start;
+    column-gap: var(--s3);
+    row-gap: var(--s2);
+  }
+  .an-candidate-no {
+    grid-area: no;
+  }
+  .an-candidate-body {
+    display: contents;
+  }
+  .an-candidate-ids {
+    grid-area: ids;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .an-candidate-remark {
+    grid-area: remark;
+  }
+  .an-candidate-score {
+    grid-area: score;
+    flex-direction: row;
+    align-items: baseline;
+    gap: var(--s2);
+  }
+}
+
+/* ---------- Attachment / PDF viewer ---------- */
+.an-pdf-frame {
+  margin-top: var(--s4);
+  border: 1px solid var(--line);
+  height: 80vh;
+  min-height: 480px;
+}
+.an-pdf-frame iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .an-card {
+    transition: none;
+    animation: none;
+  }
+  .an-card:hover,
+  .an-card:focus-within {
+    transform: none;
+  }
+  .an-icon,
+  .an-view-arrow {
+    transition: none;
+  }
+  .an-card:hover .an-icon {
+    transform: none;
+  }
+  .an-tile {
+    transition: none;
+  }
+  .an-tile:hover:not(:disabled) {
+    transform: none;
+  }
+  .an-spotlight {
+    animation: none;
+  }
+}
+
+/* ---------- Detail page: position/shortlist tables ----------
+   The sitewide .tbl (components.css) is a bare, borderless list table —
+   fine for a short document register, but six dense columns of applicant
+   data need real structure. Everything below is scoped to .an-data-tbl
+   inside .an-table-card, so the Downloads & Forms table elsewhere is
+   untouched. */
+.an-table-section {
+  /* Vertical rhythm between sections now comes from .an-detail-main's flex
+     gap — this no longer needs its own block padding. */
+}
+.an-table-heading {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  font-size: 1.2rem;
+  color: var(--navy);
+  margin: 0 0 var(--s4);
+}
+.an-shortlist-group + .an-shortlist-group {
+  margin-top: var(--s6);
+}
+.an-shortlist-position {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s3);
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #fff;
+  background: var(--navy);
+  margin: 0;
+  padding: var(--s3) var(--s4);
+  border-bottom: 3px solid var(--gold);
+}
+.an-shortlist-count {
+  font-weight: 600;
+  font-size: 0.78rem;
+  color: var(--gold-light);
+  white-space: nowrap;
+}
+
+.an-table-card {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-top: 3px solid var(--navy);
+}
+/* The navy position-group bar already reads as the card's "top" — a second
+   navy border directly under it would look like a stray line. */
+.an-shortlist-position + .an-table-card,
+.an-shortlist-position + .an-candidate-list {
+  border-top: none;
+}
+.an-table-card .tbl-wrap {
+  overflow-x: auto;
+}
+.an-data-tbl {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+  white-space: nowrap;
+}
+.an-data-tbl th {
+  position: sticky;
+  top: 0;
+  background: var(--navy);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-align: left;
+  padding: var(--s3) var(--s4);
+  white-space: nowrap;
+}
+.an-data-tbl td {
+  padding: var(--s3) var(--s4);
+  border-bottom: 1px solid var(--line);
+  color: var(--ink);
+  vertical-align: top;
+}
+.an-data-tbl tbody tr:nth-child(even) {
+  background: var(--paper-2);
+}
+.an-data-tbl tbody tr:hover {
+  background: #fdf6e3;
+}
+.an-data-tbl tbody tr:last-child td {
+  border-bottom: none;
+}
+.an-cell-strong {
+  font-weight: 700;
+  color: var(--navy);
+}
+.an-cell-wide {
+  white-space: normal;
+  min-width: 22ch;
+  max-width: 40ch;
+}

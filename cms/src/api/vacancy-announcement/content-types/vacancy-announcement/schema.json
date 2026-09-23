@@ -1,0 +1,83 @@
+{
+  "kind": "collectionType",
+  "collectionName": "vacancy_announcements",
+  "info": {
+    "singularName": "vacancy-announcement",
+    "pluralName": "vacancy-announcements",
+    "displayName": "News & Notices – Vacancy Announcements"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "attributes": {
+    "title": {
+      "type": "string",
+      "required": true
+    },
+    "slug": {
+      "type": "uid",
+      "targetField": "title"
+    },
+    "type": {
+      "type": "enumeration",
+      "enum": [
+        "vacancy_announcement",
+        "re_vacancy_announcement",
+        "shortlisted_written",
+        "shortlisted_viva",
+        "selection_result",
+        "general_notice"
+      ],
+      "required": true
+    },
+    "position_name": {
+      "type": "string"
+    },
+    "date_posted": {
+      "type": "date",
+      "required": true
+    },
+    "deadline_or_interview_date": {
+      "type": "date"
+    },
+    "description": {
+      "type": "richtext",
+      "required": true
+    },
+    "attachment": {
+      "type": "media",
+      "multiple": false,
+      "allowedTypes": [
+        "files"
+      ]
+    },
+    "status": {
+      "type": "enumeration",
+      "enum": [
+        "open",
+        "closed"
+      ],
+      "default": "open",
+      "required": true
+    },
+    "interview_time": {
+      "type": "string"
+    },
+    "interview_venue": {
+      "type": "string"
+    },
+    "additional_notes": {
+      "type": "richtext"
+    },
+    "position_openings": {
+      "type": "component",
+      "repeatable": true,
+      "component": "announcements.position-opening"
+    },
+    "shortlisted_candidates": {
+      "type": "component",
+      "repeatable": true,
+      "component": "announcements.shortlist-row"
+    }
+  }
+}
