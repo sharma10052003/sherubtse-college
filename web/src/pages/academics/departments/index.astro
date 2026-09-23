@@ -17,21 +17,23 @@ const legacyYears = new Date().getFullYear() - 1968;
 
 const beyondImage = departments.find((d) => d.banner_url)?.banner_url ?? null;
 
-// One live-canvas motif per department, used behind a card's media area
-// when it has no banner photo to show instead — picked for subject-matter
-// fit rather than assigned arbitrarily: a spider-web network for
-// Mathematical & Data Sciences (a graph is the most literal data-science
-// visual there is), a flowing current for the social sciences, and falling
-// elements for the natural sciences. Falls back sensibly for any
-// department not yet in the map so a future fourth department never
-// breaks the grid.
-const SHOWCASE: Record<string, { fx: 'web' | 'rain' | 'wave'; motif: string }> = {
-  'humanities-social-sciences': { fx: 'wave', motif: 'Where ideas flow' },
+// One live-canvas motif per department, layered behind (or, for a
+// department with a banner photo, over) its panel's media — picked for
+// subject-matter fit rather than assigned arbitrarily: a spider-web
+// network for Mathematical & Data Sciences (a graph is the most literal
+// data-science visual there is), a rising bar chart with a trend line for
+// the social sciences (Economics, Political Science and Management all
+// read in growth/trend terms — a wave had nothing to do with any of
+// them), and falling elements for the natural sciences. Falls back
+// sensibly for any department not yet in the map so a future fourth
+// department never breaks the grid.
+const SHOWCASE: Record<string, { fx: 'web' | 'rain' | 'growth'; motif: string }> = {
+  'humanities-social-sciences': { fx: 'growth', motif: 'Where growth is measured' },
   'mathematical-data-sciences': { fx: 'web', motif: 'Where data connects' },
   'natural-sciences': { fx: 'rain', motif: 'Where elements fall' },
 };
 function showcaseFor(slug: string) {
-  return SHOWCASE[slug] ?? { fx: 'wave', motif: 'Discover the department' };
+  return SHOWCASE[slug] ?? { fx: 'growth', motif: 'Discover the department' };
 }
 ---
 <Layout
@@ -417,51 +419,69 @@ function showcaseFor(slug: string) {
       }
     }
 
-    // Flowing wave grid — fits the natural-sciences panel: fields and flow.
-    class WaveFx {
+    // Rising bar chart with a connecting trend line — fits the social
+    // sciences panel: Economics, Political Science and Management all
+    // read in growth, trend and measured-progress terms.
+    class GrowthFx {
       color: { r: number; g: number; b: number };
-      t = 0;
+      bars: { base: number; amp: number; phase: number; speed: number }[] = [];
       w = 0;
       h = 0;
+      t = 0;
       constructor(color: { r: number; g: number; b: number }) {
         this.color = color;
       }
       resize(w: number, h: number) {
         this.w = w;
         this.h = h;
+        const count = Math.max(6, Math.round(w / 46));
+        this.bars = [];
+        for (let i = 0; i < count; i++) {
+          this.bars.push({
+            base: 0.22 + Math.random() * 0.3,
+            amp: 0.15 + Math.random() * 0.28,
+            phase: Math.random() * 6.2832,
+            speed: 0.35 + Math.random() * 0.5,
+          });
+        }
       }
       draw(ctx: CanvasRenderingContext2D, dt: number, hot: boolean) {
-        this.t += dt * (hot ? 1 : 0.3);
-        const { w, h } = this;
-        const lines = 22;
-        const step = 16;
-        const amp = hot ? 20 : 11;
-        ctx.lineWidth = 1;
-        for (let i = 0; i < lines; i++) {
-          const baseY = (i / (lines - 1)) * h;
-          const depth = i / (lines - 1);
-          ctx.strokeStyle = rgba(this.color, (0.08 + depth * 0.4) * (hot ? 1 : 0.55));
+        this.t += dt * (hot ? 1 : 0.35);
+        const { w, h, bars: n } = this;
+        const gap = w / n.length;
+        const barW = gap * 0.42;
+        const points: { x: number; y: number }[] = [];
+        for (let i = 0; i < n.length; i++) {
+          const b = n[i];
+          const frac = b.base + b.amp * (0.5 + 0.5 * Math.sin(this.t * b.speed + b.phase));
+          const barH = Math.max(6, frac * h * 0.7);
+          const x = i * gap + gap / 2;
+          const y = h - barH;
+          ctx.fillStyle = rgba(this.color, hot ? 0.4 : 0.2);
+          ctx.fillRect(x - barW / 2, y, barW, barH);
+          points.push({ x, y: y - 6 });
+        }
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = rgba(this.color, hot ? 0.95 : 0.55);
+        ctx.beginPath();
+        points.forEach((p, i) => (i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y)));
+        ctx.stroke();
+        for (const p of points) {
+          ctx.fillStyle = rgba(this.color, hot ? 1 : 0.65);
           ctx.beginPath();
-          for (let x = 0; x <= w + step; x += step) {
-            const y =
-              baseY +
-              Math.sin(x * 0.008 + this.t * 1.1 + i * 0.35) * amp * depth +
-              Math.sin(x * 0.019 - this.t * 0.7 + i * 0.18) * amp * 0.45 * depth;
-            if (x === 0) ctx.moveTo(x, y);
-            else ctx.lineTo(x, y);
-          }
-          ctx.stroke();
+          ctx.arc(p.x, p.y, hot ? 3 : 2, 0, 6.2832);
+          ctx.fill();
         }
       }
     }
 
-    const FX = { web: WebFx, rain: RainFx, wave: WaveFx };
+    const FX = { web: WebFx, rain: RainFx, growth: GrowthFx };
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     const scenes = panels.flatMap((panel, i) => {
       const media = medias[i];
       const canvas = media?.querySelector<HTMLCanvasElement>('.dept-panel-fx');
       if (!media || !canvas) return [];
-      const kind = (panel.dataset.fx as keyof typeof FX) || 'wave';
+      const kind = (panel.dataset.fx as keyof typeof FX) || 'growth';
       const scene = {
         panel,
         canvas,
