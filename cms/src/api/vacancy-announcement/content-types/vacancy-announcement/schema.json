@@ -51,7 +51,7 @@
         "files"
       ]
     },
-    "status": {
+    "posting_status": {
       "type": "enumeration",
       "enum": [
         "open",
