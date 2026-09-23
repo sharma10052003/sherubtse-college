@@ -38,14 +38,16 @@ function iconFor(name: string): string {
 const beyondImage = departments.find((d) => d.banner_url)?.banner_url ?? null;
 
 // The "Step Inside" showcase: one live-canvas motif per department, picked
-// for subject-matter fit rather than assigned arbitrarily — a network for
-// the social sciences, a data stream for data science, a flowing field for
-// the natural sciences. Falls back sensibly for any department not yet in
-// the map so a future fourth department never breaks the section.
+// for subject-matter fit rather than assigned arbitrarily — a spider-web
+// network for Mathematical & Data Sciences (a graph is the most literal
+// data-science visual there is), a flowing current for the social
+// sciences, and falling elements for the natural sciences. Falls back
+// sensibly for any department not yet in the map so a future fourth
+// department never breaks the section.
 const SHOWCASE: Record<string, { fx: 'web' | 'rain' | 'wave'; motif: string }> = {
-  'humanities-social-sciences': { fx: 'web', motif: 'Where ideas connect' },
-  'mathematical-data-sciences': { fx: 'rain', motif: 'Where numbers move' },
-  'natural-sciences': { fx: 'wave', motif: 'Where nature is measured' },
+  'humanities-social-sciences': { fx: 'wave', motif: 'Where ideas flow' },
+  'mathematical-data-sciences': { fx: 'web', motif: 'Where data connects' },
+  'natural-sciences': { fx: 'rain', motif: 'Where elements fall' },
 };
 function showcaseFor(slug: string) {
   return SHOWCASE[slug] ?? { fx: 'wave', motif: 'Discover the department' };
