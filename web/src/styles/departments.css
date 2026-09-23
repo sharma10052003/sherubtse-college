@@ -73,197 +73,253 @@
   }
 }
 
-/* ================= Department cards ================= */
+/* ================= Department showcase (expanding panels) =================
+   Follows the reference component's mechanics closely: a flex-grow
+   accordion of wide panels, each carrying a live canvas motif (or the
+   department's own photo, when it has one) and a glass card that fades in
+   on hover/tap — rather than a static grid of always-open cards. Kept
+   strictly navy + the department's own --accent (its theme_color, or gold
+   when it doesn't have one) instead of the reference's neon per-panel
+   hues, and the radius/blur/shadow toned down to this site's "restrained"
+   register. */
 .dept-hint {
   max-width: 44rem;
   margin: 0 0 var(--s5);
   color: var(--ink-2);
   font-size: 0.95rem;
 }
-.dept-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--s6);
-}
-@media (min-width: 1024px) {
-  .dept-grid {
-    grid-template-columns: repeat(3, 1fr);
-    gap: var(--s5);
-  }
-}
 
-.dept-card {
-  position: relative;
+.dept-panels {
   display: flex;
   flex-direction: column;
-  background: var(--paper);
-  border: 1px solid var(--line);
-  transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+  gap: var(--s3);
 }
-.dept-card:hover,
-.dept-card:focus-within {
-  transform: translateY(-6px);
-  border-color: var(--line-strong);
-  box-shadow: 0 18px 40px -24px rgba(13, 27, 75, 0.35);
+.dept-panel {
+  --dept-panel-radius: 14px;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  cursor: pointer;
+  border-radius: var(--dept-panel-radius);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--navy-deep);
+  height: 230px;
+  transition: height 0.6s cubic-bezier(0.22, 0.61, 0.36, 1), border-color 0.4s ease, box-shadow 0.4s ease;
+}
+.dept-panel:hover,
+.dept-panel:focus-visible,
+.dept-panel.is-open {
+  height: 520px;
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+  box-shadow: 0 24px 56px -20px rgba(8, 18, 52, 0.6);
+}
+.dept-panel:focus-visible {
+  outline: none;
 }
 
-.dept-card-media {
-  position: relative;
-  aspect-ratio: 4 / 3;
-  overflow: hidden;
-  background: linear-gradient(155deg, var(--navy) 0%, var(--navy-deep) 100%);
+.dept-panel-media {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
 }
-.dept-card-media img {
+.dept-panel-media img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
-  transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
 }
-.dept-card:hover .dept-card-media img,
-.dept-card:focus-within .dept-card-media img {
+.dept-panel:hover .dept-panel-media img,
+.dept-panel:focus-visible .dept-panel-media img,
+.dept-panel.is-open .dept-panel-media img {
   transform: scale(1.08);
 }
-/* Fallback treatment for the (currently two of three) departments without
-   an uploaded banner: a live canvas motif (network / data-stream / flowing
-   field, picked per department for subject-matter fit) on the navy ground,
-   with the department's own line-art mark sitting on top of it — animated
-   texture instead of a static, slightly empty-feeling icon box. Kept
-   strictly navy + the department's own --accent (its theme_color, or gold
-   when it doesn't have one) rather than an arbitrary hue. */
-.dept-card-media.is-fallback {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.dept-card-media.is-fallback::before {
-  content: '';
+.dept-panel-fx {
   position: absolute;
   inset: 0;
-  z-index: 1;
-  pointer-events: none;
-  background: radial-gradient(120% 85% at 20% 0%, color-mix(in srgb, var(--accent, var(--gold)) 26%, transparent) 0%, transparent 62%);
-}
-.dept-card-fx {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
   width: 100%;
   height: 100%;
   display: block;
   opacity: 0.55;
   transition: opacity 0.6s ease;
 }
-.dept-card:hover .dept-card-fx,
-.dept-card:focus-within .dept-card-fx {
+.dept-panel:hover .dept-panel-fx,
+.dept-panel:focus-visible .dept-panel-fx,
+.dept-panel.is-open .dept-panel-fx {
   opacity: 0.95;
 }
-.dept-card-mark {
-  position: relative;
-  z-index: 1;
-  width: 28%;
-  height: 28%;
-  max-width: 84px;
-  max-height: 84px;
-  color: var(--gold);
-  opacity: 0.8;
-  transition: transform 0.5s ease, opacity 0.4s ease;
-}
-.dept-card:hover .dept-card-mark,
-.dept-card:focus-within .dept-card-mark {
-  transform: scale(1.1) rotate(-3deg);
-  opacity: 0.55;
-}
-/* A soft gradient along the base of every media panel, image or not — the
-   number sits on it whether the photo underneath is light or dark. */
-.dept-card-media::after {
-  content: '';
+
+.dept-panel-wash {
   position: absolute;
-  inset: auto 0 0 0;
-  height: 55%;
-  background: linear-gradient(to top, rgba(8, 18, 52, 0.75), transparent);
+  inset: 0;
+  z-index: 1;
   pointer-events: none;
+  background:
+    radial-gradient(120% 85% at 20% 0%, color-mix(in srgb, var(--accent) 30%, transparent) 0%, transparent 62%),
+    linear-gradient(190deg, rgba(8, 18, 52, 0.2) 0%, rgba(8, 18, 52, 0.62) 55%, rgba(8, 18, 52, 0.95) 100%);
+  opacity: 0.92;
+  transition: opacity 0.6s ease;
 }
-.dept-card-num {
-  position: absolute;
-  left: var(--s4);
-  bottom: var(--s3);
-  z-index: 1;
-  font-family: var(--font-serif);
-  font-weight: 700;
-  font-size: 2.2rem;
-  line-height: 1;
-  color: #fff;
-  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
-}
-.dept-card-num span {
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: var(--gold-light);
-  vertical-align: super;
+.dept-panel:hover .dept-panel-wash,
+.dept-panel:focus-visible .dept-panel-wash,
+.dept-panel.is-open .dept-panel-wash {
+  opacity: 0.62;
 }
 
-.dept-card-body {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  padding: var(--s5);
+/* ---------- Resting label: number, name, quick facts ---------- */
+.dept-panel-label {
+  position: absolute;
+  z-index: 3;
+  left: var(--s5);
+  right: var(--s5);
+  bottom: var(--s5);
+  color: #fff;
+  transition: opacity 0.25s ease, transform 0.35s ease;
 }
-.dept-card-kicker {
-  font-size: 0.72rem;
+.dept-panel-num {
+  display: block;
+  font-family: var(--font-serif);
   font-weight: 700;
-  letter-spacing: 0.1em;
+  font-size: 0.85rem;
+  color: var(--gold-light);
+  margin-bottom: var(--s2);
+}
+.dept-panel-label h2 {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  font-size: clamp(1.2rem, 2.4vw, 1.7rem);
+  line-height: 1.25;
+  margin: 0;
+}
+.dept-panel-label small {
+  display: block;
+  margin-top: var(--s2);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--ink-2);
-  margin: 0 0 var(--s2);
+  color: var(--gold-light);
+  opacity: 0.85;
 }
-.dept-card-motif {
-  color: var(--gold-ink);
+.dept-panel:hover .dept-panel-label,
+.dept-panel:focus-visible .dept-panel-label,
+.dept-panel.is-open .dept-panel-label {
+  opacity: 0;
+  transform: translateY(10px);
+  pointer-events: none;
 }
-.dept-card-title-link {
-  display: inline-block;
-  text-decoration: none;
-  color: var(--navy);
+
+/* ---------- Glass card: the full content, revealed on hover/tap ---------- */
+.dept-panel-card {
+  position: absolute;
+  z-index: 4;
+  left: var(--s5);
+  right: var(--s5);
+  bottom: var(--s5);
+  max-height: calc(100% - var(--s6));
+  overflow-y: auto;
+  padding: var(--s5);
+  border-radius: calc(var(--dept-panel-radius) - 2px);
+  background: rgba(13, 27, 75, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: #fff;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(10px);
+  transition: opacity 0.3s ease, transform 0.4s ease, visibility 0s linear 0.6s;
 }
-.dept-card-title {
+.dept-panel:hover .dept-panel-card,
+.dept-panel:focus-visible .dept-panel-card,
+.dept-panel.is-open .dept-panel-card {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  transition-delay: 0.15s, 0.15s, 0s;
+}
+.dept-panel-card h3 {
   font-family: var(--font-serif);
   font-weight: 600;
   font-size: 1.3rem;
-  line-height: 1.3;
-  color: inherit;
   margin: 0;
 }
-/* The "expanding gold accent line" — sits under the title, draws in from
-   the left on hover instead of just appearing. */
-.dept-card-rule {
+.dept-panel-rule {
   display: block;
-  width: 32px;
+  width: 44px;
   height: 2px;
   margin: var(--s3) 0 var(--s3);
   background: var(--gold);
-  transform: scaleX(1);
-  transform-origin: left;
-  transition: width 0.35s ease;
 }
-.dept-card:hover .dept-card-rule,
-.dept-card:focus-within .dept-card-rule {
-  width: 64px;
-}
-.dept-card-hod {
+.dept-panel-hod {
   font-size: 0.85rem;
-  color: var(--ink-2);
+  color: #dfe3f0;
   margin: 0 0 var(--s3);
 }
-.dept-card-hod strong {
-  color: var(--ink);
+.dept-panel-hod strong {
+  color: #fff;
   font-weight: 700;
 }
-.dept-card-desc {
-  color: var(--ink-2);
-  font-size: 0.92rem;
-  line-height: 1.6;
+.dept-panel-desc {
   margin: 0 0 var(--s4);
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: #dfe3f0;
 }
+/* .dept-card-chips is shared with the "Full directory" accordion below —
+   only the colours need adapting here, for the dark glass background. */
+.dept-panel-card .dept-card-chips {
+  margin-bottom: var(--s4);
+}
+.dept-panel-card .dept-card-chips .tag {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.28);
+  color: #fff;
+}
+.dept-panel-card .dept-card-chips .tag:hover {
+  background: var(--gold-light);
+  border-color: var(--gold-light);
+  color: var(--ink);
+}
+.dept-panel-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s3);
+  padding-top: var(--s3);
+  border-top: 1px solid rgba(255, 255, 255, 0.16);
+}
+.dept-panel-faculty {
+  margin: 0;
+  font-size: 0.78rem;
+  color: #c9d0e4;
+}
+.dept-panel-faculty strong {
+  font-family: var(--font-serif);
+  font-size: 1.05rem;
+  color: #fff;
+  font-weight: 700;
+}
+.dept-panel-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 20px;
+  border-radius: 999px;
+  background: var(--gold);
+  color: var(--navy);
+  font-weight: 700;
+  font-size: 0.82rem;
+  text-decoration: none;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.dept-panel-cta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 22px -8px rgba(0, 0, 0, 0.5);
+}
+
+/* Shared chip-list utility — used both inside the panel's glass card
+   (above) and the "Full directory" accordion further down the page. */
 .dept-card-chips {
   display: flex;
   flex-wrap: wrap;
@@ -279,49 +335,38 @@
   border-color: var(--gold-light);
 }
 
-.dept-card-footer {
-  margin-top: auto;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--s3);
-  padding-top: var(--s4);
-  border-top: 1px solid var(--line);
+@media (min-width: 900px) {
+  .dept-panels {
+    flex-direction: row;
+    height: min(64vh, 520px);
+    gap: var(--s3);
+  }
+  .dept-panel {
+    flex: 1 1 0;
+    min-width: 0;
+    height: 100%;
+    transition: flex-grow 0.6s cubic-bezier(0.22, 0.61, 0.36, 1), border-color 0.4s ease, box-shadow 0.4s ease;
+  }
+  .dept-panel:hover,
+  .dept-panel:focus-visible,
+  .dept-panel.is-open {
+    flex-grow: 2.4;
+  }
+  .dept-panels:has(.dept-panel:hover) .dept-panel:not(:hover),
+  .dept-panels:has(.dept-panel.is-open) .dept-panel:not(.is-open) {
+    flex-grow: 0.85;
+  }
 }
-.dept-card-faculty {
-  font-size: 0.78rem;
-  color: var(--ink-2);
-}
-.dept-card-faculty strong {
-  font-family: var(--font-serif);
-  font-size: 1.05rem;
-  color: var(--navy);
-  font-weight: 700;
-}
-.dept-explore {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-weight: 700;
-  font-size: 0.78rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--navy-mid);
-  text-decoration: none;
-}
-.dept-explore:hover,
-.dept-card:hover .dept-explore,
-.dept-card:focus-within .dept-explore {
-  color: var(--gold-ink);
-}
-.dept-explore-arrow {
-  display: inline-block;
-  transition: transform 0.25s ease;
-}
-.dept-explore:hover .dept-explore-arrow,
-.dept-card:hover .dept-explore-arrow,
-.dept-card:focus-within .dept-explore-arrow {
-  transform: translateX(6px);
+
+@media (prefers-reduced-motion: reduce) {
+  .dept-panel,
+  .dept-panel-fx,
+  .dept-panel-wash,
+  .dept-panel-label,
+  .dept-panel-card,
+  .dept-panel-media img {
+    transition: none !important;
+  }
 }
 
 /* ================= Stats band ================= */
@@ -572,10 +617,4 @@
 }
 .dept-expertise-cta {
   margin-top: var(--s6);
-}
-
-@media (max-width: 759px) {
-  .dept-card-media {
-    aspect-ratio: 16 / 10;
-  }
 }
