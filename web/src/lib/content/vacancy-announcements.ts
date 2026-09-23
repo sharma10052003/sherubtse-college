@@ -71,7 +71,7 @@ function mapAnnouncement(row: any): VacancyAnnouncement {
     description: row.description,
     attachment_url: mediaUrl(row.attachment),
     attachment_name: row.attachment?.name ?? null,
-    status: row.status === 'closed' ? 'closed' : 'open',
+    status: row.posting_status === 'closed' ? 'closed' : 'open',
   };
 }
 
