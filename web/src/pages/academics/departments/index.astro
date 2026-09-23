@@ -71,12 +71,9 @@ function showcaseFor(slug: string) {
                   data-fx={fx}
                   style={`--accent:${d.theme_color ?? 'var(--gold)'}`}
                 >
-                  <div class="dept-panel-media">
-                    {d.banner_url ? (
-                      <img src={d.banner_url} alt="" loading="lazy" />
-                    ) : (
-                      <canvas class="dept-panel-fx" aria-hidden="true"></canvas>
-                    )}
+                  <div class={`dept-panel-media${d.banner_url ? ' has-photo' : ''}`}>
+                    {d.banner_url && <img src={d.banner_url} alt="" loading="lazy" />}
+                    <canvas class="dept-panel-fx" aria-hidden="true"></canvas>
                   </div>
                   <div class="dept-panel-wash" aria-hidden="true"></div>
 
@@ -84,8 +81,7 @@ function showcaseFor(slug: string) {
                     <span class="dept-panel-num">0{i + 1}</span>
                     <h2>{d.name}</h2>
                     <small>
-                      {d.programmes.length} programme{d.programmes.length === 1 ? '' : 's'} &middot; {d.faculty_count} faculty
-                      {!d.banner_url && <> &middot; {motif}</>}
+                      {d.programmes.length} programme{d.programmes.length === 1 ? '' : 's'} &middot; {d.faculty_count} faculty &middot; {motif}
                     </small>
                   </div>
 
