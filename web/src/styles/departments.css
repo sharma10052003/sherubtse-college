@@ -74,6 +74,12 @@
 }
 
 /* ================= Department cards ================= */
+.dept-hint {
+  max-width: 44rem;
+  margin: 0 0 var(--s5);
+  color: var(--ink-2);
+  font-size: 0.95rem;
+}
 .dept-grid {
   display: grid;
   grid-template-columns: 1fr;
@@ -119,8 +125,12 @@
   transform: scale(1.08);
 }
 /* Fallback treatment for the (currently two of three) departments without
-   an uploaded banner — an icon on the navy ground rather than a blank box,
-   so the card never looks broken. */
+   an uploaded banner: a live canvas motif (network / data-stream / flowing
+   field, picked per department for subject-matter fit) on the navy ground,
+   with the department's own line-art mark sitting on top of it — animated
+   texture instead of a static, slightly empty-feeling icon box. Kept
+   strictly navy + the department's own --accent (its theme_color, or gold
+   when it doesn't have one) rather than an arbitrary hue. */
 .dept-card-media.is-fallback {
   display: flex;
   align-items: center;
@@ -130,22 +140,39 @@
   content: '';
   position: absolute;
   inset: 0;
-  background-image: url('/patterns/knot-gold.svg');
-  background-size: 100px;
-  opacity: 0.08;
+  z-index: 1;
+  pointer-events: none;
+  background: radial-gradient(120% 85% at 20% 0%, color-mix(in srgb, var(--accent, var(--gold)) 26%, transparent) 0%, transparent 62%);
 }
-.dept-card-media.is-fallback svg {
+.dept-card-fx {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  opacity: 0.55;
+  transition: opacity 0.6s ease;
+}
+.dept-card:hover .dept-card-fx,
+.dept-card:focus-within .dept-card-fx {
+  opacity: 0.95;
+}
+.dept-card-mark {
   position: relative;
-  width: 30%;
-  height: 30%;
-  max-width: 96px;
-  max-height: 96px;
+  z-index: 1;
+  width: 28%;
+  height: 28%;
+  max-width: 84px;
+  max-height: 84px;
   color: var(--gold);
-  opacity: 0.85;
-  transition: transform 0.5s ease;
+  opacity: 0.8;
+  transition: transform 0.5s ease, opacity 0.4s ease;
 }
-.dept-card:hover .dept-card-media.is-fallback svg {
+.dept-card:hover .dept-card-mark,
+.dept-card:focus-within .dept-card-mark {
   transform: scale(1.1) rotate(-3deg);
+  opacity: 0.55;
 }
 /* A soft gradient along the base of every media panel, image or not — the
    number sits on it whether the photo underneath is light or dark. */
@@ -189,6 +216,9 @@
   text-transform: uppercase;
   color: var(--ink-2);
   margin: 0 0 var(--s2);
+}
+.dept-card-motif {
+  color: var(--gold-ink);
 }
 .dept-card-title-link {
   display: inline-block;
@@ -542,238 +572,6 @@
 }
 .dept-expertise-cta {
   margin-top: var(--s6);
-}
-
-/* ================= Step-inside showcase (expanding panels) =================
-   A live-canvas accordion — one wide navy panel per department, each
-   carrying a small generative motif (network / data stream / flowing
-   field) picked to match its subject rather than decoration for its own
-   sake. Kept strictly navy + gold: the per-department --accent below is
-   either the department's own theme_color (currently only one department
-   sets one, and it's a bronze-gold already) or the site's own --gold, never
-   an arbitrary hue, so three panels never read as three different brands. */
-.dept-expand-section {
-  background: var(--paper-2);
-}
-.dept-expand {
-  display: flex;
-  flex-direction: column;
-  gap: var(--s3);
-  height: auto;
-}
-.dept-expand-panel {
-  --dept-expand-radius: 14px;
-  position: relative;
-  overflow: hidden;
-  isolation: isolate;
-  cursor: pointer;
-  border-radius: var(--dept-expand-radius);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: var(--navy-deep);
-  height: 210px;
-  transition: height 0.6s cubic-bezier(0.22, 0.61, 0.36, 1), border-color 0.4s ease, box-shadow 0.4s ease;
-}
-.dept-expand-panel:hover,
-.dept-expand-panel:focus-visible,
-.dept-expand-panel.is-open {
-  height: 460px;
-  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
-  box-shadow: 0 24px 56px -20px rgba(8, 18, 52, 0.6);
-}
-.dept-expand-panel:focus-visible {
-  outline: none;
-}
-
-.dept-expand-fx {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  width: 100%;
-  height: 100%;
-  display: block;
-  opacity: 0.5;
-  transition: opacity 0.6s ease;
-}
-.dept-expand-panel:hover .dept-expand-fx,
-.dept-expand-panel:focus-visible .dept-expand-fx,
-.dept-expand-panel.is-open .dept-expand-fx {
-  opacity: 0.9;
-}
-
-.dept-expand-wash {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  pointer-events: none;
-  background:
-    radial-gradient(120% 85% at 20% 0%, color-mix(in srgb, var(--accent) 30%, transparent) 0%, transparent 62%),
-    linear-gradient(190deg, rgba(8, 18, 52, 0.2) 0%, rgba(8, 18, 52, 0.6) 55%, rgba(8, 18, 52, 0.95) 100%);
-  opacity: 0.92;
-  transition: opacity 0.6s ease;
-}
-.dept-expand-panel:hover .dept-expand-wash,
-.dept-expand-panel.is-open .dept-expand-wash {
-  opacity: 0.65;
-}
-
-.dept-expand-label {
-  position: absolute;
-  z-index: 3;
-  left: var(--s5);
-  right: var(--s5);
-  bottom: var(--s5);
-  color: #fff;
-  transition: opacity 0.25s ease, transform 0.35s ease;
-}
-.dept-expand-num {
-  display: block;
-  font-family: var(--font-serif);
-  font-weight: 700;
-  font-size: 0.85rem;
-  color: var(--gold-light);
-  margin-bottom: var(--s2);
-}
-.dept-expand-label h3 {
-  font-family: var(--font-serif);
-  font-weight: 600;
-  font-size: clamp(1.2rem, 2.4vw, 1.7rem);
-  line-height: 1.25;
-  margin: 0;
-}
-.dept-expand-label small {
-  display: block;
-  margin-top: var(--s2);
-  font-size: 0.72rem;
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--gold-light);
-  opacity: 0.85;
-}
-.dept-expand-panel:hover .dept-expand-label,
-.dept-expand-panel:focus-visible .dept-expand-label,
-.dept-expand-panel.is-open .dept-expand-label {
-  opacity: 0;
-  transform: translateY(10px);
-  pointer-events: none;
-}
-
-.dept-expand-card {
-  position: absolute;
-  z-index: 4;
-  left: var(--s5);
-  right: var(--s5);
-  bottom: var(--s5);
-  padding: var(--s5) var(--s5) var(--s4);
-  border-radius: calc(var(--dept-expand-radius) - 2px);
-  background: rgba(13, 27, 75, 0.55);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  color: #fff;
-  opacity: 0;
-  visibility: hidden;
-  transform: translateY(10px);
-  transition: opacity 0.3s ease, transform 0.4s ease, visibility 0s linear 0.6s;
-}
-.dept-expand-panel:hover .dept-expand-card,
-.dept-expand-panel:focus-visible .dept-expand-card,
-.dept-expand-panel.is-open .dept-expand-card {
-  opacity: 1;
-  visibility: visible;
-  transform: translateY(0);
-  transition-delay: 0.15s, 0.15s, 0s;
-}
-.dept-expand-card h3 {
-  font-family: var(--font-serif);
-  font-weight: 600;
-  font-size: 1.25rem;
-  margin: 0;
-}
-.dept-expand-rule {
-  display: block;
-  width: 44px;
-  height: 2px;
-  margin: var(--s3) 0 var(--s3);
-  background: var(--gold);
-}
-.dept-expand-card p {
-  margin: 0 0 var(--s4);
-  font-size: 0.9rem;
-  line-height: 1.6;
-  color: #dfe3f0;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-.dept-expand-facts {
-  list-style: none;
-  margin: 0 0 var(--s4);
-  padding: 0;
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--s2) var(--s5);
-  font-size: 0.8rem;
-  color: #c9d0e4;
-}
-.dept-expand-facts strong {
-  color: #fff;
-  font-weight: 700;
-  margin-right: 4px;
-}
-.dept-expand-cta {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 10px 20px;
-  border-radius: 999px;
-  background: var(--gold);
-  color: var(--navy);
-  font-weight: 700;
-  font-size: 0.82rem;
-  text-decoration: none;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-.dept-expand-cta:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 22px -8px rgba(0, 0, 0, 0.5);
-}
-
-@media (min-width: 900px) {
-  .dept-expand {
-    flex-direction: row;
-    height: min(64vh, 480px);
-    gap: var(--s3);
-  }
-  .dept-expand-panel {
-    flex: 1 1 0;
-    min-width: 0;
-    height: 100%;
-    transition: flex-grow 0.6s cubic-bezier(0.22, 0.61, 0.36, 1), border-color 0.4s ease, box-shadow 0.4s ease;
-  }
-  .dept-expand-panel:hover,
-  .dept-expand-panel:focus-visible,
-  .dept-expand-panel.is-open {
-    flex-grow: 2.4;
-  }
-  .dept-expand:has(.dept-expand-panel:hover) .dept-expand-panel:not(:hover),
-  .dept-expand:has(.dept-expand-panel.is-open) .dept-expand-panel:not(.is-open) {
-    flex-grow: 0.85;
-  }
-  .dept-expand-card p {
-    -webkit-line-clamp: 5;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .dept-expand-panel,
-  .dept-expand-fx,
-  .dept-expand-wash,
-  .dept-expand-label,
-  .dept-expand-card {
-    transition: none !important;
-  }
 }
 
 @media (max-width: 759px) {
