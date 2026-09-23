@@ -1,0 +1,29 @@
+{
+  "collectionName": "components_announcements_position_openings",
+  "info": {
+    "displayName": "Position Opening",
+    "icon": "briefcase"
+  },
+  "options": {},
+  "attributes": {
+    "particular": {
+      "type": "string"
+    },
+    "position_title": {
+      "type": "string",
+      "required": true
+    },
+    "position_level": {
+      "type": "string"
+    },
+    "slots": {
+      "type": "integer"
+    },
+    "mode_of_employment": {
+      "type": "string"
+    },
+    "eligibility_criteria": {
+      "type": "text"
+    }
+  }
+}

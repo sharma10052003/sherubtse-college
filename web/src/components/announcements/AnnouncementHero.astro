@@ -1,0 +1,71 @@
+---
+// Detail-page hero: breadcrumb, type/status badges, title, the position(s)
+// the announcement covers (split into a list — never one long sentence),
+// and a horizontal row of Posted/Interview-or-Deadline/Venue info cards.
+import { typeIcon } from '../../lib/content/announcement-icons';
+
+interface Crumb {
+  label: string;
+  url: string;
+}
+interface Props {
+  breadcrumb: Crumb[];
+  type: string;
+  typeLabel: string;
+  status: 'open' | 'closed';
+  title: string;
+  positions: string[];
+  datePosted: string;
+  dateFieldLabel: string | null;
+  dateFieldValue: string | null;
+  venue: string | null;
+}
+const { breadcrumb, type, typeLabel, status, title, positions, datePosted, dateFieldLabel, dateFieldValue, venue } = Astro.props;
+---
+<header class="sl-head an-detail-head">
+  <div class="wrap an-detail-wrap">
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      {breadcrumb.map((b, i) => (
+        <>
+          {i > 0 && ' › '}
+          {i === breadcrumb.length - 1 ? <span class="current">{b.label}</span> : <a href={b.url}>{b.label}</a>}
+        </>
+      ))}
+    </nav>
+
+    <div class="an-detail-badges">
+      <span class="an-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" set:html={typeIcon(type)} />
+      </span>
+      <span class={`an-badge an-badge-${type}`}>{typeLabel}</span>
+      <span class={`an-status an-status-${status}`}>{status === 'open' ? 'Open' : 'Closed'}</span>
+    </div>
+
+    <h1 class="sl-title an-detail-title">{title}</h1>
+
+    {positions.length > 0 && (
+      <ul class="an-detail-positions">
+        {positions.map((p) => <li>{p}</li>)}
+      </ul>
+    )}
+
+    <div class="an-detail-meta">
+      <span class="an-pill">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <span class="an-pill-label">Posted</span> {datePosted}
+      </span>
+      {dateFieldLabel && dateFieldValue && (
+        <span class="an-pill">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <span class="an-pill-label">{dateFieldLabel}</span> {dateFieldValue}
+        </span>
+      )}
+      {venue && (
+        <span class="an-pill">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          <span class="an-pill-label">Location</span> {venue}
+        </span>
+      )}
+    </div>
+  </div>
+</header>

@@ -1,21 +1,378 @@
 ---
+// Departments gateway — a full editorial page rather than a plain listing,
+// built on the "department" content type (departments.ts), which is where
+// this data actually lives (the old Unit-based source this page used to
+// read had no academic-kind records to show). Every number below is real:
+// counted from what Strapi returns, not authored copy that could drift.
 import Layout from '../../../layouts/Layout.astro';
-import { getUnits } from '../../../lib/content/units';
+import '../../../styles/section-landing.css';
+import '../../../styles/departments.css';
+import { getDepartments } from '../../../lib/content/departments';
 
-const departments = await getUnits('academic');
+const departments = await getDepartments();
+
+const totalProgrammes = departments.reduce((n, d) => n + d.programmes.length, 0);
+const totalFaculty = departments.reduce((n, d) => n + d.faculty_count, 0);
+const legacyYears = new Date().getFullYear() - 1968;
+
+// A line-art mark per department — the same idiom as the announcement type
+// icons and SectionLanding's ICONS map (a small keyed set of 24x24 stroke
+// paths), matched by keyword so a future department still gets a sensible
+// mark instead of nothing.
+const ICONS: Record<string, string> = {
+  book: '<path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v17H6.5A2.5 2.5 0 0 0 4 21.5z"/><path d="M4 21.5V4.5M8 7h8"/>',
+  chart: '<path d="M4 20V10M12 20V4M20 20v-7"/><path d="M2 20h20"/>',
+  flask: '<path d="M9 3h6M10 3v6l-5.5 9.5A1.7 1.7 0 0 0 6 21h12a1.7 1.7 0 0 0 1.5-2.5L14 9V3"/><path d="M7.5 15h9"/>',
+  cap: '<path d="M12 3 2 8l10 5 10-5-10-5z"/><path d="M6 11v5c0 1.4 2.7 3 6 3s6-1.6 6-3v-5"/>',
+};
+function iconFor(name: string): string {
+  // Checked in this order deliberately: "Humanities and Social Sciences"
+  // contains the word "Sciences" too, so the humanities/social match has to
+  // run before the generic science check or it never gets reached.
+  if (/humanit|social|economic|communicat|political/i.test(name)) return ICONS.book;
+  if (/math|data/i.test(name)) return ICONS.chart;
+  if (/science|natural|physic|chemistr|biolog/i.test(name)) return ICONS.flask;
+  return ICONS.cap;
+}
+
+const beyondImage = departments.find((d) => d.banner_url)?.banner_url ?? null;
 ---
-<Layout title="Departments" description="Academic departments at Sherubtse College.">
-  <div class="wrap" style="padding-top:var(--s5);padding-bottom:var(--s7)">
-    <nav class="breadcrumb" aria-label="Breadcrumb"><a href="/">Home</a> › <a href="/academics">Academics</a> › <span class="current">Departments</span></nav>
-    <h1 class="h1">Departments</h1>
-    <div class="cards" style="margin-top:var(--s6)">
-      {departments.length > 0 ? departments.map((d) => (
-        <div class="card">
-          <h3 class="h3">{d.name}</h3>
-          {d.description && <p>{d.description}</p>}
-          <a href={`/academics/departments/${d.slug}`} class="btn-quiet">View department</a>
-        </div>
-      )) : <p class="small">Departments will appear here once added in Strapi.</p>}
+<Layout
+  title="Departments"
+  description="The academic departments of Sherubtse College — programmes, faculty and areas of expertise."
+>
+  <header class="sl-head dept-hero">
+    <div class="wrap">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="/">Home</a> › <a href="/academics">Academics</a> › <span class="current">Departments</span>
+      </nav>
+      <p class="sl-eyebrow">Academics</p>
+      <h1 class="sl-title">Explore Our Departments</h1>
+      <span class="sl-rule" aria-hidden="true"></span>
+      <p class="sl-intro">
+        Three departments carry Sherubtse College's undergraduate teaching — each with its own faculty, programmes
+        and academic character. Start with the department closest to what you want to study.
+      </p>
     </div>
-  </div>
+  </header>
+
+  {departments.length === 0 ? (
+    <div class="wrap" style="padding-block:var(--s7)">
+      <p class="small">Departments will appear here once added in Strapi.</p>
+    </div>
+  ) : (
+    <>
+      <section class="dept-section">
+        <div class="wrap">
+          <div class="dept-grid">
+            {departments.map((d, i) => (
+              <article class="dept-card reveal">
+                <div class={`dept-card-media${d.banner_url ? '' : ' is-fallback'}`}>
+                  {d.banner_url ? (
+                    <img src={d.banner_url} alt="" loading="lazy" />
+                  ) : (
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" set:html={iconFor(d.name)} />
+                  )}
+                  <p class="dept-card-num" aria-hidden="true"><span>0</span>{i + 1}</p>
+                </div>
+                <div class="dept-card-body">
+                  <p class="dept-card-kicker">{d.programmes.length} programme{d.programmes.length === 1 ? '' : 's'} &middot; {d.faculty_count} faculty</p>
+                  <a class="dept-card-title-link" href={`/academics/departments/${d.slug}`}>
+                    <h2 class="dept-card-title">{d.name}</h2>
+                  </a>
+                  <span class="dept-card-rule" aria-hidden="true"></span>
+                  {d.head && (
+                    <p class="dept-card-hod"><strong>Head of Department</strong> {d.head.full_name}</p>
+                  )}
+                  {(d.description || d.short_description) && (
+                    <p class="dept-card-desc">{d.description ?? d.short_description}</p>
+                  )}
+                  {d.programmes.length > 0 && (
+                    <div class="dept-card-chips">
+                      {d.programmes.map((p) => (
+                        <a class="tag tag-gold" href={`/academics/programmes/${p.slug}`}>{p.programme_name}</a>
+                      ))}
+                    </div>
+                  )}
+                  <div class="dept-card-footer">
+                    <p class="dept-card-faculty"><strong>{d.faculty_count}</strong> faculty members</p>
+                    <a class="dept-explore" href={`/academics/departments/${d.slug}`}>
+                      Explore department <span class="dept-explore-arrow" aria-hidden="true">→</span>
+                    </a>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section class="dept-section dept-stats">
+        <div class="wrap">
+          <div class="dept-section-head">
+            <p class="dept-eyebrow">By the numbers</p>
+            <h2 class="dept-section-title" style="color:#fff">A small college, taught closely</h2>
+          </div>
+          <div class="dept-stat-grid">
+            <div class="dept-stat reveal">
+              <span class="dept-stat-num"><span data-count-to={departments.length}>0</span></span>
+              <span class="dept-stat-label">Academic departments</span>
+            </div>
+            <div class="dept-stat reveal">
+              <span class="dept-stat-num"><span data-count-to={totalProgrammes}>0</span></span>
+              <span class="dept-stat-label">Undergraduate programmes</span>
+            </div>
+            <div class="dept-stat reveal">
+              <span class="dept-stat-num"><span data-count-to={totalFaculty}>0</span></span>
+              <span class="dept-stat-label">Faculty members</span>
+            </div>
+            <div class="dept-stat reveal">
+              <span class="dept-stat-num"><span data-count-to={legacyYears}>0</span><span class="plus">+</span></span>
+              <span class="dept-stat-label">Years since founding, 1968</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="dept-section">
+        <div class="wrap">
+          <div class="dept-section-head">
+            <p class="dept-eyebrow">Areas of study</p>
+            <h2 class="dept-section-title">Where each department focuses</h2>
+            <p class="dept-section-desc">Switch between departments for a fuller picture of who leads them and what they teach.</p>
+          </div>
+          <div class="dept-tabs reveal" data-dept-tabs>
+            <div class="dept-tablist" role="tablist" aria-label="Departments">
+              {departments.map((d, i) => (
+                <button
+                  type="button"
+                  class="dept-tab"
+                  role="tab"
+                  id={`dept-tab-${d.slug}`}
+                  aria-controls={`dept-panel-${d.slug}`}
+                  aria-selected={i === 0 ? 'true' : 'false'}
+                  data-dept-tab={d.slug}
+                >
+                  <span class="dept-tab-num">0{i + 1}</span> {d.name}
+                </button>
+              ))}
+            </div>
+            {departments.map((d, i) => (
+              <div
+                class="dept-tabpanel"
+                role="tabpanel"
+                id={`dept-panel-${d.slug}`}
+                aria-labelledby={`dept-tab-${d.slug}`}
+                data-dept-panel={d.slug}
+                hidden={i !== 0}
+              >
+                {(d.description || d.short_description) && (
+                  <p class="dept-tabpanel-lede">{d.description ?? d.short_description}</p>
+                )}
+                <div class="dept-tabpanel-grid">
+                  <div>
+                    <p class="dept-tabpanel-heading">What you'll study</p>
+                    {d.programmes.length > 0 ? (
+                      <ul class="dept-tabpanel-programmes">
+                        {d.programmes.map((p) => (
+                          <li><a href={`/academics/programmes/${p.slug}`}>{p.programme_name} <span class="tag">{p.level === 'postgraduate' ? 'PG' : 'UG'}</span></a></li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p class="small">Programmes will appear here once published.</p>
+                    )}
+                  </div>
+                  <ul class="dept-tabpanel-facts">
+                    <li><span>Head of Department</span> <strong>{d.head?.full_name ?? '—'}</strong></li>
+                    <li><span>Faculty members</span> <strong>{d.faculty_count}</strong></li>
+                    <li><span>Programmes offered</span> <strong>{d.programmes.length}</strong></li>
+                  </ul>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section class="dept-section">
+        <div class="wrap">
+          <div class="dept-section-head">
+            <p class="dept-eyebrow">Full directory</p>
+            <h2 class="dept-section-title">Every department, expanded</h2>
+          </div>
+          <div class="dept-accordion reveal" data-dept-accordion>
+            {departments.map((d, i) => (
+              <div class="dept-accordion-item">
+                <h3>
+                  <button type="button" class="dept-accordion-trigger" aria-expanded="false" aria-controls={`dept-acc-${d.slug}`} data-dept-trigger>
+                    <span class="dept-accordion-num">0{i + 1}</span>
+                    <span class="dept-accordion-name">{d.name}</span>
+                    <span class="dept-accordion-meta">{d.programmes.length} programmes &middot; {d.faculty_count} faculty</span>
+                    <svg class="dept-accordion-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+                  </button>
+                </h3>
+                <div class="dept-accordion-panel" id={`dept-acc-${d.slug}`} data-dept-panel>
+                  <div class="dept-accordion-panel-inner">
+                    <div>
+                      {(d.description || d.short_description) && (
+                        <p class="dept-accordion-desc">{d.description ?? d.short_description}</p>
+                      )}
+                      {d.programmes.length > 0 && (
+                        <div class="dept-card-chips">
+                          {d.programmes.map((p) => (
+                            <a class="tag tag-gold" href={`/academics/programmes/${p.slug}`}>{p.programme_name}</a>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    <div class="dept-accordion-side">
+                      {d.head && <p><strong>Head of Department</strong><br />{d.head.full_name}</p>}
+                      <p><strong>{d.faculty_count}</strong> faculty members</p>
+                      <a class="btn-quiet" href={`/academics/departments/${d.slug}`}>View full department</a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section class="dept-beyond reveal">
+        {beyondImage && (
+          <div class="dept-beyond-media"><img src={beyondImage} alt="" loading="lazy" /></div>
+        )}
+        <div class="wrap">
+          <div class="dept-beyond-body">
+            <p class="dept-eyebrow">Beyond the syllabus</p>
+            <h2 class="dept-beyond-title">Learning Beyond the Classroom</h2>
+            <p class="dept-beyond-desc">
+              A Sherubtse education runs past the timetable — clubs, field visits, campus events and residential
+              life on the Kanglung hillside shape students as much as any lecture hall does. Departments teach the
+              subject; the wider campus is where it's put into practice.
+            </p>
+            <a class="btn btn-primary" href="/student-life">Discover student life</a>
+          </div>
+        </div>
+      </section>
+
+      <section class="dept-section">
+        <div class="wrap">
+          <div class="dept-section-head">
+            <p class="dept-eyebrow">Research &amp; expertise</p>
+            <h2 class="dept-section-title">Programmes our faculty build expertise around</h2>
+            <p class="dept-section-desc">
+              Every programme below sits inside one of the three departments above — a working map of where
+              Sherubtse's teaching and research strength currently concentrates.
+            </p>
+          </div>
+          <div class="dept-expertise-grid">
+            {departments.flatMap((d) =>
+              d.programmes.map((p) => (
+                <a class="dept-expertise-chip reveal" href={`/academics/programmes/${p.slug}`}>
+                  <span class="dept-expertise-chip-level">{p.level === 'postgraduate' ? 'Postgraduate' : 'Undergraduate'}</span>
+                  <span class="dept-expertise-chip-name">{p.programme_name}</span>
+                  <span class="dept-expertise-chip-dept">{d.name}</span>
+                </a>
+              ))
+            )}
+          </div>
+          <p class="dept-expertise-cta">
+            <a class="btn btn-secondary" href="/research">Visit Research &amp; Innovation →</a>
+          </p>
+        </div>
+      </section>
+    </>
+  )}
 </Layout>
+
+<script>
+  // Count-up for the stats band — the sitewide reveal script (Layout.astro)
+  // only handles opacity/transform, so numeric counters get their own small
+  // observer here, generalised to run every [data-count-to] on the page
+  // rather than the single counter SectionLanding's split hero uses.
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const counters = Array.from(document.querySelectorAll<HTMLElement>('.dept-stat-num [data-count-to]'));
+
+  function runCounter(el: HTMLElement) {
+    const target = Number(el.dataset.countTo ?? '0');
+    if (prefersReducedMotion) {
+      el.textContent = String(target);
+      return;
+    }
+    const duration = 1100;
+    const start = performance.now();
+    const step = (now: number) => {
+      const t = Math.min(1, (now - start) / duration);
+      const eased = 1 - Math.pow(1 - t, 3);
+      el.textContent = String(Math.round(eased * target));
+      if (t < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  }
+
+  if (counters.length > 0 && 'IntersectionObserver' in window) {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          runCounter(entry.target as HTMLElement);
+          observer.unobserve(entry.target);
+        }
+      },
+      { threshold: 0.4 }
+    );
+    counters.forEach((el) => observer.observe(el));
+  } else {
+    counters.forEach(runCounter);
+  }
+
+  // Academic-area tabs — one open at a time, click (or arrow-key) to switch.
+  const tabsRoot = document.querySelector<HTMLElement>('[data-dept-tabs]');
+  if (tabsRoot) {
+    const tabs = Array.from(tabsRoot.querySelectorAll<HTMLButtonElement>('[data-dept-tab]'));
+    const panels = Array.from(tabsRoot.querySelectorAll<HTMLElement>('[data-dept-panel]'));
+
+    function activate(slug: string) {
+      for (const tab of tabs) tab.setAttribute('aria-selected', String(tab.dataset.deptTab === slug));
+      for (const panel of panels) panel.hidden = panel.dataset.deptPanel !== slug;
+    }
+
+    tabs.forEach((tab, i) => {
+      tab.addEventListener('click', () => activate(tab.dataset.deptTab!));
+      tab.addEventListener('keydown', (e) => {
+        if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+        e.preventDefault();
+        const next = tabs[(i + (e.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length];
+        next.focus();
+        activate(next.dataset.deptTab!);
+      });
+    });
+  }
+
+  // Expandable directory — smooth height transition rather than the
+  // instant show/hide a plain [hidden] toggle would give.
+  const accordion = document.querySelector<HTMLElement>('[data-dept-accordion]');
+  if (accordion) {
+    const triggers = Array.from(accordion.querySelectorAll<HTMLButtonElement>('[data-dept-trigger]'));
+    triggers.forEach((trigger) => {
+      const panel = document.getElementById(trigger.getAttribute('aria-controls') ?? '');
+      if (!panel) return;
+      trigger.addEventListener('click', () => {
+        const isOpen = trigger.getAttribute('aria-expanded') === 'true';
+        trigger.setAttribute('aria-expanded', String(!isOpen));
+        panel.style.height = isOpen ? `${panel.scrollHeight}px` : '0px';
+        requestAnimationFrame(() => {
+          panel.style.height = isOpen ? '0px' : `${panel.scrollHeight}px`;
+        });
+        panel.addEventListener(
+          'transitionend',
+          () => {
+            if (trigger.getAttribute('aria-expanded') === 'true') panel.style.height = 'auto';
+          },
+          { once: true }
+        );
+      });
+    });
+  }
+</script>

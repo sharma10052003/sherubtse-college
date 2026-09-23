@@ -18,6 +18,14 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "preview", "--prefix", "web", "--", "--port", "4322"],
       "port": 4322
+    },
+    {
+      "name": "strapi-cms-attach",
+      "url": "http://localhost:1337"
+    },
+    {
+      "name": "astro-web-attach",
+      "url": "http://localhost:4321"
     }
   ]
 }

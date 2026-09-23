@@ -1,0 +1,185 @@
+/**
+ * Listing subpages (Announcements, News, Events, Recruitment, Tenders,
+ * Archive, Downloads). Sits under the same header as the section landing pages
+ * (section-landing.css): navy + gold, thin borders, square corners, no
+ * shadows. Each item is a bordered card that lifts and turns gold on hover.
+ */
+
+.ls-body {
+  background: var(--paper-2);
+  border-top: 1px solid var(--line);
+  padding-block: var(--s7) var(--s9);
+}
+.ls-list {
+  display: grid;
+  gap: var(--s4);
+}
+
+/* ---------- Row card ---------- */
+.ls-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: var(--s5);
+  padding: var(--s4) var(--s5) var(--s4) var(--s4);
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--navy);
+  transition: transform 0.25s ease, border-color 0.25s ease;
+}
+.ls-row:hover,
+.ls-row:focus-within {
+  transform: translateY(-3px);
+  border-color: var(--gold-deep);
+  border-left-color: var(--gold);
+}
+.ls-date {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 68px;
+  padding: var(--s2) var(--s3);
+  background: var(--navy);
+  color: #fff;
+  text-align: center;
+  line-height: 1.1;
+}
+.ls-day {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: 1.6rem;
+  color: var(--gold);
+}
+.ls-month {
+  font-weight: 700;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.ls-year {
+  font-size: 0.7rem;
+  color: #c9d0e4;
+  margin-top: 2px;
+}
+.ls-title {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  font-size: 1.15rem;
+  line-height: 1.3;
+  color: var(--navy);
+  margin: 0;
+}
+/* Whole card is the click target: one link per row for screen readers and a
+   large touch area. */
+.ls-link {
+  color: inherit;
+  text-decoration: none;
+}
+.ls-link::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+.ls-link:focus-visible {
+  outline: none;
+}
+.ls-link:focus-visible::after {
+  outline: 3px solid var(--gold);
+  outline-offset: 2px;
+}
+.ls-row:hover .ls-title {
+  color: var(--navy-mid);
+}
+.ls-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s2) var(--s3);
+  margin: var(--s2) 0 0;
+  font-size: 0.85rem;
+  color: var(--ink-2);
+}
+.ls-tag {
+  font-weight: 700;
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gold-ink);
+  border: 1px solid var(--gold-deep);
+  padding: 2px 8px;
+}
+.ls-arrow {
+  font-size: 1.2rem;
+  color: var(--navy-mid);
+  transition: transform 0.25s ease;
+}
+.ls-row:hover .ls-arrow {
+  transform: translateX(6px);
+}
+.ls-empty {
+  padding: var(--s6);
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--gold);
+  color: var(--ink-2);
+  margin: 0;
+}
+.ls-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--s5);
+  margin-top: var(--s6);
+}
+
+/* ---------- Downloads (table inside a card) ---------- */
+.ls-panel {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-top: 3px solid var(--navy);
+  padding: var(--s3) var(--s5) var(--s5);
+}
+.ls-panel .tbl th {
+  border-bottom-color: var(--gold);
+}
+.ls-panel .tbl caption {
+  padding-top: var(--s4);
+}
+.ls-panel .tbl td a {
+  font-weight: 600;
+  color: var(--navy);
+}
+
+/* ---------- Small screens ---------- */
+@media (max-width: 759px) {
+  .ls-body {
+    padding-block: var(--s6) var(--s7);
+  }
+  .ls-row {
+    grid-template-columns: auto 1fr;
+    gap: var(--s4);
+    padding-right: var(--s4);
+  }
+  .ls-arrow {
+    display: none;
+  }
+  .ls-date {
+    min-width: 58px;
+  }
+  .ls-panel {
+    padding-inline: var(--s3);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ls-row,
+  .ls-arrow {
+    transition: none;
+  }
+  .ls-row:hover,
+  .ls-row:focus-within,
+  .ls-row:hover .ls-arrow {
+    transform: none;
+  }
+}

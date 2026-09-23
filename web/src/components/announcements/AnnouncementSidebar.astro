@@ -1,0 +1,46 @@
+---
+// The right-hand column: a compact "key dates" card (titled for whichever
+// stage the announcement is at) plus the free-text additional notes, kept
+// visually secondary so they never compete with the candidate list.
+interface Props {
+  keyInfoTitle: string | null;
+  datePosted: string;
+  dateFieldLabel: string | null;
+  dateFieldValue: string | null;
+  venue: string | null;
+  additionalNotes: string | null;
+}
+const { keyInfoTitle, datePosted, dateFieldLabel, dateFieldValue, venue, additionalNotes } = Astro.props;
+---
+<aside class="an-detail-sidebar">
+  {keyInfoTitle && (
+    <div class="an-side-card">
+      <h2 class="an-side-heading">{keyInfoTitle}</h2>
+      <dl class="an-side-list">
+        <div>
+          <dt>Posted</dt>
+          <dd>{datePosted}</dd>
+        </div>
+        {dateFieldLabel && dateFieldValue && (
+          <div>
+            <dt>{dateFieldLabel}</dt>
+            <dd>{dateFieldValue}</dd>
+          </div>
+        )}
+        {venue && (
+          <div>
+            <dt>Venue</dt>
+            <dd>{venue}</dd>
+          </div>
+        )}
+      </dl>
+    </div>
+  )}
+
+  {additionalNotes && (
+    <div class="an-side-card an-side-card-notes">
+      <h2 class="an-side-heading">Important Information</h2>
+      <div class="an-side-notes" set:html={additionalNotes.replace(/\n/g, '<br>')} />
+    </div>
+  )}
+</aside>

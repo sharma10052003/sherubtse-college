@@ -1,0 +1,26 @@
+{
+  "collectionName": "components_announcements_shortlist_rows",
+  "info": {
+    "displayName": "Shortlisted Candidate",
+    "icon": "user"
+  },
+  "options": {},
+  "attributes": {
+    "position_title": {
+      "type": "string",
+      "required": true
+    },
+    "cid_number": {
+      "type": "string"
+    },
+    "contact_number": {
+      "type": "string"
+    },
+    "score": {
+      "type": "string"
+    },
+    "remarks": {
+      "type": "string"
+    }
+  }
+}

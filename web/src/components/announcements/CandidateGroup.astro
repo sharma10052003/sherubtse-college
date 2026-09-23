@@ -1,0 +1,38 @@
+---
+// One position's shortlist, rendered as a row of compact candidate cards
+// rather than a bare data table — this is the page's main visual focus,
+// so it gets more presence than the position-openings table above it.
+import type { ShortlistRow } from '../../lib/content/vacancy-announcements';
+
+interface Props {
+  position: string;
+  rows: ShortlistRow[];
+  showHeading: boolean;
+}
+const { position, rows, showHeading } = Astro.props;
+---
+<div class="an-shortlist-group">
+  {showHeading && (
+    <p class="an-shortlist-position">
+      {position} <span class="an-shortlist-count">{rows.length} candidate{rows.length === 1 ? '' : 's'}</span>
+    </p>
+  )}
+  <ul class="an-candidate-list">
+    {rows.map((r, i) => (
+      <li class={`an-candidate${r.remarks ? ' is-highlight' : ''}`}>
+        <span class="an-candidate-no" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
+        <div class="an-candidate-body">
+          <div class="an-candidate-ids">
+            <span class="an-candidate-id"><span class="an-candidate-id-label">CID</span> {r.cid_number ?? '—'}</span>
+            <span class="an-candidate-id"><span class="an-candidate-id-label">Contact</span> {r.contact_number ?? '—'}</span>
+          </div>
+          {r.remarks && <span class="tag tag-open an-candidate-remark">{r.remarks}</span>}
+        </div>
+        <span class="an-candidate-score">
+          {r.score ?? '—'}
+          <span class="an-candidate-score-label">Score</span>
+        </span>
+      </li>
+    ))}
+  </ul>
+</div>
