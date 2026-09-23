@@ -148,6 +148,19 @@
 .dept-panel.is-open .dept-panel-fx {
   opacity: 0.95;
 }
+/* Departments with a real photo (Humanities & Social Sciences) still get
+   the same subject-matched motion as the others — the canvas draws over
+   the photo instead of replacing it, blended lighter so it reads as an
+   animated current across the image rather than a haze sitting on it. */
+.dept-panel-media.has-photo .dept-panel-fx {
+  opacity: 0.3;
+  mix-blend-mode: screen;
+}
+.dept-panel:hover .dept-panel-media.has-photo .dept-panel-fx,
+.dept-panel:focus-visible .dept-panel-media.has-photo .dept-panel-fx,
+.dept-panel.is-open .dept-panel-media.has-photo .dept-panel-fx {
+  opacity: 0.55;
+}
 
 .dept-panel-wash {
   position: absolute;
