@@ -376,7 +376,7 @@ function showcaseFor(slug: string) {
     // atom's orbits, a paw print — cycling through the natural-sciences
     // panel's own programmes (Chemistry, Life Science, Physics) instead of
     // an unrelated stream of falling characters.
-    type LabItem = { kind: 'flask' | 'leaf' | 'atom' | 'paw'; x: number; y: number; vx: number; vy: number; size: number; rot: number; rotSpeed: number; phase: number };
+    type LabItem = { kind: 'flask' | 'leaf' | 'atom' | 'paw' | 'dna'; x: number; y: number; vx: number; vy: number; size: number; rot: number; rotSpeed: number; phase: number };
     class LabFx {
       color: { r: number; g: number; b: number };
       items: LabItem[] = [];
@@ -389,7 +389,7 @@ function showcaseFor(slug: string) {
       resize(w: number, h: number) {
         this.w = w;
         this.h = h;
-        const kinds: LabItem['kind'][] = ['flask', 'leaf', 'atom', 'paw'];
+        const kinds: LabItem['kind'][] = ['flask', 'leaf', 'atom', 'paw', 'dna'];
         const count = Math.max(5, Math.round((w * h) / 9500));
         this.items = [];
         for (let i = 0; i < count; i++) {
@@ -475,7 +475,7 @@ function showcaseFor(slug: string) {
             ctx.fill();
             ctx.restore();
           }
-        } else {
+        } else if (it.kind === 'paw') {
           ctx.beginPath();
           ctx.ellipse(0, s * 0.25, s * 0.45, s * 0.35, 0, 0, 6.2832);
           ctx.fill();
@@ -485,6 +485,39 @@ function showcaseFor(slug: string) {
             ctx.beginPath();
             ctx.arc(tx, ty, toe, 0, 6.2832);
             ctx.fill();
+          }
+        } else {
+          // DNA double helix — two out-of-phase strands with rungs between
+          // them, the item's own slow rotation reading as the helix twist.
+          const steps = 12;
+          const turns = 1.6;
+          const amp = s * 0.42;
+          const top = -s;
+          const bottom = s;
+          let prev: { x1: number; x2: number; y: number } | null = null;
+          for (let k = 0; k <= steps; k++) {
+            const yFrac = k / steps;
+            const y = top + yFrac * (bottom - top);
+            const phase = yFrac * turns * 6.2832;
+            const x1 = Math.sin(phase) * amp;
+            const x2 = Math.sin(phase + Math.PI) * amp;
+            if (prev) {
+              ctx.beginPath();
+              ctx.moveTo(prev.x1, prev.y);
+              ctx.lineTo(x1, y);
+              ctx.stroke();
+              ctx.beginPath();
+              ctx.moveTo(prev.x2, prev.y);
+              ctx.lineTo(x2, y);
+              ctx.stroke();
+            }
+            if (k % 3 === 0) {
+              ctx.beginPath();
+              ctx.moveTo(x1, y);
+              ctx.lineTo(x2, y);
+              ctx.stroke();
+            }
+            prev = { x1, x2, y };
           }
         }
         ctx.restore();
