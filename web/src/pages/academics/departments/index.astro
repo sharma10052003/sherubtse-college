@@ -61,7 +61,6 @@ function showcaseFor(slug: string) {
     <>
       <section class="dept-section dept-section-cards">
         <div class="wrap">
-          <p class="dept-hint reveal">Hover or tap a panel to step inside — each department opens to reveal its people, programmes and focus.</p>
           <div class="dept-panels reveal" id="dept-panels">
             {departments.map((d, i) => {
               const { fx, motif } = showcaseFor(d.slug);
