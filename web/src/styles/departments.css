@@ -82,11 +82,11 @@
    when it doesn't have one) instead of the reference's neon per-panel
    hues, and the radius/blur/shadow toned down to this site's "restrained"
    register. */
-.dept-hint {
-  max-width: 44rem;
-  margin: 0 0 var(--s5);
-  color: var(--ink-2);
-  font-size: 0.95rem;
+/* The hero already ends with its own bottom padding, so this section's
+   usual top padding (.dept-section's var(--s8)/var(--s9)) stacked on top
+   of it left a large gap before the panels even started. */
+.dept-section-cards {
+  padding-top: var(--s5);
 }
 
 .dept-panels {
