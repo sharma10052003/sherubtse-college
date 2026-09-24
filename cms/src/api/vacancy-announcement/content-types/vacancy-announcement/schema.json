@@ -80,7 +80,7 @@
     "written_exam_shortlist": {
       "type": "component",
       "repeatable": true,
-      "component": "announcements.shortlist-row"
+      "component": "announcements.written-exam-candidate"
     },
     "viva_date": {
       "type": "date"

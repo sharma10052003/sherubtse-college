@@ -1,0 +1,26 @@
+{
+  "collectionName": "components_announcements_written_exam_candidates",
+  "info": {
+    "displayName": "Written Exam Candidate",
+    "icon": "user"
+  },
+  "options": {},
+  "attributes": {
+    "position_title": {
+      "type": "string",
+      "required": true
+    },
+    "cid_number": {
+      "type": "string"
+    },
+    "contact_number": {
+      "type": "string"
+    },
+    "qualification": {
+      "type": "string"
+    },
+    "remarks": {
+      "type": "string"
+    }
+  }
+}

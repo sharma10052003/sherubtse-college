@@ -54,6 +54,18 @@ export interface ShortlistRow {
   remarks: string | null;
 }
 
+/** Written-exam shortlisting isn't score-based — there's no exam result
+ * yet at this point. Candidates are screened in on qualification (Class
+ * XII, Bachelor's, Master's, PhD, ...) against the posting's eligibility
+ * criteria, so this stage records `qualification` instead of `score`. */
+export interface WrittenExamCandidate {
+  position_title: string;
+  cid_number: string | null;
+  contact_number: string | null;
+  qualification: string | null;
+  remarks: string | null;
+}
+
 /** One stage of the recruitment pipeline — its own date/time/venue and its
  * own candidate list, all living on the *same* announcement record. This
  * is the fix for the thing that was actually broken before: shortlisting
@@ -68,11 +80,18 @@ export interface AnnouncementStage {
   candidates: ShortlistRow[];
 }
 
+export interface WrittenExamStage {
+  date: string | null;
+  time: string | null;
+  venue: string | null;
+  candidates: WrittenExamCandidate[];
+}
+
 export interface VacancyAnnouncementDetail extends VacancyAnnouncement {
   application_deadline: string | null;
   additional_notes: string | null;
   position_openings: PositionOpening[];
-  written_exam: AnnouncementStage;
+  written_exam: WrittenExamStage;
   viva: AnnouncementStage;
   result: { date: string | null; candidates: ShortlistRow[] };
 }
@@ -122,6 +141,16 @@ function mapShortlist(rows: any[] | null | undefined): ShortlistRow[] {
   }));
 }
 
+function mapWrittenExamCandidates(rows: any[] | null | undefined): WrittenExamCandidate[] {
+  return (rows ?? []).map((c: any) => ({
+    position_title: c.position_title,
+    cid_number: c.cid_number ?? null,
+    contact_number: c.contact_number ?? null,
+    qualification: c.qualification ?? null,
+    remarks: c.remarks ?? null,
+  }));
+}
+
 /** All announcements, newest first — the /news-notices/announcements listing.
  * Only the light card fields; the detail-only fields (position tables,
  * shortlist rows) are fetched per-page by getVacancyAnnouncementBySlug. */
@@ -167,7 +196,7 @@ export async function getVacancyAnnouncementBySlug(slug: string): Promise<Vacanc
       date: row.written_exam_date ?? null,
       time: row.written_exam_time ?? null,
       venue: row.written_exam_venue ?? null,
-      candidates: mapShortlist(row.written_exam_shortlist),
+      candidates: mapWrittenExamCandidates(row.written_exam_shortlist),
     },
     viva: {
       date: row.viva_date ?? null,

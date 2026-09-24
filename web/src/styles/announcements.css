@@ -818,6 +818,31 @@
   text-transform: uppercase;
   color: var(--ink-2);
 }
+/* The written-exam stage's alternative to a score — qualification text
+   runs longer than a two-digit number, so it keeps the same stacked
+   label-over-value shape as .an-candidate-score but at body-text size
+   instead of the big serif figure. */
+.an-candidate-qualification {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  max-width: 180px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--navy);
+  line-height: 1.3;
+  text-align: right;
+}
+.an-candidate-qualification-label {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 0.65rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
 /* Nested flex-wrap (badge + wrapping id row + score, all wrapping
    independently) reflowed unpredictably at phone widths — badge ending up
    vertically stranded between two lines of text. A small grid pins each
@@ -847,11 +872,13 @@
   .an-candidate-remark {
     grid-area: remark;
   }
-  .an-candidate-score {
+  .an-candidate-score,
+  .an-candidate-qualification {
     grid-area: score;
     flex-direction: row;
     align-items: baseline;
     gap: var(--s2);
+    max-width: none;
   }
 }
 
