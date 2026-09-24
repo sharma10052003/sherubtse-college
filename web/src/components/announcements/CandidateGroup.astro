@@ -2,11 +2,23 @@
 // One position's shortlist, rendered as a row of compact candidate cards
 // rather than a bare data table — this is the page's main visual focus,
 // so it gets more presence than the position-openings table above it.
-import type { ShortlistRow } from '../../lib/content/vacancy-announcements';
-
+//
+// Serves two shapes of row: the written-exam stage's WrittenExamCandidate
+// (qualification-based — there's no exam result yet at that point) and
+// every later stage's ShortlistRow (score-based). Each row shows whichever
+// of the two it actually has, so this one component covers both without
+// two near-duplicate templates.
+interface Row {
+  position_title: string;
+  cid_number: string | null;
+  contact_number: string | null;
+  remarks: string | null;
+  score?: string | null;
+  qualification?: string | null;
+}
 interface Props {
   position: string;
-  rows: ShortlistRow[];
+  rows: Row[];
   showHeading: boolean;
 }
 const { position, rows, showHeading } = Astro.props;
@@ -28,10 +40,17 @@ const { position, rows, showHeading } = Astro.props;
           </div>
           {r.remarks && <span class="tag tag-open an-candidate-remark">{r.remarks}</span>}
         </div>
-        <span class="an-candidate-score">
-          {r.score ?? '—'}
-          <span class="an-candidate-score-label">Score</span>
-        </span>
+        {r.score != null ? (
+          <span class="an-candidate-score">
+            {r.score}
+            <span class="an-candidate-score-label">Score</span>
+          </span>
+        ) : r.qualification ? (
+          <span class="an-candidate-qualification">
+            <span class="an-candidate-qualification-label">Qualification</span>
+            {r.qualification}
+          </span>
+        ) : null}
       </li>
     ))}
   </ul>

@@ -23,7 +23,7 @@ import AnnouncementAttachment from '../../../components/announcements/Announceme
 import '../../../styles/section-landing.css';
 import '../../../styles/listing.css';
 import '../../../styles/announcements.css';
-import { getVacancyAnnouncementSlugs, getVacancyAnnouncementBySlug, type ShortlistRow } from '../../../lib/content/vacancy-announcements';
+import { getVacancyAnnouncementSlugs, getVacancyAnnouncementBySlug } from '../../../lib/content/vacancy-announcements';
 import { getAllNoticeIds, getNoticeById } from '../../../lib/content/notices';
 
 export async function getStaticPaths() {
@@ -48,9 +48,11 @@ function formatDate(iso: string) {
 
 // The source notices group shortlisted candidates under their own position
 // heading when a stage covers more than one post — same here, grouped in
-// the order each position first appears rather than re-sorted.
-function groupByPosition(rows: ShortlistRow[]): { position: string; rows: ShortlistRow[] }[] {
-  const groups: { position: string; rows: ShortlistRow[] }[] = [];
+// the order each position first appears rather than re-sorted. Generic
+// because the written-exam stage's rows (qualification-based) and every
+// other stage's rows (score-based) are different shapes.
+function groupByPosition<T extends { position_title: string }>(rows: T[]): { position: string; rows: T[] }[] {
+  const groups: { position: string; rows: T[] }[] = [];
   for (const row of rows) {
     let group = groups.find((g) => g.position === row.position_title);
     if (!group) {
