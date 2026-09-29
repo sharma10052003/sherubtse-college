@@ -1,6 +1,14 @@
 ---
-import ArticleTemplate from '../../../components/templates/ArticleTemplate.astro';
-import { getAllEventIds, getEventById } from '../../../lib/content/events';
+// One event: a full-bleed hero (photo, or the same navy dot-pattern the
+// mosaic tiles use when there's no photo), then facts + description in a
+// two-column body so the page fills the full content width instead of a
+// lone narrow text column, plus a prev/next pager through every event in
+// date order and a sidebar of what's coming up next.
+import Layout from '../../../layouts/Layout.astro';
+import '../../../styles/section-landing.css';
+import '../../../styles/listing.css';
+import '../../../styles/events.css';
+import { getAllEvents, getAllEventIds, getEventById } from '../../../lib/content/events';
 
 export async function getStaticPaths() {
   const ids = await getAllEventIds();
@@ -11,24 +19,124 @@ const { id } = Astro.params;
 const event = await getEventById(Number(id));
 if (!event) return Astro.redirect('/news-notices/events', 404);
 
+const allEvents = await getAllEvents();
+const idx = allEvents.findIndex((e) => e.id === event.id);
+const prev = idx > 0 ? allEvents[idx - 1] : null;
+const next = idx >= 0 && idx < allEvents.length - 1 ? allEvents[idx + 1] : null;
+const upNext = allEvents.filter((e) => e.id !== event.id && !e.is_past).slice(0, 4);
+
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+}
+function formatTime(iso: string) {
+  return new Date(iso).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+}
+function formatShort(iso: string) {
+  return new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+}
+
+const breadcrumb = [
+  { label: 'Home', url: '/' },
+  { label: 'News & Notices', url: '/news-notices' },
+  { label: 'Events', url: '/news-notices/events' },
+  { label: event.title, url: `/news-notices/events/${event.id}` },
+];
+
 const dateRange = event.ends_at
-  ? `${new Date(event.starts_at).toLocaleString('en-GB', { dateStyle: 'long', timeStyle: 'short' })} – ${new Date(event.ends_at).toLocaleString('en-GB', { dateStyle: 'long', timeStyle: 'short' })}`
-  : new Date(event.starts_at).toLocaleString('en-GB', { dateStyle: 'long', timeStyle: 'short' });
+  ? `${formatDate(event.starts_at)}, ${formatTime(event.starts_at)} – ${formatTime(event.ends_at)}`
+  : `${formatDate(event.starts_at)}, ${formatTime(event.starts_at)}`;
 ---
-<ArticleTemplate
-  eyebrow={event.open_to ? `Open to ${event.open_to.replace('_', ' ')}` : 'Event'}
-  title={event.title}
-  meta={`${dateRange}${event.venue ? ' · ' + event.venue : ''}`}
-  body={event.description ?? ''}
-  breadcrumb={[
-    { label: 'Home', url: '/' },
-    { label: 'News & Notices', url: '/news-notices' },
-    { label: 'Events', url: '/news-notices/events' },
-    { label: event.title, url: `/news-notices/events/${event.id}` },
-  ]}
-/>
-{event.registration_link && (
-  <div class="wrap narrow" style="padding-bottom:var(--s7)">
-    <a href={event.registration_link} class="btn btn-primary">Register</a>
+<Layout title={event.title} description={event.description ?? undefined}>
+  <div class="wrap" style="padding-top:var(--s4)">
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      {breadcrumb.map((b, i) => (
+        <>
+          {i > 0 && ' › '}
+          {i === breadcrumb.length - 1 ? <span class="current">{b.label}</span> : <a href={b.url}>{b.label}</a>}
+        </>
+      ))}
+    </nav>
   </div>
-)}
+
+  <div class="ev-bleed" style="margin-top:var(--s3)">
+    <div class="ev-hero">
+      {event.image_url && <img src={event.image_url} alt="" class="ev-hero-img" />}
+      <div class="ev-hero-body">
+        <span class="ev-tile-kicker">{event.is_past ? 'Past Event' : (event.open_to_label ?? 'Event')}</span>
+        <h1 class="ev-hero-title">{event.title}</h1>
+      </div>
+    </div>
+  </div>
+
+  <div class="wrap" style="padding-top:var(--s6);padding-bottom:var(--s8)">
+    <div class="ev-body-grid">
+      <div class="ev-main">
+        <dl class="ev-facts">
+          <div>
+            <dt>When</dt>
+            <dd>{dateRange}</dd>
+          </div>
+          <div>
+            <dt>Where</dt>
+            <dd>{event.venue ?? 'To be announced'}</dd>
+          </div>
+          {event.open_to_label && (
+            <div>
+              <dt>Who Can Attend</dt>
+              <dd>{event.open_to_label}</dd>
+            </div>
+          )}
+          {event.registration_link && (
+            <div>
+              <dt>Registration</dt>
+              <dd>Required</dd>
+            </div>
+          )}
+        </dl>
+
+        {event.description && (
+          <div class="article-body" set:html={event.description.replace(/\n/g, '<br>')} />
+        )}
+
+        {event.registration_link && !event.is_past && (
+          <a href={event.registration_link} class="btn btn-primary ev-cta" target="_blank" rel="noopener">Register for This Event</a>
+        )}
+
+        {(prev || next) && (
+          <div class="ev-pager">
+            {prev ? (
+              <a href={`/news-notices/events/${prev.id}`}>
+                <span>← {formatShort(prev.starts_at)}</span>
+                <strong>{prev.title}</strong>
+              </a>
+            ) : <span></span>}
+            {next ? (
+              <a href={`/news-notices/events/${next.id}`}>
+                <span>{formatShort(next.starts_at)} →</span>
+                <strong>{next.title}</strong>
+              </a>
+            ) : <span></span>}
+          </div>
+        )}
+      </div>
+
+      {upNext.length > 0 && (
+        <aside class="ev-sidebar">
+          <div class="ev-side-card">
+            <h2 class="ev-side-heading">Coming Up Next</h2>
+            <ol class="ev-side-list">
+              {upNext.map((e) => (
+                <li>
+                  <a href={`/news-notices/events/${e.id}`}>
+                    <span class="ev-side-date">{formatShort(e.starts_at)}{e.venue ? ` · ${e.venue}` : ''}</span>
+                    <span class="ev-side-title">{e.title}</span>
+                  </a>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </aside>
+      )}
+    </div>
+  </div>
+</Layout>

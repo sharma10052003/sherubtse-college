@@ -1,0 +1,188 @@
+---
+// The newsroom's front page: a lead story (image or, for the featured
+// broadcast, autoplaying video — the one place autoplay happens at all)
+// beside a rail of the next few headlines and a small live stat strip,
+// the way a front page pairs its splash with a "more inside" column.
+import type { NewsItem } from '../../lib/content/news';
+
+interface RailItem {
+  id: number;
+  title: string;
+  category_label: string;
+}
+interface Props {
+  item: NewsItem;
+  rail: RailItem[];
+  totalStories: number;
+  totalCategories: number;
+  archivedCount: number;
+}
+const { item, rail, totalStories, totalCategories, archivedCount } = Astro.props;
+const href = `/news-notices/news/${item.id}`;
+const isVideo = item.hero_media_type === 'video' && !!item.video_url;
+
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+}
+---
+<section class="news-front">
+  <article class="news-hero" aria-label="Featured story">
+    <div class="news-hero-media">
+      {isVideo ? (
+        <video
+          class="news-hero-video"
+          src={item.video_url!}
+          poster={item.video_poster_url ?? item.image_url ?? undefined}
+          muted
+          loop
+          playsinline
+          autoplay
+          aria-label={item.title}
+        >
+        </video>
+      ) : item.image_url ? (
+        <img src={item.image_url} alt="" />
+      ) : (
+        <div class="news-hero-fallback" aria-hidden="true"></div>
+      )}
+      <span class="news-hero-scrim" aria-hidden="true"></span>
+
+      {isVideo && (
+        <div class="news-hero-controls">
+          <button type="button" id="newsHeroPlay" class="news-hero-btn" aria-pressed="true" aria-label="Pause video">
+            <svg class="icon-pause" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>
+            <svg class="icon-play" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style="display:none"><path d="M8 5v14l11-7z"/></svg>
+          </button>
+          <button type="button" id="newsHeroMute" class="news-hero-btn" aria-pressed="true" aria-label="Unmute video">
+            <svg class="icon-muted" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.42.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3 3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06a8.99 8.99 0 0 0 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4 9.91 6.09 12 8.18V4z"/></svg>
+            <svg class="icon-sound" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style="display:none"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+          </button>
+        </div>
+      )}
+    </div>
+
+    <div class="news-hero-body">
+      <span class="news-kicker news-kicker-on-navy">{item.category_label}</span>
+      <h1 class="news-hero-title"><a href={href}>{item.title}</a></h1>
+      {item.summary && <p class="news-hero-summary">{item.summary}</p>}
+      <p class="small news-hero-date">{formatDate(item.date)}</p>
+      <a href={href} class="btn btn-primary">Read the full story</a>
+    </div>
+  </article>
+
+  <aside class="news-rail">
+    {rail.length > 0 && (
+      <div class="news-rail-block">
+        <h2 class="news-rail-h">More Headlines</h2>
+        <ol class="news-rail-list">
+          {rail.map((r) => (
+            <li>
+              <a href={`/news-notices/news/${r.id}`}>
+                <span class="news-kicker">{r.category_label}</span>
+                <span class="news-rail-title">{r.title}</span>
+              </a>
+            </li>
+          ))}
+        </ol>
+      </div>
+    )}
+
+    <div class="news-stats" data-stats>
+      <div class="news-stat">
+        <span class="news-stat-num" data-count={totalStories}>0</span>
+        <span class="news-stat-label">Stories Published</span>
+      </div>
+      <div class="news-stat">
+        <span class="news-stat-num" data-count={totalCategories}>0</span>
+        <span class="news-stat-label">Newsroom Beats</span>
+      </div>
+      <div class="news-stat">
+        <span class="news-stat-num" data-count={archivedCount}>0</span>
+        <span class="news-stat-label">Stories Archived</span>
+      </div>
+    </div>
+  </aside>
+</section>
+
+<script>
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const nums = document.querySelectorAll<HTMLElement>('.news-stat-num[data-count]');
+  function animate(el: HTMLElement) {
+    const target = Number(el.dataset.count ?? '0');
+    if (reduce || target === 0) {
+      el.textContent = String(target);
+      return;
+    }
+    const start = performance.now();
+    const duration = 900;
+    function tick(now: number) {
+      const p = Math.min(1, (now - start) / duration);
+      const eased = 1 - Math.pow(1 - p, 3);
+      el.textContent = String(Math.round(target * eased));
+      if (p < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  }
+  const statsObserver = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        if (entry.isIntersecting) {
+          nums.forEach(animate);
+          statsObserver.disconnect();
+        }
+      }
+    },
+    { threshold: 0.4 },
+  );
+  const statsEl = document.querySelector('[data-stats]');
+  if (statsEl) statsObserver.observe(statsEl);
+</script>
+
+{isVideo && (
+  <script>
+    const video = document.querySelector<HTMLVideoElement>('.news-hero-video');
+    const playBtn = document.getElementById('newsHeroPlay');
+    const muteBtn = document.getElementById('newsHeroMute');
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    function show(btn: HTMLElement | null, selector: string, visible: boolean) {
+      const el = btn?.querySelector<HTMLElement>(selector);
+      if (el) el.style.display = visible ? '' : 'none';
+    }
+
+    if (video) {
+      video.muted = true;
+      if (reduceMotion) {
+        video.pause();
+        playBtn?.setAttribute('aria-pressed', 'false');
+        show(playBtn, '.icon-pause', false);
+        show(playBtn, '.icon-play', true);
+      } else {
+        video.play().catch(() => {});
+      }
+    }
+
+    playBtn?.addEventListener('click', () => {
+      if (!video) return;
+      const playing = !video.paused;
+      if (playing) {
+        video.pause();
+      } else {
+        video.play().catch(() => {});
+      }
+      playBtn.setAttribute('aria-pressed', String(!playing));
+      playBtn.setAttribute('aria-label', playing ? 'Play video' : 'Pause video');
+      show(playBtn, '.icon-pause', !playing);
+      show(playBtn, '.icon-play', playing);
+    });
+
+    muteBtn?.addEventListener('click', () => {
+      if (!video) return;
+      video.muted = !video.muted;
+      muteBtn.setAttribute('aria-pressed', String(!video.muted));
+      muteBtn.setAttribute('aria-label', video.muted ? 'Unmute video' : 'Mute video');
+      show(muteBtn, '.icon-muted', video.muted);
+      show(muteBtn, '.icon-sound', !video.muted);
+    });
+  </script>
+)}

@@ -1,19 +1,101 @@
 ---
-import ListingTemplate from '../../../components/templates/ListingTemplate.astro';
-import { getAllNews } from '../../../lib/content/news';
+// The newsroom: a featured hero (image or video) for the top story, then a
+// mixed-template grid where each article renders in whichever layout its
+// editor picked in the CMS, then an archive timeline for older material.
+// Only the featured/broadcast hero autoplays video — every video card in
+// the grid below is a poster + play icon, by design (bandwidth + visual
+// calm over auto-playing everything).
+import Layout from '../../../layouts/Layout.astro';
+import NewsHero from '../../../components/news/NewsHero.astro';
+import NewsBoard from '../../../components/news/NewsBoard';
+import '../../../styles/section-landing.css';
+import '../../../styles/listing.css';
+import '../../../styles/news.css';
+import { getAllNews, CATEGORY_LABELS } from '../../../lib/content/news';
 
-const news = await getAllNews();
-const rows = news.map((n) => ({
-  id: n.id,
-  href: `/news-notices/news/${n.id}`,
-  date: new Date(n.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
-  title: n.title,
-  tags: n.tags,
-  meta: n.unit_name ?? undefined,
-}));
+const allNews = await getAllNews();
+const live = allNews.filter((n) => !n.archived);
+
+const featuredCandidates = live.filter((n) => n.featured).sort((a, b) => {
+  if (a.pinned !== b.pinned) return a.pinned ? -1 : 1;
+  return b.date.localeCompare(a.date);
+});
+const hero = featuredCandidates[0] ?? live[0] ?? null;
+
+const rail = live
+  .filter((n) => n.id !== hero?.id)
+  .slice(0, 4)
+  .map((n) => ({ id: n.id, title: n.title, category_label: n.category_label }));
+
+const totalCategories = new Set(live.map((n) => n.category)).size;
+
+const boardItems = allNews
+  .filter((n) => n.id !== hero?.id)
+  .map((n) => ({
+    id: n.id,
+    title: n.title,
+    summary: n.summary,
+    date: n.date,
+    year: n.year,
+    category: n.category,
+    category_label: n.category_label,
+    template: n.template,
+    image_url: n.image_url,
+    images: n.images,
+    gallery: n.gallery,
+    tags: n.tags,
+    video_url: n.video_url,
+    video_poster_url: n.video_poster_url,
+    archived: n.archived,
+  }));
+
+const categoryOptions = Object.entries(CATEGORY_LABELS).map(([value, label]) => ({ value, label }));
+
+const breadcrumb = [
+  { label: 'Home', url: '/' },
+  { label: 'News & Notices', url: '/news-notices' },
+  { label: 'News', url: '/news-notices/news' },
+];
 ---
-<ListingTemplate
-  title="News"
-  breadcrumb={[{ label: 'Home', url: '/' }, { label: 'News & Notices', url: '/news-notices' }, { label: 'News', url: '/news-notices/news' }]}
-  rows={rows}
-/>
+<Layout title="News" description="The Sherubtse College newsroom — current stories, broadcasts and the full archive.">
+  <div class="wrap" style="padding-top:var(--s4)">
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      {breadcrumb.map((b, i) => (
+        <>
+          {i > 0 && ' › '}
+          {i === breadcrumb.length - 1 ? <span class="current">{b.label}</span> : <a href={b.url}>{b.label}</a>}
+        </>
+      ))}
+    </nav>
+  </div>
+
+  {hero ? (
+    <div class="wrap" style="padding-top:var(--s2)">
+      <NewsHero
+        item={hero}
+        rail={rail}
+        totalStories={live.length}
+        totalCategories={totalCategories}
+        archivedCount={allNews.length - live.length}
+      />
+    </div>
+  ) : (
+    <header class="sl-head">
+      <div class="wrap">
+        <p class="sl-eyebrow">News &amp; Notices</p>
+        <h1 class="sl-title">News</h1>
+        <span class="sl-rule" aria-hidden="true"></span>
+      </div>
+    </header>
+  )}
+
+  <div class="ls-body">
+    <div class="wrap">
+      <div style="max-width:var(--measure); margin-bottom:var(--s5)">
+        <p class="eyebrow">The Newsroom</p>
+        <h2 class="h2">Latest From Sherubtse</h2>
+      </div>
+      <NewsBoard client:load items={boardItems} categoryOptions={categoryOptions} />
+    </div>
+  </div>
+</Layout>
