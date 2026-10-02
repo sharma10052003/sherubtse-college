@@ -1,21 +1,45 @@
 ---
+// Programmes: a card grid with a quick-view drawer (department, degree
+// type, duration, annual fee, admissions status and an overview) — all
+// driven by the `programme` content type, so every fact an admin edits
+// in Strapi shows up here with no code change.
 import Layout from '../../../layouts/Layout.astro';
+import ProgrammesBoard from '../../../components/programmes/ProgrammesBoard';
+import '../../../styles/programmes.css';
 import { getProgrammes } from '../../../lib/content/programmes';
 
 const programmes = await getProgrammes();
+
+const boardItems = programmes.map((p) => ({
+  id: p.id,
+  slug: p.slug,
+  programme_name: p.programme_name,
+  level: p.level,
+  degree_type: p.degree_type ?? null,
+  duration: p.duration ?? null,
+  short_description: p.short_description ?? null,
+  overview: p.overview ?? null,
+  department_name: p.department_name ?? null,
+  department_slug: p.department_slug ?? null,
+  annual_fee: p.annual_fee ?? null,
+  intake_status: p.intake_status ?? null,
+}));
 ---
 <Layout title="Programmes" description="Undergraduate and postgraduate degree programmes at Sherubtse College.">
-  <div class="wrap" style="padding-top:var(--s5);padding-bottom:var(--s7)">
+  <div class="wrap prog-wrap" style="padding-top:var(--s5);padding-bottom:var(--s8)">
     <nav class="breadcrumb" aria-label="Breadcrumb"><a href="/">Home</a> › <a href="/academics">Academics</a> › <span class="current">Programmes</span></nav>
-    <h1 class="h1">Programmes</h1>
-    <div class="cards" style="margin-top:var(--s6)">
-      {programmes.length > 0 ? programmes.map((p) => (
-        <div class="card">
-          <h3 class="h3">{p.programme_name}</h3>
-          {p.short_description && <p>{p.short_description}</p>}
-          <a href={`/academics/programmes/${p.slug}`} class="btn-quiet">View programme</a>
-        </div>
-      )) : <p class="small">Programmes will appear here once added in Strapi.</p>}
+
+    <div class="prog-header" style="margin-top:var(--s4)">
+      <div class="prog-header-copy">
+        <h1 class="h1">Programmes</h1>
+        <p class="lede" style="margin-top:var(--s3)">Undergraduate degrees across the sciences, data and the social sciences.</p>
+      </div>
     </div>
+
+    {programmes.length > 0 ? (
+      <ProgrammesBoard client:load items={boardItems} />
+    ) : (
+      <p class="small" style="margin-top:var(--s6)">Programmes will appear here once added in Strapi.</p>
+    )}
   </div>
 </Layout>

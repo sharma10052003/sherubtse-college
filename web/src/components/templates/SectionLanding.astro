@@ -34,8 +34,25 @@ interface Props {
   blocks?: Block[];
   /** Meta description; defaults to the intro. */
   description?: string;
+  /** 'feature' gives this page's own distinct navy/photo hero instead of the
+   * plain header every other section page shares — currently About only. */
+  heroVariant?: 'plain' | 'feature';
+  /** Optional real photo for the 'feature' hero; falls back to a navy
+   * gradient + pattern when not set, so an empty field never looks broken. */
+  heroImageUrl?: string;
 }
-const { title, intro, children, eyebrow, heading, featured = true, blocks = [], description } = Astro.props;
+const {
+  title,
+  intro,
+  children,
+  eyebrow,
+  heading,
+  featured = true,
+  blocks = [],
+  description,
+  heroVariant = 'plain',
+  heroImageUrl,
+} = Astro.props;
 
 const ICONS: Record<string, string> = {
   college: '<path d="M3 21h18M5 21V9l7-5 7 5v12M9 21v-6h6v6"/>',
@@ -96,18 +113,47 @@ const lastSpanMd = rest.length % 2 === 0 ? 1 : 2;
 
 const eyebrowText = eyebrow ?? title;
 const headingText = heading ?? title;
+
+// Feature hero only (About): a real, computed figure — not a made-up
+// "decades of excellence" round number — so it never quietly goes stale.
+const legacyYears = new Date().getFullYear() - 1968;
 ---
 <Layout title={title} description={description ?? intro}>
   <div class="sl-page">
-    <header class="sl-head">
-      <div class="wrap">
-        <nav class="breadcrumb" aria-label="Breadcrumb"><a href="/">Home</a> › <span class="current">{title}</span></nav>
-        <p class="sl-eyebrow">{eyebrowText}</p>
-        <h1 class="sl-title">{headingText}</h1>
-        <span class="sl-rule" aria-hidden="true"></span>
-        <p class="sl-intro">{intro}</p>
-      </div>
-    </header>
+    {heroVariant === 'feature' ? (
+      <header class="sl-split">
+        <div class="sl-split-text">
+          <nav class="breadcrumb" aria-label="Breadcrumb"><a href="/">Home</a> › <span class="current">{title}</span></nav>
+          <p class="sl-eyebrow">{eyebrowText}</p>
+          <h1 class="sl-title sl-split-title">{headingText}</h1>
+          <span class="sl-rule" aria-hidden="true"></span>
+          <p class="sl-intro">{intro}</p>
+        </div>
+        <div class="sl-split-panel" style={heroImageUrl ? `--sl-hero-image:url(${heroImageUrl})` : undefined}>
+          <div class="sl-split-panel-inner">
+            <p class="sl-counter">
+              <span class="sl-counter-num" data-count-to={legacyYears}>0</span><span class="sl-counter-plus">+</span>
+            </p>
+            <p class="sl-counter-label">Years of Academic Legacy</p>
+            <ul class="sl-split-facts">
+              <li><span>Founded</span>1968</li>
+              <li><span>Campus</span>Kanglung, Trashigang</li>
+              <li><span>Affiliation</span>Royal University of Bhutan</li>
+            </ul>
+          </div>
+        </div>
+      </header>
+    ) : (
+      <header class="sl-head">
+        <div class="wrap">
+          <nav class="breadcrumb" aria-label="Breadcrumb"><a href="/">Home</a> › <span class="current">{title}</span></nav>
+          <p class="sl-eyebrow">{eyebrowText}</p>
+          <h1 class="sl-title">{headingText}</h1>
+          <span class="sl-rule" aria-hidden="true"></span>
+          <p class="sl-intro">{intro}</p>
+        </div>
+      </header>
+    )}
 
     <div class="sl-body">
       <div class="wrap">
@@ -142,3 +188,45 @@ const headingText = heading ?? title;
     </div>
   </div>
 </Layout>
+
+<script>
+  // Counts the legacy figure up from 0 once it scrolls into view — a no-op
+  // on every page except the ones using the 'feature' hero, since the
+  // target element simply doesn't exist there.
+  const counter = document.querySelector<HTMLElement>('.sl-counter-num');
+  if (counter) {
+    const target = Number(counter.dataset.countTo ?? '0');
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    const run = () => {
+      if (prefersReducedMotion) {
+        counter.textContent = String(target);
+        return;
+      }
+      const duration = 1200;
+      const start = performance.now();
+      const step = (now: number) => {
+        const t = Math.min(1, (now - start) / duration);
+        const eased = 1 - Math.pow(1 - t, 3);
+        counter.textContent = String(Math.round(eased * target));
+        if (t < 1) requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    };
+
+    if ('IntersectionObserver' in window) {
+      const observer = new IntersectionObserver(
+        (entries) => {
+          if (entries[0]?.isIntersecting) {
+            run();
+            observer.disconnect();
+          }
+        },
+        { threshold: 0.4 },
+      );
+      observer.observe(counter);
+    } else {
+      run();
+    }
+  }
+</script>

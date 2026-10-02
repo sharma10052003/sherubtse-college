@@ -137,6 +137,82 @@ export async function getAlumniSetting(): Promise<AlumniSetting> {
   };
 }
 
+export interface SectionCopy {
+  eyebrow: string;
+  heading: string;
+  intro: string;
+  paragraphs: string[];
+  tagline: string;
+  button_label: string;
+  secondary_button_label: string;
+}
+export interface MattersCard { icon: string; title: string; text: string }
+export interface AlumniContactItem { kind: string; label: string; link: string | null }
+
+/** Every piece of wording on the Alumni page except the form field labels,
+ * all edited in Strapi under Alumni – Page. Missing values come back empty so
+ * the template simply omits them instead of showing placeholder text. */
+export interface AlumniCopy {
+  seo_description: string | null;
+  hero: SectionCopy;
+  about: SectionCopy;
+  matters: SectionCopy;
+  matters_cards: MattersCard[];
+  distinguished: SectionCopy;
+  stories: SectionCopy;
+  story_form: SectionCopy;
+  events: SectionCopy;
+  mentorship: SectionCopy;
+  global_reach: SectionCopy;
+  gallery: SectionCopy;
+  achievements: SectionCopy;
+  register: SectionCopy;
+  newsletter: SectionCopy;
+  contact: SectionCopy;
+  contact_items: AlumniContactItem[];
+  labels: Record<'total_alumni' | 'years' | 'countries' | 'stories' | 'alumni' | 'chapters' | 'upcoming_events' | 'past_events' | 'gallery_all', string>;
+  texts: Record<'stories_empty' | 'upcoming_empty' | 'past_empty' | 'story_consent' | 'story_success' | 'register_consent' | 'register_success' | 'newsletter_placeholder' | 'newsletter_success' | 'newsletter_already' | 'error', string>;
+}
+
+const clean = (t: unknown) => (typeof t === 'string' ? t.replace(/�/g, '').trim() : '');
+const sc = (c: any): SectionCopy => ({
+  eyebrow: clean(c?.eyebrow),
+  heading: clean(c?.heading),
+  intro: clean(c?.intro),
+  paragraphs: clean(c?.body).split(/\n{2,}/).map((p) => p.trim()).filter(Boolean),
+  tagline: clean(c?.tagline),
+  button_label: clean(c?.button_label),
+  secondary_button_label: clean(c?.secondary_button_label),
+});
+
+export async function getAlumniCopy(): Promise<AlumniCopy> {
+  const res = await strapiGet<StrapiSingleResponse<any>>('alumni-setting', {
+    populate: ['hero', 'about', 'matters', 'matters_cards', 'distinguished', 'stories', 'story_form', 'events', 'mentorship', 'global_reach', 'gallery', 'achievements', 'register', 'newsletter', 'contact', 'contact_items'],
+  });
+  const r = res?.data ?? {};
+  return {
+    seo_description: clean(r.seo_description) || null,
+    hero: sc(r.hero), about: sc(r.about), matters: sc(r.matters),
+    matters_cards: (r.matters_cards ?? []).map((c: any) => ({ icon: c.icon ?? 'star', title: clean(c.title), text: clean(c.text) })),
+    distinguished: sc(r.distinguished), stories: sc(r.stories), story_form: sc(r.story_form), events: sc(r.events),
+    mentorship: sc(r.mentorship), global_reach: sc(r.global_reach), gallery: sc(r.gallery), achievements: sc(r.achievements),
+    register: sc(r.register), newsletter: sc(r.newsletter), contact: sc(r.contact),
+    contact_items: (r.contact_items ?? []).map((c: any) => ({ kind: c.kind, label: clean(c.label), link: c.link || null })),
+    labels: {
+      total_alumni: clean(r.label_total_alumni), years: clean(r.label_years), countries: clean(r.label_countries),
+      stories: clean(r.label_stories), alumni: clean(r.label_alumni), chapters: clean(r.label_chapters),
+      upcoming_events: clean(r.label_upcoming_events), past_events: clean(r.label_past_events), gallery_all: clean(r.label_gallery_all),
+    },
+    texts: {
+      stories_empty: clean(r.stories_empty_text), upcoming_empty: clean(r.upcoming_empty_text), past_empty: clean(r.past_empty_text),
+      story_consent: clean(r.story_consent_text), story_success: clean(r.story_success_message),
+      register_consent: clean(r.register_consent_text), register_success: clean(r.register_success_message),
+      newsletter_placeholder: clean(r.newsletter_placeholder), newsletter_success: clean(r.newsletter_success_message),
+      newsletter_already: clean(r.newsletter_already_message), error: clean(r.error_message),
+    },
+  };
+}
+
 export async function getDistinguishedAlumni(): Promise<AlumniCard[]> {
   const res = await strapiGet<StrapiListResponse<any>>('alumnis', {
     filters: { is_featured: { $eq: true } },

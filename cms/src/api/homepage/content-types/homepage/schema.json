@@ -10,12 +10,32 @@
     "draftAndPublish": true
   },
   "attributes": {
-    "hero_images": { "type": "media", "multiple": true, "allowedTypes": ["images"] },
-    "hero_video": { "type": "media", "multiple": false, "allowedTypes": ["videos"] },
-    "hero_eyebrow": { "type": "string" },
-    "hero_heading": { "type": "string" },
-    "statement": { "type": "text" },
-    "hero_badge": { "type": "string" },
+    "hero_images": {
+      "type": "media",
+      "multiple": true,
+      "allowedTypes": [
+        "images"
+      ]
+    },
+    "hero_video": {
+      "type": "media",
+      "multiple": false,
+      "allowedTypes": [
+        "videos"
+      ]
+    },
+    "hero_eyebrow": {
+      "type": "string"
+    },
+    "hero_heading": {
+      "type": "string"
+    },
+    "statement": {
+      "type": "text"
+    },
+    "hero_badge": {
+      "type": "string"
+    },
     "hero_buttons": {
       "type": "component",
       "repeatable": true,
@@ -26,14 +46,67 @@
       "repeatable": true,
       "component": "shared.link-item"
     },
-    "featured_selections": {
+    "president_name": {
+      "type": "string"
+    },
+    "president_title": {
+      "type": "string"
+    },
+    "president_message": {
+      "type": "richtext"
+    },
+    "president_photo": {
+      "type": "media",
+      "multiple": false,
+      "allowedTypes": [
+        "images"
+      ]
+    },
+    "seo_title": {
+      "type": "string"
+    },
+    "seo_description": {
+      "type": "text"
+    },
+    "president_heading": {
+      "type": "string"
+    },
+    "announcements_heading": {
+      "type": "string"
+    },
+    "announcements_link_label": {
+      "type": "string"
+    },
+    "announcements_empty_text": {
+      "type": "string"
+    },
+    "events_heading": {
+      "type": "string"
+    },
+    "events_link_label": {
+      "type": "string"
+    },
+    "events_empty_text": {
+      "type": "string"
+    },
+    "explore_heading": {
+      "type": "string"
+    },
+    "explore_button_label": {
+      "type": "string"
+    },
+    "explore_cards": {
       "type": "component",
       "repeatable": true,
-      "component": "shared.link-item"
+      "component": "shared.landing-card"
     },
-    "president_name": { "type": "string" },
-    "president_title": { "type": "string" },
-    "president_message": { "type": "richtext" },
-    "president_photo": { "type": "media", "multiple": false, "allowedTypes": ["images"] }
+    "sections": {
+      "type": "dynamiczone",
+      "components": [
+        "sections.rich-text",
+        "sections.image-text",
+        "sections.call-to-action"
+      ]
+    }
   }
 }

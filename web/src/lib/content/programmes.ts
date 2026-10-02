@@ -9,20 +9,21 @@ export interface ProgrammeCard {
   degree_type?: string | null;
   duration?: string | null;
   short_description?: string | null;
+  overview?: string | null;
   department_name?: string | null;
+  department_slug?: string | null;
+  annual_fee?: number | null;
+  intake_status?: 'open' | 'closed' | 'waitlist' | null;
   hero_image_url: string | null;
 }
 
 export interface ProgrammeDetail extends ProgrammeCard {
-  overview?: string | null;
   about?: string | null;
   objectives?: string | null;
   learning_outcomes?: string | null;
   admission_requirements?: string | null;
   career_opportunities?: string | null;
   further_study?: string | null;
-  annual_fee?: number | null;
-  intake_status?: 'open' | 'closed' | 'waitlist' | null;
   curriculum: { label: string; courses: string }[];
   faqs: { question: string; answer: string }[];
   coordinator?: { full_name: string; slug: string } | null;
@@ -37,7 +38,11 @@ function mapCard(row: any): ProgrammeCard {
     degree_type: row.degree_type ?? null,
     duration: row.duration ?? null,
     short_description: row.short_description ?? null,
+    overview: row.overview ?? null,
     department_name: row.department?.department_name ?? null,
+    department_slug: row.department?.slug ?? null,
+    annual_fee: row.annual_fee ?? null,
+    intake_status: row.intake_status ?? null,
     hero_image_url: mediaUrl(row.hero_image),
   };
 }
@@ -72,15 +77,12 @@ export async function getProgrammeBySlug(slug: string): Promise<ProgrammeDetail 
   if (!row) return null;
   return {
     ...mapCard(row),
-    overview: row.overview ?? null,
     about: row.about ?? null,
     objectives: row.objectives ?? null,
     learning_outcomes: row.learning_outcomes ?? null,
     admission_requirements: row.admission_requirements ?? null,
     career_opportunities: row.career_opportunities ?? null,
     further_study: row.further_study ?? null,
-    annual_fee: row.annual_fee ?? null,
-    intake_status: row.intake_status ?? null,
     curriculum: row.curriculum ?? [],
     faqs: row.faqs ?? [],
     coordinator: row.coordinator ?? null,

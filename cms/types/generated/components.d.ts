@@ -1,5 +1,52 @@
 import type { Schema, Struct } from '@strapi/strapi';
 
+export interface AnnouncementsPositionOpening extends Struct.ComponentSchema {
+  collectionName: 'components_announcements_position_openings';
+  info: {
+    displayName: 'Position Opening';
+    icon: 'briefcase';
+  };
+  attributes: {
+    eligibility_criteria: Schema.Attribute.Text;
+    mode_of_employment: Schema.Attribute.String;
+    particular: Schema.Attribute.String;
+    position_level: Schema.Attribute.String;
+    position_title: Schema.Attribute.String & Schema.Attribute.Required;
+    slots: Schema.Attribute.Integer;
+  };
+}
+
+export interface AnnouncementsShortlistRow extends Struct.ComponentSchema {
+  collectionName: 'components_announcements_shortlist_rows';
+  info: {
+    displayName: 'Shortlisted Candidate';
+    icon: 'user';
+  };
+  attributes: {
+    cid_number: Schema.Attribute.String;
+    contact_number: Schema.Attribute.String;
+    position_title: Schema.Attribute.String & Schema.Attribute.Required;
+    remarks: Schema.Attribute.String;
+    score: Schema.Attribute.String;
+  };
+}
+
+export interface AnnouncementsWrittenExamCandidate
+  extends Struct.ComponentSchema {
+  collectionName: 'components_announcements_written_exam_candidates';
+  info: {
+    displayName: 'Written Exam Candidate';
+    icon: 'user';
+  };
+  attributes: {
+    cid_number: Schema.Attribute.String;
+    contact_number: Schema.Attribute.String;
+    position_title: Schema.Attribute.String & Schema.Attribute.Required;
+    qualification: Schema.Attribute.String;
+    remarks: Schema.Attribute.String;
+  };
+}
+
 export interface NavigationNavItem extends Struct.ComponentSchema {
   collectionName: 'components_navigation_nav_items';
   info: {
@@ -105,6 +152,23 @@ export interface SharedContactBlock extends Struct.ComponentSchema {
   };
 }
 
+export interface SharedContactItem extends Struct.ComponentSchema {
+  collectionName: 'components_shared_contact_items';
+  info: {
+    displayName: 'Contact Item';
+    icon: 'phone';
+  };
+  attributes: {
+    kind: Schema.Attribute.Enumeration<
+      ['phone', 'email', 'person', 'address']
+    > &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'phone'>;
+    label: Schema.Attribute.String & Schema.Attribute.Required;
+    link: Schema.Attribute.String;
+  };
+}
+
 export interface SharedFaqItem extends Struct.ComponentSchema {
   collectionName: 'components_shared_faq_items';
   info: {
@@ -114,6 +178,22 @@ export interface SharedFaqItem extends Struct.ComponentSchema {
   attributes: {
     answer: Schema.Attribute.Text & Schema.Attribute.Required;
     question: Schema.Attribute.String & Schema.Attribute.Required;
+  };
+}
+
+export interface SharedIconCard extends Struct.ComponentSchema {
+  collectionName: 'components_shared_icon_cards';
+  info: {
+    displayName: 'Icon Card';
+    icon: 'star';
+  };
+  attributes: {
+    icon: Schema.Attribute.Enumeration<
+      ['cap', 'people', 'shield', 'compass', 'book', 'star', 'heart', 'globe']
+    > &
+      Schema.Attribute.DefaultTo<'star'>;
+    text: Schema.Attribute.Text;
+    title: Schema.Attribute.String & Schema.Attribute.Required;
   };
 }
 
@@ -168,6 +248,23 @@ export interface SharedPublication extends Struct.ComponentSchema {
   };
 }
 
+export interface SharedSectionCopy extends Struct.ComponentSchema {
+  collectionName: 'components_shared_section_copies';
+  info: {
+    displayName: 'Section Text';
+    icon: 'align-left';
+  };
+  attributes: {
+    body: Schema.Attribute.Text;
+    button_label: Schema.Attribute.String;
+    eyebrow: Schema.Attribute.String;
+    heading: Schema.Attribute.String;
+    intro: Schema.Attribute.Text;
+    secondary_button_label: Schema.Attribute.String;
+    tagline: Schema.Attribute.String;
+  };
+}
+
 export interface SharedSeo extends Struct.ComponentSchema {
   collectionName: 'components_shared_seo';
   info: {
@@ -210,6 +307,9 @@ export interface SharedStageDocument extends Struct.ComponentSchema {
 declare module '@strapi/strapi' {
   export namespace Public {
     export interface ComponentSchemas {
+      'announcements.position-opening': AnnouncementsPositionOpening;
+      'announcements.shortlist-row': AnnouncementsShortlistRow;
+      'announcements.written-exam-candidate': AnnouncementsWrittenExamCandidate;
       'navigation.nav-item': NavigationNavItem;
       'programme.curriculum-block': ProgrammeCurriculumBlock;
       'sections.call-to-action': SectionsCallToAction;
@@ -218,11 +318,14 @@ declare module '@strapi/strapi' {
       'shared.attachment': SharedAttachment;
       'shared.button': SharedButton;
       'shared.contact-block': SharedContactBlock;
+      'shared.contact-item': SharedContactItem;
       'shared.faq-item': SharedFaqItem;
+      'shared.icon-card': SharedIconCard;
       'shared.landing-card': SharedLandingCard;
       'shared.link-group': SharedLinkGroup;
       'shared.link-item': SharedLinkItem;
       'shared.publication': SharedPublication;
+      'shared.section-copy': SharedSectionCopy;
       'shared.seo': SharedSeo;
       'shared.social-link': SharedSocialLink;
       'shared.stage-document': SharedStageDocument;

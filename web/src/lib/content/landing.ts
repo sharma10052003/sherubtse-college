@@ -21,6 +21,8 @@ export interface LandingPage {
   cards: LandingCard[];
   blocks: Block[];
   seo_description: string | null;
+  /** Optional hero photo — currently only used by the About page's feature hero. */
+  hero_image_url: string | null;
 }
 
 /** Overview pages are single types named `<section>-overview`. Returns null when
@@ -40,24 +42,18 @@ const paragraphs = (text: string | null | undefined) =>
     .map((p) => p.replace(/�/g, '').trim())
     .filter(Boolean);
 
-export async function getLandingPage(type: OverviewType): Promise<LandingPage | null> {
-  const res = await strapiGet<StrapiSingleResponse<any>>(type, {
-    populate: {
-      cards: true,
-      seo: true,
-      sections: {
-        on: {
-          'sections.rich-text': true,
-          'sections.image-text': { populate: ['image'] },
-          'sections.call-to-action': true,
-        },
-      },
-    },
-  });
-  const row = res?.data;
-  if (!row?.heading) return null;
+/** Populate clause for the editor-built "sections" dynamic zone. */
+export const BLOCKS_POPULATE = {
+  on: {
+    'sections.rich-text': true,
+    'sections.image-text': { populate: ['image'] },
+    'sections.call-to-action': true,
+  },
+};
 
-  const blocks: Block[] = (row.sections ?? []).flatMap((s: any): Block[] => {
+/** Turns the raw dynamic-zone entries into renderable blocks. */
+export function toBlocks(sections: any[] | null | undefined): Block[] {
+  return (sections ?? []).flatMap((s: any): Block[] => {
     switch (s.__component) {
       case 'sections.rich-text':
         return [{ kind: 'text', heading: s.heading ?? null, paragraphs: paragraphs(s.body) }];
@@ -76,6 +72,17 @@ export async function getLandingPage(type: OverviewType): Promise<LandingPage | 
         return [];
     }
   });
+}
+
+export async function getLandingPage(type: OverviewType): Promise<LandingPage | null> {
+  // hero_image only exists on about-overview's schema — Strapi returns 400
+  // for a populate key that isn't a real attribute on the other 5 types.
+  const populate: Record<string, unknown> = { cards: true, seo: true, sections: BLOCKS_POPULATE };
+  if (type === 'about-overview') populate.hero_image = true;
+
+  const res = await strapiGet<StrapiSingleResponse<any>>(type, { populate });
+  const row = res?.data;
+  if (!row?.heading) return null;
 
   return {
     eyebrow: row.eyebrow ?? null,
@@ -88,7 +95,8 @@ export async function getLandingPage(type: OverviewType): Promise<LandingPage | 
       description: c.description ?? '',
       icon: c.icon || undefined,
     })),
-    blocks,
+    blocks: toBlocks(row.sections),
     seo_description: row.seo?.description ?? null,
+    hero_image_url: mediaUrl(row.hero_image),
   };
 }
