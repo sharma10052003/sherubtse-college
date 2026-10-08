@@ -461,6 +461,7 @@ export interface ApiAboutOverviewAboutOverview extends Struct.SingleTypeSchema {
     eyebrow: Schema.Attribute.String;
     featured: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
     heading: Schema.Attribute.String & Schema.Attribute.Required;
+    hero_image: Schema.Attribute.Media<'images'>;
     intro: Schema.Attribute.Text & Schema.Attribute.Required;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
@@ -792,18 +793,49 @@ export interface ApiAlumniSettingAlumniSetting extends Struct.SingleTypeSchema {
     draftAndPublish: false;
   };
   attributes: {
+    about: Schema.Attribute.Component<'shared.section-copy', false>;
+    achievements: Schema.Attribute.Component<'shared.section-copy', false>;
+    contact: Schema.Attribute.Component<'shared.section-copy', false>;
+    contact_items: Schema.Attribute.Component<'shared.contact-item', true>;
     countries_represented: Schema.Attribute.Integer;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    distinguished: Schema.Attribute.Component<'shared.section-copy', false>;
+    error_message: Schema.Attribute.String;
+    events: Schema.Attribute.Component<'shared.section-copy', false>;
+    gallery: Schema.Attribute.Component<'shared.section-copy', false>;
+    global_reach: Schema.Attribute.Component<'shared.section-copy', false>;
+    hero: Schema.Attribute.Component<'shared.section-copy', false>;
     hero_background: Schema.Attribute.Media<'images' | 'videos'>;
+    label_alumni: Schema.Attribute.String;
+    label_chapters: Schema.Attribute.String;
+    label_countries: Schema.Attribute.String;
+    label_gallery_all: Schema.Attribute.String;
+    label_past_events: Schema.Attribute.String;
+    label_stories: Schema.Attribute.String;
+    label_total_alumni: Schema.Attribute.String;
+    label_upcoming_events: Schema.Attribute.String;
+    label_years: Schema.Attribute.String;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
       'api::alumni-setting.alumni-setting'
     > &
       Schema.Attribute.Private;
+    matters: Schema.Attribute.Component<'shared.section-copy', false>;
+    matters_cards: Schema.Attribute.Component<'shared.icon-card', true>;
+    mentorship: Schema.Attribute.Component<'shared.section-copy', false>;
+    newsletter: Schema.Attribute.Component<'shared.section-copy', false>;
+    newsletter_already_message: Schema.Attribute.String;
+    newsletter_placeholder: Schema.Attribute.String;
+    newsletter_success_message: Schema.Attribute.String;
+    past_empty_text: Schema.Attribute.String;
     publishedAt: Schema.Attribute.DateTime;
+    register: Schema.Attribute.Component<'shared.section-copy', false>;
+    register_consent_text: Schema.Attribute.Text;
+    register_success_message: Schema.Attribute.Text;
+    seo_description: Schema.Attribute.Text;
     show_achievements: Schema.Attribute.Boolean &
       Schema.Attribute.DefaultTo<true>;
     show_chapters: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
@@ -813,7 +845,13 @@ export interface ApiAlumniSettingAlumniSetting extends Struct.SingleTypeSchema {
       Schema.Attribute.DefaultTo<true>;
     show_statistics: Schema.Attribute.Boolean &
       Schema.Attribute.DefaultTo<true>;
+    stories: Schema.Attribute.Component<'shared.section-copy', false>;
+    stories_empty_text: Schema.Attribute.String;
+    story_consent_text: Schema.Attribute.Text;
+    story_form: Schema.Attribute.Component<'shared.section-copy', false>;
+    story_success_message: Schema.Attribute.Text;
     total_alumni_override: Schema.Attribute.Integer;
+    upcoming_empty_text: Schema.Attribute.String;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -1918,10 +1956,18 @@ export interface ApiHomepageHomepage extends Struct.SingleTypeSchema {
     draftAndPublish: true;
   };
   attributes: {
+    announcements_empty_text: Schema.Attribute.String;
+    announcements_heading: Schema.Attribute.String;
+    announcements_link_label: Schema.Attribute.String;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
-    featured_selections: Schema.Attribute.Component<'shared.link-item', true>;
+    events_empty_text: Schema.Attribute.String;
+    events_heading: Schema.Attribute.String;
+    events_link_label: Schema.Attribute.String;
+    explore_button_label: Schema.Attribute.String;
+    explore_cards: Schema.Attribute.Component<'shared.landing-card', true>;
+    explore_heading: Schema.Attribute.String;
     hero_badge: Schema.Attribute.String;
     hero_buttons: Schema.Attribute.Component<'shared.link-item', true>;
     hero_eyebrow: Schema.Attribute.String;
@@ -1934,12 +1980,18 @@ export interface ApiHomepageHomepage extends Struct.SingleTypeSchema {
       'api::homepage.homepage'
     > &
       Schema.Attribute.Private;
+    president_heading: Schema.Attribute.String;
     president_message: Schema.Attribute.RichText;
     president_name: Schema.Attribute.String;
     president_photo: Schema.Attribute.Media<'images'>;
     president_title: Schema.Attribute.String;
     publishedAt: Schema.Attribute.DateTime;
     quick_links: Schema.Attribute.Component<'shared.link-item', true>;
+    sections: Schema.Attribute.DynamicZone<
+      ['sections.rich-text', 'sections.image-text', 'sections.call-to-action']
+    >;
+    seo_description: Schema.Attribute.Text;
+    seo_title: Schema.Attribute.String;
     statement: Schema.Attribute.Text;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
@@ -2067,12 +2119,33 @@ export interface ApiNewsNews extends Struct.CollectionTypeSchema {
     draftAndPublish: true;
   };
   attributes: {
+    archived: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    archived_at: Schema.Attribute.DateTime;
+    autoplay: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
     body: Schema.Attribute.RichText & Schema.Attribute.Required;
+    category: Schema.Attribute.Enumeration<
+      [
+        'campus_life',
+        'academics',
+        'research',
+        'achievements',
+        'events',
+        'sports',
+        'administration',
+        'general',
+      ]
+    > &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'general'>;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     date: Schema.Attribute.Date & Schema.Attribute.Required;
     expires_at: Schema.Attribute.DateTime;
+    featured: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    gallery: Schema.Attribute.Media<'images', true>;
+    hero_media_type: Schema.Attribute.Enumeration<['image', 'video']> &
+      Schema.Attribute.DefaultTo<'image'>;
     images: Schema.Attribute.Media<'images', true>;
     last_reviewed: Schema.Attribute.Date & Schema.Attribute.Required;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
@@ -2080,17 +2153,36 @@ export interface ApiNewsNews extends Struct.CollectionTypeSchema {
       Schema.Attribute.Private;
     owning_unit: Schema.Attribute.Relation<'manyToOne', 'api::unit.unit'> &
       Schema.Attribute.Required;
+    pinned: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    publish_at: Schema.Attribute.DateTime;
     publishedAt: Schema.Attribute.DateTime;
     review_interval: Schema.Attribute.Enumeration<
       ['semester', 'annual', 'none']
     > &
       Schema.Attribute.DefaultTo<'none'>;
+    summary: Schema.Attribute.Text & Schema.Attribute.Required;
     tags: Schema.Attribute.String;
+    template: Schema.Attribute.Enumeration<
+      [
+        'standard',
+        'featured',
+        'video',
+        'photo_story',
+        'split',
+        'gallery',
+        'magazine',
+      ]
+    > &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'standard'>;
     title: Schema.Attribute.String & Schema.Attribute.Required;
     unit: Schema.Attribute.Relation<'manyToOne', 'api::unit.unit'>;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    video_file: Schema.Attribute.Media<'videos'>;
+    video_poster: Schema.Attribute.Media<'images'>;
+    video_url: Schema.Attribute.String;
   };
 }
 
@@ -2714,6 +2806,79 @@ export interface ApiUnitUnit extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiVacancyAnnouncementVacancyAnnouncement
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'vacancy_announcements';
+  info: {
+    displayName: 'News & Notices \u2013 Vacancy Announcements';
+    pluralName: 'vacancy-announcements';
+    singularName: 'vacancy-announcement';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    additional_notes: Schema.Attribute.RichText;
+    application_deadline: Schema.Attribute.Date;
+    attachment: Schema.Attribute.Media<'files'>;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    date_posted: Schema.Attribute.Date & Schema.Attribute.Required;
+    description: Schema.Attribute.RichText & Schema.Attribute.Required;
+    final_selected: Schema.Attribute.Component<
+      'announcements.shortlist-row',
+      true
+    >;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::vacancy-announcement.vacancy-announcement'
+    > &
+      Schema.Attribute.Private;
+    position_name: Schema.Attribute.String;
+    position_openings: Schema.Attribute.Component<
+      'announcements.position-opening',
+      true
+    >;
+    posting_status: Schema.Attribute.Enumeration<['open', 'closed']> &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'open'>;
+    publishedAt: Schema.Attribute.DateTime;
+    result_date: Schema.Attribute.Date;
+    slug: Schema.Attribute.UID<'title'>;
+    title: Schema.Attribute.String & Schema.Attribute.Required;
+    type: Schema.Attribute.Enumeration<
+      [
+        'vacancy_announcement',
+        're_vacancy_announcement',
+        'shortlisted_written',
+        'shortlisted_viva',
+        'selection_result',
+        'general_notice',
+      ]
+    > &
+      Schema.Attribute.Required;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    viva_date: Schema.Attribute.Date;
+    viva_shortlist: Schema.Attribute.Component<
+      'announcements.shortlist-row',
+      true
+    >;
+    viva_time: Schema.Attribute.String;
+    viva_venue: Schema.Attribute.String;
+    written_exam_date: Schema.Attribute.Date;
+    written_exam_shortlist: Schema.Attribute.Component<
+      'announcements.written-exam-candidate',
+      true
+    >;
+    written_exam_time: Schema.Attribute.String;
+    written_exam_venue: Schema.Attribute.String;
+  };
+}
+
 export interface PluginContentReleasesRelease
   extends Struct.CollectionTypeSchema {
   collectionName: 'strapi_releases';
@@ -3275,6 +3440,7 @@ declare module '@strapi/strapi' {
       'api::site-settings.site-settings': ApiSiteSettingsSiteSettings;
       'api::student-life-overview.student-life-overview': ApiStudentLifeOverviewStudentLifeOverview;
       'api::unit.unit': ApiUnitUnit;
+      'api::vacancy-announcement.vacancy-announcement': ApiVacancyAnnouncementVacancyAnnouncement;
       'plugin::content-releases.release': PluginContentReleasesRelease;
       'plugin::content-releases.release-action': PluginContentReleasesReleaseAction;
       'plugin::i18n.locale': PluginI18NLocale;

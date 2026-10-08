@@ -363,3 +363,176 @@
   border: 1px solid var(--line);
   border-left: 4px solid var(--gold);
 }
+
+
+/* ---------- Split hero variant (About only — opt-in via heroVariant="feature") ----------
+   A different shape from the full-bleed navy banner used elsewhere on the
+   site (Faculty, Alumni, Contact): text on a light ground, a diagonally-cut
+   navy panel carrying a real, computed "years since 1968" counter instead
+   of decorative-only content. */
+.sl-split {
+  display: grid;
+  grid-template-columns: 1fr;
+}
+@media (min-width: 900px) {
+  .sl-split {
+    grid-template-columns: minmax(0, 1fr) minmax(340px, 38%);
+    min-height: 480px;
+    align-items: stretch;
+  }
+}
+
+.sl-split-text {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--s2);
+  padding: var(--s7) var(--s5);
+  background: var(--paper);
+}
+@media (min-width: 760px) {
+  .sl-split-text {
+    padding: var(--s8) var(--s7);
+  }
+}
+@media (min-width: 900px) {
+  .sl-split-text {
+    padding-left: max(var(--s7), calc((100vw - var(--content-width)) / 2 + var(--s5)));
+  }
+}
+.sl-split-title {
+  max-width: 14ch;
+}
+.sl-split-text > * {
+  opacity: 0;
+  transform: translateY(12px);
+  animation: sl-split-in 0.55s ease forwards;
+}
+.sl-split-text > *:nth-child(1) {
+  animation-delay: 0s;
+}
+.sl-split-text > *:nth-child(2) {
+  animation-delay: 0.08s;
+}
+.sl-split-text > *:nth-child(3) {
+  animation-delay: 0.16s;
+}
+.sl-split-text > *:nth-child(4) {
+  animation-delay: 0.24s;
+}
+.sl-split-text > *:nth-child(5) {
+  animation-delay: 0.32s;
+}
+@keyframes sl-split-in {
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ---------- The navy panel ---------- */
+.sl-split-panel {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(165deg, var(--navy) 0%, var(--navy-deep) 100%);
+  color: #fff;
+  padding: var(--s7) var(--s5);
+  display: flex;
+  align-items: center;
+  animation: sl-panel-in 0.7s ease both;
+  animation-delay: 0.15s;
+}
+@keyframes sl-panel-in {
+  from {
+    opacity: 0;
+    transform: translateX(18px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.sl-split-panel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: var(--sl-hero-image, none), url('/patterns/knot-gold.svg');
+  background-size: cover, 110px;
+  background-position: center, top left;
+  background-repeat: no-repeat, repeat;
+}
+.sl-split-panel::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  /* Darkens a real photo enough for white text; a harmless no-op layered
+     over the plain gradient when no photo is uploaded. */
+  background: linear-gradient(165deg, rgba(13, 27, 75, 0.92) 0%, rgba(8, 18, 52, 0.85) 100%);
+}
+@media (min-width: 900px) {
+  .sl-split-panel {
+    clip-path: polygon(10% 0, 100% 0, 100% 100%, 0% 100%);
+    padding-left: var(--s8);
+  }
+}
+.sl-split-panel-inner {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+}
+
+.sl-counter {
+  display: flex;
+  align-items: flex-start;
+  gap: 2px;
+  margin: 0;
+  font-family: var(--font-serif);
+  font-weight: 700;
+  line-height: 1;
+  color: #fff;
+}
+.sl-counter-num {
+  font-size: clamp(3.2rem, 6vw, 4.6rem);
+  font-variant-numeric: tabular-nums;
+}
+.sl-counter-plus {
+  font-size: 1.8rem;
+  color: var(--gold);
+  margin-top: 6px;
+}
+.sl-counter-label {
+  margin: var(--s2) 0 var(--s6);
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--gold-light);
+}
+
+.sl-split-facts {
+  list-style: none;
+  margin: 0;
+  padding: var(--s5) 0 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  display: grid;
+  gap: var(--s3);
+}
+.sl-split-facts li {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--s3);
+  font-size: 0.88rem;
+  color: #fff;
+}
+.sl-split-facts li span {
+  color: #c9d0e4;
+  font-weight: 600;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sl-split-text > *,
+  .sl-split-panel {
+    opacity: 1;
+    transform: none;
+    animation: none;
+  }
+}

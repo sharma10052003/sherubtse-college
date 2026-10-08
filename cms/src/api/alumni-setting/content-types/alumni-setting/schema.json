@@ -10,15 +10,189 @@
     "draftAndPublish": false
   },
   "attributes": {
-    "hero_background": { "type": "media", "multiple": false, "allowedTypes": ["images", "videos"] },
-    "years_of_legacy": { "type": "integer" },
-    "countries_represented": { "type": "integer" },
-    "total_alumni_override": { "type": "integer" },
-    "show_statistics": { "type": "boolean", "default": true },
-    "show_events": { "type": "boolean", "default": true },
-    "show_gallery": { "type": "boolean", "default": true },
-    "show_achievements": { "type": "boolean", "default": true },
-    "show_chapters": { "type": "boolean", "default": true },
-    "show_newsletter": { "type": "boolean", "default": true }
+    "hero_background": {
+      "type": "media",
+      "multiple": false,
+      "allowedTypes": [
+        "images",
+        "videos"
+      ]
+    },
+    "years_of_legacy": {
+      "type": "integer"
+    },
+    "countries_represented": {
+      "type": "integer"
+    },
+    "total_alumni_override": {
+      "type": "integer"
+    },
+    "show_statistics": {
+      "type": "boolean",
+      "default": true
+    },
+    "show_events": {
+      "type": "boolean",
+      "default": true
+    },
+    "show_gallery": {
+      "type": "boolean",
+      "default": true
+    },
+    "show_achievements": {
+      "type": "boolean",
+      "default": true
+    },
+    "show_chapters": {
+      "type": "boolean",
+      "default": true
+    },
+    "show_newsletter": {
+      "type": "boolean",
+      "default": true
+    },
+    "seo_description": {
+      "type": "text"
+    },
+    "hero": {
+      "type": "component",
+      "repeatable": false,
+      "component": "shared.section-copy"
+    },
+    "about": {
+      "type": "component",
+      "repeatable": false,
+      "component": "shared.section-copy"
+    },
+    "matters": {
+      "type": "component",
+      "repeatable": false,
+      "component": "shared.section-copy"
+    },
+    "matters_cards": {
+      "type": "component",
+      "repeatable": true,
+      "component": "shared.icon-card"
+    },
+    "distinguished": {
+      "type": "component",
+      "repeatable": false,
+      "component": "shared.section-copy"
+    },
+    "stories": {
+      "type": "component",
+      "repeatable": false,
+      "component": "shared.section-copy"
+    },
+    "story_form": {
+      "type": "component",
+      "repeatable": false,
+      "component": "shared.section-copy"
+    },
+    "events": {
+      "type": "component",
+      "repeatable": false,
+      "component": "shared.section-copy"
+    },
+    "mentorship": {
+      "type": "component",
+      "repeatable": false,
+      "component": "shared.section-copy"
+    },
+    "global_reach": {
+      "type": "component",
+      "repeatable": false,
+      "component": "shared.section-copy"
+    },
+    "gallery": {
+      "type": "component",
+      "repeatable": false,
+      "component": "shared.section-copy"
+    },
+    "achievements": {
+      "type": "component",
+      "repeatable": false,
+      "component": "shared.section-copy"
+    },
+    "register": {
+      "type": "component",
+      "repeatable": false,
+      "component": "shared.section-copy"
+    },
+    "newsletter": {
+      "type": "component",
+      "repeatable": false,
+      "component": "shared.section-copy"
+    },
+    "contact": {
+      "type": "component",
+      "repeatable": false,
+      "component": "shared.section-copy"
+    },
+    "contact_items": {
+      "type": "component",
+      "repeatable": true,
+      "component": "shared.contact-item"
+    },
+    "label_total_alumni": {
+      "type": "string"
+    },
+    "label_years": {
+      "type": "string"
+    },
+    "label_countries": {
+      "type": "string"
+    },
+    "label_stories": {
+      "type": "string"
+    },
+    "label_alumni": {
+      "type": "string"
+    },
+    "label_chapters": {
+      "type": "string"
+    },
+    "label_upcoming_events": {
+      "type": "string"
+    },
+    "label_past_events": {
+      "type": "string"
+    },
+    "label_gallery_all": {
+      "type": "string"
+    },
+    "stories_empty_text": {
+      "type": "string"
+    },
+    "upcoming_empty_text": {
+      "type": "string"
+    },
+    "past_empty_text": {
+      "type": "string"
+    },
+    "story_consent_text": {
+      "type": "text"
+    },
+    "story_success_message": {
+      "type": "text"
+    },
+    "register_consent_text": {
+      "type": "text"
+    },
+    "register_success_message": {
+      "type": "text"
+    },
+    "newsletter_placeholder": {
+      "type": "string"
+    },
+    "newsletter_success_message": {
+      "type": "string"
+    },
+    "newsletter_already_message": {
+      "type": "string"
+    },
+    "error_message": {
+      "type": "string"
+    }
   }
 }

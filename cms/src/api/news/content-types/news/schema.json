@@ -11,6 +11,7 @@
   },
   "attributes": {
     "title": { "type": "string", "required": true },
+    "summary": { "type": "text", "required": true },
     "body": { "type": "richtext", "required": true },
     "date": { "type": "date", "required": true },
     "unit": {
@@ -20,6 +21,33 @@
     },
     "images": { "type": "media", "multiple": true, "allowedTypes": ["images"] },
     "tags": { "type": "string" },
+    "category": {
+      "type": "enumeration",
+      "enum": ["campus_life", "academics", "research", "achievements", "events", "sports", "administration", "general"],
+      "default": "general",
+      "required": true
+    },
+    "template": {
+      "type": "enumeration",
+      "enum": ["standard", "featured", "video", "photo_story", "split", "gallery", "magazine"],
+      "default": "standard",
+      "required": true
+    },
+    "featured": { "type": "boolean", "default": false },
+    "pinned": { "type": "boolean", "default": false },
+    "hero_media_type": {
+      "type": "enumeration",
+      "enum": ["image", "video"],
+      "default": "image"
+    },
+    "video_url": { "type": "string" },
+    "video_file": { "type": "media", "multiple": false, "allowedTypes": ["videos"] },
+    "video_poster": { "type": "media", "multiple": false, "allowedTypes": ["images"] },
+    "autoplay": { "type": "boolean", "default": false },
+    "gallery": { "type": "media", "multiple": true, "allowedTypes": ["images"] },
+    "publish_at": { "type": "datetime" },
+    "archived": { "type": "boolean", "default": false },
+    "archived_at": { "type": "datetime" },
     "owning_unit": {
       "type": "relation",
       "relation": "manyToOne",

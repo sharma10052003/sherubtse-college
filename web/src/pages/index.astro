@@ -3,6 +3,7 @@ import Layout from '../layouts/Layout.astro';
 import { getHomepage } from '../lib/content/homepage';
 import { getCurrentNotices } from '../lib/content/notices';
 import { getUpcomingEvents } from '../lib/content/events';
+import SectionBlocks from '../components/SectionBlocks.astro';
 
 const homepage = await getHomepage();
 const notices = await getCurrentNotices(4);
@@ -14,7 +15,7 @@ function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }).toUpperCase();
 }
 ---
-<Layout title="Home" description="Sherubtse College, Kanglung — a constituent college of the Royal University of Bhutan.">
+<Layout title={homepage.seo_title} description={homepage.seo_description ?? undefined}>
   <!-- Hero — one photograph, one statement. Written once, not a rotating slider.
        The video is desktop/tablet only, gated by JS below rather than
        <source media="">, which turned out not to reliably suppress the
@@ -36,7 +37,7 @@ function formatDate(iso: string) {
         </p>
       )}
       <h1 class="hero-heading">
-        {homepage.hero_heading ?? 'Sherubtse College — the seat of learning in the eastern Himalayas.'}
+        {homepage.hero_heading ?? 'Sherubtse College'}
       </h1>
       {homepage.statement && <p class="hero-statement">{homepage.statement}</p>}
       {homepage.hero_buttons.length > 0 && (
@@ -68,7 +69,7 @@ function formatDate(iso: string) {
           <img src={homepage.president_photo_url} alt={homepage.president_name ?? ''} class="president-photo" />
         )}
         <div>
-          <h2 class="h2">A Message from the {homepage.president_title ?? 'President'}</h2>
+          <h2 class="h2">{homepage.president_heading}</h2>
           <div class="article-body" style="margin-top:var(--s4)" set:html={homepage.president_message.replace(/\n/g, '<br>')} />
           {homepage.president_name && (
             <p class="president-signature">
@@ -95,7 +96,7 @@ function formatDate(iso: string) {
   <section class="band">
     <div class="wrap two-col">
       <div>
-        <h2 class="h2">Current announcements</h2>
+        <h2 class="h2">{homepage.announcements_heading}</h2>
         {notices.length > 0 ? (
           <>
             {notices.map((n) => (
@@ -111,14 +112,14 @@ function formatDate(iso: string) {
                 </div>
               </div>
             ))}
-            <p class="small" style="margin-top:var(--s4)"><a href="/news-notices/announcements">All announcements &rarr;</a></p>
+            <p class="small" style="margin-top:var(--s4)"><a href="/news-notices/announcements">{homepage.announcements_link_label}</a></p>
           </>
         ) : (
-          <p class="small">No current announcements.</p>
+          homepage.announcements_empty_text ? <p class="small">{homepage.announcements_empty_text}</p> : null
         )}
       </div>
       <div>
-        <h2 class="h2">What's on</h2>
+        <h2 class="h2">{homepage.events_heading}</h2>
         {events.length > 0 ? (
           <>
             {events.map((e) => (
@@ -127,33 +128,39 @@ function formatDate(iso: string) {
                 <p class="title" style="margin:0"><a href={`/news-notices/events/${e.id}`}>{e.title}</a></p>
               </div>
             ))}
-            <p class="small" style="margin-top:var(--s4)"><a href="/news-notices/events">Full calendar &rarr;</a></p>
+            <p class="small" style="margin-top:var(--s4)"><a href="/news-notices/events">{homepage.events_link_label}</a></p>
           </>
         ) : (
-          <p class="small">No upcoming events.</p>
+          homepage.events_empty_text ? <p class="small">{homepage.events_empty_text}</p> : null
         )}
       </div>
     </div>
   </section>
 
-  <section class="band band-alt">
-    <div class="wrap">
-      <h2 class="h2" style="margin-bottom:var(--s5)">Explore</h2>
-      <div class="cards">
-        {homepage.featured_selections.length > 0 ? (
-          homepage.featured_selections.map((f) => (
-            <div class="card"><h3 class="h3">{f.label}</h3><a href={f.url} class="btn-quiet">Learn more</a></div>
-          ))
-        ) : (
-          <>
-            <div class="card"><h3 class="h3">Academics</h3><p>Departments, programmes and the academic calendar.</p><a href="/academics" class="btn-quiet">Explore academics</a></div>
-            <div class="card"><h3 class="h3">Admissions</h3><p>Entry requirements, dates, fees and how to apply.</p><a href="/admissions" class="btn-quiet">How to apply</a></div>
-            <div class="card"><h3 class="h3">Research</h3><p>Centres, grants, journals and staff expertise.</p><a href="/research" class="btn-quiet">Research at Sherubtse</a></div>
-          </>
-        )}
+  {homepage.explore_cards.length > 0 && (
+    <section class="band band-alt">
+      <div class="wrap">
+        {homepage.explore_heading && <h2 class="h2" style="margin-bottom:var(--s5)">{homepage.explore_heading}</h2>}
+        <div class="cards">
+          {homepage.explore_cards.map((c) => (
+            <div class="card">
+              <h3 class="h3">{c.label}</h3>
+              {c.description && <p>{c.description}</p>}
+              <a href={c.url} class="btn-quiet">{homepage.explore_button_label}</a>
+            </div>
+          ))}
+        </div>
       </div>
-    </div>
-  </section>
+    </section>
+  )}
+
+  {homepage.blocks.length > 0 && (
+    <section class="band">
+      <div class="wrap">
+        <SectionBlocks blocks={homepage.blocks} />
+      </div>
+    </section>
+  )}
 </Layout>
 
 <style>

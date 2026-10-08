@@ -3,6 +3,7 @@ import Layout from '../../../layouts/Layout.astro';
 import '../../../styles/alumni.css';
 import {
   getAlumniSetting,
+  getAlumniCopy,
   getDistinguishedAlumni,
   getAlumniStories,
   getAlumniCount,
@@ -16,8 +17,9 @@ import {
   GALLERY_CATEGORY_LABELS,
 } from '../../../lib/content/alumni';
 
-const [settings, distinguished, stories, alumniCount, events, chapters, chapterCount, achievements, gallery] =
+const [copy, settings, distinguished, stories, alumniCount, events, chapters, chapterCount, achievements, gallery] =
   await Promise.all([
+    getAlumniCopy(),
     getAlumniSetting(),
     getDistinguishedAlumni(),
     getAlumniStories(9),
@@ -32,11 +34,12 @@ const [settings, distinguished, stories, alumniCount, events, chapters, chapterC
 const upcomingEvents = events.filter((e) => !e.is_past);
 const pastEvents = events.filter((e) => e.is_past);
 
+const L = copy.labels;
 const stats = [
-  { label: 'Total Alumni', value: `${settings.total_alumni_override ?? alumniCount}+` },
-  settings.years_of_legacy ? { label: 'Years of Sherubtse Legacy', value: `${settings.years_of_legacy}` } : null,
-  settings.countries_represented ? { label: 'Countries Represented', value: `${settings.countries_represented}` } : null,
-  { label: 'Alumni Stories', value: `${stories.length + distinguished.length}+` },
+  { label: L.total_alumni, value: `${settings.total_alumni_override ?? alumniCount}+` },
+  settings.years_of_legacy ? { label: L.years, value: `${settings.years_of_legacy}` } : null,
+  settings.countries_represented ? { label: L.countries, value: `${settings.countries_represented}` } : null,
+  { label: L.stories, value: `${stories.length + distinguished.length}+` },
 ].filter((s): s is { label: string; value: string } => !!s);
 
 function formatDate(iso: string) {
@@ -46,10 +49,27 @@ function formatTime(iso: string) {
   return new Date(iso).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
 }
 
+// Icons for the "Why Alumni Matters" cards — the editor picks one by name.
+const MATTERS_ICONS: Record<string, string> = {
+  cap: '<path d="M12 2 2 7l10 5 10-5-10-5z" /><path d="M6 10v6c0 1.5 3 3 6 3s6-1.5 6-3v-6" />',
+  people: '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" />',
+  shield: '<path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z" /><path d="M9 12l2 2 4-4" />',
+  compass: '<circle cx="12" cy="12" r="10" /><path d="M16.24 7.76l-2.12 6.36-6.36 2.12 2.12-6.36 6.36-2.12z" />',
+  book: '<path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v17H6.5A2.5 2.5 0 0 0 4 21.5z" /><path d="M4 21.5V4.5" />',
+  star: '<path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z" />',
+  heart: '<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8z" />',
+  globe: '<circle cx="12" cy="12" r="10" /><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20" />',
+};
+const CONTACT_ICONS: Record<string, string> = {
+  phone: '<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" />',
+  email: '<rect x="2" y="4" width="20" height="16" rx="0" /><path d="m2 7 10 6 10-6" />',
+  person: '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />',
+  address: '<path d="M12 21s-7-6.1-7-11a7 7 0 0 1 14 0c0 4.9-7 11-7 11z" /><circle cx="12" cy="10" r="2.5" />',
+};
 const galleryCategories = Array.from(new Set(gallery.map((g) => g.category)));
 ---
 
-<Layout title="Alumni" description="Sherubtse College's home for its alumni community — stories, events, achievements, and ways to stay connected.">
+<Layout title="Alumni" description={copy.seo_description ?? undefined}>
   <!-- 1. Hero / Welcome -->
   <section class="alumni-hero">
     <div class="alumni-hero-overlay"></div>
@@ -57,18 +77,13 @@ const galleryCategories = Array.from(new Set(gallery.map((g) => g.category)));
       <nav class="breadcrumb breadcrumb-on-dark" aria-label="Breadcrumb">
         <a href="/">Home</a> › <a href="/about">About</a> › <span class="current">Alumni</span>
       </nav>
-      <p class="eyebrow">Sherubtse College</p>
-      <h1 class="h-display">Welcome Home, Sherubtseans</h1>
-      <p class="alumni-hero-intro">
-        No matter where life has taken you — across Bhutan or around the world — Sherubtse College will always
-        remain your academic home. We have missed you, and we are glad to reconnect. This alumni space is created
-        to bring our graduates together, celebrate shared journeys, and strengthen lifelong bonds with the College
-        and with one another.
-      </p>
-      <p class="alumni-hero-tagline">"Once a Sherubtsean, Always a Sherubtsean."</p>
+      {copy.hero.eyebrow && <p class="eyebrow">{copy.hero.eyebrow}</p>}
+      <h1 class="h-display">{copy.hero.heading}</h1>
+      {copy.hero.intro && <p class="alumni-hero-intro">{copy.hero.intro}</p>}
+      {copy.hero.tagline && <p class="alumni-hero-tagline">{copy.hero.tagline}</p>}
       <div class="alumni-hero-buttons">
-        <a href="#register" class="btn btn-primary">Join the Alumni Community</a>
-        <a href="#stories" class="btn btn-secondary btn-on-hero">Explore Alumni Stories</a>
+        {copy.hero.button_label && <a href="#register" class="btn btn-primary">{copy.hero.button_label}</a>}
+        {copy.hero.secondary_button_label && <a href="#stories" class="btn btn-secondary btn-on-hero">{copy.hero.secondary_button_label}</a>}
       </div>
 
       <!-- 2. Alumni Statistics -->
@@ -90,77 +105,30 @@ const galleryCategories = Array.from(new Set(gallery.map((g) => g.category)));
   <!-- 3. About Sherubtse Alumni Association -->
   <section class="band">
     <div class="wrap narrow reveal">
-      <p class="eyebrow">Sherubtse Alumni</p>
-      <h2 class="h2">About the Sherubtse Alumni Association</h2>
-      <p class="lede" style="margin-top:var(--s4)">
-        The Sherubtse Alumni Association welcomes all alumni — staff, faculty, students, and graduates of Sherubtse
-        College — to maintain a mutually beneficial and lifelong relationship among Sherubtse alumni and Sherubtse
-        College.
-      </p>
-      <p>
-        Your connection with Sherubtse College does not end when you graduate, stop working, or resign from the
-        College. The Sherubtse Alumni Association ensures that you stay connected through alumni matters so that
-        you can remain a part of the Sherubtse family forever.
-      </p>
-      <p>
-        The College would like to register all of you with the Sherubtse Alumni Association and be part of the
-        Sherubtse family, fostering a lifelong relationship and connection.
-      </p>
-      <a href="#register" class="btn btn-primary" style="margin-top:var(--s3)">Register as Alumni</a>
+      {copy.about.eyebrow && <p class="eyebrow">{copy.about.eyebrow}</p>}
+      <h2 class="h2">{copy.about.heading}</h2>
+      {copy.about.intro && <p class="lede" style="margin-top:var(--s4)">{copy.about.intro}</p>}
+      {copy.about.paragraphs.map((p) => <p>{p}</p>)}
+      {copy.about.button_label && <a href="#register" class="btn btn-primary" style="margin-top:var(--s3)">{copy.about.button_label}</a>}
     </div>
   </section>
 
   <!-- 4. Why Alumni Matters -->
   <section class="band band-alt">
     <div class="wrap reveal">
-      <p class="eyebrow">Why Alumni Matters</p>
-      <h2 class="h2">The Sherubtse Family Never Stops Growing</h2>
+      {copy.matters.eyebrow && <p class="eyebrow">{copy.matters.eyebrow}</p>}
+      <h2 class="h2">{copy.matters.heading}</h2>
       <div class="alumni-matters-grid">
-        <div class="alumni-matters-card">
-          <div class="alumni-matters-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 2 7l10 5 10-5-10-5z" /><path d="M6 10v6c0 1.5 3 3 6 3s6-1.5 6-3v-6" /></svg>
+        {copy.matters_cards.map((card, i) => (
+          <div class="alumni-matters-card">
+            <div class="alumni-matters-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" set:html={MATTERS_ICONS[card.icon] ?? MATTERS_ICONS.star} />
+            </div>
+            <p class="alumni-matters-num">{String(i + 1).padStart(2, '0')}</p>
+            <h3 class="h3">{card.title}</h3>
+            <p>{card.text}</p>
           </div>
-          <p class="alumni-matters-num">01</p>
-          <h3 class="h3">Inspire Current Students</h3>
-          <p>
-            Your journey after Sherubtse, whether in Bhutan or beyond, is a source of inspiration for our current
-            students. By sharing your experiences, you show them what is possible and encourage them to pursue
-            their dreams with confidence.
-          </p>
-        </div>
-        <div class="alumni-matters-card">
-          <div class="alumni-matters-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>
-          </div>
-          <p class="alumni-matters-num">02</p>
-          <h3 class="h3">Strengthen the Sherubtse Family</h3>
-          <p>
-            Every Sherubtse graduate is a thread in our family's fabric. Staying connected helps support each
-            other, celebrate successes, and create friendships and professional networks that last a lifetime.
-          </p>
-        </div>
-        <div class="alumni-matters-card">
-          <div class="alumni-matters-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z" /><path d="M9 12l2 2 4-4" /></svg>
-          </div>
-          <p class="alumni-matters-num">03</p>
-          <h3 class="h3">Represent Sherubtse with Pride</h3>
-          <p>
-            Wherever life takes you, you carry the spirit of Sherubtse College. Your achievements shine a light on
-            the College and make all of us proud to be part of this community.
-          </p>
-        </div>
-        <div class="alumni-matters-card">
-          <div class="alumni-matters-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><path d="M16.24 7.76l-2.12 6.36-6.36 2.12 2.12-6.36 6.36-2.12z" /></svg>
-          </div>
-          <p class="alumni-matters-num">04</p>
-          <h3 class="h3">Shape the Future of Sherubtse</h3>
-          <p>
-            Your ideas, feedback, and engagement help shape opportunities for the next generations of Sherubtse
-            students. Together, we ensure the College continues to grow and thrive.
-          </p>
-        </div>
+        ))}
       </div>
     </div>
   </section>
@@ -170,8 +138,8 @@ const galleryCategories = Array.from(new Set(gallery.map((g) => g.category)));
     distinguished.length > 0 && (
       <section class="band">
         <div class="wrap reveal">
-          <p class="eyebrow">Distinguished Alumni</p>
-          <h2 class="h2">Sherubtseans Leading the Way</h2>
+          {copy.distinguished.eyebrow && <p class="eyebrow">{copy.distinguished.eyebrow}</p>}
+          <h2 class="h2">{copy.distinguished.heading}</h2>
           <div class="distinguished-grid">
             {distinguished.map((a) => (
               <article class="distinguished-card">
@@ -208,12 +176,9 @@ const galleryCategories = Array.from(new Set(gallery.map((g) => g.category)));
   <!-- 6. Alumni Stories -->
   <section class="band band-alt" id="stories">
     <div class="wrap reveal">
-      <p class="eyebrow">Alumni Stories</p>
-      <h2 class="h2">Journeys Worth Sharing</h2>
-      <p class="alumni-section-intro" style="margin-top:var(--s3)">
-        Alumni can write about their life experiences, their journey to and through Sherubtse, their professional
-        path, or anything they would like to share with fellow Sherubtseans and current students.
-      </p>
+      {copy.stories.eyebrow && <p class="eyebrow">{copy.stories.eyebrow}</p>}
+      <h2 class="h2">{copy.stories.heading}</h2>
+      {copy.stories.intro && <p class="alumni-section-intro" style="margin-top:var(--s3)">{copy.stories.intro}</p>}
       {
         stories.length > 0 ? (
           <div class="stories-grid">
@@ -250,7 +215,7 @@ const galleryCategories = Array.from(new Set(gallery.map((g) => g.category)));
             ))}
           </div>
         ) : (
-          <p class="small" style="margin-top:var(--s5)">No alumni stories have been published yet.</p>
+          <p class="small" style="margin-top:var(--s5)">{copy.texts.stories_empty}</p>
         )
       }
     </div>
@@ -259,12 +224,9 @@ const galleryCategories = Array.from(new Set(gallery.map((g) => g.category)));
   <!-- 7. Submit a story -->
   <section class="band">
     <div class="wrap narrow reveal">
-      <p class="eyebrow">Share Your Story</p>
-      <h2 class="h2">Submit Your Story</h2>
-      <p class="alumni-section-intro" style="margin-top:var(--s3)">
-        Every submission is reviewed by the Alumni Office before it's published — you'll see it here once it's
-        approved.
-      </p>
+      {copy.story_form.eyebrow && <p class="eyebrow">{copy.story_form.eyebrow}</p>}
+      <h2 class="h2">{copy.story_form.heading}</h2>
+      {copy.story_form.intro && <p class="alumni-section-intro" style="margin-top:var(--s3)">{copy.story_form.intro}</p>}
       <form class="alumni-form" id="storyForm">
         <div class="form-grid cols-2">
           <div class="form-field">
@@ -311,10 +273,10 @@ const galleryCategories = Array.from(new Set(gallery.map((g) => g.category)));
         </div>
         <label class="form-consent" style="margin-top:var(--s4)">
           <input type="checkbox" name="consent" required />
-          <span>I agree that Sherubtse College may review and publish this story on the Alumni page, with my name and designation.</span>
+          <span>{copy.texts.story_consent}</span>
         </label>
         <div class="form-actions">
-          <button type="submit" class="btn btn-primary">Submit Your Story</button>
+          <button type="submit" class="btn btn-primary">{copy.story_form.button_label}</button>
         </div>
         <div class="form-status" id="storyFormStatus" role="status"></div>
       </form>
@@ -326,14 +288,14 @@ const galleryCategories = Array.from(new Set(gallery.map((g) => g.category)));
     settings.show_events && (
       <section class="band band-alt">
         <div class="wrap reveal">
-          <p class="eyebrow">Alumni Events</p>
-          <h2 class="h2">Reunions, Talks &amp; Gatherings</h2>
+          {copy.events.eyebrow && <p class="eyebrow">{copy.events.eyebrow}</p>}
+          <h2 class="h2">{copy.events.heading}</h2>
           <div class="events-tabs" role="tablist">
             <button type="button" class="events-tab" role="tab" aria-selected="true" aria-controls="upcoming-events-panel" id="upcomingEventsTab">
-              Upcoming Events
+              {L.upcoming_events}
             </button>
             <button type="button" class="events-tab" role="tab" aria-selected="false" aria-controls="past-events-panel" id="pastEventsTab">
-              Past Events
+              {L.past_events}
             </button>
           </div>
           <div id="upcoming-events-panel" class="events-panel" role="tabpanel" aria-labelledby="upcomingEventsTab">
@@ -368,7 +330,7 @@ const galleryCategories = Array.from(new Set(gallery.map((g) => g.category)));
                 ))}
               </div>
             ) : (
-              <p class="small" style="margin-top:var(--s5)">No upcoming events have been announced yet.</p>
+              <p class="small" style="margin-top:var(--s5)">{copy.texts.upcoming_empty}</p>
             )}
           </div>
           <div id="past-events-panel" class="events-panel" role="tabpanel" aria-labelledby="pastEventsTab" hidden>
@@ -393,7 +355,7 @@ const galleryCategories = Array.from(new Set(gallery.map((g) => g.category)));
                 ))}
               </div>
             ) : (
-              <p class="small" style="margin-top:var(--s5)">No past events on record yet.</p>
+              <p class="small" style="margin-top:var(--s5)">{copy.texts.past_empty}</p>
             )}
           </div>
         </div>
@@ -404,20 +366,13 @@ const galleryCategories = Array.from(new Set(gallery.map((g) => g.category)));
   <!-- 9. Career & Mentorship / Give Back -->
   <section class="band">
     <div class="wrap narrow reveal">
-      <p class="eyebrow">Career &amp; Mentorship</p>
-      <h2 class="h2">Give Back to Sherubtse</h2>
-      <p class="lede" style="margin-top:var(--s4)">
-        The most valuable thing many alumni give back is time: mentoring a current student, speaking to a class
-        about your field, or simply being someone a Sherubtsean can reach out to.
-      </p>
-      <p>
-        When you register below, tell us where you'd like to help — mentorship, guest lectures, career support,
-        internship opportunities, or volunteering — and the Alumni Office will reach out when a matching
-        opportunity comes up.
-      </p>
+      {copy.mentorship.eyebrow && <p class="eyebrow">{copy.mentorship.eyebrow}</p>}
+      <h2 class="h2">{copy.mentorship.heading}</h2>
+      {copy.mentorship.intro && <p class="lede" style="margin-top:var(--s4)">{copy.mentorship.intro}</p>}
+      {copy.mentorship.paragraphs.map((p) => <p>{p}</p>)}
       <div class="mentorship-buttons">
-        <a href="#register" class="btn btn-primary">Offer to Mentor</a>
-        <a href="#register" class="btn btn-secondary">Ask for Guidance</a>
+        {copy.mentorship.button_label && <a href="#register" class="btn btn-primary">{copy.mentorship.button_label}</a>}
+        {copy.mentorship.secondary_button_label && <a href="#register" class="btn btn-secondary">{copy.mentorship.secondary_button_label}</a>}
       </div>
     </div>
   </section>
@@ -425,23 +380,23 @@ const galleryCategories = Array.from(new Set(gallery.map((g) => g.category)));
   <!-- 11. Sherubteans Around the World + Chapters -->
   <section class="band world-band">
     <div class="wrap reveal">
-      <p class="eyebrow" style="color:var(--gold)">Global Reach</p>
-      <h2 class="h2">Sherubtseans Around the World</h2>
+      {copy.global_reach.eyebrow && <p class="eyebrow" style="color:var(--gold)">{copy.global_reach.eyebrow}</p>}
+      <h2 class="h2">{copy.global_reach.heading}</h2>
       <div class="world-stats">
         <div>
           <p class="world-stat-value">{settings.total_alumni_override ?? alumniCount}+</p>
-          <p class="world-stat-label">Alumni</p>
+          <p class="world-stat-label">{L.alumni}</p>
         </div>
         {settings.countries_represented && (
           <div>
             <p class="world-stat-value">{settings.countries_represented}</p>
-            <p class="world-stat-label">Countries Represented</p>
+            <p class="world-stat-label">{L.countries}</p>
           </div>
         )}
         {settings.show_chapters && chapterCount > 0 && (
           <div>
             <p class="world-stat-value">{chapterCount}</p>
-            <p class="world-stat-label">Alumni Chapters</p>
+            <p class="world-stat-label">{L.chapters}</p>
           </div>
         )}
       </div>
@@ -468,11 +423,11 @@ const galleryCategories = Array.from(new Set(gallery.map((g) => g.category)));
     settings.show_gallery && gallery.length > 0 && (
       <section class="band band-alt">
         <div class="wrap reveal">
-          <p class="eyebrow">Sherubtse Memories</p>
-          <h2 class="h2">Moments Worth Remembering</h2>
+          {copy.gallery.eyebrow && <p class="eyebrow">{copy.gallery.eyebrow}</p>}
+          <h2 class="h2">{copy.gallery.heading}</h2>
           <div class="alumni-gallery-filters" id="alumniGalleryFilters">
             <button type="button" data-filter="all" aria-pressed="true">
-              All
+              {L.gallery_all}
             </button>
             {galleryCategories.map((cat) => (
               <button type="button" data-filter={cat} aria-pressed="false">
@@ -497,8 +452,8 @@ const galleryCategories = Array.from(new Set(gallery.map((g) => g.category)));
     settings.show_achievements && achievements.length > 0 && (
       <section class="band">
         <div class="wrap reveal">
-          <p class="eyebrow">Alumni Achievements</p>
-          <h2 class="h2">Sherubtseans Making a Difference</h2>
+          {copy.achievements.eyebrow && <p class="eyebrow">{copy.achievements.eyebrow}</p>}
+          <h2 class="h2">{copy.achievements.heading}</h2>
           <div class="achievements-grid">
             {achievements.map((a) => (
               <div class="achievement-card">
@@ -525,11 +480,9 @@ const galleryCategories = Array.from(new Set(gallery.map((g) => g.category)));
   <!-- 15. Join / Register as Alumni -->
   <section class="band band-alt" id="register">
     <div class="wrap narrow reveal">
-      <p class="eyebrow">Register</p>
-      <h2 class="h2">Join the Sherubtse Alumni Community</h2>
-      <p class="lede" style="margin-top:var(--s3)">
-        Stay connected with Sherubtse College and fellow Sherubtseans locally and globally.
-      </p>
+      {copy.register.eyebrow && <p class="eyebrow">{copy.register.eyebrow}</p>}
+      <h2 class="h2">{copy.register.heading}</h2>
+      {copy.register.intro && <p class="lede" style="margin-top:var(--s3)">{copy.register.intro}</p>}
       <form class="alumni-form" id="registerForm">
         <h3 class="h3">Personal Information</h3>
         <div class="form-grid cols-2" style="margin-top:var(--s4)">
@@ -603,11 +556,11 @@ const galleryCategories = Array.from(new Set(gallery.map((g) => g.category)));
 
         <label class="form-consent" style="margin-top:var(--s5)">
           <input type="checkbox" name="consent_directory" />
-          <span>I'm open to being listed in a future public alumni directory (name, graduation year, and profession only — never contact details).</span>
+          <span>{copy.texts.register_consent}</span>
         </label>
 
         <div class="form-actions">
-          <button type="submit" class="btn btn-primary">Register as Alumni</button>
+          <button type="submit" class="btn btn-primary">{copy.register.button_label}</button>
         </div>
         <div class="form-status" id="registerFormStatus" role="status"></div>
       </form>
@@ -619,14 +572,12 @@ const galleryCategories = Array.from(new Set(gallery.map((g) => g.category)));
     settings.show_newsletter && (
       <section class="band newsletter-band">
         <div class="wrap narrow reveal">
-          <p class="eyebrow" style="color:var(--gold)">Stay in the Loop</p>
-          <h2 class="h2">Sherubtse Alumni Newsletter</h2>
-          <p style="color:#c9d0e4;margin-top:var(--s3)">
-            Get alumni news, events, stories and opportunities straight to your inbox.
-          </p>
+          {copy.newsletter.eyebrow && <p class="eyebrow" style="color:var(--gold)">{copy.newsletter.eyebrow}</p>}
+          <h2 class="h2">{copy.newsletter.heading}</h2>
+          {copy.newsletter.intro && <p style="color:#c9d0e4;margin-top:var(--s3)">{copy.newsletter.intro}</p>}
           <form class="newsletter-form" id="newsletterForm">
-            <input type="email" name="email" placeholder="Your email address" required aria-label="Email address" />
-            <button type="submit" class="btn btn-primary">Subscribe</button>
+            <input type="email" name="email" placeholder={copy.texts.newsletter_placeholder} required aria-label="Email address" />
+            <button type="submit" class="btn btn-primary">{copy.newsletter.button_label}</button>
           </form>
           <div class="form-status" id="newsletterFormStatus" role="status"></div>
         </div>
@@ -637,26 +588,16 @@ const galleryCategories = Array.from(new Set(gallery.map((g) => g.category)));
   <!-- 17. Contact Alumni Office -->
   <section class="band">
     <div class="wrap narrow reveal">
-      <p class="eyebrow">Get in Touch</p>
-      <h2 class="h2">Contact the Alumni Office</h2>
-      <p class="lede" style="margin-top:var(--s3)">Stay connected and contact us for any information or support.</p>
+      {copy.contact.eyebrow && <p class="eyebrow">{copy.contact.eyebrow}</p>}
+      <h2 class="h2">{copy.contact.heading}</h2>
+      {copy.contact.intro && <p class="lede" style="margin-top:var(--s3)">{copy.contact.intro}</p>}
       <div class="alumni-contact-grid">
-        <div class="alumni-contact-item">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" /></svg>
-          <a href="tel:04-535171">04-535171</a>
-        </div>
-        <div class="alumni-contact-item">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" /></svg>
-          <a href="tel:+97517562455">+975 17562455</a>
-        </div>
-        <div class="alumni-contact-item">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="0" /><path d="m2 7 10 6 10-6" /></svg>
-          <a href="mailto:lo.sherubtse@rub.edu.bt">lo.sherubtse@rub.edu.bt</a>
-        </div>
-        <div class="alumni-contact-item">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
-          <span>Office of the Dean of Research and Industrial Linkages</span>
-        </div>
+        {copy.contact_items.map((item) => (
+          <div class="alumni-contact-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" set:html={CONTACT_ICONS[item.kind] ?? CONTACT_ICONS.phone} />
+            {item.link ? <a href={item.link}>{item.label}</a> : <span>{item.label}</span>}
+          </div>
+        ))}
       </div>
     </div>
   </section>
@@ -683,7 +624,7 @@ const galleryCategories = Array.from(new Set(gallery.map((g) => g.category)));
   }
 </style>
 
-<script is:inline define:vars={{ strapiUrl: import.meta.env.PUBLIC_STRAPI_URL || 'http://localhost:1337' }}>
+<script is:inline define:vars={{ strapiUrl: import.meta.env.PUBLIC_STRAPI_URL || 'http://localhost:1337', texts: copy.texts }}>
   // ---- Events tabs ----
   const upcomingTab = document.getElementById('upcomingEventsTab');
   const pastTab = document.getElementById('pastEventsTab');
@@ -787,10 +728,10 @@ const galleryCategories = Array.from(new Set(gallery.map((g) => g.category)));
         category: fd.get('category') || null,
         consent: fd.get('consent') === 'on',
       });
-      setStatus(status, 'success', "Thank you — your story has been submitted and is pending review by the Alumni Office. We'll publish it here once it's approved.");
+      setStatus(status, 'success', texts.story_success);
       storyForm.reset();
     } catch (err) {
-      setStatus(status, 'error', `Something went wrong: ${err.message}. Please try again or email lo.sherubtse@rub.edu.bt.`);
+      setStatus(status, 'error', `${texts.error} (${err.message})`);
     }
   });
 
@@ -817,10 +758,10 @@ const galleryCategories = Array.from(new Set(gallery.map((g) => g.category)));
         interests: interests || null,
         consent_directory: fd.get('consent_directory') === 'on',
       });
-      setStatus(status, 'success', 'Welcome home! Your registration has been received — the Alumni Office will be in touch.');
+      setStatus(status, 'success', texts.register_success);
       registerForm.reset();
     } catch (err) {
-      setStatus(status, 'error', `Something went wrong: ${err.message}. Please try again or email lo.sherubtse@rub.edu.bt.`);
+      setStatus(status, 'error', `${texts.error} (${err.message})`);
     }
   });
 
@@ -832,11 +773,11 @@ const galleryCategories = Array.from(new Set(gallery.map((g) => g.category)));
     setStatus(status, 'loading', 'Subscribing…');
     try {
       await postToStrapi('newsletter-subscribers', { email: fd.get('email'), consent: true });
-      setStatus(status, 'success', "You're subscribed — thank you!");
+      setStatus(status, 'success', texts.newsletter_success);
       newsletterForm.reset();
     } catch (err) {
       const already = /already|unique/i.test(err.message);
-      setStatus(status, already ? 'success' : 'error', already ? "You're already subscribed — thank you!" : `Something went wrong: ${err.message}.`);
+      setStatus(status, already ? 'success' : 'error', already ? texts.newsletter_already : `${texts.error} (${err.message})`);
     }
   });
 </script>

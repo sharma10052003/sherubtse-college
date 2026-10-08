@@ -1,0 +1,31 @@
+{
+  "collectionName": "components_shared_section_copies",
+  "info": {
+    "displayName": "Section Text",
+    "icon": "align-left"
+  },
+  "options": {},
+  "attributes": {
+    "eyebrow": {
+      "type": "string"
+    },
+    "heading": {
+      "type": "string"
+    },
+    "intro": {
+      "type": "text"
+    },
+    "body": {
+      "type": "text"
+    },
+    "tagline": {
+      "type": "string"
+    },
+    "button_label": {
+      "type": "string"
+    },
+    "secondary_button_label": {
+      "type": "string"
+    }
+  }
+}

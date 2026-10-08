@@ -9,8 +9,11 @@ interface Props {
   type: OverviewType;
   /** Breadcrumb / <title> label — the section's short name. */
   title: string;
+  /** 'feature' gives this one page's hero a distinct navy/photo treatment
+   * instead of the plain header every other section page shares. */
+  heroVariant?: 'plain' | 'feature';
 }
-const { type, title } = Astro.props;
+const { type, title, heroVariant = 'plain' } = Astro.props;
 const page = await getLandingPage(type);
 ---
 {page ? (
@@ -23,6 +26,8 @@ const page = await getLandingPage(type);
     featured={page.featured}
     blocks={page.blocks}
     description={page.seo_description ?? undefined}
+    heroVariant={heroVariant}
+    heroImageUrl={page.hero_image_url ?? undefined}
   />
 ) : (
   <Layout title={title}>

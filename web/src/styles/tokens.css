@@ -60,6 +60,10 @@
 
 html {
   -webkit-text-size-adjust: 100%;
+  /* Guards full-bleed sections (100vw breakout, e.g. .ev-bleed) against the
+     stray horizontal scrollbar that appears when 100vw is computed wider
+     than the actual viewport because of the vertical scrollbar's own width. */
+  overflow-x: hidden;
 }
 
 body {

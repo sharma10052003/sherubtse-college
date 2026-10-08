@@ -1,6 +1,18 @@
 ---
-import ArticleTemplate from '../../../components/templates/ArticleTemplate.astro';
-import { getAllNewsIds, getNewsById } from '../../../lib/content/news';
+// One news story. The hero media (image or, for template "video", the
+// article's own video with normal controls — autoplay here only when the
+// editor explicitly turned it on for this article) runs full-width above
+// a two-column body: the reading column plus a sidebar (story details,
+// tags, more headlines) so the page uses the full content width instead
+// of a lone narrow text column with dead space beside it the whole way
+// down. Archived stories keep their original URL, content and media —
+// restoring one is just clearing the `archived` flag in the CMS, nothing
+// here changes.
+import Layout from '../../../layouts/Layout.astro';
+import '../../../styles/section-landing.css';
+import '../../../styles/listing.css';
+import '../../../styles/news.css';
+import { getAllNews, getAllNewsIds, getNewsById } from '../../../lib/content/news';
 
 export async function getStaticPaths() {
   const ids = await getAllNewsIds();
@@ -10,16 +22,128 @@ export async function getStaticPaths() {
 const { id } = Astro.params;
 const item = await getNewsById(Number(id));
 if (!item) return Astro.redirect('/news-notices/news', 404);
+
+const allNews = await getAllNews();
+const others = allNews.filter((n) => n.id !== item.id && !n.archived);
+const related = [...others.filter((n) => n.category === item.category), ...others.filter((n) => n.category !== item.category)].slice(0, 4);
+
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+}
+
+const breadcrumb = [
+  { label: 'Home', url: '/' },
+  { label: 'News & Notices', url: '/news-notices' },
+  { label: 'News', url: '/news-notices/news' },
+  { label: item.title, url: `/news-notices/news/${item.id}` },
+];
+
+const isVideo = item.template === 'video' && !!item.video_url;
+const galleryShots = item.gallery.length > 0 ? item.gallery : item.template === 'gallery' ? item.images : [];
+const coverImage = item.image_url;
 ---
-<ArticleTemplate
-  eyebrow={item.unit_name ?? 'News'}
-  title={item.title}
-  meta={new Date(item.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
-  body={item.body}
-  breadcrumb={[
-    { label: 'Home', url: '/' },
-    { label: 'News & Notices', url: '/news-notices' },
-    { label: 'News', url: '/news-notices/news' },
-    { label: item.title, url: `/news-notices/news/${item.id}` },
-  ]}
-/>
+<Layout title={item.title} description={item.summary}>
+  <div class="wrap" style="padding-top:var(--s5)">
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      {breadcrumb.map((b, i) => (
+        <>
+          {i > 0 && ' › '}
+          {i === breadcrumb.length - 1 ? <span class="current">{b.label}</span> : <a href={b.url}>{b.label}</a>}
+        </>
+      ))}
+    </nav>
+
+    {item.archived && (
+      <p class="news-archived-notice">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="4"/><path d="M5 8v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8M10 12h4"/></svg>
+        This is an archived story from the newsroom's records.
+      </p>
+    )}
+
+    <div class="news-article-header">
+      <span class="news-kicker">{item.category_label}</span>
+      <h1 class="h1" style="margin-top:var(--s2)">{item.title}</h1>
+      <p class="small" style="margin-top:var(--s2)">{formatDate(item.date)}{item.unit_name ? ` · ${item.unit_name}` : ''}</p>
+    </div>
+  </div>
+
+  {(coverImage || isVideo) && (
+    <div class="wrap news-detail-media">
+      {isVideo ? (
+        <video
+          src={item.video_url!}
+          poster={item.video_poster_url ?? coverImage ?? undefined}
+          controls
+          muted={item.autoplay}
+          autoplay={item.autoplay}
+          playsinline
+        >
+        </video>
+      ) : coverImage ? (
+        <img src={coverImage} alt="" />
+      ) : null}
+    </div>
+  )}
+
+  <div class="wrap" style="padding-bottom:var(--s8)">
+    <div class="news-article-grid">
+      <div class="news-article-main">
+        <p class="lede">{item.summary}</p>
+        <div class="article-body news-article-body" style="margin-top:var(--s4)" set:html={item.body.replace(/\n/g, '<br>')} />
+
+        {galleryShots.length > 0 && (
+          <div class="news-detail-gallery">
+            {galleryShots.map((src) => <img src={src} alt="" loading="lazy" />)}
+          </div>
+        )}
+      </div>
+
+      <aside class="news-article-sidebar">
+        <div class="news-side-card">
+          <h2 class="news-side-heading">Story Details</h2>
+          <dl class="news-side-list">
+            <div>
+              <dt>Category</dt>
+              <dd>{item.category_label}</dd>
+            </div>
+            <div>
+              <dt>Published</dt>
+              <dd>{formatDate(item.date)}</dd>
+            </div>
+            {item.unit_name && (
+              <div>
+                <dt>Department</dt>
+                <dd>{item.unit_name}</dd>
+              </div>
+            )}
+          </dl>
+        </div>
+
+        {item.tags.length > 0 && (
+          <div class="news-side-card">
+            <h2 class="news-side-heading">Tags</h2>
+            <div class="news-side-tags">
+              {item.tags.map((t) => <span class="ls-tag">{t}</span>)}
+            </div>
+          </div>
+        )}
+
+        {related.length > 0 && (
+          <div class="news-side-card">
+            <h2 class="news-side-heading">More Headlines</h2>
+            <ol class="news-rail-list">
+              {related.map((r) => (
+                <li>
+                  <a href={`/news-notices/news/${r.id}`}>
+                    <span class="news-kicker">{r.category_label}</span>
+                    <span class="news-rail-title">{r.title}</span>
+                  </a>
+                </li>
+              ))}
+            </ol>
+          </div>
+        )}
+      </aside>
+    </div>
+  </div>
+</Layout>

@@ -1,18 +1,84 @@
 ---
-import ListingTemplate from '../../../components/templates/ListingTemplate.astro';
+// Events: a full-bleed mosaic — no side padding, no gaps between tiles —
+// instead of a bordered-card list. Upcoming events lead (soonest first,
+// the very next one as the big hero tile); past events follow, dimmed but
+// still linkable, never dropped. Colours and type stay the site's own
+// navy/gold and serif/sans, not the mosaic reference's palette.
+import Layout from '../../../layouts/Layout.astro';
+import '../../../styles/events.css';
 import { getAllEvents } from '../../../lib/content/events';
 
 const events = await getAllEvents();
-const rows = events.map((e) => ({
-  id: e.id,
-  href: `/news-notices/events/${e.id}`,
-  date: new Date(e.starts_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
-  title: e.title,
-  meta: e.venue ?? undefined,
-}));
+const upcomingCount = events.filter((e) => !e.is_past).length;
+
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+function formatTime(iso: string) {
+  return new Date(iso).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+}
+
+const breadcrumb = [
+  { label: 'Home', url: '/' },
+  { label: 'News & Notices', url: '/news-notices' },
+  { label: 'Events', url: '/news-notices/events' },
+];
 ---
-<ListingTemplate
-  title="Events"
-  breadcrumb={[{ label: 'Home', url: '/' }, { label: 'News & Notices', url: '/news-notices' }, { label: 'Events', url: '/news-notices/events' }]}
-  rows={rows}
-/>
+<Layout title="Events" description="What's on at Sherubtse College — upcoming events and the full event archive.">
+  <div class="wrap" style="padding-top:var(--s4)">
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      {breadcrumb.map((b, i) => (
+        <>
+          {i > 0 && ' › '}
+          {i === breadcrumb.length - 1 ? <span class="current">{b.label}</span> : <a href={b.url}>{b.label}</a>}
+        </>
+      ))}
+    </nav>
+  </div>
+
+  <div class="ev-bleed" style="margin-top:var(--s3)">
+    {events.length === 0 ? (
+      <div class="ev-mosaic ev-mosaic--empty">
+        <div class="ev-intro ev-intro--empty">
+          <div>
+            <h1 class="ev-intro-title">Events</h1>
+            <p class="ev-intro-copy">Nothing on the calendar right now. Talks, festivals and matches will show up here as soon as they're scheduled — in the meantime, catch up on what's happening around campus.</p>
+            <a href="/news-notices/news" class="btn btn-primary" style="margin-top:var(--s5)">Visit the Newsroom</a>
+          </div>
+        </div>
+      </div>
+    ) : (
+      <div class="ev-mosaic">
+        <div class="ev-intro">
+          <div>
+            <h1 class="ev-intro-title">Events</h1>
+            <p class="ev-intro-copy">Talks, festivals, matches and everything else happening on campus. Pick one to see times, venue and how to join.</p>
+          </div>
+          <div class="ev-intro-stat">
+            <span class="ev-intro-stat-num">{upcomingCount}</span>
+            <span class="ev-intro-stat-label">Upcoming</span>
+          </div>
+        </div>
+
+        {events.map((e, i) => {
+          const isHero = i === 0 && !e.is_past;
+          const isWide = !isHero && (i - 1) % 5 === 2;
+          const cls = `ev-tile${isHero ? ' ev-tile--hero' : isWide ? ' ev-tile--wide' : ''}${e.is_past ? ' ev-tile--past' : ''}`;
+          return (
+            <a href={`/news-notices/events/${e.id}`} class={cls}>
+              {e.image_url && <img src={e.image_url} alt="" class="ev-tile-img" loading="lazy" />}
+              <span class="ev-open-mark" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14" /></svg>
+              </span>
+              <div class="ev-tile-body">
+                <span class="ev-tile-kicker">{e.is_past ? 'Past Event' : (e.open_to_label ?? 'Event')}</span>
+                <h2 class="ev-tile-title">{e.title}</h2>
+                <p class="ev-tile-meta">{formatDate(e.starts_at)}, {formatTime(e.starts_at)}{e.venue ? ` · ${e.venue}` : ''}</p>
+              </div>
+            </a>
+          );
+        })}
+      </div>
+    )}
+  </div>
+</Layout>

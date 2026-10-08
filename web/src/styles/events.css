@@ -1,0 +1,425 @@
+/**
+ * News & Notices – Events: a full-bleed mosaic of event tiles (no
+ * side-padding, no gaps — every pixel between tiles is deliberate, never
+ * dead margin) and a big editorial detail page per event. Built on the
+ * shared navy/gold tokens and serif/sans pairing, zero radius, no drop
+ * shadows — tiles are told apart by size and photography, not by a
+ * different colour per tile.
+ */
+
+/* Break the mosaic out of the page's normal .wrap padding so it runs
+   edge-to-edge under the masthead, however wide the viewport is. */
+.ev-bleed {
+  width: 100vw;
+  position: relative;
+  left: 50%;
+  right: 50%;
+  margin-left: -50vw;
+  margin-right: -50vw;
+  overflow: hidden;
+}
+
+.ev-mosaic {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-auto-flow: dense;
+  grid-auto-rows: minmax(200px, min(22vw, 320px));
+  gap: 2px;
+  background: var(--line);
+}
+
+/* ---------- Intro band — replaces the usual page header, lives as the
+   mosaic's own first cell so there is no seam between it and the tiles ---------- */
+.ev-intro {
+  grid-column: 1 / -1;
+  background: var(--navy);
+  color: #fff;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--s4) var(--s6);
+  padding: var(--s7) var(--s6);
+}
+.ev-intro-title {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: clamp(2.4rem, 6vw, 4.2rem);
+  line-height: 0.95;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+.ev-intro-copy {
+  max-width: 46ch;
+  margin: var(--s3) 0 0;
+  font-size: 1.05rem;
+  line-height: 1.55;
+  color: #d7dcee;
+}
+.ev-intro-stat {
+  text-align: right;
+}
+.ev-intro-stat-num {
+  display: block;
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: 2.6rem;
+  line-height: 1;
+  color: var(--gold-light);
+}
+.ev-intro-stat-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #aeb6d2;
+}
+
+.ev-mosaic--empty {
+  grid-auto-rows: minmax(320px, min(34vw, 460px));
+}
+.ev-intro--empty .ev-intro-copy {
+  max-width: 56ch;
+}
+
+/* ---------- Tile ---------- */
+.ev-tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  min-height: 0;
+  padding: clamp(16px, 2vw, 28px);
+  background: var(--navy-deep);
+  background-image:
+    radial-gradient(circle at 6px 6px, rgba(255, 255, 255, 0.07) 1.4px, transparent 1.6px);
+  background-size: 22px 22px;
+  color: #fff;
+  text-decoration: none;
+  overflow: hidden;
+}
+.ev-tile-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.6s ease;
+}
+.ev-tile:hover .ev-tile-img {
+  transform: scale(1.045);
+}
+.ev-tile::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(8, 18, 52, 0.92) 0%, rgba(8, 18, 52, 0.35) 45%, rgba(8, 18, 52, 0.05) 75%);
+}
+.ev-tile-body {
+  position: relative;
+  z-index: 1;
+}
+.ev-tile-kicker {
+  display: inline-block;
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: 0.68rem;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--gold-light);
+  margin-bottom: var(--s2);
+}
+.ev-tile-title {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: clamp(1.1rem, 1.6vw, 1.5rem);
+  line-height: 1.12;
+  letter-spacing: -0.01em;
+  margin: 0 0 var(--s2);
+  max-width: 18ch;
+}
+.ev-tile-meta {
+  font-size: 0.86rem;
+  line-height: 1.4;
+  color: #dfe3f0;
+  margin: 0;
+}
+.ev-open-mark {
+  position: absolute;
+  z-index: 1;
+  top: clamp(12px, 1.5vw, 22px);
+  right: clamp(12px, 1.5vw, 22px);
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255, 255, 255, 0.7);
+  display: grid;
+  place-items: center;
+  transition: transform 0.35s ease, background-color 0.35s ease;
+}
+.ev-open-mark svg {
+  width: 16px;
+  height: 16px;
+}
+.ev-tile:hover .ev-open-mark,
+.ev-tile:focus-visible .ev-open-mark {
+  transform: rotate(90deg);
+  background: rgba(255, 255, 255, 0.18);
+}
+
+/* Hero tile — the soonest upcoming event */
+.ev-tile--hero {
+  grid-column: span 2;
+  grid-row: span 2;
+}
+.ev-tile--hero .ev-tile-title {
+  font-size: clamp(1.7rem, 2.6vw, 2.6rem);
+  max-width: 14ch;
+}
+.ev-tile--hero .ev-tile-meta {
+  font-size: 1rem;
+}
+
+/* Wide tile — every so often, for rhythm */
+.ev-tile--wide {
+  grid-column: span 2;
+}
+
+/* Past events — still here, still linkable, just visually quieter */
+.ev-tile--past {
+  background-color: #10152b;
+}
+.ev-tile--past .ev-tile-img {
+  filter: grayscale(0.55) brightness(0.75);
+}
+.ev-tile--past .ev-tile-kicker {
+  color: #9aa2c2;
+}
+
+@media (max-width: 900px) {
+  .ev-mosaic {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .ev-tile--hero {
+    grid-column: 1 / -1;
+    grid-row: span 2;
+  }
+  .ev-tile--wide {
+    grid-column: 1 / -1;
+  }
+  .ev-intro {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .ev-intro-stat {
+    text-align: left;
+  }
+}
+@media (max-width: 560px) {
+  .ev-mosaic {
+    grid-template-columns: 1fr;
+  }
+  .ev-tile--hero,
+  .ev-tile--wide {
+    grid-column: 1;
+  }
+}
+
+/* ---------- Detail page ---------- */
+.ev-hero {
+  position: relative;
+  min-height: 340px;
+  display: flex;
+  align-items: flex-end;
+  background: var(--navy-deep);
+  background-image: radial-gradient(circle at 6px 6px, rgba(255, 255, 255, 0.06) 1.4px, transparent 1.6px);
+  background-size: 22px 22px;
+  color: #fff;
+  overflow: hidden;
+}
+.ev-hero-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.ev-hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(8, 18, 52, 0.95) 0%, rgba(8, 18, 52, 0.4) 50%, rgba(8, 18, 52, 0.1) 100%);
+}
+.ev-hero-body {
+  position: relative;
+  z-index: 1;
+  padding: var(--s7) var(--s6);
+  max-width: 900px;
+}
+.ev-hero-body .ev-tile-kicker {
+  margin-bottom: var(--s3);
+}
+.ev-hero-title {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: clamp(2rem, 4.6vw, 3.4rem);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.ev-body-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--s7);
+}
+@media (min-width: 1024px) {
+  .ev-body-grid {
+    grid-template-columns: minmax(0, 7fr) minmax(0, 3fr);
+    align-items: start;
+  }
+  /* No "Coming up next" card (e.g. only one event exists) — let the main
+     column take the full width instead of leaving the second track empty. */
+  .ev-body-grid:not(:has(.ev-sidebar)) {
+    grid-template-columns: 1fr;
+  }
+}
+.ev-main .lede,
+.ev-main .article-body {
+  max-width: 72ch;
+}
+
+.ev-facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s4);
+  margin: 0 0 var(--s6);
+  padding: var(--s5) 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+.ev-facts dt {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  margin: 0 0 2px;
+}
+.ev-facts dd {
+  margin: 0;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.ev-cta {
+  margin-top: var(--s6);
+}
+
+.ev-pager {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--s4);
+  margin-top: var(--s7);
+  padding-top: var(--s4);
+  border-top: 1px solid var(--line);
+}
+.ev-pager a {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-decoration: none;
+  color: var(--ink);
+}
+.ev-pager a:last-child {
+  text-align: right;
+  align-items: flex-end;
+}
+.ev-pager span {
+  font-size: 0.76rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-2);
+}
+.ev-pager strong {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  font-size: 1.08rem;
+  line-height: 1.25;
+}
+.ev-pager a:hover strong {
+  text-decoration: underline;
+  text-decoration-color: var(--gold-ink);
+}
+
+/* ---------- Sidebar ---------- */
+.ev-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s5);
+}
+.ev-side-card {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-top: 3px solid var(--navy);
+  padding: var(--s5);
+}
+.ev-side-heading {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  font-size: 1.02rem;
+  color: var(--navy);
+  margin: 0 0 var(--s4);
+}
+.ev-side-list {
+  list-style: none;
+  counter-reset: evside;
+  margin: 0;
+  padding: 0;
+}
+.ev-side-list li {
+  border-bottom: 1px solid var(--line);
+}
+.ev-side-list li:last-child {
+  border-bottom: 0;
+}
+.ev-side-list a {
+  counter-increment: evside;
+  display: grid;
+  grid-template-columns: 30px 1fr;
+  gap: var(--s2);
+  align-items: baseline;
+  padding: var(--s3) 0;
+  text-decoration: none;
+  color: var(--ink);
+}
+.ev-side-list a::before {
+  content: counter(evside);
+  grid-column: 1;
+  grid-row: 1 / -1;
+  font-family: var(--font-serif);
+  font-weight: 800;
+  font-size: 1.3rem;
+  line-height: 1;
+  color: var(--gold-ink);
+}
+.ev-side-list a > * {
+  grid-column: 2;
+}
+.ev-side-date {
+  display: block;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-2);
+  margin-bottom: 2px;
+}
+.ev-side-title {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  font-size: 0.98rem;
+  line-height: 1.3;
+}
+.ev-side-list a:hover .ev-side-title {
+  text-decoration: underline;
+  text-decoration-color: var(--gold-ink);
+}

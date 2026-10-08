@@ -1,0 +1,31 @@
+{
+  "collectionName": "components_shared_icon_cards",
+  "info": {
+    "displayName": "Icon Card",
+    "icon": "star"
+  },
+  "options": {},
+  "attributes": {
+    "icon": {
+      "type": "enumeration",
+      "enum": [
+        "cap",
+        "people",
+        "shield",
+        "compass",
+        "book",
+        "star",
+        "heart",
+        "globe"
+      ],
+      "default": "star"
+    },
+    "title": {
+      "type": "string",
+      "required": true
+    },
+    "text": {
+      "type": "text"
+    }
+  }
+}
