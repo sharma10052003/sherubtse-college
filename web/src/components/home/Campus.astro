@@ -1,0 +1,28 @@
+---
+// Student Life & Campus — your own picture cards first, then facilities.
+import Img from './Img.astro';
+import type { Card } from '../../lib/content/homepage';
+interface Props { items: Card[]; layout: 'mosaic' | 'grid'; emptyText: string | null }
+const { items, layout, emptyText } = Astro.props;
+---
+{items.length > 0 ? (
+  <ul class:list={['hm-campus', `hm-campus--${layout}`, `hm-campus--n${Math.min(items.length, 6)}`]}>
+    {items.map((c, i) => (
+      <li class:list={['hm-tile', { 'hm-tile--noimg': !c.image }]} data-reveal style={`--i:${i}`}>
+        {c.image ? (
+          <Img image={c.image} class="hm-tile-img" sizes={layout === 'mosaic' && i === 0 ? '(min-width: 900px) 50vw, 100vw' : '(min-width: 900px) 25vw, 50vw'} />
+        ) : (
+          <span class="hm-hl-pattern" aria-hidden="true"></span>
+        )}
+        <span class="hm-tile-text">
+          {c.category && <span class="hm-tile-cat">{c.category}</span>}
+          <span class="hm-tile-title">{c.href ? <a href={c.href}>{c.title}</a> : c.title}</span>
+          {c.summary && <span class="hm-tile-sum">{c.summary}</span>}
+          {c.caption && <span class="hm-tile-caption">{c.caption}</span>}
+        </span>
+      </li>
+    ))}
+  </ul>
+) : (
+  emptyText && <p class="hm-empty">{emptyText}</p>
+)}

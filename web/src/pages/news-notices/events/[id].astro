@@ -102,6 +102,10 @@ const dateRange = event.ends_at
           <a href={event.registration_link} class="btn btn-primary ev-cta" target="_blank" rel="noopener">Register for This Event</a>
         )}
 
+        {event.photo_story && (
+          <p class="ev-photos"><a href={event.photo_story.href} class="btn btn-secondary">Photos from this event: {event.photo_story.title}</a></p>
+        )}
+
         {(prev || next) && (
           <div class="ev-pager">
             {prev ? (

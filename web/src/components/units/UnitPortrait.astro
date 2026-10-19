@@ -1,0 +1,41 @@
+---
+// The head-of-unit portrait: a fixed 4:5 frame (no layout shift) with a
+// shimmer until the photo loads, or — when no verified portrait exists — a
+// monogram on a lattice motif drawn from Bhutanese window screens. Never a
+// stand-in face.
+import type { AdminUnit } from '../../lib/content/units';
+
+interface Props {
+  unit: AdminUnit;
+  size?: 'card' | 'feature' | 'detail';
+  eager?: boolean;
+}
+const { unit, size = 'card', eager = false } = Astro.props;
+const sizes = size === 'card' ? '(max-width: 640px) 90vw, 320px' : '(max-width: 900px) 90vw, 480px';
+---
+<div class:list={['au-portrait', `au-portrait--${size}`, { 'au-portrait--empty': !unit.portrait }]}>
+  {unit.portrait ? (
+    <img
+      src={unit.portrait.url}
+      alt={unit.portrait.alt}
+      width={unit.portrait.width ?? 400}
+      height={unit.portrait.height ?? 500}
+      sizes={sizes}
+      loading={eager ? 'eager' : 'lazy'}
+      decoding="async"
+      data-au-img
+    />
+  ) : (
+    <div class="au-monogram" role="img" aria-label={`${unit.name}${unit.head_name ? `, ${unit.head_name}` : ''} — no portrait yet`}>
+      <svg class="au-lattice" viewBox="0 0 120 150" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+        <defs>
+          <pattern id={`au-p-${unit.slug}-${size}`} width="24" height="24" patternUnits="userSpaceOnUse">
+            <path d="M0 12h24M12 0v24M6 6h12v12H6z" />
+          </pattern>
+        </defs>
+        <rect width="120" height="150" fill={`url(#au-p-${unit.slug}-${size})`} />
+      </svg>
+      <span class="au-monogram-letters" aria-hidden="true"><span>{unit.initials}</span></span>
+    </div>
+  )}
+</div>

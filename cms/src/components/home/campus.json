@@ -1,0 +1,72 @@
+{
+  "collectionName": "components_home_campus",
+  "info": {
+    "displayName": "Student Life & Campus",
+    "icon": "house",
+    "description": "Campus facilities and picture cards."
+  },
+  "options": {},
+  "attributes": {
+    "heading": {
+      "type": "string"
+    },
+    "intro": {
+      "type": "text"
+    },
+    "is_visible": {
+      "type": "boolean",
+      "default": true
+    },
+    "background": {
+      "type": "enumeration",
+      "enum": [
+        "white",
+        "soft",
+        "navy"
+      ],
+      "default": "white"
+    },
+    "width": {
+      "type": "enumeration",
+      "enum": [
+        "full",
+        "half"
+      ],
+      "default": "full"
+    },
+    "anchor": {
+      "type": "string",
+      "regex": "^[a-z0-9-]*$"
+    },
+    "facilities": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::facility.facility"
+    },
+    "cards": {
+      "type": "component",
+      "repeatable": true,
+      "component": "home.card"
+    },
+    "layout": {
+      "type": "enumeration",
+      "enum": [
+        "mosaic",
+        "grid"
+      ],
+      "default": "mosaic"
+    },
+    "limit": {
+      "type": "integer",
+      "default": 6,
+      "min": 1,
+      "max": 12
+    },
+    "button_label": {
+      "type": "string"
+    },
+    "button_url": {
+      "type": "string"
+    }
+  }
+}

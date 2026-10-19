@@ -1,0 +1,34 @@
+---
+// Admission notices (Notices with Category “Admissions”). Current notices
+// first; expired or archived ones are moved under “Past notices” in the
+// browser (AdmissionsRuntime), so the split stays right on a static page.
+import type { AdmissionNotice, Labels } from '../../lib/content/admissions';
+import { fmtDate } from '../../lib/content/admissions';
+
+interface Props { notices: AdmissionNotice[]; labels: Labels; limit?: number; audienceNames?: Record<string, string> }
+const { notices, labels, limit = 0, audienceNames } = Astro.props;
+const arrow = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
+---
+<div class="adm-notices" data-notices data-limit={limit || undefined}>
+  <ul class="adm-notice-list" data-notices-current>
+    {notices.map((n) => (
+      <li class:list={['adm-notice', { 'adm-notice--urgent': n.urgent }]} data-expires={n.expires ?? ''} data-archived={n.archived ? '1' : '0'}>
+        <time class="adm-notice-date" datetime={n.published?.slice(0, 10)}>
+          <span class="adm-notice-day">{fmtDate(n.published, { day: 'numeric' })}</span>
+          <span class="adm-notice-month">{fmtDate(n.published, { month: 'short', year: 'numeric' })}</span>
+        </time>
+        <div class="adm-notice-body">
+          {audienceNames && n.audience !== 'all' && <p class="adm-notice-tag">{audienceNames[n.audience]}</p>}
+          <h3 class="adm-notice-title"><a href={`/news-notices/announcements/${n.id}`}>{n.title}</a></h3>
+          {n.summary && <p class="adm-notice-summary">{n.summary}</p>}
+        </div>
+        <span class="adm-notice-go" aria-hidden="true"><Fragment set:html={arrow} /></span>
+      </li>
+    ))}
+  </ul>
+  <p class="adm-empty" data-notices-empty hidden={notices.length > 0}>{labels.notices_empty}</p>
+  <details class="adm-past" data-notices-past-wrap hidden>
+    <summary>{labels.notices_past}</summary>
+    <ul class="adm-notice-list adm-notice-list--past" data-notices-past></ul>
+  </details>
+</div>

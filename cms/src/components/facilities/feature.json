@@ -1,0 +1,43 @@
+{
+  "collectionName": "components_facilities_features",
+  "info": {
+    "displayName": "Feature",
+    "icon": "check",
+    "description": "A short highlight card: a title and one line."
+  },
+  "options": {},
+  "attributes": {
+    "title": {
+      "type": "string",
+      "required": true
+    },
+    "description": {
+      "type": "text"
+    },
+    "icon": {
+      "type": "enumeration",
+      "enum": [
+        "book",
+        "screen",
+        "study",
+        "journal",
+        "flask",
+        "microscope",
+        "atom",
+        "shield",
+        "tools",
+        "sport",
+        "home",
+        "heart",
+        "health",
+        "wifi",
+        "people",
+        "pin",
+        "clock",
+        "link",
+        "star"
+      ],
+      "default": "star"
+    }
+  }
+}

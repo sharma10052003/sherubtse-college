@@ -1,0 +1,47 @@
+---
+// Research & Innovation — stories (from News), extra cards, and research centres.
+import Img from './Img.astro';
+import { fmtDate } from '../../lib/content/homepage';
+import type { Section } from '../../lib/content/homepage';
+type S = Extract<Section, { kind: 'research' }>;
+interface Props { s: S }
+const { s } = Astro.props;
+const arrow = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
+const stories = [
+  ...s.stories.map((n) => ({ title: n.title, summary: n.summary, image: n.cover, category: n.category, date: n.date as string | null, href: n.href as string | null })),
+  ...s.cards.map((c) => ({ title: c.title, summary: c.summary ?? '', image: c.image, category: c.category, date: c.date, href: c.href })),
+];
+---
+<div class:list={['hm-research', { 'hm-research--nocentres': s.centres.length === 0, 'hm-research--nostories': stories.length === 0 }]}>
+  {stories.length > 0 && (
+    <ul class="hm-rs">
+      {stories.map((r, i) => (
+        <li class:list={['hm-rs-item', { 'hm-rs-item--noimg': !r.image }]} data-reveal style={`--i:${i}`}>
+          {r.image && (
+            <div class="hm-rs-media">
+              <Img image={r.image} class="hm-rs-img" sizes="(min-width: 1000px) 30vw, 100vw" />
+            </div>
+          )}
+          <p class="hm-meta hm-meta--light">
+            {r.category && <span class="hm-meta-cat">{r.category}</span>}
+            {r.date && <time datetime={r.date.slice(0, 10)}>{fmtDate(r.date)}</time>}
+          </p>
+          <h3 class="hm-rs-title">{r.href ? <a href={r.href}>{r.title}</a> : r.title}</h3>
+        </li>
+      ))}
+    </ul>
+  )}
+  {s.centres.length > 0 && (
+    <ul class="hm-centres" data-reveal>
+      {s.centres.map((c, i) => (
+        <li style={`--i:${i}`}>
+          <a href={c.href} title={c.summary ?? undefined}>
+            <span class="hm-centre-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 1.8 3h10.4a2 2 0 0 0 1.8-3l-5-9V3"/><path d="M7.5 15h9"/></svg></span>
+            <span class="hm-centre-name">{c.name}</span>
+            <span class="hm-centre-go" aria-hidden="true"><Fragment set:html={arrow} /></span>
+          </a>
+        </li>
+      ))}
+    </ul>
+  )}
+</div>

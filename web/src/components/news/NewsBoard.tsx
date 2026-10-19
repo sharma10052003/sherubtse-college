@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 export interface NewsCardData {
   id: number;
@@ -197,6 +197,11 @@ type SortKey = 'newest' | 'oldest';
 export default function NewsBoard({ items, categoryOptions }: Props) {
   const [q, setQ] = useState('');
   const [category, setCategory] = useState(ALL);
+  // ?category=… (e.g. from an article's category chip) preselects that tab.
+  useEffect(() => {
+    const wanted = new URLSearchParams(location.search).get('category');
+    if (wanted && items.some((i) => i.category === wanted)) setCategory(wanted);
+  }, []);
   const [sort, setSort] = useState<SortKey>('newest');
   const [archiveYear, setArchiveYear] = useState<number | null>(null);
   const revealRef = useReveal();

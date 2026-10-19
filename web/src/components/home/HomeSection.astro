@@ -1,0 +1,48 @@
+---
+// Renders one homepage section from Home – Page → Sections. With `paired`,
+// it renders only the inner content (two half-width sections share a band).
+import type { Section, HomeLabels } from '../../lib/content/homepage';
+import SectionHead from './SectionHead.astro';
+import Highlights from './Highlights.astro';
+import Notices from './Notices.astro';
+import Events from './Events.astro';
+import Introduction from './Introduction.astro';
+import Message from './Message.astro';
+import Programmes from './Programmes.astro';
+import Research from './Research.astro';
+import Campus from './Campus.astro';
+import Stats from './Stats.astro';
+import Resources from './Resources.astro';
+import LinkCards from './LinkCards.astro';
+import SectionBlocks from '../SectionBlocks.astro';
+
+interface Props { s: Section; labels: HomeLabels; paired?: boolean }
+const { s, labels, paired = false } = Astro.props;
+const headingId = `hm-${s.key.replace(/[^a-z0-9]+/gi, '-')}`;
+const light = s.background === 'navy';
+// These two draw their own heading inside their layout.
+const ownHead = s.kind === 'introduction' || s.kind === 'message';
+
+---
+<section
+  class:list={paired ? ['hm-pair-col'] : ['hm-band', `hm-band--${s.background}`, `hm-band--${s.kind}`]}
+  id={s.anchor ?? undefined}
+  aria-labelledby={s.heading ? headingId : undefined}
+  data-section={s.kind}
+>
+  <div class:list={{ wrap: !paired }}>
+    {!ownHead && <SectionHead id={headingId} heading={s.heading} intro={s.intro} button={s.button} light={light} />}
+    {s.kind === 'highlights' && <Highlights items={s.items} layout={s.layout} labels={labels} emptyText={s.empty_text} />}
+    {s.kind === 'notices' && <Notices items={s.items} labels={labels} emptyText={s.empty_text} />}
+    {s.kind === 'events' && <Events items={s.items} labels={labels} emptyText={s.empty_text} />}
+    {s.kind === 'introduction' && <Introduction s={s} headingId={headingId} />}
+    {s.kind === 'message' && <Message s={s} headingId={headingId} />}
+    {s.kind === 'programmes' && <Programmes items={s.items} labels={labels} emptyText={s.empty_text} />}
+    {s.kind === 'research' && <Research s={s} />}
+    {s.kind === 'campus' && <Campus items={s.items} layout={s.layout} emptyText={s.empty_text} />}
+    {s.kind === 'stats' && <Stats items={s.items} labels={labels} />}
+    {s.kind === 'resources' && <Resources documents={s.documents} links={s.links} labels={labels} />}
+    {s.kind === 'link-cards' && <LinkCards cards={s.cards} />}
+    {s.kind === 'blocks' && <SectionBlocks blocks={s.blocks} />}
+  </div>
+</section>

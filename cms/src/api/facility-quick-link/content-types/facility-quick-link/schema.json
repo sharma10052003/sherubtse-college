@@ -1,0 +1,68 @@
+{
+  "kind": "collectionType",
+  "collectionName": "facility_quick_links",
+  "info": {
+    "singularName": "facility-quick-link",
+    "pluralName": "facility-quick-links",
+    "displayName": "About – Campus Facilities: Quick Links",
+    "description": "Useful facility links. Only add destinations that have been checked."
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "label": {
+      "type": "string",
+      "required": true
+    },
+    "description": {
+      "type": "text"
+    },
+    "url": {
+      "type": "string",
+      "required": true
+    },
+    "icon": {
+      "type": "enumeration",
+      "enum": [
+        "book",
+        "screen",
+        "study",
+        "journal",
+        "flask",
+        "microscope",
+        "atom",
+        "shield",
+        "tools",
+        "sport",
+        "home",
+        "heart",
+        "health",
+        "wifi",
+        "people",
+        "pin",
+        "clock",
+        "link",
+        "star"
+      ],
+      "default": "link"
+    },
+    "link_type": {
+      "type": "enumeration",
+      "enum": [
+        "internal",
+        "external"
+      ],
+      "default": "external"
+    },
+    "display_order": {
+      "type": "integer",
+      "default": 0
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    }
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "collectionName": "components_facilities_section_gallery",
+  "info": {
+    "displayName": "Section – Campus Gallery",
+    "icon": "layout",
+    "description": "Photos from About – Campus Facilities: Gallery."
+  },
+  "options": {},
+  "attributes": {
+    "heading": {
+      "type": "string"
+    },
+    "intro": {
+      "type": "text"
+    },
+    "anchor": {
+      "type": "string"
+    },
+    "background": {
+      "type": "enumeration",
+      "enum": [
+        "white",
+        "soft",
+        "navy"
+      ],
+      "default": "white"
+    },
+    "is_visible": {
+      "type": "boolean",
+      "default": true
+    },
+    "layout": {
+      "type": "enumeration",
+      "enum": [
+        "grid",
+        "mosaic"
+      ],
+      "default": "mosaic"
+    },
+    "show_filters": {
+      "type": "boolean",
+      "default": true
+    },
+    "limit": {
+      "type": "integer",
+      "default": 24
+    }
+  }
+}

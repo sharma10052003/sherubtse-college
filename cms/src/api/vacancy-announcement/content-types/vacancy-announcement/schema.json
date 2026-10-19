@@ -4,7 +4,8 @@
   "info": {
     "singularName": "vacancy-announcement",
     "pluralName": "vacancy-announcements",
-    "displayName": "News & Notices – Vacancy Announcements"
+    "displayName": "News & Notices – Recruitment (Vacancies)",
+    "description": "Staff vacancies and their selection stages — shown on the Recruitment page."
   },
   "options": {
     "draftAndPublish": false
@@ -25,8 +26,7 @@
         "re_vacancy_announcement",
         "shortlisted_written",
         "shortlisted_viva",
-        "selection_result",
-        "general_notice"
+        "selection_result"
       ],
       "required": true
     },

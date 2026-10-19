@@ -1,0 +1,22 @@
+{
+  "collectionName": "components_contact_help_topics",
+  "info": {
+    "displayName": "Help Topic",
+    "icon": "question",
+    "description": "One button in \"How Can We Help?\". Office must match an office's Group Title exactly."
+  },
+  "options": {},
+  "attributes": {
+    "emoji": {
+      "type": "string"
+    },
+    "label": {
+      "type": "string",
+      "required": true
+    },
+    "office": {
+      "type": "string",
+      "required": true
+    }
+  }
+}

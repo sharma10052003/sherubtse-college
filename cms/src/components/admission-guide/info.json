@@ -1,0 +1,18 @@
+{
+  "collectionName": "components_admission_guide_infos",
+  "info": {
+    "displayName": "Information Block",
+    "icon": "bulletList",
+    "description": "A titled block for the “More info” tab (e.g. Visa, Accommodation)."
+  },
+  "options": {},
+  "attributes": {
+    "title": {
+      "type": "string",
+      "required": true
+    },
+    "body": {
+      "type": "richtext"
+    }
+  }
+}

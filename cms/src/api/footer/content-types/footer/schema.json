@@ -21,19 +21,6 @@
       "repeatable": true,
       "component": "shared.link-group"
     },
-    "map_label": {
-      "type": "string"
-    },
-    "map_url": {
-      "type": "string"
-    },
-    "map_image": {
-      "type": "media",
-      "multiple": false,
-      "allowedTypes": [
-        "images"
-      ]
-    },
     "contact_heading": {
       "type": "string",
       "default": "Contact"

@@ -1,0 +1,113 @@
+{
+  "collectionName": "components_contact_page_labels",
+  "info": {
+    "displayName": "Labels & Messages",
+    "icon": "feather",
+    "description": "Small labels and messages used across the Contact page. {count}, {shown}, {query} and {field} are filled in automatically."
+  },
+  "options": {},
+  "attributes": {
+    "directory_eyebrow": {
+      "type": "string"
+    },
+    "finder_eyebrow": {
+      "type": "string"
+    },
+    "spotlight_kicker": {
+      "type": "string"
+    },
+    "email_label": {
+      "type": "string"
+    },
+    "telephone_label": {
+      "type": "string"
+    },
+    "info_eyebrow": {
+      "type": "string"
+    },
+    "address_label": {
+      "type": "string"
+    },
+    "phone_label": {
+      "type": "string"
+    },
+    "hours_label": {
+      "type": "string"
+    },
+    "not_confirmed_text": {
+      "type": "string"
+    },
+    "copy_address_label": {
+      "type": "string"
+    },
+    "copied_label": {
+      "type": "string"
+    },
+    "location_eyebrow": {
+      "type": "string"
+    },
+    "directions_note": {
+      "type": "string"
+    },
+    "campus_map_note": {
+      "type": "string"
+    },
+    "map_caption": {
+      "type": "string"
+    },
+    "map_pin_label": {
+      "type": "string"
+    },
+    "ict_eyebrow": {
+      "type": "string"
+    },
+    "quick_actions_label": {
+      "type": "string"
+    },
+    "search_clear_label": {
+      "type": "string"
+    },
+    "search_count_text": {
+      "type": "string"
+    },
+    "search_match_text": {
+      "type": "string"
+    },
+    "search_empty_hint": {
+      "type": "string"
+    },
+    "search_reset_label": {
+      "type": "string"
+    },
+    "form_details_legend": {
+      "type": "string"
+    },
+    "form_enquiry_legend": {
+      "type": "string"
+    },
+    "form_required_note": {
+      "type": "string"
+    },
+    "form_optional_text": {
+      "type": "string"
+    },
+    "form_sending_message": {
+      "type": "string"
+    },
+    "form_fix_message": {
+      "type": "string"
+    },
+    "validation_required": {
+      "type": "string"
+    },
+    "validation_department": {
+      "type": "string"
+    },
+    "validation_email": {
+      "type": "string"
+    },
+    "rate_limit_message": {
+      "type": "string"
+    }
+  }
+}

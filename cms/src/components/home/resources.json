@@ -1,0 +1,58 @@
+{
+  "collectionName": "components_home_resources",
+  "info": {
+    "displayName": "Resources",
+    "icon": "download",
+    "description": "Downloads and useful links."
+  },
+  "options": {},
+  "attributes": {
+    "heading": {
+      "type": "string"
+    },
+    "intro": {
+      "type": "text"
+    },
+    "is_visible": {
+      "type": "boolean",
+      "default": true
+    },
+    "background": {
+      "type": "enumeration",
+      "enum": [
+        "white",
+        "soft",
+        "navy"
+      ],
+      "default": "white"
+    },
+    "width": {
+      "type": "enumeration",
+      "enum": [
+        "full",
+        "half"
+      ],
+      "default": "full"
+    },
+    "anchor": {
+      "type": "string",
+      "regex": "^[a-z0-9-]*$"
+    },
+    "documents": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::document.document"
+    },
+    "links": {
+      "type": "component",
+      "repeatable": true,
+      "component": "shared.landing-card"
+    },
+    "button_label": {
+      "type": "string"
+    },
+    "button_url": {
+      "type": "string"
+    }
+  }
+}

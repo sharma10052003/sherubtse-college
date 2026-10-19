@@ -1,0 +1,29 @@
+{
+  "collectionName": "components_home_stat_items",
+  "info": {
+    "displayName": "Statistic",
+    "icon": "chartPie",
+    "description": "A verified figure. Only figures marked “Verified” are shown."
+  },
+  "options": {},
+  "attributes": {
+    "value": {
+      "type": "string",
+      "required": true
+    },
+    "label": {
+      "type": "string",
+      "required": true
+    },
+    "note": {
+      "type": "string"
+    },
+    "source": {
+      "type": "string"
+    },
+    "verified": {
+      "type": "boolean",
+      "default": false
+    }
+  }
+}

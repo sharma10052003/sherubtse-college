@@ -1,0 +1,32 @@
+{
+  "collectionName": "components_facilities_section_index",
+  "info": {
+    "displayName": "Section – Facility Index",
+    "icon": "bulletList",
+    "description": "A numbered index of the Library, Laboratories and every published facility, linking to its story."
+  },
+  "options": {},
+  "attributes": {
+    "heading": {
+      "type": "string"
+    },
+    "intro": {
+      "type": "text"
+    },
+    "anchor": {
+      "type": "string"
+    },
+    "is_visible": {
+      "type": "boolean",
+      "default": true
+    },
+    "columns": {
+      "type": "enumeration",
+      "enum": [
+        "two",
+        "three"
+      ],
+      "default": "three"
+    }
+  }
+}

@@ -23,12 +23,12 @@ export interface AlumniCard {
   article_title: string | null;
   category: string | null;
   graduation_year: number | null;
+  programme: string | null;
   photo_url: string | null;
   is_featured: boolean;
 }
 
 export interface AlumniDetail extends AlumniCard {
-  programme: string | null;
   organization: string | null;
   story: string | null;
   publishedAt: string | null;
@@ -113,6 +113,7 @@ function mapCard(row: any): AlumniCard {
     article_title: row.article_title ?? null,
     category: row.category ?? null,
     graduation_year: row.graduation_year ?? null,
+    programme: row.programme ?? null,
     photo_url: mediaUrl(row.photo),
     is_featured: !!row.is_featured,
   };
@@ -246,7 +247,6 @@ export async function getAlumniBySlug(slug: string): Promise<AlumniDetail | null
   if (!row) return null;
   return {
     ...mapCard(row),
-    programme: row.programme ?? null,
     organization: row.organization ?? null,
     story: row.story ?? null,
     publishedAt: row.publishedAt ?? null,

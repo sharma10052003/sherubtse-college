@@ -1,0 +1,50 @@
+{
+  "collectionName": "components_research_journals",
+  "info": {
+    "displayName": "Journal",
+    "icon": "book",
+    "description": "The College research journal."
+  },
+  "options": {},
+  "attributes": {
+    "name": {
+      "type": "string",
+      "required": true
+    },
+    "description": {
+      "type": "text"
+    },
+    "cover": {
+      "type": "media",
+      "multiple": false,
+      "allowedTypes": [
+        "images"
+      ]
+    },
+    "cover_alt": {
+      "type": "string"
+    },
+    "issn_print": {
+      "type": "string"
+    },
+    "issn_online": {
+      "type": "string"
+    },
+    "current_issue": {
+      "type": "string"
+    },
+    "current_issue_date": {
+      "type": "date"
+    },
+    "links": {
+      "type": "component",
+      "repeatable": true,
+      "component": "research.doc-link"
+    },
+    "articles": {
+      "type": "component",
+      "repeatable": true,
+      "component": "research.journal-article"
+    }
+  }
+}

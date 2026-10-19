@@ -4,7 +4,8 @@
   "info": {
     "singularName": "research-overview",
     "pluralName": "research-overviews",
-    "displayName": "Research – Overview"
+    "displayName": "Research – Overview",
+    "description": "The Research landing page (/research), top to bottom. Centres and projects are edited in Research – Centres and Research – Projects."
   },
   "options": {
     "draftAndPublish": false
@@ -21,14 +22,135 @@
       "type": "text",
       "required": true
     },
-    "featured": {
-      "type": "boolean",
-      "default": true
+    "hero_image": {
+      "type": "media",
+      "multiple": false,
+      "allowedTypes": [
+        "images"
+      ]
+    },
+    "hero_image_alt": {
+      "type": "string"
+    },
+    "hero_buttons": {
+      "type": "component",
+      "repeatable": true,
+      "component": "shared.link-item"
     },
     "cards": {
       "type": "component",
       "repeatable": true,
       "component": "shared.landing-card"
+    },
+    "expertise_heading": {
+      "type": "string"
+    },
+    "expertise_text": {
+      "type": "text"
+    },
+    "expertise_link": {
+      "type": "component",
+      "repeatable": false,
+      "component": "shared.link-item"
+    },
+    "centres_heading": {
+      "type": "string"
+    },
+    "centres_intro": {
+      "type": "text"
+    },
+    "projects_heading": {
+      "type": "string"
+    },
+    "projects_intro": {
+      "type": "text"
+    },
+    "projects_limit": {
+      "type": "integer",
+      "default": 6,
+      "min": 1,
+      "max": 24
+    },
+    "journal_heading": {
+      "type": "string"
+    },
+    "journal_intro": {
+      "type": "text"
+    },
+    "journal": {
+      "type": "component",
+      "repeatable": false,
+      "component": "research.journal"
+    },
+    "grants_heading": {
+      "type": "string"
+    },
+    "grants_intro": {
+      "type": "text"
+    },
+    "grants": {
+      "type": "component",
+      "repeatable": true,
+      "component": "research.grant"
+    },
+    "facilities_heading": {
+      "type": "string"
+    },
+    "facilities_intro": {
+      "type": "text"
+    },
+    "facilities": {
+      "type": "component",
+      "repeatable": true,
+      "component": "research.facility"
+    },
+    "collaboration_heading": {
+      "type": "string"
+    },
+    "collaboration_text": {
+      "type": "text"
+    },
+    "collaboration_office": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::contact-person.contact-person"
+    },
+    "policies_heading": {
+      "type": "string"
+    },
+    "policies_intro": {
+      "type": "text"
+    },
+    "policies": {
+      "type": "component",
+      "repeatable": true,
+      "component": "research.resource"
+    },
+    "news_heading": {
+      "type": "string"
+    },
+    "news_intro": {
+      "type": "text"
+    },
+    "news_stories": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::news.news"
+    },
+    "news_limit": {
+      "type": "integer",
+      "default": 6,
+      "min": 1,
+      "max": 12
+    },
+    "labels": {
+      "type": "component",
+      "repeatable": false,
+      "component": "research.labels"
+    },
+    "featured": {
+      "type": "boolean",
+      "default": true
     },
     "sections": {
       "type": "dynamiczone",

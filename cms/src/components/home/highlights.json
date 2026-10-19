@@ -1,0 +1,79 @@
+{
+  "collectionName": "components_home_highlights",
+  "info": {
+    "displayName": "Latest Highlights",
+    "icon": "picture",
+    "description": "Photo stories from News. Newest first; pinned stories always stay at the front."
+  },
+  "options": {},
+  "attributes": {
+    "heading": {
+      "type": "string"
+    },
+    "intro": {
+      "type": "text"
+    },
+    "is_visible": {
+      "type": "boolean",
+      "default": true
+    },
+    "background": {
+      "type": "enumeration",
+      "enum": [
+        "white",
+        "soft",
+        "navy"
+      ],
+      "default": "white"
+    },
+    "width": {
+      "type": "enumeration",
+      "enum": [
+        "full",
+        "half"
+      ],
+      "default": "full"
+    },
+    "anchor": {
+      "type": "string",
+      "regex": "^[a-z0-9-]*$"
+    },
+    "selection": {
+      "type": "enumeration",
+      "enum": [
+        "latest",
+        "featured_only",
+        "manual"
+      ],
+      "default": "latest"
+    },
+    "stories": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::news.news"
+    },
+    "limit": {
+      "type": "integer",
+      "default": 5,
+      "min": 1,
+      "max": 12
+    },
+    "layout": {
+      "type": "enumeration",
+      "enum": [
+        "feature",
+        "grid"
+      ],
+      "default": "feature"
+    },
+    "empty_text": {
+      "type": "string"
+    },
+    "button_label": {
+      "type": "string"
+    },
+    "button_url": {
+      "type": "string"
+    }
+  }
+}

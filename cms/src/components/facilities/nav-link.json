@@ -1,0 +1,23 @@
+{
+  "collectionName": "components_facilities_nav_links",
+  "info": {
+    "displayName": "Quick Navigation Link",
+    "icon": "link",
+    "description": "A hero link. Use #library, #laboratories, #facilities, or ?category=slug#facilities to open a filtered list."
+  },
+  "options": {},
+  "attributes": {
+    "label": {
+      "type": "string",
+      "required": true
+    },
+    "target": {
+      "type": "string",
+      "required": true
+    },
+    "is_visible": {
+      "type": "boolean",
+      "default": true
+    }
+  }
+}

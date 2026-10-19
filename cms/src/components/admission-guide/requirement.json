@@ -1,0 +1,25 @@
+{
+  "collectionName": "components_admission_guide_requirements",
+  "info": {
+    "displayName": "Programme Requirement",
+    "icon": "bulletList",
+    "description": "Entry requirement for one programme (or a group)."
+  },
+  "options": {},
+  "attributes": {
+    "programme": {
+      "type": "string",
+      "required": true
+    },
+    "minimum": {
+      "type": "text",
+      "required": true
+    },
+    "selection": {
+      "type": "text"
+    },
+    "seats": {
+      "type": "string"
+    }
+  }
+}

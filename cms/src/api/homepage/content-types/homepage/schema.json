@@ -4,26 +4,13 @@
   "info": {
     "singularName": "homepage",
     "pluralName": "homepages",
-    "displayName": "Home – Page"
+    "displayName": "Home – Page",
+    "description": "The homepage: the hero at the top, then the sections in the order listed under “Sections”."
   },
   "options": {
     "draftAndPublish": true
   },
   "attributes": {
-    "hero_images": {
-      "type": "media",
-      "multiple": true,
-      "allowedTypes": [
-        "images"
-      ]
-    },
-    "hero_video": {
-      "type": "media",
-      "multiple": false,
-      "allowedTypes": [
-        "videos"
-      ]
-    },
     "hero_eyebrow": {
       "type": "string"
     },
@@ -41,72 +28,77 @@
       "repeatable": true,
       "component": "shared.link-item"
     },
-    "quick_links": {
-      "type": "component",
-      "repeatable": true,
-      "component": "shared.link-item"
-    },
-    "president_name": {
-      "type": "string"
-    },
-    "president_title": {
-      "type": "string"
-    },
-    "president_message": {
-      "type": "richtext"
-    },
-    "president_photo": {
+    "hero_video": {
       "type": "media",
       "multiple": false,
       "allowedTypes": [
+        "videos"
+      ]
+    },
+    "hero_images": {
+      "type": "media",
+      "multiple": true,
+      "allowedTypes": [
         "images"
       ]
+    },
+    "hero_image_alt": {
+      "type": "string"
+    },
+    "hero_overlay": {
+      "type": "enumeration",
+      "enum": [
+        "light",
+        "medium",
+        "strong"
+      ],
+      "default": "medium"
+    },
+    "hero_align": {
+      "type": "enumeration",
+      "enum": [
+        "left",
+        "center"
+      ],
+      "default": "left"
+    },
+    "hero_video_on_phones": {
+      "type": "boolean",
+      "default": false
+    },
+    "show_ticker": {
+      "type": "boolean",
+      "default": true
+    },
+    "sections": {
+      "type": "dynamiczone",
+      "components": [
+        "home.highlights",
+        "home.notices",
+        "home.events",
+        "home.introduction",
+        "home.message",
+        "home.programmes",
+        "home.research",
+        "home.campus",
+        "home.stats",
+        "home.resources",
+        "home.link-cards",
+        "sections.rich-text",
+        "sections.image-text",
+        "sections.call-to-action"
+      ]
+    },
+    "labels": {
+      "type": "component",
+      "repeatable": false,
+      "component": "home.labels"
     },
     "seo_title": {
       "type": "string"
     },
     "seo_description": {
       "type": "text"
-    },
-    "president_heading": {
-      "type": "string"
-    },
-    "announcements_heading": {
-      "type": "string"
-    },
-    "announcements_link_label": {
-      "type": "string"
-    },
-    "announcements_empty_text": {
-      "type": "string"
-    },
-    "events_heading": {
-      "type": "string"
-    },
-    "events_link_label": {
-      "type": "string"
-    },
-    "events_empty_text": {
-      "type": "string"
-    },
-    "explore_heading": {
-      "type": "string"
-    },
-    "explore_button_label": {
-      "type": "string"
-    },
-    "explore_cards": {
-      "type": "component",
-      "repeatable": true,
-      "component": "shared.landing-card"
-    },
-    "sections": {
-      "type": "dynamiczone",
-      "components": [
-        "sections.rich-text",
-        "sections.image-text",
-        "sections.call-to-action"
-      ]
     }
   }
 }

@@ -4,17 +4,31 @@
   "info": {
     "singularName": "notice",
     "pluralName": "notices",
-    "displayName": "News & Notices – Notices"
+    "displayName": "News & Notices – Notices (incl. Admission Notices)",
+    "description": "All notices. Admission notices are notices with category “Admissions” — they appear on the Admissions page and in Announcements. Publication date and application closing date are separate fields."
   },
   "options": {
     "draftAndPublish": true
   },
   "attributes": {
-    "title": { "type": "string", "required": true },
-    "body": { "type": "richtext", "required": true },
+    "title": {
+      "type": "string",
+      "required": true
+    },
+    "body": {
+      "type": "richtext",
+      "required": true
+    },
     "category": {
       "type": "enumeration",
-      "enum": ["admissions", "registration", "results", "fees", "tender", "general"],
+      "enum": [
+        "admissions",
+        "registration",
+        "results",
+        "fees",
+        "tender",
+        "general"
+      ],
       "required": true
     },
     "owning_unit": {
@@ -23,17 +37,80 @@
       "target": "api::unit.unit",
       "required": true
     },
-    "audience": { "type": "json" },
-    "publish_at": { "type": "datetime", "required": true },
-    "expires_at": { "type": "datetime", "required": true },
-    "urgency": { "type": "enumeration", "enum": ["normal", "urgent"], "default": "normal" },
+    "audience": {
+      "type": "json"
+    },
+    "publish_at": {
+      "type": "datetime",
+      "required": true
+    },
+    "expires_at": {
+      "type": "datetime",
+      "required": true
+    },
+    "urgency": {
+      "type": "enumeration",
+      "enum": [
+        "normal",
+        "urgent"
+      ],
+      "default": "normal"
+    },
     "attachments": {
       "type": "component",
       "repeatable": true,
       "component": "shared.attachment"
     },
-    "featured_for_international": { "type": "boolean", "default": false },
-    "last_reviewed": { "type": "date", "required": true },
-    "review_interval": { "type": "enumeration", "enum": ["semester", "annual", "none"], "default": "none" }
+    "featured_for_international": {
+      "type": "boolean",
+      "default": false
+    },
+    "last_reviewed": {
+      "type": "date",
+      "required": true
+    },
+    "review_interval": {
+      "type": "enumeration",
+      "enum": [
+        "semester",
+        "annual",
+        "none"
+      ],
+      "default": "none"
+    },
+    "summary": {
+      "type": "text"
+    },
+    "programmes": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::programme.programme"
+    },
+    "intake": {
+      "type": "string"
+    },
+    "application_opens": {
+      "type": "date"
+    },
+    "application_closes": {
+      "type": "date"
+    },
+    "is_featured": {
+      "type": "boolean",
+      "default": false
+    },
+    "is_archived": {
+      "type": "boolean",
+      "default": false
+    },
+    "admission_audience": {
+      "type": "enumeration",
+      "enum": [
+        "all",
+        "bhutanese",
+        "international"
+      ],
+      "default": "all"
+    }
   }
 }

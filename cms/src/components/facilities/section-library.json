@@ -1,0 +1,33 @@
+{
+  "collectionName": "components_facilities_section_library",
+  "info": {
+    "displayName": "Section – Library",
+    "icon": "layout",
+    "description": "Shows the Library content from Page Settings."
+  },
+  "options": {},
+  "attributes": {
+    "heading": {
+      "type": "string"
+    },
+    "intro": {
+      "type": "text"
+    },
+    "anchor": {
+      "type": "string"
+    },
+    "background": {
+      "type": "enumeration",
+      "enum": [
+        "white",
+        "soft",
+        "navy"
+      ],
+      "default": "white"
+    },
+    "is_visible": {
+      "type": "boolean",
+      "default": true
+    }
+  }
+}

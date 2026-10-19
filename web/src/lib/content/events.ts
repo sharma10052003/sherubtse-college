@@ -22,6 +22,8 @@ export interface EventItem {
   registration_link?: string | null;
   image_url: string | null;
   is_past: boolean;
+  /** After the event: the News story with its photos. */
+  photo_story: { title: string; href: string } | null;
 }
 
 function mapEvent(row: any): EventItem {
@@ -37,6 +39,7 @@ function mapEvent(row: any): EventItem {
     registration_link: row.registration_link ?? null,
     image_url: mediaUrl(row.image),
     is_past: new Date(row.ends_at ?? row.starts_at).getTime() < Date.now(),
+    photo_story: row.photo_story?.id ? { title: row.photo_story.title, href: `/news-notices/news/${row.photo_story.id}` } : null,
   };
 }
 
@@ -78,7 +81,7 @@ export async function getAllEventIds(): Promise<number[]> {
 export async function getEventById(id: number): Promise<EventItem | null> {
   const res = await strapiGet<StrapiListResponse<any>>('events', {
     filters: { id: { $eq: id } },
-    populate: POPULATE,
+    populate: { image: true, photo_story: { fields: ['title'] } },
     pagination: { pageSize: 1 },
   });
   const row = res?.data?.[0];

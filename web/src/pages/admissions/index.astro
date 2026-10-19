@@ -1,4 +1,145 @@
 ---
-import SectionOverview from '../../components/templates/SectionOverview.astro';
+// Admissions landing page. Visitors choose who they are first — Bhutanese or
+// international — and each choice opens one page with everything for that
+// applicant (pages/admissions/[audience].astro). Below: the key dates
+// timeline, the latest admission notices and the enquiry form.
+// Admin: Admission – Page Settings (this page), the two applicant types (the
+// cards), Notices with Category “Admissions”, and Enquiry Form Settings.
+import Layout from '../../layouts/Layout.astro';
+import '../../styles/admissions.css';
+import EnquiryForm from '../../components/admissions/EnquiryForm.astro';
+import NoticeList from '../../components/admissions/NoticeList.astro';
+import AdmissionsRuntime from '../../components/admissions/AdmissionsRuntime.astro';
+import { AUDIENCES, fmtDate, getAdmissionNotices, getAdmissionsPage, getAudienceGuide, getEnquirySettings } from '../../lib/content/admissions';
+
+const [page, bt, intl, notices, enquiry] = await Promise.all([
+  getAdmissionsPage(),
+  getAudienceGuide('bhutanese'),
+  getAudienceGuide('international'),
+  getAdmissionNotices(),
+  getEnquirySettings(),
+]);
+const guides = { bhutanese: bt, international: intl };
+const L = page.labels;
+const audienceNames: Record<string, string> = { bhutanese: bt.card_title, international: intl.card_title };
+const hasAudienceDates = page.key_dates.some((d) => d.audience !== 'all');
+
+const ICONS = {
+  bhutanese: '<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><path d="M4 40h40"/><path d="M8 40V22l16-10 16 10v18"/><path d="M14 40V27h20v13"/><path d="M20 40v-7h8v7"/><path d="M4 22 24 8l20 14"/><path d="M24 4v4"/></svg>',
+  international: '<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="24" cy="24" r="18"/><path d="M6 24h36M24 6c5 5 7.5 11 7.5 18S29 37 24 42c-5-5-7.5-11-7.5-18S19 11 24 6z"/></svg>',
+};
+const arrow = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
 ---
-<SectionOverview type="admissions-overview" title="Admissions" />
+<Layout title={page.seo_title || page.heading} description={page.seo_description || page.subtitle || undefined}>
+  <div class="adm" data-adm>
+    <!-- ============ HERO ============ -->
+    <header class:list={['adm-hero', { 'adm-hero--photo': page.hero_image }]}>
+      {page.hero_image && <img class="adm-hero-photo" src={page.hero_image.url} alt={page.hero_image.alt} />}
+      <svg class="adm-hero-motif" viewBox="0 0 400 400" aria-hidden="true">
+        <circle cx="200" cy="200" r="190" /><circle cx="200" cy="200" r="140" />
+        <path d="M200 10 390 200 200 390 10 200z" /><path d="M200 70 330 200 200 330 70 200z" />
+        <path d="M10 200h380M200 10v380" />
+      </svg>
+      <div class="wrap adm-hero-inner">
+        <nav class="adm-breadcrumb adm-rise" style="--d:0" aria-label="Breadcrumb">
+          <a href="/">Home</a><span aria-hidden="true">›</span><span aria-current="page">{page.heading}</span>
+        </nav>
+        {page.eyebrow && <p class="adm-eyebrow adm-eyebrow--light adm-rise" style="--d:1">{page.eyebrow}</p>}
+        <h1 class="adm-title adm-rise" style="--d:2">{page.heading}</h1>
+        {page.subtitle && <p class="adm-subtitle adm-rise" style="--d:3">{page.subtitle}</p>}
+        {page.intro && <p class="adm-hero-intro adm-rise" style="--d:4">{page.intro}</p>}
+      </div>
+    </header>
+
+    <!-- ============ WHO'S APPLYING ============ -->
+    <section class="adm-choose" aria-labelledby="adm-choose-h">
+      <div class="wrap">
+        <header class="adm-choose-head">
+          <h2 class="adm-h2" id="adm-choose-h">{page.choose_heading}</h2>
+          {page.choose_intro && <p class="adm-lede">{page.choose_intro}</p>}
+        </header>
+        <div class="adm-doors">
+          {AUDIENCES.map((a, i) => {
+            const g = guides[a];
+            return (
+              <a class:list={['adm-door', `adm-door--${a}`, 'adm-rise']} style={`--d:${5 + i}`} href={`/admissions/${a}`}>
+                <span class="adm-door-icon"><Fragment set:html={ICONS[a]} /></span>
+                <span class="adm-door-title">{g.card_title}</span>
+                {g.card_description && <span class="adm-door-desc">{g.card_description}</span>}
+                {g.key_facts.length > 0 && (
+                  <span class="adm-door-facts">
+                    {g.key_facts.slice(0, 3).map((f) => (
+                      <span class="adm-door-fact"><span class="adm-door-fact-label">{f.label}</span><span class="adm-door-fact-value">{f.value}</span></span>
+                    ))}
+                  </span>
+                )}
+                <span class="adm-door-cta">{L.card_button} <Fragment set:html={arrow} /></span>
+              </a>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ KEY DATES ============ -->
+    {page.key_dates.length > 0 && (
+      <section class="adm-band adm-band--soft" aria-labelledby="adm-dates-h" id="key-dates">
+        <div class="wrap">
+          <header class="adm-band-head" data-reveal>
+            <div>
+              <h2 class="adm-h2 adm-h2--rule" id="adm-dates-h">{page.dates_heading}</h2>
+              {page.dates_intro && <p class="adm-lede">{page.dates_intro}</p>}
+            </div>
+            {hasAudienceDates && (
+              <div class="adm-chips" role="group" aria-label={page.dates_heading}>
+                <button type="button" class="adm-chip" data-date-filter="all" aria-pressed="true">{L.filter_all}</button>
+                {AUDIENCES.map((a) => <button type="button" class="adm-chip" data-date-filter={a} aria-pressed="false">{audienceNames[a]}</button>)}
+              </div>
+            )}
+          </header>
+          <div class="adm-timeline" data-timeline data-reveal>
+            <span class="adm-timeline-track" aria-hidden="true"><span class="adm-timeline-fill" data-timeline-fill></span></span>
+            <ol class="adm-timeline-list">
+              {page.key_dates.map((d, i) => (
+                <li class="adm-date" data-date={d.date} data-aud={d.audience} style={`--i:${i}`}>
+                  <span class="adm-date-dot" aria-hidden="true"></span>
+                  <time class="adm-date-when" datetime={d.date}>
+                    <span class="adm-date-day">{fmtDate(d.date, { day: 'numeric' })}</span>
+                    <span class="adm-date-month">{fmtDate(d.date, { month: 'short', year: 'numeric' })}</span>
+                  </time>
+                  <p class="adm-date-label">{d.label}</p>
+                  <p class="adm-date-meta">
+                    {d.audience !== 'all' && <span class="adm-date-aud">{audienceNames[d.audience]}</span>}
+                    <span class="adm-date-state" data-date-state hidden></span>
+                  </p>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </div>
+      </section>
+    )}
+
+    <!-- ============ NOTICES ============ -->
+    <section class="adm-band" aria-labelledby="adm-notices-h" id="notices">
+      <div class="wrap">
+        <header class="adm-band-head" data-reveal>
+          <h2 class="adm-h2 adm-h2--rule" id="adm-notices-h">{page.notices_heading}</h2>
+          <a class="adm-textlink" href="/news-notices/announcements">{L.notices_all} <Fragment set:html={arrow} /></a>
+        </header>
+        <div data-reveal>
+          <NoticeList notices={notices} labels={L} limit={6} audienceNames={audienceNames} />
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ ENQUIRY ============ -->
+    <section class="adm-band adm-band--soft" aria-label={page.help_heading} id="enquiry">
+      <div class="wrap" data-reveal>
+        <EnquiryForm settings={enquiry} applicants={[bt.card_title, intl.card_title]} heading={page.help_heading} intro={page.help_intro} />
+      </div>
+    </section>
+  </div>
+</Layout>
+
+<AdmissionsRuntime labels={L} />

@@ -1,0 +1,63 @@
+{
+  "collectionName": "components_home_research",
+  "info": {
+    "displayName": "Research & Innovation",
+    "icon": "lightbulb",
+    "description": "Research stories (from News), research centres and extra cards."
+  },
+  "options": {},
+  "attributes": {
+    "heading": {
+      "type": "string"
+    },
+    "intro": {
+      "type": "text"
+    },
+    "is_visible": {
+      "type": "boolean",
+      "default": true
+    },
+    "background": {
+      "type": "enumeration",
+      "enum": [
+        "white",
+        "soft",
+        "navy"
+      ],
+      "default": "white"
+    },
+    "width": {
+      "type": "enumeration",
+      "enum": [
+        "full",
+        "half"
+      ],
+      "default": "full"
+    },
+    "anchor": {
+      "type": "string",
+      "regex": "^[a-z0-9-]*$"
+    },
+    "stories": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::news.news"
+    },
+    "centres": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::research-centre.research-centre"
+    },
+    "cards": {
+      "type": "component",
+      "repeatable": true,
+      "component": "home.card"
+    },
+    "button_label": {
+      "type": "string"
+    },
+    "button_url": {
+      "type": "string"
+    }
+  }
+}

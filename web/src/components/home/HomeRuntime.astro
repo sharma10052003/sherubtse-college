@@ -1,0 +1,103 @@
+---
+// Small client script for the homepage. Everything works without it.
+//  - Hero video: attached only after load, on wide screens (or phones when
+//    allowed), never with reduced motion; pause/play button.
+//  - Expiry: the page is static, so anything whose end time passes between
+//    builds (notices, events, stories) is hidden here; deadlines within 7
+//    days are marked “Closes soon”.
+//  - Gentle reveal on scroll and a count-up for whole-number figures.
+import type { HomeLabels } from '../../lib/content/homepage';
+interface Props { labels: HomeLabels }
+const { labels } = Astro.props;
+---
+<script is:inline define:vars={{ L: labels }}>
+  (() => {
+    const root = document.querySelector('[data-home]');
+    if (!root) return;
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const now = Date.now();
+
+    // ---- Expired items ----
+    root.querySelectorAll('[data-expiring]').forEach((box) => {
+      const items = Array.from(box.querySelectorAll('[data-expires]'));
+      items.forEach((el) => { const t = Date.parse(el.dataset.expires); if (t && t <= now) el.remove(); });
+      const left = box.querySelectorAll('li').length;
+      const empty = box.querySelector('[data-empty]');
+      if (empty) empty.hidden = left > 0;
+      if (!left && !empty) box.closest('[data-section]')?.setAttribute('hidden', '');
+    });
+    root.querySelectorAll('[data-deadline]').forEach((el) => {
+      const end = Date.parse(`${el.dataset.deadline.slice(0, 10)}T23:59:59+06:00`);
+      const days = (end - now) / 86400000;
+      if (days < 0) { el.textContent = L.closed; el.classList.add('is-closed'); }
+      else if (days <= 7) { el.textContent = `${L.closes_soon} · ${el.textContent}`; el.classList.add('is-soon'); }
+    });
+
+    // ---- Hero video ----
+    const video = root.querySelector('[data-hero-video]');
+    const toggle = root.querySelector('[data-hero-toggle]');
+    if (video) {
+      const wide = window.matchMedia('(min-width: 760px)').matches;
+      let paused = false;
+      try { paused = localStorage.getItem('hm-hero-paused') === '1'; } catch (e) {}
+      const allowed = !reduce && (wide || video.dataset.phones === '1');
+      const setLabel = (playing) => {
+        if (!toggle) return;
+        toggle.setAttribute('aria-pressed', String(!playing));
+        toggle.classList.toggle('is-paused', !playing);
+        toggle.querySelector('[data-hero-toggle-label]').textContent = playing ? toggle.dataset.pause : toggle.dataset.play;
+      };
+      const start = () => {
+        video.src = video.dataset.heroVideo;
+        video.addEventListener('playing', () => { video.classList.add('is-playing'); setLabel(true); }, { once: true });
+        const play = () => video.play().catch(() => {});
+        video.addEventListener('canplay', play, { once: true });
+        play();
+      };
+      if (allowed) {
+        if (toggle) toggle.hidden = false;
+        if (paused) setLabel(false);
+        else if (document.readyState === 'complete') start();
+        else window.addEventListener('load', start, { once: true });
+      }
+      toggle?.addEventListener('click', () => {
+        if (!video.src) { start(); try { localStorage.removeItem('hm-hero-paused'); } catch (e) {} return; }
+        if (video.paused) { video.play().catch(() => {}); setLabel(true); try { localStorage.removeItem('hm-hero-paused'); } catch (e) {} }
+        else { video.pause(); setLabel(false); try { localStorage.setItem('hm-hero-paused', '1'); } catch (e) {} }
+      });
+    }
+
+    // ---- Reveal + count-up (and a gentle parallax on the intro photo) ----
+    if (reduce || !('IntersectionObserver' in window)) return;
+    const drift = Array.from(root.querySelectorAll('[data-parallax]'));
+    if (drift.length) {
+      let queued = false;
+      const update = () => {
+        queued = false;
+        drift.forEach((el) => {
+          const r = el.getBoundingClientRect();
+          if (r.bottom < 0 || r.top > innerHeight) return;
+          const offset = (r.top + r.height / 2 - innerHeight / 2) / innerHeight;
+          el.style.setProperty('--py', `${(-offset * 36).toFixed(1)}px`);
+        });
+      };
+      window.addEventListener('scroll', () => { if (!queued) { queued = true; requestAnimationFrame(update); } }, { passive: true });
+      update();
+    }
+    root.classList.add('hm-anim');
+    const count = (el) => {
+      const target = Number(el.dataset.count);
+      if (!target || target > 100000) return;
+      const t0 = performance.now();
+      const step = (t) => { const p = Math.min(1, (t - t0) / 1200); el.textContent = String(Math.round(target * (1 - Math.pow(1 - p, 3)))); if (p < 1) requestAnimationFrame(step); };
+      requestAnimationFrame(step);
+    };
+    const io = new IntersectionObserver((entries) => entries.forEach((en) => {
+      if (!en.isIntersecting) return;
+      en.target.classList.add('is-in');
+      en.target.querySelectorAll('[data-count]').forEach(count);
+      io.unobserve(en.target);
+    }), { rootMargin: '0px 0px -8% 0px', threshold: 0.05 });
+    root.querySelectorAll('[data-reveal]').forEach((el) => io.observe(el));
+  })();
+</script>

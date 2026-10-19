@@ -1,0 +1,27 @@
+{
+  "collectionName": "components_admission_guide_contacts",
+  "info": {
+    "displayName": "Contact",
+    "icon": "bulletList",
+    "description": "Who to contact."
+  },
+  "options": {},
+  "attributes": {
+    "name": {
+      "type": "string",
+      "required": true
+    },
+    "role": {
+      "type": "string"
+    },
+    "email": {
+      "type": "string"
+    },
+    "phone": {
+      "type": "string"
+    },
+    "note": {
+      "type": "text"
+    }
+  }
+}

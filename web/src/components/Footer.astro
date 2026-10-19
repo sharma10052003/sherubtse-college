@@ -1,6 +1,4 @@
 ---
-import { Image } from 'astro:assets';
-import spatialMap from '../assets/spatial-map.jpg';
 import { getSiteSettings, getFooter } from '../lib/content/site-settings';
 
 const [settings, footer] = await Promise.all([getSiteSettings(), getFooter()]);
@@ -25,16 +23,6 @@ function isExternal(url: string) {
            icons linking to guessed accounts would be fabricating an
            official presence that may not exist; real accounts can be
            added here once someone confirms them. -->
-      {footer.map_url && (
-        <a href={footer.map_url} target="_blank" rel="noopener" class="footer-map-link">
-          {footer.map_image_url ? (
-            <img src={footer.map_image_url} alt={footer.map_label ?? 'Campus map'} width="148" height="147" loading="lazy" />
-          ) : (
-            <Image src={spatialMap} alt={footer.map_label ?? 'Campus map'} width={148} height={147} />
-          )}
-          {footer.map_label && <span>{footer.map_label}</span>}
-        </a>
-      )}
     </div>
 
     {footer.link_groups.map((group) => (

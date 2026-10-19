@@ -1,18 +1,20 @@
 ---
-// One news story. The hero media (image or, for template "video", the
-// article's own video with normal controls — autoplay here only when the
-// editor explicitly turned it on for this article) runs full-width above
-// a two-column body: the reading column plus a sidebar (story details,
-// tags, more headlines) so the page uses the full content width instead
-// of a lone narrow text column with dead space beside it the whole way
-// down. Archived stories keep their original URL, content and media —
-// restoring one is just clearing the `archived` flag in the CMS, nothing
-// here changes.
+// One news story, laid out edge to edge so it uses the whole screen at every
+// width (styles: news-article.css, scoped under .na):
+//  - a full-bleed hero — the story's photo or video when it has one,
+//    otherwise a navy mountain scene — with the headline, category, date,
+//    department and reading time;
+//  - a three-column reading area on wide screens: a sticky rail (date,
+//    reading time, share, text size, full-screen reading), the story, and a
+//    sidebar (details, tags, up next, more headlines). It folds to two
+//    columns on tablets and one on phones;
+//  - a "More from the newsroom" band and older/newer story navigation.
+// Archived stories keep their original URL, content and media — restoring
+// one is just clearing the `archived` flag in the CMS, nothing here changes.
 import Layout from '../../../layouts/Layout.astro';
-import '../../../styles/section-landing.css';
-import '../../../styles/listing.css';
-import '../../../styles/news.css';
+import '../../../styles/news-article.css';
 import { getAllNews, getAllNewsIds, getNewsById } from '../../../lib/content/news';
+import { renderArticle, excerpt } from '../../../lib/article-text';
 
 export async function getStaticPaths() {
   const ids = await getAllNewsIds();
@@ -24,126 +26,408 @@ const item = await getNewsById(Number(id));
 if (!item) return Astro.redirect('/news-notices/news', 404);
 
 const allNews = await getAllNews();
+const live = allNews.filter((n) => !n.archived || n.id === item.id);
+const index = live.findIndex((n) => n.id === item.id);
+const newer = index > 0 ? live[index - 1] : null;
+const older = index >= 0 && index < live.length - 1 ? live[index + 1] : null;
 const others = allNews.filter((n) => n.id !== item.id && !n.archived);
 const related = [...others.filter((n) => n.category === item.category), ...others.filter((n) => n.category !== item.category)].slice(0, 4);
+const article = renderArticle(item.body);
+// The sidebar grows with the story (2–5 headlines) so a short article isn't
+// left with a long empty column beside the sidebar, or the other way round.
+const headlineCount = Math.min(5, Math.max(2, Math.round(article.words / 120)));
+const headlines = others.filter((n) => !related.includes(n)).slice(0, headlineCount);
+// No summary? The first paragraph becomes the lede rather than repeating it.
+const lede = item.summary || article.firstParagraph;
+const bodyHtml = item.summary ? article.html : article.htmlWithoutFirst;
+const minutes = Math.max(1, Math.round(article.words / 200));
 
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
-}
-
-const breadcrumb = [
-  { label: 'Home', url: '/' },
-  { label: 'News & Notices', url: '/news-notices' },
-  { label: 'News', url: '/news-notices/news' },
-  { label: item.title, url: `/news-notices/news/${item.id}` },
-];
+const date = new Date(item.date);
+const formatDate = (iso: string) => new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+const shortDate = (iso: string) => new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+const day = date.toLocaleDateString('en-GB', { day: '2-digit' });
+const monthYear = date.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+const weekday = date.toLocaleDateString('en-GB', { weekday: 'long' });
 
 const isVideo = item.template === 'video' && !!item.video_url;
-const galleryShots = item.gallery.length > 0 ? item.gallery : item.template === 'gallery' ? item.images : [];
-const coverImage = item.image_url;
+const heroImage = item.image_url;
+const galleryShots = [...new Set([...(item.gallery.length > 0 ? item.gallery : item.images.slice(1))])].filter((src) => src !== heroImage || isVideo);
+const cardExcerpt = (n: typeof item) => excerpt(n.summary || n.body, 130);
+
+const pageUrl = new URL(`/news-notices/news/${item.id}`, Astro.site ?? 'https://www.sherubtse.edu.bt').href;
+const mailHref = `mailto:?subject=${encodeURIComponent(item.title)}&body=${encodeURIComponent(`${item.title}\n${pageUrl}`)}`;
+
+const ICON = {
+  share: '<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/>',
+  link: '<path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/>',
+  mail: '<rect x="3" y="5" width="18" height="14"/><path d="M3 6l9 7 9-7"/>',
+  print: '<path d="M6 9V3h12v6"/><rect x="3" y="9" width="18" height="8"/><path d="M6 14h12v7H6z"/>',
+  expand: '<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>',
+  clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  arrowL: '<path d="M19 12H5M11 6l-6 6 6 6"/>',
+  arrowR: '<path d="M5 12h14M13 6l6 6-6 6"/>',
+  close: '<path d="M6 6l12 12M18 6 6 18"/>',
+};
+const svg = (path: string) =>
+  `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${path}</svg>`;
 ---
-<Layout title={item.title} description={item.summary}>
-  <div class="wrap" style="padding-top:var(--s5)">
-    <nav class="breadcrumb" aria-label="Breadcrumb">
-      {breadcrumb.map((b, i) => (
-        <>
-          {i > 0 && ' › '}
-          {i === breadcrumb.length - 1 ? <span class="current">{b.label}</span> : <a href={b.url}>{b.label}</a>}
-        </>
-      ))}
-    </nav>
+<Layout title={item.title} description={item.summary || excerpt(item.body, 160)}>
+  <div class="na-progress" aria-hidden="true"><span data-na-progress></span></div>
 
-    {item.archived && (
-      <p class="news-archived-notice">
-        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="4"/><path d="M5 8v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8M10 12h4"/></svg>
-        This is an archived story from the newsroom's records.
-      </p>
-    )}
-
-    <div class="news-article-header">
-      <span class="news-kicker">{item.category_label}</span>
-      <h1 class="h1" style="margin-top:var(--s2)">{item.title}</h1>
-      <p class="small" style="margin-top:var(--s2)">{formatDate(item.date)}{item.unit_name ? ` · ${item.unit_name}` : ''}</p>
-    </div>
-  </div>
-
-  {(coverImage || isVideo) && (
-    <div class="wrap news-detail-media">
-      {isVideo ? (
-        <video
-          src={item.video_url!}
-          poster={item.video_poster_url ?? coverImage ?? undefined}
-          controls
-          muted={item.autoplay}
-          autoplay={item.autoplay}
-          playsinline
-        >
-        </video>
-      ) : coverImage ? (
-        <img src={coverImage} alt="" />
-      ) : null}
-    </div>
-  )}
-
-  <div class="wrap" style="padding-bottom:var(--s8)">
-    <div class="news-article-grid">
-      <div class="news-article-main">
-        <p class="lede">{item.summary}</p>
-        <div class="article-body news-article-body" style="margin-top:var(--s4)" set:html={item.body.replace(/\n/g, '<br>')} />
-
-        {galleryShots.length > 0 && (
-          <div class="news-detail-gallery">
-            {galleryShots.map((src) => <img src={src} alt="" loading="lazy" />)}
-          </div>
+  <article class="na" data-na>
+    <!-- ====================== HERO ====================== -->
+    <header class:list={['na-hero', { 'na-hero--media': heroImage || isVideo }]}>
+      <div class="na-hero-bg" aria-hidden="true">
+        {isVideo ? (
+          <video
+            class="na-hero-media"
+            src={item.video_url!}
+            poster={item.video_poster_url ?? heroImage ?? undefined}
+            muted
+            autoplay={item.autoplay}
+            loop={item.autoplay}
+            playsinline
+            data-na-parallax
+          ></video>
+        ) : heroImage ? (
+          <img class="na-hero-media" src={heroImage} alt="" data-na-parallax />
+        ) : (
+          <>
+            <svg class="na-hero-range na-hero-range--back" viewBox="0 0 1600 320" preserveAspectRatio="xMidYMax slice" data-na-parallax="0.05">
+              <path d="M0 320V190l120-50 110 30 160-120 130 80 140-60 170 110 150-90 160 100 130-60 130 70 100-30v240z" />
+            </svg>
+            <svg class="na-hero-range na-hero-range--front" viewBox="0 0 1600 320" preserveAspectRatio="xMidYMax slice" data-na-parallax="0.1">
+              <path d="M0 320V240l150-50 130 30 170-80 150 60 120-30 200 70 150-50 170 60 140-30 120 40 100-20v100z" />
+            </svg>
+          </>
         )}
+        <div class="na-hero-scrim"></div>
+        <div class="na-kira"></div>
       </div>
 
-      <aside class="news-article-sidebar">
-        <div class="news-side-card">
-          <h2 class="news-side-heading">Story Details</h2>
-          <dl class="news-side-list">
-            <div>
-              <dt>Category</dt>
-              <dd>{item.category_label}</dd>
-            </div>
-            <div>
-              <dt>Published</dt>
-              <dd>{formatDate(item.date)}</dd>
-            </div>
-            {item.unit_name && (
-              <div>
-                <dt>Department</dt>
-                <dd>{item.unit_name}</dd>
-              </div>
-            )}
-          </dl>
-        </div>
+      <div class="wrap na-wide na-hero-inner">
+        <nav class="na-breadcrumb" aria-label="Breadcrumb">
+          <a href="/">Home</a> › <a href="/news-notices">News &amp; Notices</a> › <a href="/news-notices/news">News</a> ›
+          <span aria-current="page">{item.title}</span>
+        </nav>
 
-        {item.tags.length > 0 && (
-          <div class="news-side-card">
-            <h2 class="news-side-heading">Tags</h2>
-            <div class="news-side-tags">
-              {item.tags.map((t) => <span class="ls-tag">{t}</span>)}
+        <div class="na-hero-grid">
+          <div class="na-hero-text">
+            <p class="na-kickers">
+              <a class="na-chip na-chip--gold" href={`/news-notices/news?category=${item.category}`}>{item.category_label}</a>
+              {item.archived && <span class="na-chip">Archived</span>}
+              {item.tags.slice(0, 2).filter((t) => t !== item.category_label).map((t) => <span class="na-chip">{t}</span>)}
+            </p>
+            <h1 class="na-title">{item.title}</h1>
+            <p class="na-meta">
+              <time datetime={item.date}>{formatDate(item.date)}</time>
+              {item.unit_name && <><span aria-hidden="true">·</span><span>{item.unit_name}</span></>}
+              <span aria-hidden="true">·</span>
+              <span class="na-meta-read"><Fragment set:html={svg(ICON.clock)} />{minutes} min read</span>
+            </p>
+          </div>
+
+          <div class="na-datecard" aria-hidden="true">
+            <span class="na-datecard-day">{day}</span>
+            <span class="na-datecard-month">{monthYear}</span>
+            <span class="na-datecard-week">{weekday}</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    {item.archived && (
+      <div class="wrap na-wide">
+        <p class="na-archived">This is an archived story from the newsroom's records.</p>
+      </div>
+    )}
+
+    <!-- ====================== READING AREA ====================== -->
+    <div class="wrap na-wide na-layout">
+      <aside class="na-rail" aria-label="Reading tools">
+        <div class="na-rail-inner">
+          <div class="na-rail-block na-rail-block--info na-rail-date">
+            <span class="na-rail-label">Published</span>
+            <time datetime={item.date}>{shortDate(item.date)}</time>
+          </div>
+          <div class="na-rail-block na-rail-block--info">
+            <span class="na-rail-label">Reading time</span>
+            <span>{minutes} min · {article.words} words</span>
+          </div>
+          <div class="na-rail-block">
+            <span class="na-rail-label">Share</span>
+            <div class="na-tools">
+              <button type="button" class="na-tool" data-na-share hidden aria-label="Share this story">
+                <Fragment set:html={svg(ICON.share)} /><span>Share</span>
+              </button>
+              <button type="button" class="na-tool" data-na-copy data-url={pageUrl} aria-label="Copy link to this story">
+                <Fragment set:html={svg(ICON.link)} /><span data-na-copy-label>Copy link</span>
+              </button>
+              <a class="na-tool" href={mailHref} aria-label="Email this story">
+                <Fragment set:html={svg(ICON.mail)} /><span>Email</span>
+              </a>
+              <button type="button" class="na-tool" data-na-print aria-label="Print this story">
+                <Fragment set:html={svg(ICON.print)} /><span>Print</span>
+              </button>
             </div>
           </div>
+          <div class="na-rail-block">
+            <span class="na-rail-label" id="na-size-label">Text size</span>
+            <div class="na-size" role="group" aria-labelledby="na-size-label">
+              <button type="button" class="na-size-btn" data-na-size="-1" aria-label="Smaller text">A−</button>
+              <button type="button" class="na-size-btn" data-na-size="0" aria-label="Reset text size">A</button>
+              <button type="button" class="na-size-btn" data-na-size="1" aria-label="Larger text">A+</button>
+            </div>
+          </div>
+          <button type="button" class="na-fullscreen" data-na-fullscreen hidden aria-pressed="false">
+            <Fragment set:html={svg(ICON.expand)} />
+            <span data-na-fullscreen-label>Read in full screen</span>
+          </button>
+        </div>
+      </aside>
+
+      <div class="na-main">
+        {lede && <p class="na-lede" data-na-reveal>{lede}</p>}
+        <div class="na-body" set:html={bodyHtml} />
+
+        {galleryShots.length > 0 && (
+          <section class="na-gallery" aria-labelledby="na-gallery-h">
+            <h2 id="na-gallery-h" class="na-section-h">Photos</h2>
+            <div class="na-gallery-grid">
+              {galleryShots.map((src, i) => (
+                <button type="button" class="na-shot" data-na-lightbox={src} aria-label={`Open photo ${i + 1} of ${galleryShots.length}`}>
+                  <img src={src} alt="" loading="lazy" />
+                </button>
+              ))}
+            </div>
+          </section>
         )}
 
-        {related.length > 0 && (
-          <div class="news-side-card">
-            <h2 class="news-side-heading">More Headlines</h2>
-            <ol class="news-rail-list">
-              {related.map((r) => (
+        <footer class="na-end">
+          {item.tags.length > 0 && (
+            <div class="na-tags">
+              <span class="na-rail-label">Tags</span>
+              {item.tags.map((t) => <span class="na-chip na-chip--line">{t}</span>)}
+            </div>
+          )}
+          <a class="na-back" href="/news-notices/news"><Fragment set:html={svg(ICON.arrowL)} /> All news</a>
+        </footer>
+      </div>
+
+      <aside class="na-side" aria-label="About this story">
+        <section class="na-card" data-na-reveal>
+          <h2 class="na-card-h">Story Details</h2>
+          <dl class="na-facts">
+            <div><dt>Category</dt><dd>{item.category_label}</dd></div>
+            <div><dt>Published</dt><dd>{formatDate(item.date)}</dd></div>
+            {item.unit_name && <div><dt>Department</dt><dd>{item.unit_name}</dd></div>}
+            <div><dt>Reading time</dt><dd>{minutes} min</dd></div>
+          </dl>
+        </section>
+
+        {older && (
+          <a class="na-card na-upnext" href={`/news-notices/news/${older.id}`} data-na-reveal>
+            <span class="na-card-h">Up next</span>
+            {older.image_url && <img src={older.image_url} alt="" loading="lazy" />}
+            <span class="na-upnext-kicker">{older.category_label} · {shortDate(older.date)}</span>
+            <span class="na-upnext-title">{older.title}</span>
+            <span class="na-upnext-go">Read story <Fragment set:html={svg(ICON.arrowR)} /></span>
+          </a>
+        )}
+
+        {headlines.length > 0 && (
+          <section class="na-card" data-na-reveal>
+            <h2 class="na-card-h">More Headlines</h2>
+            <ol class="na-headlines">
+              {headlines.map((h) => (
                 <li>
-                  <a href={`/news-notices/news/${r.id}`}>
-                    <span class="news-kicker">{r.category_label}</span>
-                    <span class="news-rail-title">{r.title}</span>
+                  <a href={`/news-notices/news/${h.id}`}>
+                    <span class="na-headline-date">{shortDate(h.date)}</span>
+                    <span class="na-headline-title">{h.title}</span>
                   </a>
                 </li>
               ))}
             </ol>
-          </div>
+          </section>
         )}
       </aside>
     </div>
-  </div>
+
+    <!-- ====================== MORE FROM THE NEWSROOM ====================== -->
+    {related.length > 0 && (
+      <section class="na-more" aria-labelledby="na-more-h">
+        <div class="wrap na-wide">
+          <div class="na-more-head">
+            <h2 id="na-more-h" class="na-more-title">More from the Newsroom</h2>
+            <a class="na-more-all" href="/news-notices/news">All news <Fragment set:html={svg(ICON.arrowR)} /></a>
+          </div>
+          <ul class="na-more-grid">
+            {related.map((r, i) => (
+              <li data-na-reveal style={`--i:${i}`}>
+                <a class="na-story" href={`/news-notices/news/${r.id}`}>
+                  <span class:list={['na-story-media', { 'na-story-media--art': !r.image_url }]}>
+                    {r.image_url ? <img src={r.image_url} alt="" loading="lazy" /> : <span class="na-story-mark">{r.category_label}</span>}
+                  </span>
+                  <span class="na-story-body">
+                    <span class="na-story-kicker">{r.category_label} · {shortDate(r.date)}</span>
+                    <span class="na-story-title">{r.title}</span>
+                    <span class="na-story-excerpt">{cardExcerpt(r)}</span>
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+    )}
+
+    {(newer || older) && (
+      <nav class="na-pager" aria-label="More stories">
+        <div class="wrap na-wide na-pager-grid">
+          {newer ? (
+            <a class="na-pager-link" href={`/news-notices/news/${newer.id}`} rel="prev">
+              <span class="na-pager-dir"><Fragment set:html={svg(ICON.arrowL)} /> Newer story</span>
+              <span class="na-pager-title">{newer.title}</span>
+            </a>
+          ) : <span></span>}
+          {older && (
+            <a class="na-pager-link na-pager-link--next" href={`/news-notices/news/${older.id}`} rel="next">
+              <span class="na-pager-dir">Older story <Fragment set:html={svg(ICON.arrowR)} /></span>
+              <span class="na-pager-title">{older.title}</span>
+            </a>
+          )}
+        </div>
+      </nav>
+    )}
+
+    {galleryShots.length > 0 && (
+      <div class="na-lightbox" data-na-box hidden role="dialog" aria-modal="true" aria-label="Photo viewer">
+        <button type="button" class="na-lightbox-close" data-na-box-close aria-label="Close photo"><Fragment set:html={svg(ICON.close)} /></button>
+        <img src="" alt="" />
+      </div>
+    )}
+
+    <p class="na-sr" aria-live="polite" data-na-announce></p>
+  </article>
 </Layout>
+
+<script is:inline>
+  (() => {
+    const root = document.querySelector('[data-na]');
+    if (!root) return;
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const announcer = root.querySelector('[data-na-announce]');
+    const announce = (msg) => { if (announcer) { announcer.textContent = ''; requestAnimationFrame(() => (announcer.textContent = msg)); } };
+
+    // ---- Reading progress + gentle hero parallax ----
+    const bar = document.querySelector('[data-na-progress]');
+    const main = root.querySelector('.na-main');
+    const layers = reduceMotion ? [] : Array.from(root.querySelectorAll('[data-na-parallax]'));
+    let ticking = false;
+    const onScroll = () => {
+      ticking = false;
+      if (bar && main) {
+        const r = main.getBoundingClientRect();
+        const total = r.height - innerHeight * 0.6;
+        const p = Math.min(1, Math.max(0, (innerHeight * 0.4 - r.top) / Math.max(total, 1)));
+        bar.style.transform = `scaleX(${p})`;
+      }
+      const y = scrollY;
+      layers.forEach((el) => {
+        if (y > innerHeight * 1.2) return;
+        el.style.transform = `translate3d(0, ${(y * Number(el.dataset.naParallax || 0.15)).toFixed(1)}px, 0)`;
+      });
+    };
+    addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(onScroll); } }, { passive: true });
+    addEventListener('resize', onScroll, { passive: true });
+    onScroll();
+
+    // ---- Paragraph and card reveals (content only hidden once JS opts in) ----
+    const reveal = Array.from(root.querySelectorAll('[data-na-reveal], .na-body > *'));
+    if (!reduceMotion && 'IntersectionObserver' in window) {
+      root.classList.add('na-anim');
+      const io = new IntersectionObserver((entries) => {
+        entries.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('is-in'); io.unobserve(e.target); } });
+      }, { rootMargin: '0px 0px -8% 0px', threshold: 0.05 });
+      reveal.forEach((el) => io.observe(el));
+    }
+
+    // ---- Text size (remembered on this device) ----
+    const SIZES = [0.9, 1, 1.12, 1.25, 1.4];
+    let sizeIndex = 1;
+    try {
+      const saved = localStorage.getItem('na-text-size');
+      if (saved !== null && SIZES[Number(saved)]) sizeIndex = Number(saved);
+    } catch {}
+    const applySize = () => {
+      root.style.setProperty('--na-scale', String(SIZES[sizeIndex]));
+      root.querySelectorAll('[data-na-size]').forEach((b) => {
+        const step = Number(b.dataset.naSize);
+        b.disabled = (step < 0 && sizeIndex === 0) || (step > 0 && sizeIndex === SIZES.length - 1);
+        if (step === 0) b.setAttribute('aria-pressed', String(sizeIndex === 1));
+      });
+    };
+    applySize();
+    root.querySelectorAll('[data-na-size]').forEach((b) => b.addEventListener('click', () => {
+      const step = Number(b.dataset.naSize);
+      sizeIndex = step === 0 ? 1 : Math.min(SIZES.length - 1, Math.max(0, sizeIndex + step));
+      applySize();
+      try { localStorage.setItem('na-text-size', String(sizeIndex)); } catch {}
+      announce(`Text size ${Math.round(SIZES[sizeIndex] * 100)}%.`);
+    }));
+
+    // ---- Share / copy / print ----
+    const shareBtn = root.querySelector('[data-na-share]');
+    if (shareBtn && navigator.share) {
+      shareBtn.hidden = false;
+      shareBtn.addEventListener('click', () => navigator.share({ title: document.title, url: location.href }).catch(() => {}));
+    }
+    const copyBtn = root.querySelector('[data-na-copy]');
+    copyBtn?.addEventListener('click', async () => {
+      const label = copyBtn.querySelector('[data-na-copy-label]');
+      try {
+        await navigator.clipboard.writeText(location.href);
+        label.textContent = 'Link copied';
+        announce('Link copied to the clipboard.');
+      } catch {
+        label.textContent = 'Copy failed';
+      }
+      setTimeout(() => (label.textContent = 'Copy link'), 2200);
+    });
+    root.querySelector('[data-na-print]')?.addEventListener('click', () => print());
+
+    // ---- Full-screen reading (where the browser supports it) ----
+    const fsBtn = root.querySelector('[data-na-fullscreen]');
+    if (fsBtn && document.fullscreenEnabled) {
+      fsBtn.hidden = false;
+      const label = fsBtn.querySelector('[data-na-fullscreen-label]');
+      const sync = () => {
+        const on = !!document.fullscreenElement;
+        fsBtn.setAttribute('aria-pressed', String(on));
+        label.textContent = on ? 'Exit full screen' : 'Read in full screen';
+        document.documentElement.classList.toggle('na-is-fullscreen', on);
+      };
+      fsBtn.addEventListener('click', () => {
+        if (document.fullscreenElement) document.exitFullscreen();
+        else document.documentElement.requestFullscreen().catch(() => {});
+      });
+      document.addEventListener('fullscreenchange', sync);
+    }
+
+    // ---- Photo lightbox ----
+    const box = root.querySelector('[data-na-box]');
+    if (box) {
+      const img = box.querySelector('img');
+      const close = box.querySelector('[data-na-box-close]');
+      let last = null;
+      const onKey = (e) => { if (e.key === 'Escape') hide(); };
+      const hide = () => { box.hidden = true; document.removeEventListener('keydown', onKey); last?.focus(); };
+      root.querySelectorAll('[data-na-lightbox]').forEach((btn) => btn.addEventListener('click', () => {
+        last = btn; img.src = btn.dataset.naLightbox; box.hidden = false; close.focus();
+        document.addEventListener('keydown', onKey);
+      }));
+      close.addEventListener('click', hide);
+      box.addEventListener('click', (e) => { if (e.target === box) hide(); });
+    }
+  })();
+</script>

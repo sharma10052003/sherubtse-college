@@ -1,0 +1,25 @@
+{
+  "collectionName": "components_admission_guide_fees",
+  "info": {
+    "displayName": "Fee",
+    "icon": "bulletList",
+    "description": "One fee row. Type the amount as published, e.g. “Nu. 78,505”."
+  },
+  "options": {},
+  "attributes": {
+    "item": {
+      "type": "string",
+      "required": true
+    },
+    "amount": {
+      "type": "string",
+      "required": true
+    },
+    "period": {
+      "type": "string"
+    },
+    "note": {
+      "type": "text"
+    }
+  }
+}

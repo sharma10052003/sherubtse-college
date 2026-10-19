@@ -1,4 +1,466 @@
 ---
-import SectionOverview from '../../components/templates/SectionOverview.astro';
+// Research landing page. Edited in Strapi: Research – Overview (this page,
+// top to bottom), Research – Centres, Research – Projects, Contact – Offices
+// (the collaboration contact) and News (research stories). A section with
+// nothing published is left out. Data: lib/content/research.ts.
+// Styles: research.css (.rs).
+import Layout from '../../layouts/Layout.astro';
+import '../../styles/research.css';
+import Icon from '../../components/research/Icon.astro';
+import ProjectCard from '../../components/research/ProjectCard.astro';
+import Img from '../../components/home/Img.astro';
+import { getResearchPage, getFeaturedCentres, getProjects, fmtDate } from '../../lib/content/research';
+
+const [page, centres, projects] = await Promise.all([getResearchPage(), getFeaturedCentres(), getProjects()]);
+const L = page.labels;
+
+// Listed-project counts per centre (derived from Research – Projects).
+for (const c of centres) c.projects = projects.filter((p) => p.centre?.href === c.href).length;
+const ongoing = projects.filter((p) => p.status === 'ongoing').slice(0, page.projects.limit);
+const completed = projects.filter((p) => p.status === 'completed').sort((a, b) => b.sort_key.localeCompare(a.sort_key)).slice(0, page.projects.limit);
+const externalCount = projects.filter((p) => p.funding_type !== 'college_grant').length;
+
+const collegeGrants = page.grants.items.filter((g) => g.level === 'college');
+const otherGrants = page.grants.items.filter((g) => g.level !== 'college');
+
+const facilityIcon = (name: string) => {
+  const n = name.toLowerCase();
+  if (/isotope|picarro/.test(n)) return 'isotope';
+  if (/ion|chromatograph/.test(n)) return 'ion';
+  if (/water/.test(n)) return 'water';
+  if (/molecular|micro|biolog/.test(n)) return 'molecule';
+  if (/weather|climate/.test(n)) return 'weather';
+  if (/gis|remote|spatial/.test(n)) return 'gis';
+  return 'facilities';
+};
+const ext = (url: string) => (/^https?:\/\//i.test(url) ? { target: '_blank', rel: 'noopener' } : {});
+const TYPE = { pdf: 'PDF', docx: 'DOCX', page: 'Web page', other: 'Link' } as const;
+const tel = (p: string) => `tel:${p.replace(/[^+\d]/g, '')}`;
+
+// In-page navigation: only sections that are shown.
+const nav = [
+  { id: 'centres', label: page.centres.heading, show: centres.length > 0 },
+  { id: 'projects', label: page.projects.heading, show: ongoing.length + completed.length > 0 },
+  { id: 'journal', label: page.journal?.heading ?? '', show: !!page.journal },
+  { id: 'grants', label: page.grants.heading, show: page.grants.items.length > 0 },
+  { id: 'facilities', label: page.facilities.heading, show: page.facilities.items.length > 0 || !!page.collaboration },
+  { id: 'policies', label: page.policies.heading, show: page.policies.items.length > 0 },
+  { id: 'news', label: page.news.heading, show: page.news.items.length > 0 },
+].filter((n) => n.show);
+const shown = new Set(nav.map((n) => `#${n.id}`));
+// One navigation bar: the Strapi cards, keeping only those whose section is shown.
+const navItems = page.cards.filter((c) => !c.url.startsWith('#') || shown.has(c.url));
+const buttons = page.buttons.filter((b) => !b.url.startsWith('#') || shown.has(b.url));
 ---
-<SectionOverview type="research-overview" title="Research" />
+<Layout title={page.seo_title || page.heading} description={page.seo_description || page.intro || undefined}>
+  <div class="rs" data-rs>
+    <!-- ============ HERO ============ -->
+    <header class:list={['rs-hero', { 'rs-hero--img': page.hero_image }]}>
+      <svg class="rs-hero-motif" viewBox="0 0 200 200" aria-hidden="true">
+        <defs>
+          <pattern id="rs-lattice" width="40" height="40" patternUnits="userSpaceOnUse">
+            <path d="M20 0 40 20 20 40 0 20z M20 10 30 20 20 30 10 20z" fill="none" stroke="currentColor" stroke-width="0.8" />
+          </pattern>
+        </defs>
+        <rect width="200" height="200" fill="url(#rs-lattice)" />
+      </svg>
+      <div class="wrap rs-hero-grid">
+        <div class="rs-hero-text">
+          <nav class="rs-breadcrumb rs-rise" style="--d:0" aria-label="Breadcrumb">
+            <a href="/">Home</a><span aria-hidden="true">›</span><span aria-current="page">Research</span>
+          </nav>
+          {page.eyebrow && <p class="rs-eyebrow rs-rise" style="--d:1">{page.eyebrow}</p>}
+          <h1 class="rs-title rs-rise" style="--d:2">{page.heading}</h1>
+          {page.intro && <p class="rs-intro rs-rise" style="--d:3">{page.intro}</p>}
+          {buttons.length > 0 && (
+            <div class="rs-hero-actions rs-rise" style="--d:4">
+              {buttons.map((b, i) => <a class:list={['rs-btn', i === 0 ? 'rs-btn--gold' : 'rs-btn--line']} href={b.url}>{b.label}</a>)}
+            </div>
+          )}
+        </div>
+        {page.hero_image && (
+          <figure class="rs-hero-media rs-rise" style="--d:3">
+            <span class="rs-hero-frame" aria-hidden="true"></span>
+            <Img image={page.hero_image} class="rs-hero-img" eager sizes="(min-width: 1000px) 45vw, 100vw" />
+          </figure>
+        )}
+      </div>
+    </header>
+
+    <!-- ============ NAVIGATION (sticky; shrinks to labels once pinned) ============ -->
+    {navItems.length > 1 && (
+      <nav class="rs-nav" aria-label={L.on_this_page} data-nav>
+        <div class="wrap">
+          <ul class="rs-nav-list" style={`--n:${navItems.length}`}>
+            {navItems.map((n) => (
+              <li>
+                <a class="rs-nav-link" href={n.url} {...ext(n.url)} data-nav-link>
+                  <span class="rs-nav-icon"><Icon name={n.icon} size={22} /></span>
+                  <span class="rs-nav-text">
+                    <span class="rs-nav-label">{n.label}</span>
+                    {n.description && <span class="rs-nav-desc">{n.description}</span>}
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </nav>
+    )}
+
+    <!-- ============ CENTRES ============ -->
+    {centres.length > 0 && (
+      <section class="rs-band" id="centres" aria-labelledby="rs-centres-h">
+        <div class="wrap">
+          <header class="rs-head" data-reveal>
+            <h2 class="rs-h2" id="rs-centres-h">{page.centres.heading}</h2>
+            {page.centres.intro && <p class="rs-lede">{page.centres.intro}</p>}
+          </header>
+          <ul class="rs-centres">
+            {centres.map((c, i) => (
+              <li class="rs-centre" data-reveal style={`--i:${i}`}>
+                <div class="rs-centre-mark">
+                  {c.logo ? <Img image={c.logo} class="rs-centre-logo" sizes="96px" /> : <span class="rs-centre-acronym" aria-hidden="true"><span>{c.acronym ?? c.name.slice(0, 2)}</span></span>}
+                </div>
+                <h3 class="rs-centre-name"><a href={c.href}>{c.name}</a></h3>
+                {c.summary && <p class="rs-centre-summary">{c.summary}</p>}
+                {c.themes.length > 0 && (
+                  <div class="rs-centre-themes">
+                    <p class="rs-mini">{L.themes}</p>
+                    <ul class="rs-chips">{c.themes.map((t) => <li>{t}</li>)}</ul>
+                  </div>
+                )}
+                <p class="rs-centre-foot">
+                  <span class="rs-centre-explore">{L.explore_centre} <Icon name="arrow" size={18} /></span>
+                </p>
+              </li>
+            ))}
+          </ul>
+          {page.expertise && (
+            <div class="rs-expertise" data-reveal>
+              <span class="rs-expertise-icon"><Icon name="people" size={26} /></span>
+              <p><strong>{page.expertise.heading}.</strong> {page.expertise.text}</p>
+              <a class="rs-more rs-more--inline" href={page.expertise.link.url}>{page.expertise.link.label} <Icon name="arrow" size={18} /></a>
+            </div>
+          )}
+        </div>
+      </section>
+    )}
+
+    <!-- ============ PROJECTS ============ -->
+    {ongoing.length + completed.length > 0 && (
+      <section class="rs-band rs-band--soft" id="projects" aria-labelledby="rs-projects-h">
+        <div class="wrap">
+          <header class="rs-head rs-head--row" data-reveal>
+            <div>
+              <h2 class="rs-h2" id="rs-projects-h">{page.projects.heading}</h2>
+              {page.projects.intro && <p class="rs-lede">{page.projects.intro}</p>}
+            </div>
+            <p class="rs-tally">
+              <span><strong>{projects.length}</strong> {L.listed_projects}</span>
+              {externalCount > 0 && <span><strong>{externalCount}</strong> {L.externally_funded}</span>}
+            </p>
+          </header>
+          <div class="rs-tabs" role="tablist" aria-label={page.projects.heading} data-tabs>
+            {ongoing.length > 0 && <button type="button" role="tab" id="rs-tab-ongoing" aria-controls="rs-panel-ongoing" aria-selected="true" class="rs-tab">{L.tab_ongoing} <span class="rs-tab-count">{projects.filter((p) => p.status === 'ongoing').length}</span></button>}
+            {completed.length > 0 && <button type="button" role="tab" id="rs-tab-completed" aria-controls="rs-panel-completed" aria-selected={ongoing.length ? 'false' : 'true'} class="rs-tab">{L.tab_completed} <span class="rs-tab-count">{projects.filter((p) => p.status === 'completed').length}</span></button>}
+          </div>
+          {ongoing.length > 0 && (
+            <div class="rs-projects" role="tabpanel" id="rs-panel-ongoing" aria-labelledby="rs-tab-ongoing">
+              {ongoing.map((p) => <ProjectCard project={p} labels={L} compact />)}
+            </div>
+          )}
+          {completed.length > 0 && (
+            <div class="rs-projects" role="tabpanel" id="rs-panel-completed" aria-labelledby="rs-tab-completed" hidden={ongoing.length > 0}>
+              {completed.map((p) => <ProjectCard project={p} labels={L} compact />)}
+            </div>
+          )}
+          <a class="rs-more" href="/research/projects">{L.view_all_projects} <Icon name="arrow" size={18} /></a>
+        </div>
+      </section>
+    )}
+
+    <!-- ============ JOURNAL ============ -->
+    {page.journal && (
+      <section class="rs-band" id="journal" aria-labelledby="rs-journal-h">
+        <div class="wrap">
+          <header class="rs-head" data-reveal>
+            <h2 class="rs-h2" id="rs-journal-h">{page.journal.heading}</h2>
+            {page.journal.intro && <p class="rs-lede">{page.journal.intro}</p>}
+          </header>
+          <div class:list={['rs-journal', { 'rs-journal--noarticles': page.journal.articles.length === 0 }]}>
+            <div class="rs-journal-card" data-reveal>
+              <span class="rs-journal-pattern" aria-hidden="true"></span>
+              {page.journal.cover && <Img image={page.journal.cover} class="rs-journal-cover" sizes="160px" />}
+              <h3 class="rs-journal-name">{page.journal.name}</h3>
+              {page.journal.description && <p class="rs-journal-desc">{page.journal.description}</p>}
+              <dl class="rs-journal-facts">
+                {page.journal.current_issue && <div><dt>{L.current_issue}</dt><dd>{page.journal.current_issue}{page.journal.current_issue_date && <span> · {fmtDate(page.journal.current_issue_date)}</span>}</dd></div>}
+                {page.journal.issn_print && <div><dt>{L.issn_print}</dt><dd>{page.journal.issn_print}</dd></div>}
+                {page.journal.issn_online && <div><dt>{L.issn_online}</dt><dd>{page.journal.issn_online}</dd></div>}
+              </dl>
+              {page.journal.links.length > 0 && (
+                <ul class="rs-journal-links">
+                  {page.journal.links.map((l, i) => (
+                    <li><a class:list={[i === 0 ? 'rs-btn rs-btn--gold' : 'rs-pill']} href={l.url} {...ext(l.url)}>{l.label}{l.external && <Icon name="external" size={15} />}</a></li>
+                  ))}
+                </ul>
+              )}
+            </div>
+            {page.journal.articles.length > 0 && (
+              <div class="rs-articles" data-reveal>
+                <p class="rs-mini">{L.current_issue}{page.journal.current_issue && `: ${page.journal.current_issue}`}</p>
+                <ol>
+                  {page.journal.articles.slice(0, 4).map((a) => (
+                    <li>
+                      <a href={a.url} target="_blank" rel="noopener"><span class="rs-article-title">{a.title}</span><Icon name="external" size={16} /></a>
+                      {a.authors && <span class="rs-article-authors">{a.authors}</span>}
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
+    )}
+
+    <!-- ============ GRANTS ============ -->
+    {page.grants.items.length > 0 && (
+      <section class="rs-band rs-band--navy" id="grants" aria-labelledby="rs-grants-h">
+        <div class="wrap">
+          <header class="rs-head" data-reveal>
+            <h2 class="rs-h2" id="rs-grants-h">{page.grants.heading}</h2>
+            {page.grants.intro && <p class="rs-lede">{page.grants.intro}</p>}
+          </header>
+          {collegeGrants.length > 0 && <p class="rs-mini rs-mini--light">{L.college_grants}</p>}
+          <div class="rs-grants">
+            {collegeGrants.map((g, i) => (
+              <article class="rs-grant" data-reveal style={`--i:${i}`}>
+                <header class="rs-grant-head">
+                  {g.acronym && <span class="rs-grant-acronym">{g.acronym}</span>}
+                  {g.status && <span class:list={['rs-status', g.status === 'open' ? 'rs-status--ongoing' : 'rs-status--completed']}>{g.status === 'open' ? L.status_open : L.status_closed}</span>}
+                </header>
+                <h3 class="rs-grant-name">{g.name}</h3>
+                {g.description && <p class="rs-grant-desc">{g.description}</p>}
+                {g.focus.length > 0 && <ul class="rs-chips rs-chips--light">{g.focus.map((f) => <li>{f}</li>)}</ul>}
+                {g.deadline && <p class="rs-grant-deadline">{L.deadline}: {fmtDate(g.deadline, { day: 'numeric', month: 'long', year: 'numeric' })}{g.announcement && <> · <a href={g.announcement}>{L.read_more}</a></>}</p>}
+                {g.documents.length > 0 && (
+                  <div class="rs-grant-main">
+                    {g.documents.slice(0, 2).map((d, k) => (
+                      <a class:list={['rs-btn', k === 0 ? 'rs-btn--gold' : 'rs-btn--line']} href={d.url} {...ext(d.url)}>
+                        <Icon name={d.type === 'page' ? 'link' : 'pdf'} size={18} />{d.label}
+                      </a>
+                    ))}
+                  </div>
+                )}
+                {g.documents.length > 2 && (
+                  <details class="rs-docs">
+                    <summary>{L.documents} <span class="rs-docs-count">{g.documents.length - 2}</span></summary>
+                    <ul>
+                      {g.documents.slice(2).map((d) => (
+                        <li><a href={d.url} {...ext(d.url)}><Icon name={d.type === 'page' ? 'link' : 'pdf'} size={18} /><span>{d.label}</span><span class="rs-doc-type">{TYPE[d.type]}</span></a></li>
+                      ))}
+                    </ul>
+                  </details>
+                )}
+              </article>
+            ))}
+          </div>
+          {otherGrants.length > 0 && (
+            <>
+              <p class="rs-mini rs-mini--light">{L.university_grants}</p>
+              <ul class="rs-unigrants">
+                {otherGrants.map((g) => (
+                  <li data-reveal>
+                    <div>
+                      <h3 class="rs-unigrant-name">{g.name}{g.acronym && <span> ({g.acronym})</span>}</h3>
+                      {g.description && <p>{g.description}</p>}
+                    </div>
+                    {g.documents.length > 0 && (
+                      <ul class="rs-unigrant-links">
+                        {g.documents.map((d) => <li><a href={d.url} {...ext(d.url)}>{d.label}<span class="rs-doc-type">{TYPE[d.type]}</span></a></li>)}
+                      </ul>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+        </div>
+      </section>
+    )}
+
+    <!-- ============ FACILITIES & COLLABORATION ============ -->
+    {(page.facilities.items.length > 0 || page.collaboration) && (
+      <section class="rs-band" id="facilities" aria-labelledby="rs-fac-h">
+        <div class="wrap">
+          <header class="rs-head" data-reveal>
+            <h2 class="rs-h2" id="rs-fac-h">{page.facilities.heading}</h2>
+            {page.facilities.intro && <p class="rs-lede">{page.facilities.intro}</p>}
+          </header>
+          <div class:list={['rs-fac-layout', { 'rs-fac-layout--solo': !page.collaboration }]}>
+            {page.facilities.items.length > 0 && (
+              <ul class="rs-facilities">
+                {page.facilities.items.map((f, i) => (
+                  <li class:list={['rs-facility', { 'rs-facility--img': f.image }]} data-reveal style={`--i:${i}`}>
+                    {f.image ? <Img image={f.image} class="rs-facility-img" sizes="(min-width: 1000px) 25vw, 50vw" /> : <span class="rs-facility-icon"><Icon name={facilityIcon(f.name)} size={28} /></span>}
+                    <h3 class="rs-facility-name">{f.name}</h3>
+                    <p class="rs-facility-text">{f.summary}</p>
+                    {f.centre ? (
+                      <a class="rs-facility-link" href={f.centre.href}>{f.link?.label ?? f.centre.name} <Icon name="arrow" size={16} /></a>
+                    ) : f.link ? (
+                      <a class="rs-facility-link" href={f.link.url} {...ext(f.link.url)}>{f.link.label} <Icon name="arrow" size={16} /></a>
+                    ) : null}
+                  </li>
+                ))}
+              </ul>
+            )}
+            {page.collaboration && (
+              <aside class="rs-collab" data-reveal>
+                <span class="rs-collab-pattern" aria-hidden="true"></span>
+                <h3 class="rs-collab-title">{page.collaboration.heading}</h3>
+                {page.collaboration.text && <p>{page.collaboration.text}</p>}
+                {page.collaboration.office && (
+                  <div class="rs-collab-office">
+                    <p class="rs-collab-name">{page.collaboration.office.name}</p>
+                    {(page.collaboration.office.person || page.collaboration.office.role) && (
+                      <p class="rs-collab-person">{[page.collaboration.office.person, page.collaboration.office.role].filter(Boolean).join(', ')}</p>
+                    )}
+                    <ul>
+                      {page.collaboration.office.email && <li><Icon name="mail" size={18} /><a href={`mailto:${page.collaboration.office.email}`}>{page.collaboration.office.email}</a></li>}
+                      {page.collaboration.office.phone && <li><Icon name="phone" size={18} /><a href={tel(page.collaboration.office.phone)}>{page.collaboration.office.phone}</a></li>}
+                    </ul>
+                  </div>
+                )}
+                {page.collaboration.office?.email && <a class="rs-btn rs-btn--gold" href={`mailto:${page.collaboration.office.email}`}>{L.contact}</a>}
+              </aside>
+            )}
+          </div>
+        </div>
+      </section>
+    )}
+
+    <!-- ============ POLICIES ============ -->
+    {page.policies.items.length > 0 && (
+      <section class="rs-band rs-band--soft" id="policies" aria-labelledby="rs-pol-h">
+        <div class="wrap">
+          <header class="rs-head" data-reveal>
+            <h2 class="rs-h2" id="rs-pol-h">{page.policies.heading}</h2>
+            {page.policies.intro && <p class="rs-lede">{page.policies.intro}</p>}
+          </header>
+          <ul class="rs-policies">
+            {page.policies.items.map((x, i) => (
+              <li class="rs-policy" data-reveal style={`--i:${i % 3}`}>
+                <span class="rs-policy-icon"><Icon name={x.type === 'page' ? 'policies' : 'pdf'} size={22} /></span>
+                <div class="rs-policy-body">
+                  <h3 class="rs-policy-title"><a href={x.url} {...ext(x.url)}>{x.title}</a></h3>
+                  {x.description && <p>{x.description}</p>}
+                  <p class="rs-policy-meta">{[x.source, TYPE[x.type]].filter(Boolean).join(' · ')}</p>
+                </div>
+                <span class="rs-policy-go" aria-hidden="true"><Icon name={/^https?:/.test(x.url) ? 'external' : 'arrow'} size={18} /></span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+    )}
+
+    <!-- ============ NEWS ============ -->
+    {page.news.items.length > 0 && (
+      <section class="rs-band" id="news" aria-labelledby="rs-news-h">
+        <div class="wrap">
+          <header class="rs-head rs-head--row" data-reveal>
+            <div>
+              <h2 class="rs-h2" id="rs-news-h">{page.news.heading}</h2>
+              {page.news.intro && <p class="rs-lede">{page.news.intro}</p>}
+            </div>
+            <a class="rs-more rs-more--inline" href="/news-notices/news">{L.all_news} <Icon name="arrow" size={18} /></a>
+          </header>
+          <ul class="rs-news">
+            {page.news.items.map((n, i) => (
+              <li class:list={['rs-news-item', { 'rs-news-item--noimg': !n.image }]} data-reveal style={`--i:${i}`}>
+                <div class="rs-news-media">
+                  {n.image ? <Img image={n.image} class="rs-news-img" sizes="(min-width: 1000px) 30vw, 100vw" /> : <span class="rs-journal-pattern" aria-hidden="true"></span>}
+                </div>
+                <p class="rs-news-meta">
+                  {n.category && <span>{n.category}</span>}
+                  <time datetime={String(n.date).slice(0, 10)}>{fmtDate(n.date, { day: 'numeric', month: 'long', year: 'numeric' })}</time>
+                </p>
+                <h3 class="rs-news-title"><a href={n.href}>{n.title}</a></h3>
+                {n.summary && <p class="rs-news-summary">{n.summary}</p>}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+    )}
+  </div>
+</Layout>
+
+<script is:inline>
+  (() => {
+    const root = document.querySelector('[data-rs]');
+    if (!root) return;
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // ---- Project tabs ----
+    const tablist = root.querySelector('[data-tabs]');
+    if (tablist) {
+      const tabs = Array.from(tablist.querySelectorAll('[role="tab"]'));
+      const select = (tab, focus) => {
+        tabs.forEach((t) => {
+          const on = t === tab;
+          t.setAttribute('aria-selected', String(on));
+          t.tabIndex = on ? 0 : -1;
+          const panel = document.getElementById(t.getAttribute('aria-controls'));
+          if (panel) { panel.hidden = !on; if (on && !reduce) { panel.classList.remove('is-in'); void panel.offsetWidth; panel.classList.add('is-in'); } }
+        });
+        if (focus) tab.focus();
+      };
+      tabs.forEach((t, i) => {
+        t.tabIndex = t.getAttribute('aria-selected') === 'true' ? 0 : -1;
+        t.addEventListener('click', () => select(t));
+        t.addEventListener('keydown', (e) => {
+          if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+          e.preventDefault();
+          select(tabs[(i + (e.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length], true);
+        });
+      });
+    }
+
+    // ---- Sticky in-page nav: offset for the header, and highlight the section in view ----
+    const masthead = document.querySelector('.masthead');
+    const setTop = () => root.style.setProperty('--rs-top', `${masthead ? masthead.getBoundingClientRect().height : 0}px`);
+    setTop(); window.addEventListener('resize', setTop);
+    const bar = root.querySelector('[data-nav]');
+    if (bar && 'IntersectionObserver' in window) {
+      const sentinel = document.createElement('div');
+      bar.before(sentinel);
+      new IntersectionObserver(([en]) => {
+        const stuck = !en.isIntersecting && en.boundingClientRect.top < 0;
+        bar.classList.toggle('is-stuck', stuck);
+        if (!stuck) bar.querySelectorAll('[aria-current]').forEach((x) => x.removeAttribute('aria-current'));
+      }, { rootMargin: `-${(masthead?.getBoundingClientRect().height || 0) + 1}px 0px 0px 0px` }).observe(sentinel);
+    }
+    const links = Array.from(root.querySelectorAll('[data-nav-link]')).filter((a) => a.getAttribute('href').startsWith('#'));
+    if (links.length && 'IntersectionObserver' in window) {
+      const byId = new Map(links.map((a) => [a.getAttribute('href').slice(1), a]));
+      const io = new IntersectionObserver((entries) => {
+        entries.forEach((en) => {
+          if (!en.isIntersecting) return;
+          links.forEach((a) => a.removeAttribute('aria-current'));
+          const a = byId.get(en.target.id);
+          if (a) { a.setAttribute('aria-current', 'true'); a.scrollIntoView({ block: 'nearest', inline: 'center', behavior: reduce ? 'auto' : 'smooth' }); }
+        });
+      }, { rootMargin: '-35% 0px -60% 0px' });
+      byId.forEach((_, id) => { const s = document.getElementById(id); if (s) io.observe(s); });
+    }
+
+    // ---- Gentle reveal ----
+    if (reduce || !('IntersectionObserver' in window)) return;
+    root.classList.add('rs-anim');
+    const io = new IntersectionObserver((es) => es.forEach((en) => { if (en.isIntersecting) { en.target.classList.add('is-in'); io.unobserve(en.target); } }), { rootMargin: '0px 0px -6% 0px', threshold: 0.05 });
+    root.querySelectorAll('[data-reveal]').forEach((el) => io.observe(el));
+  })();
+</script>

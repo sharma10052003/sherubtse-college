@@ -1,0 +1,40 @@
+{
+  "collectionName": "components_research_facilities",
+  "info": {
+    "displayName": "Research Facility",
+    "icon": "cog",
+    "description": "A documented laboratory, instrument or facility."
+  },
+  "options": {},
+  "attributes": {
+    "name": {
+      "type": "string",
+      "required": true
+    },
+    "summary": {
+      "type": "text",
+      "required": true
+    },
+    "image": {
+      "type": "media",
+      "multiple": false,
+      "allowedTypes": [
+        "images"
+      ]
+    },
+    "image_alt": {
+      "type": "string"
+    },
+    "centre": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::research-centre.research-centre"
+    },
+    "link_url": {
+      "type": "string"
+    },
+    "link_label": {
+      "type": "string"
+    }
+  }
+}

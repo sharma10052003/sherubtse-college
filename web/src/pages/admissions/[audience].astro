@@ -1,0 +1,315 @@
+---
+// One page per applicant group — everything a Bhutanese or an international
+// applicant needs, split into tabs (How to Apply · Requirements · Fees ·
+// Scholarships · Notices · FAQs · More Info · Contact). A tab with nothing
+// published is left out. Without JavaScript every panel simply shows.
+// Admin: Admission – Bhutanese Applicants / International Applicants (all
+// content, in tab order), Page Settings → Labels (tab names and buttons),
+// Notices with Category “Admissions”, Enquiry Form Settings.
+import Layout from '../../layouts/Layout.astro';
+import '../../styles/admissions.css';
+import EnquiryForm from '../../components/admissions/EnquiryForm.astro';
+import NoticeList from '../../components/admissions/NoticeList.astro';
+import AdmissionsRuntime from '../../components/admissions/AdmissionsRuntime.astro';
+import {
+  AUDIENCES, fmtDate, fmtRange, getAdmissionNotices, getAdmissionsPage, getAudienceGuide, getEnquirySettings, noticesFor,
+} from '../../lib/content/admissions';
+import type { Audience } from '../../lib/content/admissions';
+
+export function getStaticPaths() {
+  return AUDIENCES.map((audience) => ({ params: { audience } }));
+}
+
+const audience = Astro.params.audience as Audience;
+const otherAudience: Audience = audience === 'bhutanese' ? 'international' : 'bhutanese';
+const [page, g, other, allNotices, enquiry] = await Promise.all([
+  getAdmissionsPage(),
+  getAudienceGuide(audience),
+  getAudienceGuide(otherAudience),
+  getAdmissionNotices(),
+  getEnquirySettings(),
+]);
+const L = page.labels;
+const notices = noticesFor(allNotices, audience);
+const applicants = audience === 'bhutanese' ? [g.card_title, other.card_title] : [other.card_title, g.card_title];
+
+const tabs = [
+  { id: 'apply', label: L.tab_apply, show: g.routes.length > 0 || !!g.apply_intro_html || g.documents.length > 0 },
+  { id: 'requirements', label: L.tab_requirements, show: g.requirements.length > 0 || !!g.requirements_intro_html },
+  { id: 'fees', label: L.tab_fees, show: g.fees.length > 0 || !!g.fees_intro_html },
+  { id: 'scholarships', label: L.tab_scholarships, show: g.scholarships.length > 0 },
+  { id: 'notices', label: L.tab_notices, show: notices.length > 0 },
+  { id: 'faqs', label: L.tab_faqs, show: g.faqs.length > 0 },
+  { id: 'more', label: L.tab_more, show: g.more_info.length > 0 || g.links.length > 0 },
+  { id: 'contact', label: L.tab_contact, show: true },
+].filter((t) => t.show);
+const nextOf = (id: string) => tabs[tabs.findIndex((t) => t.id === id) + 1] ?? null;
+
+const tel = (p: string) => `tel:${p.replace(/[^+\d]/g, '')}`;
+const ext = (url: string) => (/^https?:\/\//i.test(url) ? { target: '_blank', rel: 'noopener' } : {});
+const arrow = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
+const external = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>';
+const check = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>';
+const mail = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14"/><path d="m3 6 9 7 9-7"/></svg>';
+const phone = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M5 3h4l2 5-2.5 1.5a11 11 0 0 0 6 6L16 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 5a2 2 0 0 1 2-2z"/></svg>';
+const calendar = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>';
+---
+<Layout title={`${g.card_title} — ${page.heading}`} description={g.card_description || g.intro || undefined}>
+  <div class="adm adm-guide" data-adm data-audience={audience}>
+    <!-- ============ HERO ============ -->
+    <header class="adm-hero adm-hero--guide">
+      <svg class="adm-hero-motif" viewBox="0 0 400 400" aria-hidden="true">
+        <circle cx="200" cy="200" r="190" /><circle cx="200" cy="200" r="140" />
+        <path d="M200 10 390 200 200 390 10 200z" /><path d="M200 70 330 200 200 330 70 200z" />
+        <path d="M10 200h380M200 10v380" />
+      </svg>
+      <div class="wrap adm-hero-inner">
+        <nav class="adm-breadcrumb adm-rise" style="--d:0" aria-label="Breadcrumb">
+          <a href="/">Home</a><span aria-hidden="true">›</span><a href="/admissions">{page.heading}</a><span aria-hidden="true">›</span><span aria-current="page">{g.card_title}</span>
+        </nav>
+        <h1 class="adm-title adm-rise" style="--d:1">{g.card_title}</h1>
+        {g.intro && <p class="adm-hero-intro adm-rise" style="--d:2">{g.intro}</p>}
+        <p class="adm-switch adm-rise" style="--d:3">
+          {L.switch_label} <a href={`/admissions/${otherAudience}`}>{other.card_title} <Fragment set:html={arrow} /></a>
+        </p>
+        {g.key_facts.length > 0 && (
+          <dl class="adm-facts">
+            {g.key_facts.map((f, i) => (
+              <div class="adm-fact adm-rise" style={`--d:${4 + i}`}>
+                <dt>{f.label}</dt>
+                <dd>{f.value}</dd>
+              </div>
+            ))}
+          </dl>
+        )}
+      </div>
+    </header>
+
+    <!-- ============ TABS ============ -->
+    <div class="adm-tabbar" data-tabbar>
+      <div class="wrap">
+        <div class="adm-tabs" role="tablist" aria-label={g.card_title} data-tabs>
+          {tabs.map((t, i) => (
+            <a class="adm-tab" role="tab" href={`#${t.id}`} id={`tab-${t.id}`} aria-controls={t.id} aria-selected={i === 0 ? 'true' : 'false'}>{t.label}</a>
+          ))}
+        </div>
+      </div>
+    </div>
+
+    <div class="wrap adm-panels">
+      <!-- ---------- How to Apply ---------- -->
+      {tabs.some((t) => t.id === 'apply') && (
+        <section class="adm-panel" id="apply" role="tabpanel" aria-labelledby="tab-apply" tabindex="-1">
+          <h2 class="adm-h2 adm-h2--rule">{L.tab_apply}</h2>
+          {g.apply_intro_html && <div class="adm-prose adm-panel-intro" set:html={g.apply_intro_html} />}
+          {g.routes.length > 0 && (
+            <div class:list={['adm-routes', { 'adm-routes--single': g.routes.length === 1 }]}>
+              {g.routes.map((r) => (
+                <article class="adm-route" data-window data-opens={r.opens_on ?? ''} data-closes={r.closes_on ?? ''}>
+                  <header class="adm-route-head">
+                    <div>
+                      <h3 class="adm-h3">{r.title}</h3>
+                      {r.for_programmes && <p class="adm-route-for">{r.for_programmes}</p>}
+                    </div>
+                    <span class="adm-badge" data-status hidden></span>
+                  </header>
+                  {(r.opens_on || r.closes_on) && (
+                    <p class="adm-route-dates"><Fragment set:html={calendar} /> {fmtRange(r.opens_on, r.closes_on)}</p>
+                  )}
+                  {r.description && <p class="adm-route-desc">{r.description}</p>}
+                  {r.steps.length > 0 && (
+                    <ol class="adm-steps">
+                      {r.steps.map((s) => (
+                        <li class="adm-step">
+                          <span class="adm-step-title" set:html={s.title_html} />
+                          {s.detail_html && <span class="adm-step-detail" set:html={s.detail_html} />}
+                        </li>
+                      ))}
+                    </ol>
+                  )}
+                  {r.portal && (
+                    <a class="adm-btn adm-btn--navy" href={r.portal.url} {...ext(r.portal.url)}>
+                      {r.portal.label} <Fragment set:html={/^https?:/i.test(r.portal.url) ? external : arrow} />
+                    </a>
+                  )}
+                </article>
+              ))}
+            </div>
+          )}
+          {g.documents.length > 0 && (
+            <div class="adm-docs">
+              <h3 class="adm-h3">{L.documents_heading}</h3>
+              <ul class="adm-doc-list">
+                {g.documents.map((d) => (
+                  <li>
+                    <span class="adm-doc-check"><Fragment set:html={check} /></span>
+                    <span><strong set:html={d.title_html} />{d.detail_html && <span class="adm-doc-detail" set:html={d.detail_html} />}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {nextOf('apply') && <a class="adm-next" href={`#${nextOf('apply')!.id}`}>{L.date_next}: {nextOf('apply')!.label} <Fragment set:html={arrow} /></a>}
+        </section>
+      )}
+
+      <!-- ---------- Requirements ---------- -->
+      {tabs.some((t) => t.id === 'requirements') && (
+        <section class="adm-panel" id="requirements" role="tabpanel" aria-labelledby="tab-requirements" tabindex="-1">
+          <h2 class="adm-h2 adm-h2--rule">{L.tab_requirements}</h2>
+          {g.requirements_intro_html && <div class="adm-prose adm-panel-intro" set:html={g.requirements_intro_html} />}
+          <div class="adm-reqs">
+            {g.requirements.map((r, i) => (
+              <article class="adm-req" style={`--i:${i}`}>
+                <h3 class="adm-h3">{r.programme}</h3>
+                <dl class="adm-req-list">
+                  <div><dt>{L.minimum_label}</dt><dd>{r.minimum}</dd></div>
+                  {r.selection && <div><dt>{L.selection_label}</dt><dd>{r.selection}</dd></div>}
+                  {r.seats && <div class="adm-req-seats"><dt>{L.seats_label}</dt><dd>{r.seats}</dd></div>}
+                </dl>
+              </article>
+            ))}
+          </div>
+          {nextOf('requirements') && <a class="adm-next" href={`#${nextOf('requirements')!.id}`}>{L.date_next}: {nextOf('requirements')!.label} <Fragment set:html={arrow} /></a>}
+        </section>
+      )}
+
+      <!-- ---------- Fees ---------- -->
+      {tabs.some((t) => t.id === 'fees') && (
+        <section class="adm-panel" id="fees" role="tabpanel" aria-labelledby="tab-fees" tabindex="-1">
+          <h2 class="adm-h2 adm-h2--rule">{L.tab_fees}</h2>
+          {g.fees_intro_html && <div class="adm-prose adm-panel-intro" set:html={g.fees_intro_html} />}
+          <ul class="adm-fees">
+            {g.fees.map((f) => (
+              <li class="adm-fee">
+                <div class="adm-fee-what">
+                  <p class="adm-fee-item">{f.item}</p>
+                  {f.note && <p class="adm-fee-note">{f.note}</p>}
+                </div>
+                <p class="adm-fee-amount">
+                  <strong>{f.amount}</strong>
+                  {f.period && <span>{f.period}</span>}
+                </p>
+              </li>
+            ))}
+          </ul>
+          {g.fees_note_html && <div class="adm-callout adm-prose" set:html={g.fees_note_html} />}
+          {nextOf('fees') && <a class="adm-next" href={`#${nextOf('fees')!.id}`}>{L.date_next}: {nextOf('fees')!.label} <Fragment set:html={arrow} /></a>}
+        </section>
+      )}
+
+      <!-- ---------- Scholarships ---------- -->
+      {tabs.some((t) => t.id === 'scholarships') && (
+        <section class="adm-panel" id="scholarships" role="tabpanel" aria-labelledby="tab-scholarships" tabindex="-1">
+          <h2 class="adm-h2 adm-h2--rule">{L.tab_scholarships}</h2>
+          {g.scholarships_intro_html && <div class="adm-prose adm-panel-intro" set:html={g.scholarships_intro_html} />}
+          <div class="adm-schols">
+            {g.scholarships.map((s) => (
+              <article class="adm-schol" {...(s.deadline ? { 'data-deadline': s.deadline } : {})}>
+                <header class="adm-route-head">
+                  <h3 class="adm-h3">{s.title}</h3>
+                  {s.deadline && <span class="adm-badge" data-status hidden></span>}
+                </header>
+                {s.summary && <p class="adm-schol-summary">{s.summary}</p>}
+                {s.eligibility.length > 0 && (
+                  <ul class="adm-ticks">
+                    {s.eligibility.map((e) => <li><Fragment set:html={check} /><span>{e}</span></li>)}
+                  </ul>
+                )}
+                {s.how_to_apply && <p class="adm-schol-how">{s.how_to_apply}</p>}
+                <div class="adm-schol-foot">
+                  {s.deadline && <p class="adm-schol-deadline"><Fragment set:html={calendar} /> {L.deadline_label} {fmtDate(s.deadline)}</p>}
+                  {s.link && <a class="adm-textlink" href={s.link.url} {...ext(s.link.url)}>{s.link.label} <Fragment set:html={/^https?:/i.test(s.link.url) ? external : arrow} /></a>}
+                </div>
+              </article>
+            ))}
+          </div>
+          {nextOf('scholarships') && <a class="adm-next" href={`#${nextOf('scholarships')!.id}`}>{L.date_next}: {nextOf('scholarships')!.label} <Fragment set:html={arrow} /></a>}
+        </section>
+      )}
+
+      <!-- ---------- Notices ---------- -->
+      {tabs.some((t) => t.id === 'notices') && (
+        <section class="adm-panel" id="notices" role="tabpanel" aria-labelledby="tab-notices" tabindex="-1">
+          <h2 class="adm-h2 adm-h2--rule">{L.tab_notices}</h2>
+          <NoticeList notices={notices} labels={L} />
+          {nextOf('notices') && <a class="adm-next" href={`#${nextOf('notices')!.id}`}>{L.date_next}: {nextOf('notices')!.label} <Fragment set:html={arrow} /></a>}
+        </section>
+      )}
+
+      <!-- ---------- FAQs ---------- -->
+      {tabs.some((t) => t.id === 'faqs') && (
+        <section class="adm-panel" id="faqs" role="tabpanel" aria-labelledby="tab-faqs" tabindex="-1">
+          <div class="adm-faqs" data-faqs>
+            <div class="adm-panel-head">
+              <h2 class="adm-h2 adm-h2--rule">{L.tab_faqs}</h2>
+              <button type="button" class="adm-chip" data-faq-toggle aria-expanded="false">{L.faq_expand}</button>
+            </div>
+            {g.faqs.map((f) => (
+              <details class="adm-faq">
+                <summary><span>{f.question}</span><span class="adm-faq-icon" aria-hidden="true"></span></summary>
+                <div class="adm-prose adm-faq-answer" set:html={f.answer_html} />
+              </details>
+            ))}
+          </div>
+          {nextOf('faqs') && <a class="adm-next" href={`#${nextOf('faqs')!.id}`}>{L.date_next}: {nextOf('faqs')!.label} <Fragment set:html={arrow} /></a>}
+        </section>
+      )}
+
+      <!-- ---------- More info ---------- -->
+      {tabs.some((t) => t.id === 'more') && (
+        <section class="adm-panel" id="more" role="tabpanel" aria-labelledby="tab-more" tabindex="-1">
+          <h2 class="adm-h2 adm-h2--rule">{L.tab_more}</h2>
+          <div class="adm-more">
+            {g.more_info.length > 0 && (
+              <div class="adm-info-grid">
+                {g.more_info.map((b) => (
+                  <article class="adm-info">
+                    <h3 class="adm-h3">{b.title}</h3>
+                    <div class="adm-prose" set:html={b.body_html} />
+                  </article>
+                ))}
+              </div>
+            )}
+            {g.links.length > 0 && (
+              <aside class="adm-links">
+                <h3 class="adm-h3">{L.links_heading}</h3>
+                <ul>
+                  {g.links.map((l) => (
+                    <li><a href={l.url} {...ext(l.url)}><span>{l.label}</span><Fragment set:html={l.external ? external : arrow} /></a></li>
+                  ))}
+                </ul>
+              </aside>
+            )}
+          </div>
+          {nextOf('more') && <a class="adm-next" href={`#${nextOf('more')!.id}`}>{L.date_next}: {nextOf('more')!.label} <Fragment set:html={arrow} /></a>}
+        </section>
+      )}
+
+      <!-- ---------- Contact ---------- -->
+      <section class="adm-panel" id="contact" role="tabpanel" aria-labelledby="tab-contact" tabindex="-1">
+        <h2 class="adm-h2 adm-h2--rule">{L.tab_contact}</h2>
+        {g.contacts.length > 0 && (
+          <ul class="adm-contacts">
+            {g.contacts.map((c) => (
+              <li class="adm-contact">
+                <p class="adm-contact-name">{c.name}</p>
+                {c.role && <p class="adm-contact-role">{c.role}</p>}
+                <ul class="adm-contact-lines">
+                  {c.email && <li><Fragment set:html={mail} /><a href={`mailto:${c.email}`}>{c.email}</a></li>}
+                  {c.phone && <li><Fragment set:html={phone} /><a href={tel(c.phone)}>{c.phone}</a></li>}
+                </ul>
+                {c.note && <p class="adm-contact-note">{c.note}</p>}
+              </li>
+            ))}
+          </ul>
+        )}
+        <div class="adm-contact-form">
+          <EnquiryForm settings={enquiry} applicants={applicants} selected={g.card_title} heading={page.help_heading} intro={page.help_intro} />
+        </div>
+      </section>
+    </div>
+  </div>
+</Layout>
+
+<AdmissionsRuntime labels={L} />

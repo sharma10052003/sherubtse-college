@@ -1,0 +1,19 @@
+{
+  "collectionName": "components_admission_enquiry_options",
+  "info": {
+    "displayName": "Enquiry Category",
+    "icon": "question",
+    "description": "An option in the enquiry form, and the email address its enquiries are assigned to."
+  },
+  "options": {},
+  "attributes": {
+    "label": {
+      "type": "string",
+      "required": true
+    },
+    "recipient_email": {
+      "type": "email",
+      "required": false
+    }
+  }
+}

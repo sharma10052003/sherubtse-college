@@ -14,7 +14,11 @@
     "role_title": { "type": "string" },
     "group_title": { "type": "string", "required": true },
     "group_description": { "type": "text" },
-    "group_icon": { "type": "string" },
+    "group_icon": {
+      "type": "enumeration",
+      "enum": ["president", "academic", "student", "research", "admin", "ict", "exam"],
+      "default": "admin"
+    },
     "group_order": { "type": "integer", "default": 0 },
     "display_order": { "type": "integer", "default": 0 },
     "photo": { "type": "media", "multiple": false, "allowedTypes": ["images"] },

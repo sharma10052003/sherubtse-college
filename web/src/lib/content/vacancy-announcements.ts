@@ -6,8 +6,7 @@ export type AnnouncementType =
   | 're_vacancy_announcement'
   | 'shortlisted_written'
   | 'shortlisted_viva'
-  | 'selection_result'
-  | 'general_notice';
+  | 'selection_result';
 
 export const TYPE_LABELS: Record<AnnouncementType, string> = {
   vacancy_announcement: 'Vacancy Announcement',
@@ -15,7 +14,6 @@ export const TYPE_LABELS: Record<AnnouncementType, string> = {
   shortlisted_written: 'Shortlisted (Written)',
   shortlisted_viva: 'Shortlisted (Viva-Voce)',
   selection_result: 'Selection Result',
-  general_notice: 'General Notice',
 };
 
 export interface VacancyAnnouncement {
@@ -151,7 +149,8 @@ function mapWrittenExamCandidates(rows: any[] | null | undefined): WrittenExamCa
   }));
 }
 
-/** All announcements, newest first — the /news-notices/announcements listing.
+/** All recruitment postings, newest first — the /news-notices/recruitment listing
+ * (and the vacancies in the combined Announcements feed).
  * Only the light card fields; the detail-only fields (position tables,
  * shortlist rows) are fetched per-page by getVacancyAnnouncementBySlug. */
 export async function getVacancyAnnouncements(): Promise<VacancyAnnouncement[]> {

@@ -9,8 +9,11 @@ import Layout from '../../layouts/Layout.astro';
 import { getAllPageSlugs, getPageBySlug } from '../../lib/content/pages';
 
 export async function getStaticPaths() {
+  // Slugs with their own designed page in this folder — skipped here so the
+  // two routes don't both claim the same URL.
+  const dedicatedPages = new Set(['vision-mission-core-values', 'contact', 'campus-facilities']);
   const slugs = await getAllPageSlugs();
-  return slugs.map((slug) => ({ params: { slug } }));
+  return slugs.filter((slug) => !dedicatedPages.has(slug)).map((slug) => ({ params: { slug } }));
 }
 
 const { slug } = Astro.params;

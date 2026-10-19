@@ -1,0 +1,22 @@
+---
+// Leadership message — only rendered once a message has been entered.
+import Img from './Img.astro';
+import type { Section } from '../../lib/content/homepage';
+type S = Extract<Section, { kind: 'message' }>;
+interface Props { s: S; headingId: string }
+const { s, headingId } = Astro.props;
+---
+<div class:list={['hm-message', { 'hm-message--nophoto': !s.photo }]} data-reveal>
+  {s.photo && <Img image={s.photo} class="hm-message-photo" sizes="240px" />}
+  <div>
+    {s.heading && <h2 class="hm-h2" id={headingId}>{s.heading}</h2>}
+    <blockquote class="hm-message-quote hm-prose" set:html={s.message_html} />
+    {(s.name || s.role) && (
+      <p class="hm-message-sign">
+        {s.name && <strong>{s.name}</strong>}
+        {s.role && <span>{s.role}</span>}
+      </p>
+    )}
+    {s.button && <a class="hm-more" href={s.button.url}>{s.button.label}</a>}
+  </div>
+</div>

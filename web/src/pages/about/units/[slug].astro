@@ -1,28 +1,183 @@
 ---
-import UnitTemplate from '../../../components/templates/UnitTemplate.astro';
-import { getUnits, getUnitBySlug } from '../../../lib/content/units';
+// One administrative unit (existing routes /about/units/<slug>, e.g.
+// /about/units/office-of-the-president). Head, portrait and contact come from
+// the unit's linked office in Contact – Offices unless overridden on the unit;
+// staff and notices populate themselves from Person and Notice records owned
+// by the unit. Styles: units.css (.au).
+import Layout from '../../../layouts/Layout.astro';
+import '../../../styles/units.css';
+import UnitPortrait from '../../../components/units/UnitPortrait.astro';
+import { getAdminUnits, getAdminUnitBySlug } from '../../../lib/content/units';
 import { getPeopleByUnit } from '../../../lib/content/people';
 import { getNoticesByUnit } from '../../../lib/content/notices';
 
 export async function getStaticPaths() {
-  const units = await getUnits('administrative');
+  const units = await getAdminUnits();
   return units.map((u) => ({ params: { slug: u.slug } }));
 }
 
-const { slug } = Astro.params;
-const unit = await getUnitBySlug(slug as string);
+const { slug } = Astro.params as { slug: string };
+const unit = await getAdminUnitBySlug(slug);
 if (!unit) return Astro.redirect('/about/units', 404);
 
-const [people, notices] = await Promise.all([getPeopleByUnit(unit.slug), getNoticesByUnit(unit.slug)]);
+const [people, notices, all] = await Promise.all([getPeopleByUnit(unit.slug), getNoticesByUnit(unit.slug), getAdminUnits()]);
+const others = all.filter((u) => u.slug !== unit.slug);
+const tel = (p: string) => `tel:${p.replace(/[^+\d]/g, '').replace(/^975/, '+975')}`;
+const fmt = (iso: string) => new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+const arrow = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
+const hasContact = !!(unit.email || unit.phone || unit.location || unit.hours);
 ---
-<UnitTemplate
-  unit={unit}
-  people={people}
-  notices={notices}
-  breadcrumb={[
-    { label: 'Home', url: '/' },
-    { label: 'About', url: '/about' },
-    { label: 'Administrative Units', url: '/about/units' },
-    { label: unit.name, url: `/about/units/${unit.slug}` },
-  ]}
-/>
+<Layout title={unit.name} description={unit.summary ?? undefined}>
+  <div class="au au-unit" data-au>
+    <header class="au-hero au-hero--unit">
+      <svg class="au-hero-motif" viewBox="0 0 400 400" aria-hidden="true">
+        <g class="au-motif-ring"><circle cx="200" cy="200" r="190" /><circle cx="200" cy="200" r="150" /></g>
+        <path d="M200 30 370 200 200 370 30 200z" />
+        <path d="M80 80h240v240H80z" />
+        <circle cx="200" cy="200" r="34" />
+      </svg>
+      <div class="wrap au-wide au-unit-grid">
+        <div class="au-unit-text">
+          <nav class="au-breadcrumb au-stagger" style="--d:0" aria-label="Breadcrumb">
+            <a href="/">Home</a><span aria-hidden="true">→</span><a href="/about">About</a><span aria-hidden="true">→</span><a href="/about/units">Administrative Units</a><span aria-hidden="true">→</span><span aria-current="page">{unit.name}</span>
+          </nav>
+          {unit.category && <p class="au-eyebrow au-stagger" style="--d:1">{unit.category.name}</p>}
+          <h1 class="au-title au-title--unit au-stagger" style="--d:2">{unit.name}</h1>
+          {unit.summary && <p class="au-subtitle au-stagger" style="--d:3">{unit.summary}</p>}
+          {unit.head_name && (
+            <p class="au-person au-person--hero au-stagger" style="--d:4">
+              <span class="au-person-label">Head of unit</span>
+              <strong>{unit.head_name}</strong>
+              {unit.head_designation && <span>{unit.head_designation}</span>}
+            </p>
+          )}
+          {!unit.head_name && unit.head_designation && <p class="au-person au-person--hero au-stagger" style="--d:4"><strong>{unit.head_designation}</strong></p>}
+        </div>
+        <div class="au-unit-portrait au-stagger" style="--d:2">
+          <span class="au-lead-frame" aria-hidden="true"></span>
+          <UnitPortrait unit={unit} size="detail" eager />
+        </div>
+      </div>
+    </header>
+
+    <section class="au-section">
+      <div class="wrap au-wide au-unit-body">
+        <div class="au-unit-main">
+          {unit.description_html && (
+            <section class="au-block" aria-labelledby="au-overview">
+              <h2 class="au-h3" id="au-overview">Overview</h2>
+              <div class="au-prose" set:html={unit.description_html} />
+            </section>
+          )}
+
+          {unit.responsibilities.length > 0 && (
+            <section class="au-block" aria-labelledby="au-resp">
+              <h2 class="au-h3" id="au-resp">Key responsibilities</h2>
+              <ol class="au-points">
+                {unit.responsibilities.map((r) => (
+                  <li><strong>{r.title}</strong>{r.description && <span>{r.description}</span>}</li>
+                ))}
+              </ol>
+            </section>
+          )}
+
+          {unit.services.length > 0 && (
+            <section class="au-block" aria-labelledby="au-services">
+              <h2 class="au-h3" id="au-services">Services</h2>
+              <ul class="au-services">
+                {unit.services.map((s) => (
+                  <li><strong>{s.title}</strong>{s.description && <span>{s.description}</span>}</li>
+                ))}
+              </ul>
+            </section>
+          )}
+
+          {people.length > 0 && (
+            <section class="au-block" aria-labelledby="au-people">
+              <h2 class="au-h3" id="au-people">People</h2>
+              <ul class="au-people">
+                {people.map((p) => (
+                  <li>
+                    <a href={`/people/${p.slug}`}>
+                      {p.photo_url ? <img src={p.photo_url} alt="" width="80" height="100" loading="lazy" /> : <span class="au-people-ph" aria-hidden="true">{p.full_name.split(/\s+/).map((w) => w[0]).slice(0, 2).join('')}</span>}
+                      <span><strong>{p.honorific ? `${p.honorific} ` : ''}{p.full_name}</strong><span>{p.designation}</span></span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
+          {notices.length > 0 && (
+            <section class="au-block" aria-labelledby="au-notices">
+              <h2 class="au-h3" id="au-notices">Announcements</h2>
+              <ul class="au-notices">
+                {notices.map((n) => (
+                  <li><time datetime={n.publish_at}>{fmt(n.publish_at)}</time><a href={`/news-notices/announcements/${n.id}`}>{n.title}</a></li>
+                ))}
+              </ul>
+            </section>
+          )}
+        </div>
+
+        <aside class="au-unit-side">
+          <section class="au-contact" aria-labelledby="au-contact-h">
+            <h2 class="au-h4" id="au-contact-h">Contact</h2>
+            {hasContact ? (
+              <dl>
+                {unit.email && <div><dt>Email</dt><dd><a href={`mailto:${unit.email}`}>{unit.email}</a></dd></div>}
+                {unit.phone && <div><dt>Telephone</dt><dd><a href={tel(unit.phone)}>{unit.phone}</a></dd></div>}
+                {unit.location && <div><dt>Office</dt><dd>{unit.location}</dd></div>}
+                {unit.hours && <div><dt>Hours</dt><dd>{unit.hours}</dd></div>}
+              </dl>
+            ) : (
+              <p class="au-muted">Contact details have not been published yet. See the <a href="/about/contact">College contact page</a>.</p>
+            )}
+          </section>
+
+          {(unit.links.length > 0 || unit.documents.length > 0) && (
+            <section class="au-contact" aria-labelledby="au-links-h">
+              <h2 class="au-h4" id="au-links-h">Useful links</h2>
+              <ul class="au-linklist">
+                {unit.links.map((l) => (
+                  <li><a href={l.url} {...(l.external ? { target: '_blank', rel: 'noopener' } : {})}>{l.label}<Fragment set:html={arrow} />{l.external && <span class="au-sr">(opens in a new tab)</span>}</a></li>
+                ))}
+                {unit.documents.map((d) => (
+                  <li><a href={d.url} target="_blank" rel="noopener">{d.label}{d.ext && <span class="au-ext">{d.ext}</span>}<Fragment set:html={arrow} /></a></li>
+                ))}
+              </ul>
+            </section>
+          )}
+
+          <a class="au-back" href="/about/units"><span aria-hidden="true">←</span> All administrative units</a>
+        </aside>
+      </div>
+    </section>
+
+    {others.length > 0 && (
+      <section class="au-section au-others" aria-labelledby="au-others-h">
+        <div class="wrap au-wide">
+          <h2 class="au-h3" id="au-others-h">Other offices</h2>
+          <ul class="au-others-list">
+            {others.map((u) => (
+              <li>
+                <a href={`/about/units/${u.slug}`}>
+                  <span class="au-others-name">{u.name}</span>
+                  {u.head_name && <span class="au-others-head">{u.head_name}{u.head_designation ? ` · ${u.head_designation}` : ''}</span>}
+                  <Fragment set:html={arrow} />
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+    )}
+  </div>
+</Layout>
+
+<script is:inline>
+  document.querySelectorAll('[data-au-img]').forEach((img) => {
+    const done = () => img.closest('.au-portrait')?.classList.add('is-loaded');
+    if (img.complete && img.naturalWidth) done(); else img.addEventListener('load', done, { once: true });
+  });
+</script>

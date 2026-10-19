@@ -10,7 +10,15 @@ export type NewsCategory =
   | 'events'
   | 'sports'
   | 'administration'
-  | 'general';
+  | 'general'
+  | 'celebrations'
+  | 'culture'
+  | 'workshops'
+  | 'conferences'
+  | 'visits'
+  | 'awards'
+  | 'graduation'
+  | 'community';
 
 export const CATEGORY_LABELS: Record<NewsCategory, string> = {
   campus_life: 'Campus Life',
@@ -21,6 +29,14 @@ export const CATEGORY_LABELS: Record<NewsCategory, string> = {
   sports: 'Sports',
   administration: 'Administration',
   general: 'General',
+  celebrations: 'Celebrations',
+  culture: 'Culture',
+  workshops: 'Workshops & Seminars',
+  conferences: 'Conferences',
+  visits: 'Distinguished Visits',
+  awards: 'Awards & Recognition',
+  graduation: 'Graduation',
+  community: 'Community Engagement',
 };
 
 export interface NewsItem {

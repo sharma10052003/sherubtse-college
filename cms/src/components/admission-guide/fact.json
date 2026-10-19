@@ -1,0 +1,19 @@
+{
+  "collectionName": "components_admission_guide_facts",
+  "info": {
+    "displayName": "Key Fact",
+    "icon": "bulletList",
+    "description": "A short label and value shown at the top of the page, e.g. “Applications open” — “1–15 March 2026”."
+  },
+  "options": {},
+  "attributes": {
+    "label": {
+      "type": "string",
+      "required": true
+    },
+    "value": {
+      "type": "string",
+      "required": true
+    }
+  }
+}

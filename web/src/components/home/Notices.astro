@@ -1,0 +1,36 @@
+---
+// News & Notices — the same combined feed as the Announcements page
+// (notices, vacancies, announcements). Pinned first; urgent items and
+// deadlines within 7 days are marked (re-checked in the browser).
+import type { FeedItem } from '../../lib/content/announcement-feed';
+import type { HomeLabels } from '../../lib/content/homepage';
+import { fmtDate } from '../../lib/content/homepage';
+
+interface Props { items: FeedItem[]; labels: HomeLabels; emptyText: string | null }
+const { items, labels, emptyText } = Astro.props;
+const pin = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M9 3h6l-1 6 4 4H6l4-4zM12 13v8"/></svg>';
+const clip = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="m20 11-8.5 8.5a5 5 0 0 1-7-7L13 4a3.5 3.5 0 0 1 5 5l-8.5 8.5a2 2 0 0 1-3-3L14 7"/></svg>';
+---
+<div data-expiring>
+  <ul class="hm-notices">
+    {items.map((n) => (
+      <li class:list={['hm-notice', { 'hm-notice--urgent': n.tone === 'danger', 'hm-notice--warn': n.tone === 'warning', 'hm-notice--vacancy': n.group === 'vacancies' }]} data-expires={n.expires ?? undefined} data-reveal>
+        <time class="hm-notice-date" datetime={n.date?.slice(0, 10)}>
+          <span>{fmtDate(n.date, { day: 'numeric' })}</span>
+          <span>{fmtDate(n.date, { month: 'short' })}</span>
+        </time>
+        <div class="hm-notice-body">
+          <p class="hm-notice-tags">
+            <span class="hm-tag">{n.label}</span>
+            {n.pinned && <span class="hm-tag hm-tag--gold"><Fragment set:html={pin} />{labels.pinned}</span>}
+            {n.deadline && n.deadline_label === 'Deadline' && (
+              <span class="hm-tag hm-tag--deadline" data-deadline={n.deadline}>{labels.deadline}: {fmtDate(n.deadline, { day: 'numeric', month: 'short' })}</span>
+            )}
+          </p>
+          <h3 class="hm-notice-title"><a href={n.href}>{n.title}</a>{n.has_attachment && <span class="hm-notice-clip" title="Attachment"><Fragment set:html={clip} /></span>}</h3>
+        </div>
+      </li>
+    ))}
+  </ul>
+  {emptyText && <p class="hm-empty" data-empty hidden={items.length > 0}>{emptyText}</p>}
+</div>

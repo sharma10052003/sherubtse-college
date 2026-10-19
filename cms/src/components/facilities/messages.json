@@ -1,0 +1,23 @@
+{
+  "collectionName": "components_facilities_messages",
+  "info": {
+    "displayName": "Empty-State Messages",
+    "icon": "message",
+    "description": "Shown when nothing is available."
+  },
+  "options": {},
+  "attributes": {
+    "no_facilities": {
+      "type": "text"
+    },
+    "no_filter_results": {
+      "type": "text"
+    },
+    "no_gallery": {
+      "type": "text"
+    },
+    "no_lab_profiles": {
+      "type": "text"
+    }
+  }
+}

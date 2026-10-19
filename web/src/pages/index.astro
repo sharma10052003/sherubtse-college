@@ -1,353 +1,44 @@
 ---
+// Homepage. Everything comes from Strapi → Home – Page: the hero, then the
+// “Sections” list in its order (add, reorder or hide sections there). Two
+// consecutive half-width sections share one band, side by side.
+// Content rules and data: lib/content/homepage.ts. Styles: home.css (.hm).
 import Layout from '../layouts/Layout.astro';
-import { getHomepage } from '../lib/content/homepage';
-import { getCurrentNotices } from '../lib/content/notices';
-import { getUpcomingEvents } from '../lib/content/events';
-import SectionBlocks from '../components/SectionBlocks.astro';
+import '../styles/home.css';
+import Hero from '../components/home/Hero.astro';
+import HomeSection from '../components/home/HomeSection.astro';
+import HomeRuntime from '../components/home/HomeRuntime.astro';
+import { getHomepage, type Section } from '../lib/content/homepage';
 
-const homepage = await getHomepage();
-const notices = await getCurrentNotices(4);
-const events = await getUpcomingEvents(4);
+const home = await getHomepage();
 
-const heroImage = homepage.hero_image_urls[0] ?? null;
-
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }).toUpperCase();
+type Row = { single: Section } | { pair: [Section, Section] };
+const rows: Row[] = [];
+for (let i = 0; i < home.sections.length; i++) {
+  const s = home.sections[i];
+  const next = home.sections[i + 1];
+  if (s.width === 'half' && next?.width === 'half') {
+    rows.push({ pair: [s, next] });
+    i++;
+  } else rows.push({ single: s });
 }
 ---
-<Layout title={homepage.seo_title} description={homepage.seo_description ?? undefined}>
-  <!-- Hero — one photograph, one statement. Written once, not a rotating slider.
-       The video is desktop/tablet only, gated by JS below rather than
-       <source media="">, which turned out not to reliably suppress the
-       fetch (verified: networkState stayed NETWORK_NO_SOURCE even at
-       1280px). No src/autoplay in the markup at all — the script only sets
-       .src and calls .play() once it has confirmed both the width and
-       prefers-reduced-motion, so a phone on mobile data never requests
-       the file in the first place. The still image (also the video's
-       poster) is the only asset mobile visitors pay for. -->
-  <section class="hero" style={heroImage ? `background-image:url(${heroImage})` : undefined}>
-    {homepage.hero_video_url && (
-      <video class="hero-video" poster={heroImage ?? undefined} muted loop playsinline preload="none" id="heroVideo" data-src={homepage.hero_video_url}></video>
+<Layout title={home.seo_title} description={home.seo_description ?? undefined}>
+  <div class="hm" data-home>
+    <Hero hero={home.hero} labels={home.labels} />
+    {rows.map((row) =>
+      'single' in row ? (
+        <HomeSection s={row.single} labels={home.labels} />
+      ) : (
+        <div class:list={['hm-band', `hm-band--${row.pair[0].background}`, 'hm-band--pair']}>
+          <div class="wrap hm-pair">
+            <HomeSection s={row.pair[0]} labels={home.labels} paired />
+            <HomeSection s={row.pair[1]} labels={home.labels} paired />
+          </div>
+        </div>
+      ),
     )}
-    <div class="wrap">
-      {homepage.hero_eyebrow && (
-        <p class="hero-eyebrow">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z" /></svg>
-          {homepage.hero_eyebrow}
-        </p>
-      )}
-      <h1 class="hero-heading">
-        {homepage.hero_heading ?? 'Sherubtse College'}
-      </h1>
-      {homepage.statement && <p class="hero-statement">{homepage.statement}</p>}
-      {homepage.hero_buttons.length > 0 && (
-        <div class="hero-buttons">
-          {homepage.hero_buttons.map((b, i) => (
-            <a href={b.url} class={i === 0 ? 'btn btn-primary' : 'btn btn-secondary btn-on-hero'}>{b.label}</a>
-          ))}
-        </div>
-      )}
-      {homepage.hero_badge && (
-        <p class="hero-badge">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2 2 7l10 5 10-5-10-5z" /><path d="M6 10v6c0 1.5 3 3 6 3s6-1.5 6-3v-6" /></svg>
-          {homepage.hero_badge}
-        </p>
-      )}
-    </div>
-  </section>
-
-  <!-- President's message — editable from the Homepage section in the
-       admin (president_name/title/message/photo). Doesn't render at all
-       unless a message has actually been entered, same rule the person-
-       directory photo/consent fields already follow, so an unfilled
-       field never leaves a broken-looking empty section on the live
-       homepage. -->
-  {homepage.president_message && (
-    <section class="band president-message">
-      <div class="wrap president-message-grid">
-        {homepage.president_photo_url && (
-          <img src={homepage.president_photo_url} alt={homepage.president_name ?? ''} class="president-photo" />
-        )}
-        <div>
-          <h2 class="h2">{homepage.president_heading}</h2>
-          <div class="article-body" style="margin-top:var(--s4)" set:html={homepage.president_message.replace(/\n/g, '<br>')} />
-          {homepage.president_name && (
-            <p class="president-signature">
-              {homepage.president_name}
-              {homepage.president_title && <span class="president-title-line">{homepage.president_title}</span>}
-            </p>
-          )}
-        </div>
-      </div>
-    </section>
-  )}
-
-  <!-- Quick-access strip — the one large gold moment on the site. -->
-  {homepage.quick_links.length > 0 && (
-    <div class="quickstrip">
-      <div class="wrap">
-        <ul>
-          {homepage.quick_links.map((l) => <li><a href={l.url}>{l.label}</a></li>)}
-        </ul>
-      </div>
-    </div>
-  )}
-
-  <section class="band">
-    <div class="wrap two-col">
-      <div>
-        <h2 class="h2">{homepage.announcements_heading}</h2>
-        {notices.length > 0 ? (
-          <>
-            {notices.map((n) => (
-              <div class="notice-row">
-                <span class="date">{formatDate(n.publish_at)}</span>
-                <div>
-                  <p class="title"><a href={`/news-notices/announcements/${n.id}`}>{n.title}</a></p>
-                  <p class="meta">
-                    {n.urgency === 'urgent' && <span class="tag tag-urgent">Urgent</span>}
-                    <span class="tag">{n.category}</span>
-                    {n.owning_unit_name}
-                  </p>
-                </div>
-              </div>
-            ))}
-            <p class="small" style="margin-top:var(--s4)"><a href="/news-notices/announcements">{homepage.announcements_link_label}</a></p>
-          </>
-        ) : (
-          homepage.announcements_empty_text ? <p class="small">{homepage.announcements_empty_text}</p> : null
-        )}
-      </div>
-      <div>
-        <h2 class="h2">{homepage.events_heading}</h2>
-        {events.length > 0 ? (
-          <>
-            {events.map((e) => (
-              <div class="notice-row" style="grid-template-columns:100px 1fr">
-                <span class="date">{formatDate(e.starts_at)}</span>
-                <p class="title" style="margin:0"><a href={`/news-notices/events/${e.id}`}>{e.title}</a></p>
-              </div>
-            ))}
-            <p class="small" style="margin-top:var(--s4)"><a href="/news-notices/events">{homepage.events_link_label}</a></p>
-          </>
-        ) : (
-          homepage.events_empty_text ? <p class="small">{homepage.events_empty_text}</p> : null
-        )}
-      </div>
-    </div>
-  </section>
-
-  {homepage.explore_cards.length > 0 && (
-    <section class="band band-alt">
-      <div class="wrap">
-        {homepage.explore_heading && <h2 class="h2" style="margin-bottom:var(--s5)">{homepage.explore_heading}</h2>}
-        <div class="cards">
-          {homepage.explore_cards.map((c) => (
-            <div class="card">
-              <h3 class="h3">{c.label}</h3>
-              {c.description && <p>{c.description}</p>}
-              <a href={c.url} class="btn-quiet">{homepage.explore_button_label}</a>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  )}
-
-  {homepage.blocks.length > 0 && (
-    <section class="band">
-      <div class="wrap">
-        <SectionBlocks blocks={homepage.blocks} />
-      </div>
-    </section>
-  )}
+  </div>
 </Layout>
 
-<style>
-  .hero {
-    position: relative;
-    min-height: 420px;
-    display: flex;
-    align-items: flex-end;
-    background-color: var(--navy);
-    background-size: cover;
-    background-position: center;
-    color: #fff;
-    overflow: hidden;
-  }
-  /* Full-bleed darkening fade behind the text, spanning the whole hero —
-     previously this lived on .hero .wrap itself, which is capped at
-     --content-width, so it rendered as a hard-edged dark box sitting in
-     front of the video/photo rather than a natural fade across it. */
-  .hero::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(to top, rgba(8, 18, 52, 0.85), rgba(8, 18, 52, 0) 65%);
-    z-index: 1;
-  }
-  .hero-video {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    /* The still background-image on .hero is directly behind this and
-       shows through until the video has a frame ready — never a blank
-       flash, on any connection speed. */
-  }
-  .hero .wrap {
-    position: relative;
-    z-index: 2;
-    padding-block: var(--s6);
-    width: 100%;
-  }
-  .hero-eyebrow {
-    display: flex;
-    align-items: center;
-    gap: var(--s2);
-    font-family: var(--font-sans);
-    font-weight: 700;
-    font-size: 0.78rem;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--gold);
-    margin: 0 0 var(--s3);
-  }
-  .hero-eyebrow svg {
-    width: 16px;
-    height: 16px;
-    flex-shrink: 0;
-  }
-  .hero-heading {
-    font-family: var(--font-serif);
-    font-weight: 700;
-    font-size: clamp(1.6rem, 4vw, 2.4rem);
-    line-height: 1.2;
-    max-width: 20ch;
-    margin: 0;
-  }
-  .hero-statement {
-    font-family: var(--font-sans);
-    font-size: 1rem;
-    line-height: 1.6;
-    max-width: 55ch;
-    color: #e4e8f5;
-    margin: var(--s4) 0 0;
-  }
-  .hero-buttons {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--s4);
-    margin-top: var(--s5);
-  }
-  .hero-buttons .btn-primary {
-    background: var(--gold);
-    border-color: var(--gold);
-    color: var(--navy);
-  }
-  .hero-buttons .btn-primary:hover {
-    background: #ffc95c;
-    border-color: #ffc95c;
-  }
-  .hero-buttons .btn-on-hero {
-    border-color: #fff;
-    color: #fff;
-    background: transparent;
-  }
-  .hero-buttons .btn-on-hero:hover {
-    background: rgba(255, 255, 255, 0.12);
-    color: #fff;
-  }
-  .hero-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--s2);
-    margin: var(--s5) 0 0;
-    padding: var(--s2) var(--s4);
-    border: 1px solid rgba(255, 255, 255, 0.4);
-    font-size: 0.82rem;
-    font-weight: 600;
-  }
-  .hero-badge svg {
-    width: 16px;
-    height: 16px;
-    color: var(--gold);
-    flex-shrink: 0;
-  }
-  @media (min-width: 760px) {
-    .hero {
-      min-height: 560px;
-    }
-  }
-  @media (min-width: 1024px) {
-    .hero {
-      min-height: 680px;
-    }
-  }
-  .two-col {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: var(--s7);
-  }
-  @media (min-width: 1024px) {
-    .two-col {
-      grid-template-columns: 2fr 1fr;
-    }
-  }
-  .president-message-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: var(--s6);
-  }
-  @media (min-width: 760px) {
-    .president-message-grid {
-      grid-template-columns: 220px 1fr;
-      align-items: start;
-    }
-  }
-  .president-photo {
-    width: 100%;
-    max-width: 220px;
-    aspect-ratio: 4/5;
-    object-fit: cover;
-  }
-  .president-signature {
-    margin-top: var(--s4);
-    font-weight: 700;
-  }
-  .president-title-line {
-    display: block;
-    font-weight: 400;
-    font-size: 0.85rem;
-    color: var(--ink-2);
-  }
-</style>
-
-<script>
-  // No src/autoplay in the markup — this only loads and plays the hero
-  // video once it has confirmed the viewport is desktop/tablet-sized AND
-  // the visitor hasn't asked for reduced motion. Either condition failing
-  // means the video file is never requested at all, so a phone on mobile
-  // data (the site's stated primary persona) never pays for it — same
-  // budget-exempt-interaction class as the mobile menu toggle and
-  // calendar filter chips.
-  const heroVideo = document.getElementById('heroVideo') as HTMLVideoElement | null;
-  if (heroVideo) {
-    const isDesktop = window.matchMedia('(min-width: 760px)').matches;
-    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (isDesktop && !reducedMotion) {
-      heroVideo.src = heroVideo.dataset.src ?? '';
-      heroVideo.load();
-      // Two attempts, not one: calling .play() in the same tick as setting
-      // .src can lose a race against the browser registering the new
-      // source (verified — the immediate call silently failed while a
-      // later manual call succeeded once loaded). 'canplay' catches it
-      // once the browser is actually ready; the immediate call covers the
-      // common case where it already is.
-      const tryPlay = () => heroVideo.play().catch(() => {}); // browser autoplay policy can still block it — fail silently, poster stays visible
-      tryPlay();
-      heroVideo.addEventListener('canplay', tryPlay, { once: true });
-    }
-  }
-</script>
+<HomeRuntime labels={home.labels} />

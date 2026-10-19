@@ -1,0 +1,335 @@
+---
+// Vision, Mission & Core Values — a dedicated page (the generic
+// about/[slug] text-page route skips this slug). Three connected ideas,
+// told in order: what we aspire to become, what we do, and the
+// principles behind it, linked by a GNH thread at the end. All copy comes
+// from the "About – Vision, Mission & Core Values" single type in Strapi,
+// with the approved wording as a fallback so the page is never empty.
+import Layout from '../../layouts/Layout.astro';
+import VmIcon from '../../components/vision/VmIcon.astro';
+import '../../styles/vision-mission.css';
+import { getVisionMissionPage } from '../../lib/content/vision-mission';
+
+const page = await getVisionMissionPage();
+
+// Split the vision statement so the highlighted phrases can be wrapped
+// without touching the official wording itself.
+function segments(statement: string, phrases: string[]) {
+  const parts: { text: string; hl: boolean }[] = [];
+  let rest = statement;
+  while (rest) {
+    let best: { i: number; p: string } | null = null;
+    for (const p of phrases) {
+      const i = rest.toLowerCase().indexOf(p.toLowerCase());
+      if (i !== -1 && (!best || i < best.i)) best = { i, p };
+    }
+    if (!best) {
+      parts.push({ text: rest, hl: false });
+      break;
+    }
+    if (best.i > 0) parts.push({ text: rest.slice(0, best.i), hl: false });
+    parts.push({ text: rest.slice(best.i, best.i + best.p.length), hl: true });
+    rest = rest.slice(best.i + best.p.length);
+  }
+  return parts;
+}
+const visionParts = segments(page.vision_statement, page.vision_highlights);
+
+const ACCENTS = ['navy', 'blue', 'gold'] as const;
+const values = page.core_values.map((v, i) => {
+  const angle = (-90 + (360 / page.core_values.length) * i) * (Math.PI / 180);
+  return {
+    ...v,
+    accent: ACCENTS[i % ACCENTS.length],
+    x: 50 + 41 * Math.cos(angle),
+    y: 50 + 41 * Math.sin(angle),
+  };
+});
+
+const pad = (n: number) => String(n).padStart(2, '0');
+---
+<Layout title="Vision, Mission & Core Values" description={page.seo_description ?? page.vision_statement}>
+  <div class="vm">
+    <!-- ======================= HERO ======================= -->
+    <section class="vm-hero" aria-labelledby="vm-title">
+      <div class="vm-hero-bg" aria-hidden="true">
+        {page.hero_image_url && <img class="vm-hero-photo" src={page.hero_image_url} alt="" data-parallax="0.18" />}
+        <svg class="vm-hero-range vm-hero-range--far" data-parallax="0.08" viewBox="0 0 1600 400" preserveAspectRatio="xMidYMax slice">
+          <path d="M0 400V250l110-70 90 40 140-120 120 90 90-50 170 130 120-80 150 100 110-60 160 110 130-70 110 60v170z" />
+        </svg>
+        <svg class="vm-hero-range vm-hero-range--mid" data-parallax="0.14" viewBox="0 0 1600 400" preserveAspectRatio="xMidYMax slice">
+          <path d="M0 400V300l160-90 120 70 160-130 140 110 120-50 200 140 150-90 160 100 140-60 150 80v110z" />
+          <path class="vm-hero-snow" d="M440 150L412 175L428 171L440 181L453 171L470 177ZM700 210L676 228L690 225L700 234L712 225L726 230Z" />
+        </svg>
+        <svg class="vm-hero-range vm-hero-range--near" data-parallax="0.22" viewBox="0 0 1600 400" preserveAspectRatio="xMidYMax slice">
+          <path d="M0 400V340l200-60 180 40 220-80 200 70 180-40 220 70 200-50 200 40v110z" />
+        </svg>
+        <svg class="vm-constellation" viewBox="0 0 600 340">
+          <g class="vm-constellation-lines">
+            <path pathLength="1" d="M60 280L150 210L250 230L330 140L440 160L540 60" />
+            <path pathLength="1" d="M150 210L210 120L330 140" />
+            <path pathLength="1" d="M250 230L300 300M440 160L470 250L540 60" />
+          </g>
+          <g class="vm-constellation-nodes">
+            <circle cx="60" cy="280" r="3" /><circle cx="150" cy="210" r="3.5" /><circle cx="250" cy="230" r="3" />
+            <circle cx="330" cy="140" r="4" /><circle cx="440" cy="160" r="3" /><circle cx="540" cy="60" r="5" />
+            <circle cx="210" cy="120" r="2.5" /><circle cx="300" cy="300" r="2.5" /><circle cx="470" cy="250" r="2.5" />
+          </g>
+        </svg>
+      </div>
+
+      <div class="wrap vm-wide vm-hero-inner">
+        <nav class="vm-breadcrumb" aria-label="Breadcrumb"><a href="/">Home</a> › <a href="/about">About</a> › <span aria-current="page">Vision, Mission &amp; Core Values</span></nav>
+        <p class="vm-eyebrow vm-hero-eyebrow">{page.hero_eyebrow}</p>
+        <h1 id="vm-title" class="vm-hero-title">{page.hero_heading}</h1>
+        <p class="vm-hero-intro">{page.hero_intro}</p>
+        <a class="vm-scroll" href="#vision">
+          <span>Explore our purpose</span>
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M6 13l6 6 6-6" /></svg>
+        </a>
+      </div>
+    </section>
+
+    <!-- ======================= VISION ======================= -->
+    <section id="vision" class="vm-vision" aria-labelledby="vm-vision-h">
+      <svg class="vm-vision-horizon" data-parallax="0.1" aria-hidden="true" viewBox="0 0 1600 300" preserveAspectRatio="xMidYMax slice">
+        <path d="M0 300V190l140-60 120 40 160-100 150 80 130-40 190 110 160-70 170 80 140-50 140 60v150z" />
+      </svg>
+      <div class="wrap vm-wide vm-vision-inner">
+        <div class="vm-step" data-vm-reveal>
+          <span class="vm-step-num">01</span>
+          <span class="vm-step-line" aria-hidden="true"></span>
+          <h2 id="vm-vision-h" class="vm-step-label">Our Vision <span>What we aspire to become</span></h2>
+        </div>
+
+        <div class="vm-vision-body">
+          <svg class="vm-emblem" data-vm-reveal viewBox="0 0 200 200" aria-hidden="true">
+            <circle class="vm-draw" pathLength="1" cx="100" cy="100" r="92" />
+            <circle class="vm-draw" pathLength="1" cx="100" cy="100" r="70" />
+            <path class="vm-draw" pathLength="1" d="M100 8v34M100 158v34M8 100h34M158 100h34M35 35l24 24M141 141l24 24M165 35l-24 24M59 141l-24 24" />
+            <path class="vm-draw" pathLength="1" d="M100 52l14 34 34 14-34 14-14 34-14-34-34-14 34-14z" />
+            <circle cx="100" cy="100" r="6" class="vm-emblem-dot" />
+          </svg>
+          <blockquote class="vm-vision-statement" data-vm-reveal>
+            <span class="vm-quote-mark" aria-hidden="true">&#8220;</span>
+            {visionParts.map((part) => (part.hl ? <em class="vm-hl">{part.text}</em> : part.text))}
+          </blockquote>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================= MISSION ======================= -->
+    <section id="mission" class="vm-mission" aria-labelledby="vm-mission-h">
+      <div class="wrap vm-wide">
+        <div class="vm-step" data-vm-reveal>
+          <span class="vm-step-num">02</span>
+          <span class="vm-step-line" aria-hidden="true"></span>
+          <h2 id="vm-mission-h" class="vm-step-label">Our Mission <span>What we do</span></h2>
+        </div>
+
+        <div class="vm-mission-grid">
+          {page.missions.map((m, i) => (
+            <article class={`vm-mpanel vm-mpanel--${m.theme}`} data-vm-reveal style={`--d:${i * 140}ms`}>
+              <div class="vm-mpanel-top">
+                <span class="vm-mpanel-icon"><VmIcon name={`mission-${m.theme}`} size={44} /></span>
+                <span class="vm-mpanel-num">Mission {pad(i + 1)}</span>
+              </div>
+              {m.title && <h3 class="vm-mpanel-title">{m.title}</h3>}
+              <p class="vm-mpanel-statement">{m.statement}</p>
+              <span class="vm-mpanel-rule" aria-hidden="true"></span>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================= CORE VALUES ======================= -->
+    <section id="values" class="vm-values" aria-labelledby="vm-values-h">
+      <div class="wrap vm-wide">
+        <div class="vm-step vm-step--light" data-vm-reveal>
+          <span class="vm-step-num">03</span>
+          <span class="vm-step-line" aria-hidden="true"></span>
+          <h2 id="vm-values-h" class="vm-step-label">Core Values <span>The heart of Sherubtse</span></h2>
+        </div>
+
+        <div class="vm-values-layout">
+          <div class="vm-wheel" data-vm-reveal>
+            <svg class="vm-wheel-lines" viewBox="0 0 100 100" aria-hidden="true">
+              <circle class="vm-draw" pathLength="1" cx="50" cy="50" r="41" />
+              {values.map((v) => <line class="vm-draw" pathLength="1" x1="50" y1="50" x2={v.x} y2={v.y} />)}
+            </svg>
+            <div class="vm-wheel-hub" aria-hidden="true">
+              <span class="vm-wheel-hub-k">GNH</span>
+              <span class="vm-wheel-hub-s">Values in balance</span>
+            </div>
+            <ul class="vm-value-list" role="list">
+              {values.map((v, i) => (
+                <li class="vm-value-slot" style={`--x:${v.x}%;--y:${v.y}%`}>
+                  <button
+                    type="button"
+                    class={`vm-value vm-value--${v.accent}`}
+                    aria-pressed={i === 0 ? 'true' : 'false'}
+                    aria-controls="vm-value-detail"
+                    data-value-index={i}
+                  >
+                    <span class="vm-value-icon"><VmIcon name={v.icon} size={28} /></span>
+                    <span class="vm-value-name">{v.name}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div id="vm-value-detail" class={`vm-value-detail vm-value-detail--${values[0]?.accent}`} aria-live="polite" data-vm-reveal>
+            <span class="vm-value-detail-num" data-detail-num>{pad(1)} / {pad(values.length)}</span>
+            <span class="vm-value-detail-icon" data-detail-icon><VmIcon name={values[0]?.icon} size={56} /></span>
+            <h3 class="vm-value-detail-name" data-detail-name>{values[0]?.name}</h3>
+            <p class="vm-value-detail-text" data-detail-text>{values[0]?.description}</p>
+            <p class="vm-value-detail-hint">Select a value to read about it.</p>
+          </div>
+        </div>
+
+        {values.map((v) => (
+          <template data-value-template>
+            <VmIcon name={v.icon} size={56} />
+          </template>
+        ))}
+        <script is:inline type="application/json" id="vm-values-data" set:html={JSON.stringify(values.map((v) => ({ name: v.name, description: v.description, accent: v.accent })))} />
+
+        <noscript>
+          <dl class="vm-values-noscript">
+            {values.map((v) => (<><dt>{v.name}</dt><dd>{v.description}</dd></>))}
+          </dl>
+        </noscript>
+      </div>
+    </section>
+
+    <!-- ======================= GNH THREAD ======================= -->
+    <section class="vm-thread" aria-labelledby="vm-thread-h">
+      <div class="wrap vm-wide">
+        <h2 id="vm-thread-h" class="vm-thread-title" data-vm-reveal>One purpose, three connected ideas</h2>
+        <div class="vm-thread-path" data-vm-reveal>
+          <svg class="vm-thread-line" viewBox="0 0 1000 40" preserveAspectRatio="none" aria-hidden="true">
+            <path class="vm-draw" pathLength="1" d="M60 20C260 -10 380 50 500 20S760 -10 940 20" />
+          </svg>
+          <ol class="vm-thread-list">
+          <li>
+            <a href="#vision" class="vm-thread-node">
+              <span class="vm-thread-dot vm-thread-dot--navy"></span>
+              <strong>Vision</strong>
+              <span>What we aspire to become</span>
+            </a>
+          </li>
+          <li>
+            <a href="#mission" class="vm-thread-node">
+              <span class="vm-thread-dot vm-thread-dot--blue"></span>
+              <strong>Mission</strong>
+              <span>What we do to achieve our purpose</span>
+            </a>
+          </li>
+          <li>
+            <a href="#values" class="vm-thread-node">
+              <span class="vm-thread-dot vm-thread-dot--gold"></span>
+              <strong>Core Values</strong>
+              <span>The principles that guide our actions</span>
+            </a>
+          </li>
+          </ol>
+        </div>
+        <p class="vm-thread-note" data-vm-reveal>{page.closing_note}</p>
+      </div>
+    </section>
+  </div>
+</Layout>
+
+<script>
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const root = document.querySelector<HTMLElement>('.vm');
+
+  // Scroll reveals — each block (and the SVG strokes inside it) animates in
+  // once, the first time it enters the viewport.
+  const revealEls = Array.from(document.querySelectorAll<HTMLElement | SVGElement>('[data-vm-reveal]'));
+  if (reduceMotion || !('IntersectionObserver' in window)) {
+    revealEls.forEach((el) => el.classList.add('is-in'));
+  } else {
+    root?.classList.add('vm-anim');
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          entry.target.classList.add('is-in');
+          io.unobserve(entry.target);
+        }
+      },
+      { threshold: 0.15, rootMargin: '0px 0px -60px 0px' },
+    );
+    revealEls.forEach((el) => io.observe(el));
+  }
+
+  // Gentle parallax on the landscape layers only. Disabled for reduced
+  // motion; transforms only, so it never triggers layout.
+  const layers = Array.from(document.querySelectorAll<HTMLElement | SVGElement>('[data-parallax]'));
+  if (!reduceMotion && layers.length) {
+    let ticking = false;
+    const update = () => {
+      ticking = false;
+      for (const el of layers) {
+        const section = el.closest('section');
+        if (!section) continue;
+        const rect = section.getBoundingClientRect();
+        if (rect.bottom < 0 || rect.top > window.innerHeight) continue;
+        // Only once the section has started scrolling past the top — layers
+        // then sink a little slower than the page, and never lift off the
+        // section's bottom edge.
+        const speed = Number((el as HTMLElement).dataset.parallax ?? 0);
+        const travel = Math.max(0, -rect.top);
+        (el as HTMLElement).style.transform = `translate3d(0, ${(travel * speed).toFixed(1)}px, 0)`;
+      }
+    };
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        ticking = true;
+        requestAnimationFrame(update);
+      }
+    }, { passive: true });
+    update();
+  }
+
+  // Core values: selecting a value shows it in the detail panel. Buttons
+  // work by click, tap and keyboard; arrow keys move round the wheel.
+  const dataEl = document.getElementById('vm-values-data');
+  const buttons = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-value-index]'));
+  const detail = document.getElementById('vm-value-detail');
+  const templates = Array.from(document.querySelectorAll<HTMLTemplateElement>('[data-value-template]'));
+  if (dataEl && detail && buttons.length) {
+    const values: { name: string; description: string; accent: string }[] = JSON.parse(dataEl.textContent || '[]');
+    const nameEl = detail.querySelector('[data-detail-name]');
+    const textEl = detail.querySelector('[data-detail-text]');
+    const numEl = detail.querySelector('[data-detail-num]');
+    const iconEl = detail.querySelector('[data-detail-icon]');
+    const pad = (n: number) => String(n).padStart(2, '0');
+
+    const select = (index: number, focus = false) => {
+      const v = values[index];
+      if (!v) return;
+      buttons.forEach((b, i) => b.setAttribute('aria-pressed', i === index ? 'true' : 'false'));
+      detail.className = `vm-value-detail vm-value-detail--${v.accent} is-in is-swapping`;
+      if (nameEl) nameEl.textContent = v.name;
+      if (textEl) textEl.textContent = v.description;
+      if (numEl) numEl.textContent = `${pad(index + 1)} / ${pad(values.length)}`;
+      if (iconEl && templates[index]) iconEl.replaceChildren(templates[index].content.cloneNode(true));
+      requestAnimationFrame(() => requestAnimationFrame(() => detail.classList.remove('is-swapping')));
+      if (focus) buttons[index].focus();
+    };
+
+    buttons.forEach((button, i) => {
+      button.addEventListener('click', () => select(i));
+      button.addEventListener('keydown', (e) => {
+        const next = e.key === 'ArrowRight' || e.key === 'ArrowDown' ? 1 : e.key === 'ArrowLeft' || e.key === 'ArrowUp' ? -1 : 0;
+        if (!next) return;
+        e.preventDefault();
+        select((i + next + buttons.length) % buttons.length, true);
+      });
+    });
+  }
+</script>

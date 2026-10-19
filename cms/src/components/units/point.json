@@ -1,0 +1,18 @@
+{
+  "collectionName": "components_units_points",
+  "info": {
+    "displayName": "Point",
+    "icon": "check",
+    "description": "A short item: a title and an optional line."
+  },
+  "options": {},
+  "attributes": {
+    "title": {
+      "type": "string",
+      "required": true
+    },
+    "description": {
+      "type": "text"
+    }
+  }
+}

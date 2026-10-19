@@ -1,0 +1,87 @@
+{
+  "kind": "collectionType",
+  "collectionName": "research_projects",
+  "info": {
+    "singularName": "research-project",
+    "pluralName": "research-projects",
+    "displayName": "Research – Projects",
+    "description": "Research projects, as listed on the official Research Centres and Projects page."
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "title": {
+      "type": "string",
+      "required": true
+    },
+    "centre": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::research-centre.research-centre"
+    },
+    "centre_label": {
+      "type": "string"
+    },
+    "principal_investigator": {
+      "type": "string"
+    },
+    "co_investigators": {
+      "type": "string"
+    },
+    "funding_type": {
+      "type": "enumeration",
+      "enum": [
+        "college_grant",
+        "national",
+        "international"
+      ],
+      "default": "college_grant"
+    },
+    "funding_source": {
+      "type": "string"
+    },
+    "budget": {
+      "type": "string"
+    },
+    "start_date": {
+      "type": "date"
+    },
+    "end_date": {
+      "type": "date"
+    },
+    "period_label": {
+      "type": "string"
+    },
+    "listed_status": {
+      "type": "enumeration",
+      "enum": [
+        "ongoing",
+        "completed",
+        "not_stated"
+      ],
+      "default": "not_stated"
+    },
+    "summary": {
+      "type": "text"
+    },
+    "link_url": {
+      "type": "string"
+    },
+    "link_label": {
+      "type": "string"
+    },
+    "is_featured": {
+      "type": "boolean",
+      "default": false
+    },
+    "display_order": {
+      "type": "integer",
+      "default": 0
+    },
+    "source_note": {
+      "type": "string"
+    }
+  }
+}

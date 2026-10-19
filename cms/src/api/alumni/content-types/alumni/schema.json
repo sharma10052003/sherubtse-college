@@ -41,7 +41,7 @@
         "international_journey"
       ]
     },
-    "email": { "type": "string" },
+    "email": { "type": "email" },
     "organization": { "type": "string" },
     "article_title": { "type": "string" },
     "supporting_images": { "type": "media", "multiple": true, "allowedTypes": ["images"] },

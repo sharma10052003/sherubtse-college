@@ -1,0 +1,58 @@
+{
+  "kind": "collectionType",
+  "collectionName": "admission_enquiries",
+  "info": {
+    "singularName": "admission-enquiry",
+    "pluralName": "admission-enquiries",
+    "displayName": "Admission – Enquiries",
+    "description": "Enquiries sent from the Admissions page. Mark “reviewed” once answered."
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "full_name": {
+      "type": "string",
+      "required": true,
+      "maxLength": 120
+    },
+    "email": {
+      "type": "email",
+      "required": true
+    },
+    "phone": {
+      "type": "string",
+      "maxLength": 40
+    },
+    "applicant_category": {
+      "type": "string",
+      "maxLength": 120
+    },
+    "programme": {
+      "type": "string",
+      "maxLength": 200
+    },
+    "enquiry_category": {
+      "type": "string",
+      "maxLength": 120
+    },
+    "message": {
+      "type": "text",
+      "required": true,
+      "maxLength": 5000
+    },
+    "consent": {
+      "type": "boolean",
+      "default": false
+    },
+    "routed_to": {
+      "type": "string",
+      "private": true
+    },
+    "reviewed": {
+      "type": "boolean",
+      "default": false
+    }
+  }
+}
