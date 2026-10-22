@@ -1,4 +1,120 @@
 ---
-import SectionOverview from '../../components/templates/SectionOverview.astro';
+// Student Life landing page. Content is unchanged and still edited in
+// Strapi → Student Life – Overview (eyebrow, heading, intro, cards, extra
+// sections). Only the presentation is specific to this page: a mosaic of
+// cards, each with its own tone from the navy/gold palette, a pointer
+// spotlight and a colour sweep on hover. Styles: student-life.css (.sv).
+import Layout from '../../layouts/Layout.astro';
+import SectionBlocks from '../../components/SectionBlocks.astro';
+import '../../styles/student-life.css';
+import { getLandingPage } from '../../lib/content/landing';
+
+const page = await getLandingPage('student-life-overview');
+
+// Icons: the card's own `icon` key if set, otherwise guessed from its label.
+const ICONS: Record<string, string> = {
+  support: '<path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/><path d="M9 11h6M12 8v6"/>',
+  home: '<path d="M3 11 12 4l9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-5h4v5"/>',
+  people: '<circle cx="8" cy="8" r="3"/><circle cx="16.5" cy="9" r="2.5"/><path d="M2.5 20a5.5 5.5 0 0 1 11 0"/><path d="M13.5 15.2A4.5 4.5 0 0 1 21 18.5"/>',
+  sport: '<circle cx="12" cy="12" r="8.5"/><path d="M12 3.5v17M3.5 12h17"/><path d="M6 6c3 2.5 3 9.5 0 12M18 6c-3 2.5-3 9.5 0 12"/>',
+  book: '<path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5"/><path d="M8 7h8M8 11h6"/>',
+  alumni: '<path d="m2 9 10-5 10 5-10 5z"/><path d="M6 11v5c0 1.7 2.7 3 6 3s6-1.3 6-3v-5"/><path d="M22 9v6"/>',
+  compass: '<circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5z"/>',
+};
+const GUESS: [RegExp, string][] = [
+  [/counsel|support|service|well|health/i, 'support'],
+  [/hostel|residen|accommod|housing/i, 'home'],
+  [/club|societ|union|associat/i, 'people'],
+  [/sport|game|recreat|athlet/i, 'sport'],
+  [/handbook|rule|guide|policy/i, 'book'],
+  [/alumni|graduat/i, 'alumni'],
+];
+const iconFor = (c: { icon?: string; label: string }) => (c.icon && ICONS[c.icon] ? c.icon : GUESS.find(([re]) => re.test(c.label))?.[1] ?? 'compass');
+
+// One tone per card, in a fixed rhythm so neighbouring cards always differ.
+const TONES = ['navy', 'cream', 'sky', 'gold', 'deep', 'cream', 'navy', 'sky'];
+const cards = (page?.cards ?? []).filter((c) => c.label && c.url).map((c, i) => ({ ...c, icon: iconFor(c), tone: TONES[i % TONES.length] }));
+const external = (url: string) => /^https?:\/\//i.test(url);
+const arrow = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
+const heading = page?.heading ?? 'Student Life';
 ---
-<SectionOverview type="student-life-overview" title="Student Life" />
+<Layout title={heading} description={page?.seo_description ?? page?.intro ?? undefined}>
+  <div class="sv" data-sv>
+    <!-- ============ HERO ============ -->
+    <header class="sv-hero">
+      <span class="sv-hero-pattern" aria-hidden="true"></span>
+      <span class="sv-flags" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+      <div class="wrap sv-hero-inner">
+        <nav class="sv-breadcrumb sv-rise" style="--d:0" aria-label="Breadcrumb">
+          <a href="/">Home</a><span aria-hidden="true">›</span><span aria-current="page">{heading}</span>
+        </nav>
+        {page?.eyebrow && page.eyebrow !== heading && <p class="sv-eyebrow sv-rise" style="--d:1">{page.eyebrow}</p>}
+        <h1 class="sv-title sv-rise" style="--d:2">{heading}</h1>
+        {page?.intro && <p class="sv-intro sv-rise" style="--d:3">{page.intro}</p>}
+        {cards.length > 1 && (
+          <ul class="sv-jump sv-rise" style="--d:4" aria-label={heading}>
+            {cards.map((c) => (
+              <li><a href={c.url} {...(external(c.url) ? { target: '_blank', rel: 'noopener' } : {})}>{c.label}</a></li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </header>
+
+    <!-- ============ CARDS ============ -->
+    <section class="sv-band" aria-label={heading}>
+      <div class="wrap">
+        {cards.length > 0 ? (
+          <ul class:list={['sv-grid', `sv-grid--n${Math.min(cards.length, 8)}`]}>
+            {cards.map((c, i) => (
+              <li class:list={['sv-card', `sv-card--${c.tone}`, { 'sv-card--lead': i === 0 && cards.length >= 4 }]} data-sv-card data-reveal style={`--i:${i}`}>
+                <span class="sv-card-glow" aria-hidden="true"></span>
+                <svg class="sv-card-watermark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" set:html={ICONS[c.icon]} />
+                <span class="sv-card-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" set:html={ICONS[c.icon]} />
+                </span>
+                <h2 class="sv-card-title">
+                  <a href={c.url} {...(external(c.url) ? { target: '_blank', rel: 'noopener' } : {})}>{c.label}</a>
+                </h2>
+                {c.description && <p class="sv-card-text">{c.description}</p>}
+                <span class="sv-card-go" aria-hidden="true"><Fragment set:html={arrow} /></span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p class="sv-empty">This page is temporarily unavailable. Please check back shortly.</p>
+        )}
+        {page && page.blocks.length > 0 && (
+          <div class="sv-blocks">
+            <SectionBlocks blocks={page.blocks} />
+          </div>
+        )}
+      </div>
+    </section>
+  </div>
+</Layout>
+
+<script is:inline>
+  (() => {
+    const root = document.querySelector('[data-sv]');
+    if (!root) return;
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // Spotlight that follows the pointer inside each card.
+    if (!reduce && window.matchMedia('(hover: hover)').matches) {
+      root.querySelectorAll('[data-sv-card]').forEach((card) => {
+        card.addEventListener('pointermove', (e) => {
+          const r = card.getBoundingClientRect();
+          card.style.setProperty('--mx', `${e.clientX - r.left}px`);
+          card.style.setProperty('--my', `${e.clientY - r.top}px`);
+        });
+      });
+    }
+
+    // Gentle reveal as cards scroll into view.
+    if (reduce || !('IntersectionObserver' in window)) return;
+    root.classList.add('sv-anim');
+    const io = new IntersectionObserver((es) => es.forEach((en) => { if (en.isIntersecting) { en.target.classList.add('is-in'); io.unobserve(en.target); } }), { rootMargin: '0px 0px -6% 0px', threshold: 0.05 });
+    root.querySelectorAll('[data-reveal]').forEach((el) => io.observe(el));
+  })();
+</script>

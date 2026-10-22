@@ -368,7 +368,7 @@ async function resolveCampus(s: any): Promise<Card[]> {
     caption: null,
     category: null,
     date: null,
-    href: f.display_mode === 'page' ? `/about/campus-facilities/${f.slug}` : `/about/campus-facilities#${f.slug}`,
+    href: f.display_mode === 'page' ? `/about/campus-facilities/${f.slug}` : `/about/campus-facilities#facility-${f.slug}`,
     link_label: null,
   }));
   const cards = (s.cards ?? []).filter((c: any) => c?.title).map(cardOf);

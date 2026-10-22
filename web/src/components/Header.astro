@@ -29,11 +29,9 @@ const currentPath = Astro.url.pathname;
         ))}
       </ul>
 
-      <!-- Live, as-you-type results via Pagefind's JS module (built site
-           only — see search.astro's note on why dev mode has no index).
-           Still a plain GET form underneath, so it works with JS off or
-           before the module loads: submitting goes to /search?q=... same
-           as always. The dropdown is progressive enhancement on top. -->
+      <!-- Live, as-you-type results from the site search index
+           (/search-index.json, built from Strapi content). Still a plain GET
+           form underneath, so it works with JS off: submitting goes to /search?q=... -->
       <form class="header-search" action="/search" role="search" autocomplete="off">
         <div class="header-search-field">
           <input
@@ -149,16 +147,14 @@ const currentPath = Astro.url.pathname;
 </script>
 
 <script>
-  // Live search dropdown, powered by Pagefind's own JS module — the same
-  // index /search already uses, just driven directly instead of through
-  // the bulkier PagefindUI widget (that widget is the right call for a
-  // full results page; this header slot needs a compact few-result list).
-  // Pagefind only exists after a real `npm run build` (astro build +
-  // pagefind), never in `astro dev` — the dynamic import below fails
-  // there and the form just falls back to a plain GET submit to /search,
-  // exactly as it always has. No dropdowns elsewhere on the site; this is
-  // a search-results list, not a navigation menu, so it's a deliberate
-  // exception to that rule, not a contradiction of it.
+  // Live search dropdown, driven by the site search index
+  // (/search-index.json, built from the same Strapi content as the pages —
+  // works in `astro dev` and in the built site). Up to 6 results, a type
+  // label on each, arrow-key navigation, and a link to all results on
+  // /search. A search-results list, not a navigation menu, so it is a
+  // deliberate exception to the site's no-dropdowns rule.
+  import { loadIndex, search, highlight } from '../lib/search-client';
+
   const input = document.getElementById('headerSearchInput') as HTMLInputElement | null;
   const resultsBox = document.getElementById('headerSearchResults') as HTMLElement | null;
   const field = input?.closest('.header-search-field') as HTMLElement | null;
@@ -168,75 +164,58 @@ const currentPath = Astro.url.pathname;
     resultsBox.hidden = true;
     resultsBox.innerHTML = '';
     input.setAttribute('aria-expanded', 'false');
+    input.removeAttribute('aria-activedescendant');
   }
 
-  function escapeHtml(s: string) {
-    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-  }
+  if (input && resultsBox && field) {
+    // Start loading as soon as the visitor shows interest.
+    input.addEventListener('focus', () => void loadIndex(), { once: true });
 
-  async function setup() {
-    if (!input || !resultsBox || !field) return;
-
-    let pagefind: any;
-    try {
-      // A plain `import()` here gets rewritten by Vite's build-time module
-      // preload helper even with a @vite-ignore comment, because Pagefind's
-      // output isn't part of Vite's own module graph — that rewrite throws
-      // "__VITE_PRELOAD__ is not defined" at runtime. Hiding the import
-      // inside `new Function` keeps it invisible to Vite's static analysis
-      // entirely, which is the documented workaround for this exact
-      // Pagefind + Vite/Astro interaction.
-      const dynamicImport = new Function('specifier', 'return import(specifier)');
-      pagefind = await dynamicImport('/pagefind/pagefind.js');
-      await pagefind.init();
-    } catch {
-      return;
-    }
-
-    let latestTerm = '';
-
+    let latest = '';
     input.addEventListener('input', async () => {
       const term = input.value.trim();
-      latestTerm = term;
-
-      if (term.length < 2) {
-        closeResults();
-        return;
-      }
-
-      const search = await pagefind.debouncedSearch(term);
-      if (!search || term !== latestTerm) return;
-
-      const top = search.results.slice(0, 6);
-      if (top.length === 0) {
-        resultsBox.innerHTML = '<p class="header-search-empty">No matches.</p>';
-        resultsBox.hidden = false;
-        input.setAttribute('aria-expanded', 'true');
-        return;
-      }
-
-      const items = await Promise.all(top.map((r: any) => r.data()));
-      resultsBox.innerHTML = items
-        .map(
-          (d: any) => `
-        <a href="${d.url}" class="header-search-result" role="option">
-          <span class="header-search-result-title">${escapeHtml(d.meta?.title ?? d.url)}</span>
-          <span class="header-search-result-excerpt">${d.excerpt}</span>
-        </a>`
-        )
-        .join('');
+      latest = term;
+      if (term.length < 2) return closeResults();
+      const index = await loadIndex();
+      if (term !== latest) return;
+      const results = search(index, term);
+      const all = `/search?q=${encodeURIComponent(term)}`;
+      resultsBox.innerHTML = results.length
+        ? results
+            .slice(0, 6)
+            .map(
+              (r, i) => `<a href="${r.u}" class="header-search-result" role="option" id="hsr-${i}"${/^https?:/.test(r.u) ? ' target="_blank" rel="noopener"' : ''}>
+                <span class="header-search-result-kind">${r.k}</span>
+                <span class="header-search-result-title">${highlight(r.t, term)}</span>
+                ${r.d ? `<span class="header-search-result-excerpt">${highlight(r.d, term)}</span>` : ''}
+              </a>`,
+            )
+            .join('') + `<a href="${all}" class="header-search-all" role="option" id="hsr-all">See all ${results.length} result${results.length === 1 ? '' : 's'} →</a>`
+        : `<p class="header-search-empty">No matches for “${term.replace(/[<>&"]/g, '')}”. <a href="${all}">Search all pages</a></p>`;
       resultsBox.hidden = false;
       input.setAttribute('aria-expanded', 'true');
     });
 
+    // Arrow keys move through the results; Enter opens the highlighted one.
     input.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') closeResults();
+      if (e.key === 'Escape') return closeResults();
+      const options = Array.from(resultsBox.querySelectorAll<HTMLAnchorElement>('[role="option"]'));
+      if (!options.length || resultsBox.hidden) return;
+      const current = options.findIndex((o) => o.classList.contains('is-active'));
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        const next = e.key === 'ArrowDown' ? (current + 1) % options.length : (current - 1 + options.length) % options.length;
+        options.forEach((o, i) => o.classList.toggle('is-active', i === next));
+        input.setAttribute('aria-activedescendant', options[next].id);
+        options[next].scrollIntoView({ block: 'nearest' });
+      } else if (e.key === 'Enter' && current >= 0) {
+        e.preventDefault();
+        options[current].click();
+      }
     });
 
     document.addEventListener('click', (e) => {
       if (!field.contains(e.target as Node)) closeResults();
     });
   }
-
-  setup();
 </script>
