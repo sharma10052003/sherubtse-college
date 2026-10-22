@@ -1,0 +1,53 @@
+{
+  "collectionName": "components_research_grants",
+  "info": {
+    "displayName": "Grant",
+    "icon": "priceTag",
+    "description": "A research grant and its official documents."
+  },
+  "options": {},
+  "attributes": {
+    "name": {
+      "type": "string",
+      "required": true
+    },
+    "acronym": {
+      "type": "string"
+    },
+    "level": {
+      "type": "enumeration",
+      "enum": [
+        "college",
+        "university",
+        "external"
+      ],
+      "default": "college"
+    },
+    "description": {
+      "type": "text"
+    },
+    "focus_areas": {
+      "type": "text"
+    },
+    "status": {
+      "type": "enumeration",
+      "enum": [
+        "not_shown",
+        "open",
+        "closed"
+      ],
+      "default": "not_shown"
+    },
+    "deadline": {
+      "type": "date"
+    },
+    "announcement_url": {
+      "type": "string"
+    },
+    "documents": {
+      "type": "component",
+      "repeatable": true,
+      "component": "research.doc-link"
+    }
+  }
+}

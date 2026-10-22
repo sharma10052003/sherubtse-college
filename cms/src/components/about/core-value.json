@@ -1,0 +1,19 @@
+{
+  "collectionName": "components_about_core_values",
+  "info": {
+    "displayName": "Core Value",
+    "icon": "star",
+    "description": "One official core value name plus a short supporting description."
+  },
+  "options": {},
+  "attributes": {
+    "name": { "type": "string", "required": true },
+    "description": { "type": "text" },
+    "icon": {
+      "type": "enumeration",
+      "enum": ["professionalism", "innovation", "learning", "ownership", "community", "excellence"],
+      "default": "excellence",
+      "required": true
+    }
+  }
+}

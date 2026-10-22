@@ -1,0 +1,71 @@
+{
+  "collectionName": "components_facilities_feature_blocks",
+  "info": {
+    "displayName": "Featured Facility Content",
+    "icon": "star",
+    "description": "Content for the Library or Laboratories feature."
+  },
+  "options": {},
+  "attributes": {
+    "label": {
+      "type": "string"
+    },
+    "heading": {
+      "type": "string"
+    },
+    "intro": {
+      "type": "richtext"
+    },
+    "image": {
+      "type": "media",
+      "multiple": false,
+      "allowedTypes": [
+        "images"
+      ]
+    },
+    "image_alt": {
+      "type": "string"
+    },
+    "image_position": {
+      "type": "enumeration",
+      "enum": [
+        "left",
+        "right"
+      ],
+      "default": "left"
+    },
+    "features": {
+      "type": "component",
+      "repeatable": true,
+      "component": "facilities.feature"
+    },
+    "more_heading": {
+      "type": "string"
+    },
+    "more_content": {
+      "type": "richtext"
+    },
+    "gallery": {
+      "type": "media",
+      "multiple": true,
+      "allowedTypes": [
+        "images"
+      ]
+    },
+    "links": {
+      "type": "component",
+      "repeatable": true,
+      "component": "shared.link-item"
+    },
+    "documents": {
+      "type": "component",
+      "repeatable": true,
+      "component": "shared.attachment"
+    },
+    "facility": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::facility.facility"
+    }
+  }
+}

@@ -1,21 +1,20 @@
 ---
-// Announcements — one fixed template (Strapi: News & Notices – Vacancy
-// Announcements) drives this whole page. Staff create an entry in the admin
-// and it appears here automatically, newest first — no separate publish
-// step (draftAndPublish is off on that type). Search and type filtering are
-// client-side (AnnouncementsBoard), since the full list is small enough to
-// ship in one page load, matching the Faculty/Newsletter directory pattern.
+// Announcements — everything the College announces, newest first, in one
+// feed (see lib/content/announcement-feed.ts): recruitment postings (the
+// same records the Recruitment page lists — entered once, shown in both
+// places), short announcements including warnings and urgent notices, and
+// general notices. Tenders keep their own page. Search and filtering are
+// client-side (AnnouncementFeedBoard) since the list is small.
 import Layout from '../../../layouts/Layout.astro';
-import AnnouncementsBoard from '../../../components/announcements/AnnouncementsBoard.tsx';
+import AnnouncementFeedBoard from '../../../components/announcements/AnnouncementFeedBoard.tsx';
 import '../../../styles/section-landing.css';
 import '../../../styles/listing.css';
 import '../../../styles/announcements.css';
-import { getVacancyAnnouncements, TYPE_LABELS } from '../../../lib/content/vacancy-announcements';
+import { getAnnouncementFeed, GROUP_LABELS } from '../../../lib/content/announcement-feed';
 
-const announcements = await getVacancyAnnouncements();
-const typeOptions = Object.entries(TYPE_LABELS).map(([value, label]) => ({ value, label }));
+const items = await getAnnouncementFeed();
 ---
-<Layout title="Announcements" description="Vacancy announcements, shortlisted candidates, selection results and general notices from Sherubtse College.">
+<Layout title="Announcements" description="Vacancies, important notices and general announcements from Sherubtse College, newest first.">
   <header class="sl-head">
     <div class="wrap">
       <nav class="breadcrumb" aria-label="Breadcrumb">
@@ -24,13 +23,16 @@ const typeOptions = Object.entries(TYPE_LABELS).map(([value, label]) => ({ value
       <p class="sl-eyebrow">News & Notices</p>
       <h1 class="sl-title">Announcements</h1>
       <span class="sl-rule" aria-hidden="true"></span>
-      <p class="sl-intro">Vacancy announcements, shortlisted candidates, selection results and general notices — newest first.</p>
+      <p class="sl-intro">
+        Vacancies, important notices and general announcements — newest first. For the full recruitment process of each
+        vacancy, see <a href="/news-notices/recruitment">Recruitment</a>; older notices are in the <a href="/news-notices/archive">Archive</a>.
+      </p>
     </div>
   </header>
 
   <div class="ls-body">
     <div class="wrap an-wrap">
-      <AnnouncementsBoard client:load items={announcements} typeOptions={typeOptions} />
+      <AnnouncementFeedBoard client:load items={items} groupLabels={GROUP_LABELS} />
     </div>
   </div>
 </Layout>

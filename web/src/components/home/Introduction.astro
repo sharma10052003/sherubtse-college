@@ -1,0 +1,31 @@
+---
+// College introduction — a photograph, a short text and links.
+import Img from './Img.astro';
+import type { Section } from '../../lib/content/homepage';
+type S = Extract<Section, { kind: 'introduction' }>;
+interface Props { s: S; headingId: string }
+const { s, headingId } = Astro.props;
+const arrow = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
+---
+<div class:list={['hm-intro', { 'hm-intro--noimg': !s.image }]}>
+  {s.image && (
+    <figure class="hm-intro-media" data-reveal>
+      <span class="hm-intro-frame" aria-hidden="true"></span>
+      <span class="hm-intro-parallax" data-parallax>
+        <Img image={s.image} class="hm-intro-img" sizes="(min-width: 900px) 45vw, 100vw" />
+      </span>
+    </figure>
+  )}
+  <div class="hm-intro-text" data-reveal>
+    {s.eyebrow && <p class="hm-eyebrow">{s.eyebrow}</p>}
+    {s.heading && <h2 class="hm-h2" id={headingId}>{s.heading}</h2>}
+    {s.intro && <p class="hm-lede">{s.intro}</p>}
+    {s.body_html && <div class="hm-prose hm-statement" set:html={s.body_html} />}
+    {s.links.length > 0 && (
+      <ul class="hm-pills">
+        {s.links.map((l) => <li><a href={l.url}>{l.label} <Fragment set:html={arrow} /></a></li>)}
+      </ul>
+    )}
+    {s.button && <a class="hm-btn" href={s.button.url}>{s.button.label}</a>}
+  </div>
+</div>

@@ -1,0 +1,43 @@
+{
+  "collectionName": "components_home_cards",
+  "info": {
+    "displayName": "Card",
+    "icon": "picture",
+    "description": "A picture card: an image with a title, short text and a link."
+  },
+  "options": {},
+  "attributes": {
+    "title": {
+      "type": "string",
+      "required": true
+    },
+    "summary": {
+      "type": "text"
+    },
+    "image": {
+      "type": "media",
+      "multiple": false,
+      "allowedTypes": [
+        "images"
+      ]
+    },
+    "image_alt": {
+      "type": "string"
+    },
+    "caption": {
+      "type": "string"
+    },
+    "category": {
+      "type": "string"
+    },
+    "date": {
+      "type": "date"
+    },
+    "link_label": {
+      "type": "string"
+    },
+    "link_url": {
+      "type": "string"
+    }
+  }
+}

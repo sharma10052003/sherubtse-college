@@ -1,0 +1,211 @@
+---
+// Detail page for one recruitment posting (Strapi: News & Notices –
+// Recruitment (Vacancies)). One record covers a posting's whole lifecycle:
+// advertised, shortlisted for the written exam, shortlisted for the viva,
+// result declared — each stage has its own date/venue and candidate list on
+// the *same* record (see vacancy-announcements.ts), so every stage that's
+// happened stays visible on this one page even after a later stage is
+// filled in. General notices live on /news-notices/announcements instead.
+import Layout from '../../../layouts/Layout.astro';
+import AnnouncementHero from '../../../components/announcements/AnnouncementHero.astro';
+import AnnouncementStatusStepper from '../../../components/announcements/AnnouncementStatusStepper.astro';
+import AnnouncementSidebar from '../../../components/announcements/AnnouncementSidebar.astro';
+import PositionOpeningsTable from '../../../components/announcements/PositionOpeningsTable.astro';
+import CandidateGroup from '../../../components/announcements/CandidateGroup.astro';
+import AnnouncementAttachment from '../../../components/announcements/AnnouncementAttachment.astro';
+import '../../../styles/section-landing.css';
+import '../../../styles/listing.css';
+import '../../../styles/announcements.css';
+import { getVacancyAnnouncementSlugs, getVacancyAnnouncementBySlug } from '../../../lib/content/vacancy-announcements';
+
+export async function getStaticPaths() {
+  const slugs = await getVacancyAnnouncementSlugs();
+  return slugs.map((slug) => ({ params: { slug } }));
+}
+
+const { slug } = Astro.params as { slug: string };
+const announcement = await getVacancyAnnouncementBySlug(slug);
+
+if (!announcement) {
+  return Astro.redirect('/news-notices/recruitment', 404);
+}
+
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+}
+
+// The source notices group shortlisted candidates under their own position
+// heading when a stage covers more than one post — same here, grouped in
+// the order each position first appears rather than re-sorted. Generic
+// because the written-exam stage's rows (qualification-based) and every
+// other stage's rows (score-based) are different shapes.
+function groupByPosition<T extends { position_title: string }>(rows: T[]): { position: string; rows: T[] }[] {
+  const groups: { position: string; rows: T[] }[] = [];
+  for (const row of rows) {
+    let group = groups.find((g) => g.position === row.position_title);
+    if (!group) {
+      group = { position: row.position_title, rows: [] };
+      groups.push(group);
+    }
+    group.rows.push(row);
+  }
+  return groups;
+}
+
+const writtenGroups = announcement ? groupByPosition(announcement.written_exam.candidates) : [];
+const vivaGroups = announcement ? groupByPosition(announcement.viva.candidates) : [];
+const resultGroups = announcement ? groupByPosition(announcement.result.candidates) : [];
+
+// The "positions" a heading lists — preferring structured data (the
+// advertised openings, then whichever stage has candidates) over
+// re-splitting the free-text position_name.
+function splitPositions(name: string | null): string[] {
+  if (!name) return [];
+  return name.split(',').map((s) => s.trim()).filter(Boolean);
+}
+const allCandidateRows = announcement
+  ? [...announcement.written_exam.candidates, ...announcement.viva.candidates, ...announcement.result.candidates]
+  : [];
+const positionList = announcement
+  ? announcement.position_openings.length > 0
+    ? [...new Set(announcement.position_openings.map((p) => p.position_title))]
+    : allCandidateRows.length > 0
+      ? [...new Set(allCandidateRows.map((r) => r.position_title))]
+      : splitPositions(announcement.position_name)
+  : [];
+
+// The hero/sidebar "key info" card shows wherever the posting currently
+// stands — the full stage-by-stage history lives in the main column below
+// regardless, so this is a summary, not the only place a date appears.
+function formatDateTime(date: string, time: string | null) {
+  return formatDate(date) + (time ? ` at ${time}` : '');
+}
+const dateFieldLabel = announcement
+  ? announcement.type === 'shortlisted_written'
+    ? 'Written Exam'
+    : announcement.type === 'shortlisted_viva'
+      ? 'Viva-Voce'
+      : announcement.type === 'selection_result'
+        ? 'Result Declared'
+        : announcement.type === 'vacancy_announcement' || announcement.type === 're_vacancy_announcement'
+          ? 'Application Deadline'
+          : null
+  : null;
+const dateFieldValue =
+  announcement && announcement.type === 'shortlisted_written' && announcement.written_exam.date
+    ? formatDateTime(announcement.written_exam.date, announcement.written_exam.time)
+    : announcement && announcement.type === 'shortlisted_viva' && announcement.viva.date
+      ? formatDateTime(announcement.viva.date, announcement.viva.time)
+      : announcement && announcement.type === 'selection_result' && announcement.result.date
+        ? formatDate(announcement.result.date)
+        : announcement && announcement.application_deadline
+          ? formatDate(announcement.application_deadline)
+          : null;
+const venue =
+  announcement?.type === 'shortlisted_written'
+    ? announcement.written_exam.venue
+    : announcement?.type === 'shortlisted_viva'
+      ? announcement.viva.venue
+      : null;
+
+const KEY_INFO_TITLES: Record<string, string> = {
+  shortlisted_written: 'Interview Information',
+  shortlisted_viva: 'Interview Information',
+  vacancy_announcement: 'Application Details',
+  re_vacancy_announcement: 'Application Details',
+  selection_result: 'Key Dates',
+};
+const keyInfoTitle = announcement ? (KEY_INFO_TITLES[announcement.type] ?? null) : null;
+---
+{announcement && (
+  <Layout title={announcement.title} description={announcement.description}>
+    <AnnouncementHero
+      breadcrumb={[
+        { label: 'Home', url: '/' },
+        { label: 'News & Notices', url: '/news-notices' },
+        { label: 'Recruitment', url: '/news-notices/recruitment' },
+        { label: announcement.title, url: `/news-notices/recruitment/${announcement.slug}` },
+      ]}
+      type={announcement.type}
+      typeLabel={announcement.type_label}
+      status={announcement.status}
+      title={announcement.title}
+      positions={positionList}
+      datePosted={formatDate(announcement.date_posted)}
+      dateFieldLabel={dateFieldLabel}
+      dateFieldValue={dateFieldValue}
+      venue={venue}
+    />
+
+    <div class="ls-body">
+      <div class="wrap an-detail-wrap">
+        <AnnouncementStatusStepper type={announcement.type} />
+
+        <div class="an-detail-grid">
+          <div class="an-intro-panel">
+            <div class="article-body" set:html={announcement.description.replace(/\n/g, '<br>')} />
+          </div>
+
+          <div class="an-detail-main">
+            {announcement.position_openings.length > 0 && (
+              <PositionOpeningsTable positions={announcement.position_openings} />
+            )}
+
+            {writtenGroups.length > 0 && (
+              <section class="an-table-section">
+                <h2 class="an-table-heading">Shortlisted for Written Exam</h2>
+                {announcement.written_exam.date && (
+                  <p class="small an-stage-meta">
+                    {formatDateTime(announcement.written_exam.date, announcement.written_exam.time)}
+                    {announcement.written_exam.venue && <> &middot; {announcement.written_exam.venue}</>}
+                  </p>
+                )}
+                {writtenGroups.map((group) => (
+                  <CandidateGroup position={group.position} rows={group.rows} showHeading={writtenGroups.length > 1} />
+                ))}
+              </section>
+            )}
+
+            {vivaGroups.length > 0 && (
+              <section class="an-table-section">
+                <h2 class="an-table-heading">Shortlisted for Viva-Voce</h2>
+                {announcement.viva.date && (
+                  <p class="small an-stage-meta">
+                    {formatDateTime(announcement.viva.date, announcement.viva.time)}
+                    {announcement.viva.venue && <> &middot; {announcement.viva.venue}</>}
+                  </p>
+                )}
+                {vivaGroups.map((group) => (
+                  <CandidateGroup position={group.position} rows={group.rows} showHeading={vivaGroups.length > 1} />
+                ))}
+              </section>
+            )}
+
+            {resultGroups.length > 0 && (
+              <section class="an-table-section">
+                <h2 class="an-table-heading">Selection Result</h2>
+                {announcement.result.date && <p class="small an-stage-meta">Declared {formatDate(announcement.result.date)}</p>}
+                {resultGroups.map((group) => (
+                  <CandidateGroup position={group.position} rows={group.rows} showHeading={resultGroups.length > 1} />
+                ))}
+              </section>
+            )}
+
+            {announcement.attachment_url && (
+              <AnnouncementAttachment url={announcement.attachment_url} name={announcement.attachment_name} title={announcement.title} />
+            )}
+          </div>
+
+          <AnnouncementSidebar
+            keyInfoTitle={keyInfoTitle}
+            datePosted={formatDate(announcement.date_posted)}
+            dateFieldLabel={dateFieldLabel}
+            dateFieldValue={dateFieldValue}
+            venue={venue}
+            additionalNotes={announcement.additional_notes}
+          />
+        </div>
+      </div>
+    </div>
+  </Layout>
+)}

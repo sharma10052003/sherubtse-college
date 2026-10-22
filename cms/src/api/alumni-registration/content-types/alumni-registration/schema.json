@@ -11,7 +11,7 @@
   },
   "attributes": {
     "full_name": { "type": "string", "required": true },
-    "email": { "type": "string", "required": true },
+    "email": { "type": "email", "required": true },
     "phone": { "type": "string" },
 
     "programme": { "type": "string" },

@@ -1,0 +1,166 @@
+---
+// The Admissions enquiry form (Admission – Enquiry Form Settings). Posts to
+// /api/admission-enquiries, which routes it to the option's email address.
+// Used on /admissions and in the Contact tab of each applicant page.
+import type { EnquirySettings } from '../../lib/content/admissions';
+
+interface Props {
+  settings: EnquirySettings;
+  /** Applicant options (the two applicant page titles). */
+  applicants: string[];
+  /** Pre-selected applicant option. */
+  selected?: string;
+  heading: string;
+  intro?: string | null;
+}
+const { settings: e, applicants, selected, heading, intro } = Astro.props;
+const info = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>';
+---
+<div class="adm-enquiry">
+  <div class="adm-enquiry-intro">
+    <h2 class="adm-h2">{heading}</h2>
+    {intro && <p class="adm-lede">{intro}</p>}
+    {e.introduction && e.introduction !== intro && <p class="adm-lede">{e.introduction}</p>}
+    {e.privacy_notice && (
+      <p class="adm-privacy">
+        <Fragment set:html={info} />
+        <span>{e.privacy_notice}{e.privacy_url && <> <a href={e.privacy_url}>Privacy policy</a></>}</span>
+      </p>
+    )}
+  </div>
+  <form class="adm-form" id="admissionEnquiry" novalidate>
+    <h3 class="adm-sr">{e.title}</h3>
+    <div class="adm-form-grid">
+      <div class="adm-field">
+        <label for="aq-name">{e.labels.name} <span class="adm-req" aria-hidden="true">*</span></label>
+        <input id="aq-name" name="full_name" required maxlength="120" autocomplete="name" />
+      </div>
+      <div class="adm-field">
+        <label for="aq-email">{e.labels.email} <span class="adm-req" aria-hidden="true">*</span></label>
+        <input id="aq-email" name="email" type="email" required maxlength="160" autocomplete="email" inputmode="email" />
+      </div>
+      {e.show_phone && (
+        <div class="adm-field">
+          <label for="aq-phone">{e.labels.phone} {e.phone_required ? <span class="adm-req" aria-hidden="true">*</span> : null}</label>
+          <input id="aq-phone" name="phone" type="tel" maxlength="40" autocomplete="tel" required={e.phone_required} />
+        </div>
+      )}
+      {applicants.length > 0 && (
+        <div class="adm-field">
+          <label for="aq-applicant">{e.labels.applicant}</label>
+          <select id="aq-applicant" name="applicant_category">
+            {applicants.map((a) => <option value={a} selected={a === selected}>{a}</option>)}
+          </select>
+        </div>
+      )}
+      {e.show_programme && e.programmes.length > 0 && (
+        <div class="adm-field">
+          <label for="aq-programme">{e.labels.programme} {e.programme_required ? <span class="adm-req" aria-hidden="true">*</span> : null}</label>
+          <select id="aq-programme" name="programme" required={e.programme_required}>
+            <option value="">—</option>
+            {e.programmes.map((p) => <option value={p}>{p}</option>)}
+          </select>
+        </div>
+      )}
+      {e.categories.length > 0 && (
+        <div class="adm-field">
+          <label for="aq-category">{e.labels.category}</label>
+          <select id="aq-category" name="enquiry_category">
+            {e.categories.map((c) => <option value={c}>{c}</option>)}
+          </select>
+        </div>
+      )}
+      <div class="adm-field adm-field--full">
+        <label for="aq-message">{e.labels.message} <span class="adm-req" aria-hidden="true">*</span></label>
+        <textarea id="aq-message" name="message" required maxlength="5000" rows="5"></textarea>
+      </div>
+      <div class="adm-field adm-field--full adm-consent">
+        <input id="aq-consent" name="consent" type="checkbox" required />
+        <label for="aq-consent">{e.labels.consent} <span class="adm-req" aria-hidden="true">*</span></label>
+      </div>
+    </div>
+    <div class="adm-hp" aria-hidden="true">
+      <label for="aq-hp">Leave this field empty</label>
+      <input id="aq-hp" name="hp_field" tabindex="-1" autocomplete="off" />
+    </div>
+    <div class="adm-form-foot">
+      <button type="submit" class="adm-btn adm-btn--navy"><span class="adm-spinner" aria-hidden="true"></span>{e.labels.submit}</button>
+      <p class="adm-status-msg" role="status" data-form-status></p>
+    </div>
+  </form>
+</div>
+
+<script
+  is:inline
+  define:vars={{
+    strapiUrl: import.meta.env.PUBLIC_STRAPI_URL || 'http://localhost:1337',
+    texts: { confirmation: e.confirmation, error: e.error },
+  }}
+>
+  (() => {
+    const form = document.getElementById('admissionEnquiry');
+    if (!form) return;
+    const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+    const labelText = (input) => (input.labels?.[0]?.firstChild?.textContent || input.name).trim();
+    function setError(input, msg) {
+      const field = input.closest('.adm-field');
+      let err = field?.querySelector('.adm-error');
+      if (msg) {
+        if (!err && field) { err = document.createElement('p'); err.className = 'adm-error'; err.id = `${input.id}-error`; field.appendChild(err); }
+        if (err) err.textContent = msg;
+        input.setAttribute('aria-invalid', 'true');
+        if (err) input.setAttribute('aria-describedby', err.id);
+      } else {
+        input.removeAttribute('aria-invalid'); input.removeAttribute('aria-describedby'); err?.remove();
+      }
+    }
+    function check(input) {
+      if (input.name === 'hp_field') return true;
+      const value = input.type === 'checkbox' ? input.checked : input.value.trim();
+      let msg = '';
+      if (input.required && !value) msg = input.type === 'checkbox' ? 'Please tick this box to continue.' : input.tagName === 'SELECT' ? `Please choose an option for “${labelText(input)}”.` : `Please fill in “${labelText(input)}”.`;
+      else if (input.type === 'email' && value && !EMAIL.test(value)) msg = 'Please enter a valid email address, e.g. name@example.com.';
+      setError(input, msg);
+      return !msg;
+    }
+    const status = form.querySelector('[data-form-status]');
+    const setStatus = (kind, msg) => { status.className = `adm-status-msg is-${kind}`; status.textContent = msg; };
+    form.querySelectorAll('input, select, textarea').forEach((el) => {
+      el.addEventListener('blur', () => { if (el.getAttribute('aria-invalid') === 'true' || (el.value && el.type !== 'checkbox')) check(el); });
+      el.addEventListener('change', () => { if (el.getAttribute('aria-invalid') === 'true') check(el); });
+    });
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (form.dataset.busy === 'true') return;
+      const invalid = Array.from(form.querySelectorAll('input, select, textarea')).filter((el) => !check(el));
+      if (invalid.length) { invalid[0].focus(); setStatus('error', 'Please fix the highlighted fields and try again.'); return; }
+      const fd = new FormData(form);
+      const val = (k) => { const v = (fd.get(k) || '').toString().trim(); return v || null; };
+      const btn = form.querySelector('button[type="submit"]');
+      const applicant = form.querySelector('[name="applicant_category"]')?.value;
+      form.dataset.busy = 'true'; btn.disabled = true; btn.classList.add('is-loading'); form.setAttribute('aria-busy', 'true');
+      setStatus('loading', 'Sending your enquiry…');
+      try {
+        const res = await fetch(`${strapiUrl}/api/admission-enquiries`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ data: {
+            full_name: val('full_name'), email: val('email'), phone: val('phone'), applicant_category: val('applicant_category'),
+            programme: val('programme'), enquiry_category: val('enquiry_category'), message: val('message'),
+            consent: fd.get('consent') === 'on', hp_field: fd.get('hp_field') || '',
+          } }),
+        });
+        const body = await res.json().catch(() => null);
+        if (!res.ok) { const err = new Error(body?.error?.message || `Request failed (${res.status})`); err.status = res.status; throw err; }
+        setStatus('success', texts.confirmation);
+        form.reset();
+        const sel = form.querySelector('[name="applicant_category"]');
+        if (sel && applicant) sel.value = applicant;
+      } catch (err) {
+        setStatus('error', err.status === 429 ? err.message : `${texts.error} (${err.message})`);
+      } finally {
+        form.dataset.busy = 'false'; btn.disabled = false; btn.classList.remove('is-loading'); form.removeAttribute('aria-busy');
+      }
+    });
+  })();
+</script>

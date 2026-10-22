@@ -1,0 +1,18 @@
+---
+// A responsive Strapi image (srcset from Strapi's generated sizes).
+import type { ResponsiveImage } from '../../lib/strapi';
+interface Props { image: ResponsiveImage; sizes?: string; class?: string; eager?: boolean; alt?: string }
+const { image, sizes = '100vw', class: cls, eager = false, alt } = Astro.props;
+---
+<img
+  class={cls}
+  src={image.src}
+  srcset={image.srcset ?? undefined}
+  sizes={image.srcset ? sizes : undefined}
+  width={image.width ?? undefined}
+  height={image.height ?? undefined}
+  alt={alt ?? image.alt}
+  loading={eager ? 'eager' : 'lazy'}
+  decoding="async"
+  fetchpriority={eager ? 'high' : undefined}
+/>

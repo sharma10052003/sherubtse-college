@@ -1,0 +1,53 @@
+{
+  "collectionName": "components_home_link_cards",
+  "info": {
+    "displayName": "Link Cards",
+    "icon": "apps",
+    "description": "Simple cards linking to pages, e.g. “Academics”, “Admissions”."
+  },
+  "options": {},
+  "attributes": {
+    "heading": {
+      "type": "string"
+    },
+    "intro": {
+      "type": "text"
+    },
+    "is_visible": {
+      "type": "boolean",
+      "default": true
+    },
+    "background": {
+      "type": "enumeration",
+      "enum": [
+        "white",
+        "soft",
+        "navy"
+      ],
+      "default": "white"
+    },
+    "width": {
+      "type": "enumeration",
+      "enum": [
+        "full",
+        "half"
+      ],
+      "default": "full"
+    },
+    "anchor": {
+      "type": "string",
+      "regex": "^[a-z0-9-]*$"
+    },
+    "cards": {
+      "type": "component",
+      "repeatable": true,
+      "component": "shared.landing-card"
+    },
+    "button_label": {
+      "type": "string"
+    },
+    "button_url": {
+      "type": "string"
+    }
+  }
+}

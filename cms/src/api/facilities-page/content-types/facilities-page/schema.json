@@ -1,0 +1,78 @@
+{
+  "kind": "singleType",
+  "collectionName": "facilities_page",
+  "info": {
+    "singularName": "facilities-page",
+    "pluralName": "facilities-pages",
+    "displayName": "About – Campus Facilities: Page Settings",
+    "description": "The Campus Facilities page: hero, quick navigation, the Library and Laboratories features, empty-state text, SEO and the order of sections."
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "eyebrow": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string",
+      "required": true
+    },
+    "intro": {
+      "type": "text"
+    },
+    "hero_images": {
+      "type": "media",
+      "multiple": true,
+      "allowedTypes": [
+        "images"
+      ]
+    },
+    "hero_image_alt": {
+      "type": "string"
+    },
+    "hero_caption": {
+      "type": "string"
+    },
+    "quick_nav": {
+      "type": "component",
+      "repeatable": true,
+      "component": "facilities.nav-link"
+    },
+    "library": {
+      "type": "component",
+      "repeatable": false,
+      "component": "facilities.feature-block"
+    },
+    "laboratories": {
+      "type": "component",
+      "repeatable": false,
+      "component": "facilities.feature-block"
+    },
+    "messages": {
+      "type": "component",
+      "repeatable": false,
+      "component": "facilities.messages"
+    },
+    "sections": {
+      "type": "dynamiczone",
+      "components": [
+        "facilities.section-index",
+        "facilities.section-library",
+        "facilities.section-laboratories",
+        "facilities.section-directory",
+        "facilities.section-gallery",
+        "facilities.section-links",
+        "sections.rich-text",
+        "sections.image-text",
+        "sections.call-to-action"
+      ]
+    },
+    "seo": {
+      "type": "component",
+      "repeatable": false,
+      "component": "shared.seo"
+    }
+  }
+}

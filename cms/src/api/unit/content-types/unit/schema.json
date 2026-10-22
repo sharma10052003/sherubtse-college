@@ -4,21 +4,38 @@
   "info": {
     "singularName": "unit",
     "pluralName": "units",
-    "displayName": "About – Administrative Units"
+    "displayName": "About – Administrative Units",
+    "description": "Departments, administrative offices, research centres and student bodies. Administrative ones appear on About → Administrative Units."
   },
   "options": {
     "draftAndPublish": true
   },
   "attributes": {
-    "name": { "type": "string", "required": true, "unique": true },
-    "short_name": { "type": "string" },
-    "slug": { "type": "uid", "targetField": "name" },
+    "name": {
+      "type": "string",
+      "required": true,
+      "unique": true
+    },
+    "short_name": {
+      "type": "string"
+    },
+    "slug": {
+      "type": "uid",
+      "targetField": "name"
+    },
     "kind": {
       "type": "enumeration",
-      "enum": ["academic", "administrative", "research_centre", "student_body"],
+      "enum": [
+        "academic",
+        "administrative",
+        "research_centre",
+        "student_body"
+      ],
       "required": true
     },
-    "description": { "type": "richtext" },
+    "description": {
+      "type": "richtext"
+    },
     "head": {
       "type": "relation",
       "relation": "oneToOne",
@@ -29,8 +46,82 @@
       "relation": "oneToOne",
       "target": "api::person.person"
     },
-    "contact": { "type": "component", "repeatable": false, "component": "shared.contact-block" },
-    "photo": { "type": "media", "multiple": false, "allowedTypes": ["images"] },
-    "last_reviewed": { "type": "date", "required": true }
+    "contact": {
+      "type": "component",
+      "repeatable": false,
+      "component": "shared.contact-block"
+    },
+    "photo": {
+      "type": "media",
+      "multiple": false,
+      "allowedTypes": [
+        "images"
+      ]
+    },
+    "last_reviewed": {
+      "type": "date",
+      "required": true
+    },
+    "summary": {
+      "type": "text",
+      "maxLength": 300
+    },
+    "category": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::unit-category.unit-category"
+    },
+    "office": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::contact-person.contact-person"
+    },
+    "head_name": {
+      "type": "string"
+    },
+    "head_designation": {
+      "type": "string"
+    },
+    "head_portrait": {
+      "type": "media",
+      "multiple": false,
+      "allowedTypes": [
+        "images"
+      ]
+    },
+    "head_portrait_alt": {
+      "type": "string"
+    },
+    "responsibilities": {
+      "type": "component",
+      "repeatable": true,
+      "component": "units.point"
+    },
+    "services": {
+      "type": "component",
+      "repeatable": true,
+      "component": "units.point"
+    },
+    "location": {
+      "type": "string"
+    },
+    "links": {
+      "type": "component",
+      "repeatable": true,
+      "component": "shared.link-item"
+    },
+    "documents": {
+      "type": "component",
+      "repeatable": true,
+      "component": "shared.attachment"
+    },
+    "display_order": {
+      "type": "integer",
+      "default": 0
+    },
+    "is_featured": {
+      "type": "boolean",
+      "default": false
+    }
   }
 }

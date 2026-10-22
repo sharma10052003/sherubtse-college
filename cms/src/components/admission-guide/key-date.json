@@ -1,0 +1,28 @@
+{
+  "collectionName": "components_admission_guide_key_dates",
+  "info": {
+    "displayName": "Key Date",
+    "icon": "bulletList",
+    "description": "A date on the Admissions timeline."
+  },
+  "options": {},
+  "attributes": {
+    "date": {
+      "type": "date",
+      "required": true
+    },
+    "label": {
+      "type": "string",
+      "required": true
+    },
+    "audience": {
+      "type": "enumeration",
+      "enum": [
+        "all",
+        "bhutanese",
+        "international"
+      ],
+      "default": "all"
+    }
+  }
+}

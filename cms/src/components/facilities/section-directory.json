@@ -1,0 +1,69 @@
+{
+  "collectionName": "components_facilities_section_directory",
+  "info": {
+    "displayName": "Section – Facility Stories",
+    "icon": "layout",
+    "description": "Each published Facility as a numbered editorial story, with an “Explore facility details” toggle. Facilities linked to the Library or Laboratories feature are not repeated here."
+  },
+  "options": {},
+  "attributes": {
+    "heading": {
+      "type": "string"
+    },
+    "intro": {
+      "type": "text"
+    },
+    "anchor": {
+      "type": "string"
+    },
+    "background": {
+      "type": "enumeration",
+      "enum": [
+        "white",
+        "soft",
+        "navy"
+      ],
+      "default": "white"
+    },
+    "is_visible": {
+      "type": "boolean",
+      "default": true
+    },
+    "columns": {
+      "type": "enumeration",
+      "enum": [
+        "three",
+        "four"
+      ],
+      "default": "three"
+    },
+    "card_style": {
+      "type": "enumeration",
+      "enum": [
+        "image_top",
+        "image_left"
+      ],
+      "default": "image_top"
+    },
+    "show_search": {
+      "type": "boolean",
+      "default": true
+    },
+    "show_filters": {
+      "type": "boolean",
+      "default": true
+    },
+    "layout": {
+      "type": "enumeration",
+      "enum": [
+        "alternating",
+        "list"
+      ],
+      "default": "alternating"
+    },
+    "expand_label": {
+      "type": "string",
+      "default": "Explore facility details"
+    }
+  }
+}

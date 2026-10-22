@@ -1,0 +1,35 @@
+{
+  "collectionName": "components_research_resources",
+  "info": {
+    "displayName": "Policy or Guideline",
+    "icon": "shield",
+    "description": "An official policy, guideline or requirement."
+  },
+  "options": {},
+  "attributes": {
+    "title": {
+      "type": "string",
+      "required": true
+    },
+    "description": {
+      "type": "text"
+    },
+    "url": {
+      "type": "string",
+      "required": true
+    },
+    "source": {
+      "type": "string"
+    },
+    "file_type": {
+      "type": "enumeration",
+      "enum": [
+        "pdf",
+        "docx",
+        "page",
+        "other"
+      ],
+      "default": "page"
+    }
+  }
+}

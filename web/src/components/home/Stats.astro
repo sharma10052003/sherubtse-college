@@ -1,0 +1,18 @@
+---
+// Facts & Figures — verified figures only (the section is dropped when none are).
+import type { Stat, HomeLabels } from '../../lib/content/homepage';
+interface Props { items: Stat[]; labels: HomeLabels }
+const { items, labels } = Astro.props;
+// Whole numbers count up when scrolled into view.
+const countable = (v: string) => (/^[0-9]{1,5}$/.test(v) ? v : undefined);
+---
+<dl class="hm-stats">
+  {items.map((s, i) => (
+    <div class="hm-stat" data-reveal style={`--i:${i}`}>
+      <dt class="hm-stat-label">{s.label}</dt>
+      <dd class="hm-stat-value" data-count={countable(s.value)}>{s.value}</dd>
+      {s.note && <dd class="hm-stat-note">{s.note}</dd>}
+      {s.source && <dd class="hm-stat-source">{labels.source}: {s.source}</dd>}
+    </div>
+  ))}
+</dl>

@@ -1,21 +1,161 @@
 ---
+// Administrative Units — hero, featured leadership offices, and a directory
+// of every published administrative unit. All content
+// comes from Strapi (About → Administrative Units; heads from each unit's
+// linked office in Contact – Offices) via lib/content/units.ts. Each unit
+// links to its existing page at /about/units/<slug>. Styles: units.css (.au).
 import Layout from '../../../layouts/Layout.astro';
-import { getUnits } from '../../../lib/content/units';
+import '../../../styles/units.css';
+import UnitPortrait from '../../../components/units/UnitPortrait.astro';
+import { getAdminUnits, getUnitsPage, getUnitCategories } from '../../../lib/content/units';
 
-const units = await getUnits('administrative');
+const [page, units, allCategories] = await Promise.all([getUnitsPage(), getAdminUnits(), getUnitCategories()]);
+const featured = units.filter((u) => u.featured);
+const categories = allCategories.filter((c) => units.some((u) => u.category?.slug === c.slug));
+const tel = (p: string) => `tel:${p.replace(/[^+\d]/g, '').replace(/^975/, '+975')}`;
+const arrow = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
 ---
-<Layout title="Administrative Units" description="Administrative offices at Sherubtse College.">
-  <div class="wrap" style="padding-top:var(--s5);padding-bottom:var(--s7)">
-    <nav class="breadcrumb" aria-label="Breadcrumb"><a href="/">Home</a> › <a href="/about">About</a> › <span class="current">Administrative Units</span></nav>
-    <h1 class="h1">Administrative Units</h1>
-    <div class="cards" style="margin-top:var(--s6)">
-      {units.length > 0 ? units.map((u) => (
-        <div class="card">
-          <h3 class="h3">{u.name}</h3>
-          {u.description && <p>{u.description}</p>}
-          <a href={`/about/units/${u.slug}`} class="btn-quiet">View unit</a>
+<Layout title={page.seo_title || page.title} description={page.seo_description || page.subtitle || undefined}>
+  <div class="au" data-au>
+    <!-- =========================== HERO =========================== -->
+    <header class:list={['au-hero', { 'au-hero--photo': page.hero_image }]}>
+      {page.hero_image && <img class="au-hero-photo" src={page.hero_image.url} alt={page.hero_image.alt} />}
+      <svg class="au-hero-motif" viewBox="0 0 400 400" aria-hidden="true">
+        <g class="au-motif-ring"><circle cx="200" cy="200" r="190" /><circle cx="200" cy="200" r="150" /></g>
+        <path d="M200 30 370 200 200 370 30 200z" />
+        <path d="M200 80 320 200 200 320 80 200z" />
+        <path d="M80 80h240v240H80z" />
+        <path d="M200 30v340M30 200h340" />
+        <circle cx="200" cy="200" r="34" />
+      </svg>
+      <div class="wrap au-wide au-hero-inner">
+        <nav class="au-breadcrumb au-stagger" style="--d:0" aria-label="Breadcrumb">
+          <a href="/">Home</a><span aria-hidden="true">→</span><a href="/about">About</a><span aria-hidden="true">→</span><span aria-current="page">Administrative Units</span>
+        </nav>
+        {page.eyebrow && <p class="au-eyebrow au-stagger" style="--d:1">{page.eyebrow}</p>}
+        <h1 class="au-title au-stagger" style="--d:2">{page.title}</h1>
+        {page.subtitle && <p class="au-subtitle au-stagger" style="--d:3">{page.subtitle}</p>}
+        {page.intro && <p class="au-intro au-stagger" style="--d:4">{page.intro}</p>}
+        {units.length > 0 && (
+          <p class="au-facts au-stagger" style="--d:5">
+            <span><strong>{units.length}</strong> offices</span>
+            {categories.length > 0 && <span><strong>{categories.length}</strong> areas of responsibility</span>}
+          </p>
+        )}
+      </div>
+    </header>
+
+    <!-- =========================== FEATURED =========================== -->
+    {featured.length > 0 && (
+      <section class="au-section au-featured" aria-labelledby="au-featured-h">
+        <div class="wrap au-wide">
+          <header class="au-head" data-au-reveal>
+            <h2 class="au-h2" id="au-featured-h">{page.featured_heading}</h2>
+            {page.featured_intro && <p class="au-lede">{page.featured_intro}</p>}
+          </header>
+          {featured.map((u, i) => (
+            <article class:list={['au-lead', { 'au-lead--flip': i % 2 === 1 }]} aria-labelledby={`au-lead-${u.slug}`} data-au-reveal>
+              <div class="au-lead-media">
+                <span class="au-lead-frame" aria-hidden="true"></span>
+                <UnitPortrait unit={u} size="feature" eager={i === 0} />
+              </div>
+              <div class="au-lead-body">
+                {u.category && <p class="au-tag">{u.category.name}</p>}
+                <h3 class="au-lead-title" id={`au-lead-${u.slug}`}>{u.name}</h3>
+                {u.head_name && (
+                  <p class="au-person">
+                    <strong>{u.head_name}</strong>
+                    {u.head_designation && <span>{u.head_designation}</span>}
+                  </p>
+                )}
+                {u.summary && <p class="au-lead-summary">{u.summary}</p>}
+                {u.responsibilities.length > 0 && (
+                  <ul class="au-lead-points">
+                    {u.responsibilities.slice(0, 4).map((r) => <li>{r.title}</li>)}
+                  </ul>
+                )}
+                <div class="au-lead-actions">
+                  <a class="au-btn" href={`/about/units/${u.slug}`}>Explore Unit <Fragment set:html={arrow} /><span class="au-sr">: {u.name}</span></a>
+                  {u.email && <a class="au-quiet" href={`mailto:${u.email}`}>{u.email}</a>}
+                </div>
+              </div>
+            </article>
+          ))}
         </div>
-      )) : <p class="small">Administrative units will appear here once added in Strapi.</p>}
-    </div>
+      </section>
+    )}
+
+    <!-- =========================== DIRECTORY =========================== -->
+    <section class="au-section au-directory" aria-labelledby="au-dir-h" id="directory">
+      <div class="wrap au-wide">
+        <header class="au-head" data-au-reveal>
+          <h2 class="au-h2" id="au-dir-h">{page.directory_heading}</h2>
+          {page.directory_intro && <p class="au-lede">{page.directory_intro}</p>}
+        </header>
+
+        {units.length > 0 ? (
+          <>
+            <ul class="au-grid" data-au-grid>
+              {units.map((u, i) => (
+                <li
+                  class:list={['au-card', { 'au-card--side': i % 3 === 1 }]}
+                  data-au-item
+                  data-au-reveal
+                  style={`--i:${i % 6}`}
+                >
+                  <a class="au-card-link" href={`/about/units/${u.slug}`} aria-labelledby={`au-card-${u.slug}`}></a>
+                  <UnitPortrait unit={u} />
+                  <div class="au-card-body">
+                    {u.category && <p class="au-tag"><span class="au-tag-mark" aria-hidden="true"></span>{u.category.name}</p>}
+                    <h3 class="au-card-title" id={`au-card-${u.slug}`}>{u.name}</h3>
+                    {u.head_name || u.head_designation ? (
+                      <p class="au-person">
+                        {u.head_name && <strong>{u.head_name}</strong>}
+                        {u.head_designation && <span>{u.head_designation}</span>}
+                      </p>
+                    ) : null}
+                    {u.summary && <p class="au-card-summary">{u.summary}</p>}
+                    {(u.email || u.phone || u.location) && (
+                      <ul class="au-card-contact">
+                        {u.email && <li><a href={`mailto:${u.email}`}>{u.email}</a></li>}
+                        {u.phone && <li><a href={tel(u.phone)}>{u.phone}</a></li>}
+                        {u.location && <li>{u.location}</li>}
+                      </ul>
+                    )}
+                    <span class="au-explore" aria-hidden="true">Explore Unit <Fragment set:html={arrow} /></span>
+                  </div>
+                </li>
+              ))}
+            </ul>
+
+          </>
+        ) : (
+          <p class="au-empty-static">{page.empty_message}</p>
+        )}
+      </div>
+    </section>
   </div>
 </Layout>
+
+<script is:inline>
+  (() => {
+    const root = document.querySelector('[data-au]');
+    if (!root) return;
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // ---- Portrait loading: shimmer until each photo has decoded ----
+    root.querySelectorAll('[data-au-img]').forEach((img) => {
+      const done = () => img.closest('.au-portrait')?.classList.add('is-loaded');
+      if (img.complete && img.naturalWidth) done(); else img.addEventListener('load', done, { once: true });
+    });
+
+    // ---- Scroll reveals ----
+    const reveal = Array.from(root.querySelectorAll('[data-au-reveal]'));
+    if (!reduceMotion && 'IntersectionObserver' in window) {
+      root.classList.add('au-anim');
+      const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('is-in'); io.unobserve(e.target); } }), { rootMargin: '0px 0px -8% 0px', threshold: 0.05 });
+      reveal.forEach((el) => io.observe(el));
+    }
+
+  })();
+</script>

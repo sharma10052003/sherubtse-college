@@ -1,6 +1,15 @@
 import type { Core } from '@strapi/strapi';
 import registerFacultyImport from './faculty-import';
 import { ensureAdminRoles } from './admin-roles';
+import { ensureVisionMissionPage } from './seed-vision-mission';
+import { ensureContactPageContent } from './seed-contact-page';
+import { ensureAdmissionContent } from './seed-admission';
+import { applyAdmissionAdminHelp } from './admission-admin-help';
+import { ensureFacilitiesContent } from './seed-facilities';
+import { ensureUnitsContent } from './seed-units';
+import { ensureHomeContent } from './seed-home';
+import { ensureResearchContent } from './seed-research';
+import { registerSiteRebuild } from './site-rebuild';
 
 /**
  * The Alumni and Contact pages have public-facing forms (submit a
@@ -21,6 +30,7 @@ const PUBLIC_CREATE_ACTIONS = [
   'api::alumni-registration.alumni-registration.create',
   'api::newsletter-subscriber.newsletter-subscriber.create',
   'api::contact-enquiry.contact-enquiry.create',
+  'api::admission-enquiry.admission-enquiry.create',
   // Needed so the story-submission and registration forms can attach
   // a photo — scoped to upload only, not to browsing the media library.
   'plugin::upload.content-api.upload',
@@ -63,5 +73,15 @@ export default {
   async bootstrap({ strapi }: { strapi: Core.Strapi }) {
     await grantPublicCreatePermissions({ strapi });
     await ensureAdminRoles({ strapi });
+    await ensureVisionMissionPage({ strapi });
+    await ensureContactPageContent({ strapi });
+    await ensureAdmissionContent({ strapi });
+    await applyAdmissionAdminHelp({ strapi });
+    await ensureFacilitiesContent({ strapi });
+    await ensureUnitsContent({ strapi });
+    await ensureHomeContent({ strapi });
+    await ensureResearchContent({ strapi });
+    // Last, so the setup above never triggers a website rebuild.
+    registerSiteRebuild({ strapi });
   },
 };

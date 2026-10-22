@@ -1,0 +1,28 @@
+---
+// One research project (Research – Projects). The status shown is computed
+// in lib/content/research.ts: “ongoing” only while the dates allow it.
+import type { Project, ResearchLabels } from '../../lib/content/research';
+import { FUNDING_LABEL } from '../../lib/content/research';
+
+/** `compact`: the landing page shows status, centre, title, PI and period only. */
+interface Props { project: Project; labels: ResearchLabels; showBudget?: boolean; compact?: boolean }
+const { project: p, labels: L, showBudget = false, compact = false } = Astro.props;
+const STATUS = { ongoing: L.status_ongoing, completed: L.status_completed, unconfirmed: L.status_unconfirmed };
+const centre = p.centre?.acronym ?? p.centre?.name ?? p.centre_label;
+---
+<article class:list={['rs-project', `rs-project--${p.status}`, { 'rs-project--compact': compact }]}>
+  <header class="rs-project-top">
+    <span class:list={['rs-status', `rs-status--${p.status}`]}>{STATUS[p.status]}</span>
+    {centre && (p.centre ? <a class="rs-project-centre" href={p.centre.href} title={p.centre.name}>{centre}</a> : <span class="rs-project-centre">{centre}</span>)}
+  </header>
+  <h3 class="rs-project-title">{p.link ? <a href={p.link.url}>{p.title}</a> : p.title}</h3>
+  {p.summary && <p class="rs-project-summary">{p.summary}</p>}
+  <dl class="rs-project-meta">
+    {p.pi && <div><dt>{L.pi}</dt><dd>{p.pi}</dd></div>}
+    {!compact && <div><dt>{L.funding}</dt><dd>{p.funding_source ?? FUNDING_LABEL[p.funding_type]}</dd></div>}
+    {p.period && <div><dt>{L.period}</dt><dd>{p.period}</dd></div>}
+    {showBudget && p.budget && <div><dt>{L.budget}</dt><dd>{p.budget}</dd></div>}
+  </dl>
+  {compact && <p class="rs-project-fund">{p.funding_source ?? FUNDING_LABEL[p.funding_type]}</p>}
+  {!compact && p.co_investigators && <p class="rs-project-co"><span>{L.co_investigators}:</span> {p.co_investigators}</p>}
+</article>

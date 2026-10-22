@@ -1,0 +1,33 @@
+{
+  "collectionName": "components_admission_guide_scholarships",
+  "info": {
+    "displayName": "Scholarship",
+    "icon": "bulletList",
+    "description": "A scholarship or financial support."
+  },
+  "options": {},
+  "attributes": {
+    "title": {
+      "type": "string",
+      "required": true
+    },
+    "summary": {
+      "type": "text"
+    },
+    "eligibility": {
+      "type": "text"
+    },
+    "how_to_apply": {
+      "type": "text"
+    },
+    "deadline": {
+      "type": "date"
+    },
+    "link_label": {
+      "type": "string"
+    },
+    "link_url": {
+      "type": "string"
+    }
+  }
+}

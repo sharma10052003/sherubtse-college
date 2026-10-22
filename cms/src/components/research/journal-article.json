@@ -1,0 +1,22 @@
+{
+  "collectionName": "components_research_journal_articles",
+  "info": {
+    "displayName": "Journal Article",
+    "icon": "file",
+    "description": "An article from the journal, linked to its page."
+  },
+  "options": {},
+  "attributes": {
+    "title": {
+      "type": "string",
+      "required": true
+    },
+    "authors": {
+      "type": "string"
+    },
+    "url": {
+      "type": "string",
+      "required": true
+    }
+  }
+}

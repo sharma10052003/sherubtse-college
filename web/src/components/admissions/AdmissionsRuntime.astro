@@ -1,0 +1,159 @@
+---
+// Client behaviour shared by the Admissions pages. Everything works without
+// it (all panels and notices simply show); it adds tabs, live date badges
+// re-checked in the browser so a static page stays honest, the current/past
+// notice split, the key-dates timeline state and gentle reveal motion.
+import type { Labels } from '../../lib/content/admissions';
+interface Props { labels: Labels }
+const { labels } = Astro.props;
+---
+<script is:inline define:vars={{ L: labels }}>
+  (() => {
+    const root = document.querySelector('[data-adm]');
+    if (!root) return;
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const today = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; })();
+    const day = (v) => (v || '').slice(0, 10);
+    root.classList.add('adm-js');
+
+    // ---- Application windows: Open now / Opens soon / Closed ----
+    root.querySelectorAll('[data-window]').forEach((el) => {
+      const opens = day(el.dataset.opens), closes = day(el.dataset.closes);
+      const status = closes && closes < today ? 'closed' : opens && opens > today ? 'upcoming' : opens || closes ? 'open' : '';
+      const badge = el.querySelector('[data-status]');
+      if (!badge || !status) return;
+      badge.hidden = false;
+      badge.className = `adm-badge adm-badge--${status}`;
+      badge.textContent = L[`status_${status}`];
+    });
+    root.querySelectorAll('[data-deadline]').forEach((el) => {
+      if (day(el.dataset.deadline) < today) el.classList.add('is-closed');
+      const badge = el.querySelector('[data-status]');
+      if (badge) { badge.hidden = false; const closed = day(el.dataset.deadline) < today; badge.className = `adm-badge adm-badge--${closed ? 'closed' : 'open'}`; badge.textContent = closed ? L.status_closed : L.status_open; }
+    });
+
+    // ---- Notices: expired or archived ones move to “Past notices” ----
+    root.querySelectorAll('[data-notices]').forEach((box) => {
+      const current = box.querySelector('[data-notices-current]');
+      const past = box.querySelector('[data-notices-past]');
+      const pastWrap = box.querySelector('[data-notices-past-wrap]');
+      const empty = box.querySelector('[data-notices-empty]');
+      const limit = Number(box.dataset.limit) || 0;
+      Array.from(current.children).forEach((li) => {
+        if (li.dataset.archived === '1' || (li.dataset.expires && day(li.dataset.expires) < today)) past?.appendChild(li);
+      });
+      if (limit) Array.from(current.children).slice(limit).forEach((li) => (li.hidden = true));
+      if (empty) empty.hidden = current.querySelector('li:not([hidden])') !== null;
+      if (pastWrap) pastWrap.hidden = !past || past.children.length === 0;
+    });
+
+    // ---- Key dates timeline: passed / next, and an audience filter ----
+    const timeline = root.querySelector('[data-timeline]');
+    if (timeline) {
+      const items = Array.from(timeline.querySelectorAll('[data-date]'));
+      const mark = () => {
+        let nextFound = false;
+        items.forEach((li) => {
+          const passed = day(li.dataset.date) < today;
+          li.classList.toggle('is-past', passed);
+          const isNext = !passed && !nextFound && !li.hidden;
+          if (isNext) nextFound = true;
+          li.classList.toggle('is-next', isNext);
+          const state = li.querySelector('[data-date-state]');
+          if (state) { state.hidden = !(passed || isNext); state.textContent = passed ? L.date_passed : isNext ? L.date_next : ''; }
+        });
+        const fill = timeline.querySelector('[data-timeline-fill]');
+        const visible = items.filter((li) => !li.hidden);
+        const done = visible.filter((li) => li.classList.contains('is-past')).length;
+        if (fill) fill.style.setProperty('--progress', visible.length ? String(done / visible.length) : '0');
+      };
+      root.querySelectorAll('[data-date-filter]').forEach((btn) => btn.addEventListener('click', () => {
+        const aud = btn.dataset.dateFilter;
+        root.querySelectorAll('[data-date-filter]').forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
+        items.forEach((li) => { li.hidden = aud !== 'all' && li.dataset.aud !== 'all' && li.dataset.aud !== aud; });
+        mark();
+      }));
+      mark();
+    }
+
+    // ---- Tabs (applicant pages) ----
+    const tablist = root.querySelector('[data-tabs]');
+    if (tablist) {
+      const tabs = Array.from(tablist.querySelectorAll('[role="tab"]'));
+      const panels = tabs.map((t) => document.getElementById(t.getAttribute('aria-controls')));
+      const bar = root.querySelector('[data-tabbar]');
+      const masthead = document.querySelector('.masthead');
+      const setTop = () => root.style.setProperty('--adm-top', `${masthead ? masthead.getBoundingClientRect().height : 0}px`);
+      setTop(); window.addEventListener('resize', setTop);
+      root.classList.add('adm-tabbed');
+
+      const select = (i, { focus = false, scroll = false, push = true } = {}) => {
+        tabs.forEach((t, j) => {
+          const on = i === j;
+          t.setAttribute('aria-selected', String(on));
+          t.tabIndex = on ? 0 : -1;
+          panels[j].hidden = !on;
+          if (on) panels[j].classList.remove('is-entering'), void panels[j].offsetWidth, panels[j].classList.add('is-entering');
+        });
+        const tab = tabs[i];
+        tab.scrollIntoView({ block: 'nearest', inline: 'center', behavior: reduceMotion ? 'auto' : 'smooth' });
+        if (focus) tab.focus();
+        if (push) history.replaceState(null, '', `#${panels[i].id}`);
+        if (scroll && bar) {
+          const top = bar.getBoundingClientRect().top + window.scrollY - (masthead ? masthead.getBoundingClientRect().height : 0);
+          if (window.scrollY > top) window.scrollTo({ top, behavior: reduceMotion ? 'auto' : 'smooth' });
+        }
+      };
+      tabs.forEach((t, i) => {
+        t.addEventListener('click', (e) => { e.preventDefault(); select(i, { scroll: true }); });
+        t.addEventListener('keydown', (e) => {
+          const k = e.key;
+          let n = null;
+          if (k === 'ArrowRight') n = (i + 1) % tabs.length;
+          else if (k === 'ArrowLeft') n = (i - 1 + tabs.length) % tabs.length;
+          else if (k === 'Home') n = 0;
+          else if (k === 'End') n = tabs.length - 1;
+          if (n !== null) { e.preventDefault(); select(n, { focus: true }); }
+        });
+      });
+      // Links to a panel anywhere on the page (e.g. “Next: Fees”, #contact).
+      root.querySelectorAll('a[href^="#"]:not([role="tab"])').forEach((a) => a.addEventListener('click', (e) => {
+        const i = panels.findIndex((p) => `#${p.id}` === a.getAttribute('href'));
+        if (i < 0) return;
+        e.preventDefault();
+        select(i, { scroll: true });
+        bar?.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
+      }));
+      const fromHash = () => panels.findIndex((p) => `#${p.id}` === location.hash);
+      const start = fromHash();
+      select(start >= 0 ? start : 0, { push: false });
+      if (start >= 0) requestAnimationFrame(() => bar?.scrollIntoView({ block: 'start' }));
+      window.addEventListener('hashchange', () => { const i = fromHash(); if (i >= 0) select(i, { push: false, scroll: true }); });
+      // Shadow under the bar once it is pinned.
+      if (bar && 'IntersectionObserver' in window) {
+        const sentinel = document.createElement('div');
+        sentinel.className = 'adm-tab-sentinel';
+        bar.before(sentinel);
+        new IntersectionObserver(([en]) => bar.classList.toggle('is-stuck', !en.isIntersecting), { rootMargin: `-${(masthead?.getBoundingClientRect().height || 0) + 1}px 0px 0px 0px` }).observe(sentinel);
+      }
+    }
+
+    // ---- FAQs: open / close all ----
+    root.querySelectorAll('[data-faq-toggle]').forEach((btn) => btn.addEventListener('click', () => {
+      const box = btn.closest('[data-faqs]');
+      const items = Array.from(box.querySelectorAll('details'));
+      const open = !items.every((d) => d.open);
+      items.forEach((d) => (d.open = open));
+      btn.textContent = open ? L.faq_collapse : L.faq_expand;
+      btn.setAttribute('aria-expanded', String(open));
+    }));
+
+    // ---- Reveal on scroll ----
+    const reveal = Array.from(root.querySelectorAll('[data-reveal]'));
+    if (!reduceMotion && 'IntersectionObserver' in window) {
+      root.classList.add('adm-anim');
+      const io = new IntersectionObserver((es) => es.forEach((en) => { if (en.isIntersecting) { en.target.classList.add('is-in'); io.unobserve(en.target); } }), { rootMargin: '0px 0px -6% 0px', threshold: 0.05 });
+      reveal.forEach((el) => io.observe(el));
+    }
+  })();
+</script>

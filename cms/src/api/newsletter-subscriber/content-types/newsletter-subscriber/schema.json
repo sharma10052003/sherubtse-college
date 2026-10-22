@@ -10,7 +10,7 @@
     "draftAndPublish": false
   },
   "attributes": {
-    "email": { "type": "string", "required": true, "unique": true },
+    "email": { "type": "email", "required": true, "unique": true },
     "consent": { "type": "boolean", "default": true }
   }
 }

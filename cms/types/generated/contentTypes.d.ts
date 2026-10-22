@@ -580,11 +580,238 @@ export interface ApiAcademicsOverviewAcademicsOverview
   };
 }
 
+export interface ApiAdmissionBhutaneseAdmissionBhutanese
+  extends Struct.SingleTypeSchema {
+  collectionName: 'admission_bhutanese';
+  info: {
+    description: 'Everything on the Bhutanese applicants page (/admissions/bhutanese), in the same order as its tabs.';
+    displayName: 'Admission \u2013 Bhutanese Applicants';
+    pluralName: 'admission-bhutaneses';
+    singularName: 'admission-bhutanese';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    application_routes: Schema.Attribute.Component<
+      'admission-guide.route',
+      true
+    >;
+    apply_intro: Schema.Attribute.RichText;
+    card_description: Schema.Attribute.Text;
+    card_title: Schema.Attribute.String & Schema.Attribute.Required;
+    contacts: Schema.Attribute.Component<'admission-guide.contact', true>;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    faqs: Schema.Attribute.Component<'admission-guide.faq', true>;
+    fees: Schema.Attribute.Component<'admission-guide.fee', true>;
+    fees_intro: Schema.Attribute.RichText;
+    fees_note: Schema.Attribute.RichText;
+    intro: Schema.Attribute.Text;
+    key_facts: Schema.Attribute.Component<'admission-guide.fact', true>;
+    links: Schema.Attribute.Component<'shared.link-item', true>;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::admission-bhutanese.admission-bhutanese'
+    > &
+      Schema.Attribute.Private;
+    more_info: Schema.Attribute.Component<'admission-guide.info', true>;
+    publishedAt: Schema.Attribute.DateTime;
+    required_documents: Schema.Attribute.Text;
+    requirements: Schema.Attribute.Component<
+      'admission-guide.requirement',
+      true
+    >;
+    requirements_intro: Schema.Attribute.RichText;
+    scholarships: Schema.Attribute.Component<
+      'admission-guide.scholarship',
+      true
+    >;
+    scholarships_intro: Schema.Attribute.RichText;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiAdmissionEnquirySettingAdmissionEnquirySetting
+  extends Struct.SingleTypeSchema {
+  collectionName: 'admission_enquiry_setting';
+  info: {
+    description: 'Wording, fields and routing for the Admissions enquiry form.';
+    displayName: 'Admission \u2013 Enquiry Form Settings';
+    pluralName: 'admission-enquiry-settings';
+    singularName: 'admission-enquiry-setting';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    applicant_category_label: Schema.Attribute.String;
+    confirmation_message: Schema.Attribute.Text;
+    consent_label: Schema.Attribute.Text;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    default_recipient_email: Schema.Attribute.Email;
+    email_label: Schema.Attribute.String;
+    enquiry_categories: Schema.Attribute.Component<
+      'admission.enquiry-option',
+      true
+    >;
+    enquiry_category_label: Schema.Attribute.String;
+    error_message: Schema.Attribute.Text;
+    introduction: Schema.Attribute.Text;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::admission-enquiry-setting.admission-enquiry-setting'
+    > &
+      Schema.Attribute.Private;
+    message_label: Schema.Attribute.String;
+    name_label: Schema.Attribute.String;
+    phone_label: Schema.Attribute.String;
+    phone_required: Schema.Attribute.Boolean &
+      Schema.Attribute.DefaultTo<false>;
+    privacy_notice: Schema.Attribute.Text;
+    privacy_policy_url: Schema.Attribute.String;
+    programme_label: Schema.Attribute.String;
+    programme_required: Schema.Attribute.Boolean &
+      Schema.Attribute.DefaultTo<false>;
+    publishedAt: Schema.Attribute.DateTime;
+    show_phone: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
+    show_programme: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
+    submit_label: Schema.Attribute.String;
+    title: Schema.Attribute.String;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiAdmissionEnquiryAdmissionEnquiry
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'admission_enquiries';
+  info: {
+    description: 'Enquiries sent from the Admissions page. Mark \u201Creviewed\u201D once answered.';
+    displayName: 'Admission \u2013 Enquiries';
+    pluralName: 'admission-enquiries';
+    singularName: 'admission-enquiry';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    applicant_category: Schema.Attribute.String &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 120;
+      }>;
+    consent: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    email: Schema.Attribute.Email & Schema.Attribute.Required;
+    enquiry_category: Schema.Attribute.String &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 120;
+      }>;
+    full_name: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 120;
+      }>;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::admission-enquiry.admission-enquiry'
+    > &
+      Schema.Attribute.Private;
+    message: Schema.Attribute.Text &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 5000;
+      }>;
+    phone: Schema.Attribute.String &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 40;
+      }>;
+    programme: Schema.Attribute.String &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 200;
+      }>;
+    publishedAt: Schema.Attribute.DateTime;
+    reviewed: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    routed_to: Schema.Attribute.String & Schema.Attribute.Private;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiAdmissionInternationalApplicantsAdmissionInternationalApplicants
+  extends Struct.SingleTypeSchema {
+  collectionName: 'admission_international_applicants';
+  info: {
+    description: 'Everything on the international applicants page (/admissions/international), in the same order as its tabs.';
+    displayName: 'Admission \u2013 International Applicants';
+    pluralName: 'admission-international-applicantss';
+    singularName: 'admission-international-applicants';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    application_routes: Schema.Attribute.Component<
+      'admission-guide.route',
+      true
+    >;
+    apply_intro: Schema.Attribute.RichText;
+    card_description: Schema.Attribute.Text;
+    card_title: Schema.Attribute.String & Schema.Attribute.Required;
+    contacts: Schema.Attribute.Component<'admission-guide.contact', true>;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    faqs: Schema.Attribute.Component<'admission-guide.faq', true>;
+    fees: Schema.Attribute.Component<'admission-guide.fee', true>;
+    fees_intro: Schema.Attribute.RichText;
+    fees_note: Schema.Attribute.RichText;
+    intro: Schema.Attribute.Text;
+    key_facts: Schema.Attribute.Component<'admission-guide.fact', true>;
+    links: Schema.Attribute.Component<'shared.link-item', true>;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::admission-international-applicants.admission-international-applicants'
+    > &
+      Schema.Attribute.Private;
+    more_info: Schema.Attribute.Component<'admission-guide.info', true>;
+    publishedAt: Schema.Attribute.DateTime;
+    required_documents: Schema.Attribute.Text;
+    requirements: Schema.Attribute.Component<
+      'admission-guide.requirement',
+      true
+    >;
+    requirements_intro: Schema.Attribute.RichText;
+    scholarships: Schema.Attribute.Component<
+      'admission-guide.scholarship',
+      true
+    >;
+    scholarships_intro: Schema.Attribute.RichText;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiAdmissionsOverviewAdmissionsOverview
   extends Struct.SingleTypeSchema {
   collectionName: 'admissions_overview';
   info: {
-    displayName: 'Admissions \u2013 Overview';
+    description: 'The Admissions landing page (/admissions): hero, the two \u201CWho\u2019s applying?\u201D choices, key dates and notices. Each audience\u2019s details are in Admission \u2013 Bhutanese Applicants and Admission \u2013 International Applicants.';
+    displayName: 'Admission \u2013 Page Settings';
     pluralName: 'admissions-overviews';
     singularName: 'admissions-overview';
   };
@@ -592,25 +819,32 @@ export interface ApiAdmissionsOverviewAdmissionsOverview
     draftAndPublish: false;
   };
   attributes: {
-    cards: Schema.Attribute.Component<'shared.landing-card', true>;
+    choose_heading: Schema.Attribute.String;
+    choose_intro: Schema.Attribute.Text;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    dates_heading: Schema.Attribute.String;
+    dates_intro: Schema.Attribute.Text;
     eyebrow: Schema.Attribute.String;
-    featured: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
     heading: Schema.Attribute.String & Schema.Attribute.Required;
-    intro: Schema.Attribute.Text & Schema.Attribute.Required;
+    help_heading: Schema.Attribute.String;
+    help_intro: Schema.Attribute.Text;
+    hero_image: Schema.Attribute.Media<'images'>;
+    hero_image_alt: Schema.Attribute.String;
+    intro: Schema.Attribute.Text;
+    key_dates: Schema.Attribute.Component<'admission-guide.key-date', true>;
+    labels: Schema.Attribute.Component<'admission-guide.page-labels', false>;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
       'api::admissions-overview.admissions-overview'
     > &
       Schema.Attribute.Private;
+    notices_heading: Schema.Attribute.String;
     publishedAt: Schema.Attribute.DateTime;
-    sections: Schema.Attribute.DynamicZone<
-      ['sections.rich-text', 'sections.image-text', 'sections.call-to-action']
-    >;
     seo: Schema.Attribute.Component<'shared.seo', false>;
+    subtitle: Schema.Attribute.String;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -760,7 +994,7 @@ export interface ApiAlumniRegistrationAlumniRegistration
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     designation: Schema.Attribute.String;
-    email: Schema.Attribute.String & Schema.Attribute.Required;
+    email: Schema.Attribute.Email & Schema.Attribute.Required;
     full_name: Schema.Attribute.String & Schema.Attribute.Required;
     graduation_year: Schema.Attribute.Integer;
     industry: Schema.Attribute.String;
@@ -889,7 +1123,7 @@ export interface ApiAlumniAlumni extends Struct.CollectionTypeSchema {
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     current_role: Schema.Attribute.String;
-    email: Schema.Attribute.String;
+    email: Schema.Attribute.Email;
     excerpt: Schema.Attribute.Text &
       Schema.Attribute.SetMinMaxLength<{
         maxLength: 280;
@@ -923,6 +1157,7 @@ export interface ApiAnnouncementAnnouncement
   extends Struct.CollectionTypeSchema {
   collectionName: 'announcements';
   info: {
+    description: 'Short announcements, warnings and urgent notices \u2014 shown on the Announcements page and the homepage while active and inside their start/end dates.';
     displayName: 'News & Notices \u2013 Announcements';
     pluralName: 'announcements';
     singularName: 'announcement';
@@ -1122,20 +1357,39 @@ export interface ApiContactEnquiryContactEnquiry
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
-    department: Schema.Attribute.String;
-    email: Schema.Attribute.String & Schema.Attribute.Required;
-    full_name: Schema.Attribute.String & Schema.Attribute.Required;
+    department: Schema.Attribute.String &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 120;
+      }>;
+    email: Schema.Attribute.Email & Schema.Attribute.Required;
+    full_name: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 120;
+      }>;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
       'api::contact-enquiry.contact-enquiry'
     > &
       Schema.Attribute.Private;
-    message: Schema.Attribute.Text & Schema.Attribute.Required;
-    phone: Schema.Attribute.String;
+    message: Schema.Attribute.Text &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 5000;
+      }>;
+    office_email: Schema.Attribute.Email;
+    phone: Schema.Attribute.String &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 40;
+      }>;
     publishedAt: Schema.Attribute.DateTime;
     reviewed: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
-    subject: Schema.Attribute.String & Schema.Attribute.Required;
+    subject: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 200;
+      }>;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -1159,11 +1413,132 @@ export interface ApiContactPageContentContactPageContent
     };
   };
   attributes: {
+    call_button_label: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    campus_map_label: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    campus_map_url: Schema.Attribute.String;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    directions_label: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    email_button_label: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    enquiry_heading: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    enquiry_intro: Schema.Attribute.Text &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    form_department_label: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    form_department_placeholder: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    form_email_label: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    form_error_message: Schema.Attribute.Text &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    form_message_label: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    form_name_label: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    form_other_department: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    form_phone_label: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    form_subject_label: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    form_submit_label: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    form_success_message: Schema.Attribute.Text &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
     general_email: Schema.Attribute.Email;
     general_phone: Schema.Attribute.String;
+    help_heading: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    help_intro: Schema.Attribute.Text &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    help_topics: Schema.Attribute.Component<'contact.help-topic', true> &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
     hero_eyebrow: Schema.Attribute.String &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
@@ -1171,6 +1546,7 @@ export interface ApiContactPageContentContactPageContent
         };
       }> &
       Schema.Attribute.DefaultTo<'Get in Touch'>;
+    hero_image: Schema.Attribute.Media<'images'>;
     hero_subtitle: Schema.Attribute.Text &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
@@ -1185,11 +1561,78 @@ export interface ApiContactPageContentContactPageContent
         };
       }> &
       Schema.Attribute.DefaultTo<'Contact Us'>;
+    ict_button_label: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    ict_button_link: Schema.Attribute.String;
+    ict_card_button_label: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    ict_email_subject: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    ict_heading: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    ict_text: Schema.Attribute.Text &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    info_heading: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    info_subtitle: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    labels: Schema.Attribute.Component<'contact.page-labels', false> &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
     locale: Schema.Attribute.String;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
       'api::contact-page-content.contact-page-content'
     >;
+    map_heading: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    map_intro: Schema.Attribute.Text &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    map_place_name: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
     map_url: Schema.Attribute.String;
     office_hours: Schema.Attribute.String &
       Schema.Attribute.SetPluginOptions<{
@@ -1197,7 +1640,98 @@ export interface ApiContactPageContentContactPageContent
           localized: true;
         };
       }>;
+    offices_heading: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    offices_intro: Schema.Attribute.Text &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    page_title: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }> &
+      Schema.Attribute.DefaultTo<'Contact Us'>;
     publishedAt: Schema.Attribute.DateTime;
+    quick_directions_text: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    quick_directions_title: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    quick_enquiry_text: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    quick_enquiry_title: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    quick_find_text: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    quick_find_title: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    search_empty_message: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    search_label: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    search_placeholder: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    seo_description: Schema.Attribute.Text &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    spotlight_enquiry_label: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    spotlight_other_office_label: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -1224,7 +1758,10 @@ export interface ApiContactPersonContactPerson
     email: Schema.Attribute.Email;
     full_name: Schema.Attribute.String;
     group_description: Schema.Attribute.Text;
-    group_icon: Schema.Attribute.String;
+    group_icon: Schema.Attribute.Enumeration<
+      ['president', 'academic', 'student', 'research', 'admin', 'ict', 'exam']
+    > &
+      Schema.Attribute.DefaultTo<'admin'>;
     group_order: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
     group_title: Schema.Attribute.String & Schema.Attribute.Required;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
@@ -1375,6 +1912,22 @@ export interface ApiEventEvent extends Struct.CollectionTypeSchema {
     draftAndPublish: true;
   };
   attributes: {
+    category: Schema.Attribute.Enumeration<
+      [
+        'academic',
+        'conference',
+        'workshop',
+        'seminar',
+        'student_activity',
+        'sports',
+        'cultural',
+        'public_lecture',
+        'career',
+        'meeting',
+        'other',
+      ]
+    > &
+      Schema.Attribute.DefaultTo<'other'>;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -1382,6 +1935,7 @@ export interface ApiEventEvent extends Struct.CollectionTypeSchema {
     ends_at: Schema.Attribute.DateTime;
     expires_at: Schema.Attribute.DateTime & Schema.Attribute.Required;
     image: Schema.Attribute.Media<'images'>;
+    is_featured: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
     last_reviewed: Schema.Attribute.Date & Schema.Attribute.Required;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<'oneToMany', 'api::event.event'> &
@@ -1391,6 +1945,7 @@ export interface ApiEventEvent extends Struct.CollectionTypeSchema {
     >;
     owning_unit: Schema.Attribute.Relation<'manyToOne', 'api::unit.unit'> &
       Schema.Attribute.Required;
+    photo_story: Schema.Attribute.Relation<'oneToOne', 'api::news.news'>;
     publishedAt: Schema.Attribute.DateTime;
     registration_link: Schema.Attribute.String;
     review_interval: Schema.Attribute.Enumeration<
@@ -1398,6 +1953,10 @@ export interface ApiEventEvent extends Struct.CollectionTypeSchema {
     > &
       Schema.Attribute.DefaultTo<'none'>;
     starts_at: Schema.Attribute.DateTime & Schema.Attribute.Required;
+    summary: Schema.Attribute.Text &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 300;
+      }>;
     title: Schema.Attribute.String & Schema.Attribute.Required;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
@@ -1434,6 +1993,279 @@ export interface ApiExpertiseExpertise extends Struct.CollectionTypeSchema {
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+  };
+}
+
+export interface ApiFacilitiesPageFacilitiesPage
+  extends Struct.SingleTypeSchema {
+  collectionName: 'facilities_page';
+  info: {
+    description: 'The Campus Facilities page: hero, quick navigation, the Library and Laboratories features, empty-state text, SEO and the order of sections.';
+    displayName: 'About \u2013 Campus Facilities: Page Settings';
+    pluralName: 'facilities-pages';
+    singularName: 'facilities-page';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    eyebrow: Schema.Attribute.String;
+    hero_caption: Schema.Attribute.String;
+    hero_image_alt: Schema.Attribute.String;
+    hero_images: Schema.Attribute.Media<'images', true>;
+    intro: Schema.Attribute.Text;
+    laboratories: Schema.Attribute.Component<'facilities.feature-block', false>;
+    library: Schema.Attribute.Component<'facilities.feature-block', false>;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::facilities-page.facilities-page'
+    > &
+      Schema.Attribute.Private;
+    messages: Schema.Attribute.Component<'facilities.messages', false>;
+    publishedAt: Schema.Attribute.DateTime;
+    quick_nav: Schema.Attribute.Component<'facilities.nav-link', true>;
+    sections: Schema.Attribute.DynamicZone<
+      [
+        'facilities.section-index',
+        'facilities.section-library',
+        'facilities.section-laboratories',
+        'facilities.section-directory',
+        'facilities.section-gallery',
+        'facilities.section-links',
+        'sections.rich-text',
+        'sections.image-text',
+        'sections.call-to-action',
+      ]
+    >;
+    seo: Schema.Attribute.Component<'shared.seo', false>;
+    title: Schema.Attribute.String & Schema.Attribute.Required;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiFacilityCategoryFacilityCategory
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'facility_categories';
+  info: {
+    description: 'Filter categories for the facility directory and gallery. Inactive categories are hidden.';
+    displayName: 'About \u2013 Campus Facilities: Categories';
+    pluralName: 'facility-categories';
+    singularName: 'facility-category';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    description: Schema.Attribute.Text;
+    display_order: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
+    icon: Schema.Attribute.Enumeration<
+      [
+        'book',
+        'screen',
+        'study',
+        'journal',
+        'flask',
+        'microscope',
+        'atom',
+        'shield',
+        'tools',
+        'sport',
+        'home',
+        'heart',
+        'health',
+        'wifi',
+        'people',
+        'pin',
+        'clock',
+        'link',
+        'star',
+      ]
+    > &
+      Schema.Attribute.DefaultTo<'star'>;
+    image: Schema.Attribute.Media<'images'>;
+    is_active: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::facility-category.facility-category'
+    > &
+      Schema.Attribute.Private;
+    name: Schema.Attribute.String & Schema.Attribute.Required;
+    publishedAt: Schema.Attribute.DateTime;
+    slug: Schema.Attribute.UID<'name'> & Schema.Attribute.Required;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiFacilityGalleryImageFacilityGalleryImage
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'facility_gallery_images';
+  info: {
+    description: 'Real Sherubtse photographs for the Campus Gallery. Always add alternative text.';
+    displayName: 'About \u2013 Campus Facilities: Gallery';
+    pluralName: 'facility-gallery-images';
+    singularName: 'facility-gallery-image';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    alt_text: Schema.Attribute.String & Schema.Attribute.Required;
+    caption: Schema.Attribute.String;
+    category: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::facility-category.facility-category'
+    >;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    display_order: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
+    facility: Schema.Attribute.Relation<'manyToOne', 'api::facility.facility'>;
+    image: Schema.Attribute.Media<'images'> & Schema.Attribute.Required;
+    is_featured: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::facility-gallery-image.facility-gallery-image'
+    > &
+      Schema.Attribute.Private;
+    publishedAt: Schema.Attribute.DateTime;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiFacilityQuickLinkFacilityQuickLink
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'facility_quick_links';
+  info: {
+    description: 'Useful facility links. Only add destinations that have been checked.';
+    displayName: 'About \u2013 Campus Facilities: Quick Links';
+    pluralName: 'facility-quick-links';
+    singularName: 'facility-quick-link';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    description: Schema.Attribute.Text;
+    display_order: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
+    icon: Schema.Attribute.Enumeration<
+      [
+        'book',
+        'screen',
+        'study',
+        'journal',
+        'flask',
+        'microscope',
+        'atom',
+        'shield',
+        'tools',
+        'sport',
+        'home',
+        'heart',
+        'health',
+        'wifi',
+        'people',
+        'pin',
+        'clock',
+        'link',
+        'star',
+      ]
+    > &
+      Schema.Attribute.DefaultTo<'link'>;
+    is_active: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
+    label: Schema.Attribute.String & Schema.Attribute.Required;
+    link_type: Schema.Attribute.Enumeration<['internal', 'external']> &
+      Schema.Attribute.DefaultTo<'external'>;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::facility-quick-link.facility-quick-link'
+    > &
+      Schema.Attribute.Private;
+    publishedAt: Schema.Attribute.DateTime;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    url: Schema.Attribute.String & Schema.Attribute.Required;
+  };
+}
+
+export interface ApiFacilityFacility extends Struct.CollectionTypeSchema {
+  collectionName: 'facilities';
+  info: {
+    description: 'One verified campus facility, shown as a numbered story on Campus Facilities. Only publish confirmed information.';
+    displayName: 'About \u2013 Campus Facilities: Facilities';
+    pluralName: 'facilities';
+    singularName: 'facility';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    access_conditions: Schema.Attribute.Text;
+    accessibility: Schema.Attribute.Text;
+    building: Schema.Attribute.String;
+    categories: Schema.Attribute.Relation<
+      'manyToMany',
+      'api::facility-category.facility-category'
+    >;
+    contact: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::contact-person.contact-person'
+    >;
+    contact_note: Schema.Attribute.String;
+    content: Schema.Attribute.RichText;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    department: Schema.Attribute.Relation<'manyToOne', 'api::unit.unit'>;
+    display_mode: Schema.Attribute.Enumeration<['page', 'panel', 'card_only']> &
+      Schema.Attribute.DefaultTo<'panel'>;
+    display_order: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
+    documents: Schema.Attribute.Component<'shared.attachment', true>;
+    features: Schema.Attribute.Component<'facilities.feature', true>;
+    image_alt: Schema.Attribute.String;
+    images: Schema.Attribute.Media<'images', true>;
+    is_featured: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    links: Schema.Attribute.Component<'shared.link-item', true>;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::facility.facility'
+    > &
+      Schema.Attribute.Private;
+    location: Schema.Attribute.String;
+    main_image: Schema.Attribute.Media<'images'>;
+    name: Schema.Attribute.String & Schema.Attribute.Required;
+    opening_hours: Schema.Attribute.String;
+    policies: Schema.Attribute.RichText;
+    publishedAt: Schema.Attribute.DateTime;
+    slug: Schema.Attribute.UID<'name'> & Schema.Attribute.Required;
+    summary: Schema.Attribute.Text &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 280;
+      }>;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    uses: Schema.Attribute.RichText;
   };
 }
 
@@ -1630,9 +2462,6 @@ export interface ApiFooterFooter extends Struct.SingleTypeSchema {
       'api::footer.footer'
     > &
       Schema.Attribute.Private;
-    map_image: Schema.Attribute.Media<'images'>;
-    map_label: Schema.Attribute.String;
-    map_url: Schema.Attribute.String;
     motto: Schema.Attribute.String;
     publishedAt: Schema.Attribute.DateTime;
     tagline: Schema.Attribute.Text;
@@ -1948,6 +2777,7 @@ export interface ApiHistoryTraditionItemHistoryTraditionItem
 export interface ApiHomepageHomepage extends Struct.SingleTypeSchema {
   collectionName: 'homepage';
   info: {
+    description: 'The homepage: the hero at the top, then the sections in the order listed under \u201CSections\u201D.';
     displayName: 'Home \u2013 Page';
     pluralName: 'homepages';
     singularName: 'homepage';
@@ -1956,42 +2786,51 @@ export interface ApiHomepageHomepage extends Struct.SingleTypeSchema {
     draftAndPublish: true;
   };
   attributes: {
-    announcements_empty_text: Schema.Attribute.String;
-    announcements_heading: Schema.Attribute.String;
-    announcements_link_label: Schema.Attribute.String;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
-    events_empty_text: Schema.Attribute.String;
-    events_heading: Schema.Attribute.String;
-    events_link_label: Schema.Attribute.String;
-    explore_button_label: Schema.Attribute.String;
-    explore_cards: Schema.Attribute.Component<'shared.landing-card', true>;
-    explore_heading: Schema.Attribute.String;
+    hero_align: Schema.Attribute.Enumeration<['left', 'center']> &
+      Schema.Attribute.DefaultTo<'left'>;
     hero_badge: Schema.Attribute.String;
     hero_buttons: Schema.Attribute.Component<'shared.link-item', true>;
     hero_eyebrow: Schema.Attribute.String;
     hero_heading: Schema.Attribute.String;
+    hero_image_alt: Schema.Attribute.String;
     hero_images: Schema.Attribute.Media<'images', true>;
+    hero_overlay: Schema.Attribute.Enumeration<['light', 'medium', 'strong']> &
+      Schema.Attribute.DefaultTo<'medium'>;
     hero_video: Schema.Attribute.Media<'videos'>;
+    hero_video_on_phones: Schema.Attribute.Boolean &
+      Schema.Attribute.DefaultTo<false>;
+    labels: Schema.Attribute.Component<'home.labels', false>;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
       'api::homepage.homepage'
     > &
       Schema.Attribute.Private;
-    president_heading: Schema.Attribute.String;
-    president_message: Schema.Attribute.RichText;
-    president_name: Schema.Attribute.String;
-    president_photo: Schema.Attribute.Media<'images'>;
-    president_title: Schema.Attribute.String;
     publishedAt: Schema.Attribute.DateTime;
-    quick_links: Schema.Attribute.Component<'shared.link-item', true>;
     sections: Schema.Attribute.DynamicZone<
-      ['sections.rich-text', 'sections.image-text', 'sections.call-to-action']
+      [
+        'home.highlights',
+        'home.notices',
+        'home.events',
+        'home.introduction',
+        'home.message',
+        'home.programmes',
+        'home.research',
+        'home.campus',
+        'home.stats',
+        'home.resources',
+        'home.link-cards',
+        'sections.rich-text',
+        'sections.image-text',
+        'sections.call-to-action',
+      ]
     >;
     seo_description: Schema.Attribute.Text;
     seo_title: Schema.Attribute.String;
+    show_ticker: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
     statement: Schema.Attribute.Text;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
@@ -2133,6 +2972,14 @@ export interface ApiNewsNews extends Struct.CollectionTypeSchema {
         'sports',
         'administration',
         'general',
+        'celebrations',
+        'culture',
+        'workshops',
+        'conferences',
+        'visits',
+        'awards',
+        'graduation',
+        'community',
       ]
     > &
       Schema.Attribute.Required &
@@ -2153,6 +3000,7 @@ export interface ApiNewsNews extends Struct.CollectionTypeSchema {
       Schema.Attribute.Private;
     owning_unit: Schema.Attribute.Relation<'manyToOne', 'api::unit.unit'> &
       Schema.Attribute.Required;
+    photo_credit: Schema.Attribute.String;
     pinned: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
     publish_at: Schema.Attribute.DateTime;
     publishedAt: Schema.Attribute.DateTime;
@@ -2160,6 +3008,8 @@ export interface ApiNewsNews extends Struct.CollectionTypeSchema {
       ['semester', 'annual', 'none']
     > &
       Schema.Attribute.DefaultTo<'none'>;
+    show_on_homepage: Schema.Attribute.Boolean &
+      Schema.Attribute.DefaultTo<true>;
     summary: Schema.Attribute.Text & Schema.Attribute.Required;
     tags: Schema.Attribute.String;
     template: Schema.Attribute.Enumeration<
@@ -2202,7 +3052,7 @@ export interface ApiNewsletterSubscriberNewsletterSubscriber
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
-    email: Schema.Attribute.String &
+    email: Schema.Attribute.Email &
       Schema.Attribute.Required &
       Schema.Attribute.Unique;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
@@ -2318,7 +3168,8 @@ export interface ApiNewsletterNewsletter extends Struct.CollectionTypeSchema {
 export interface ApiNoticeNotice extends Struct.CollectionTypeSchema {
   collectionName: 'notices';
   info: {
-    displayName: 'News & Notices \u2013 Notices';
+    description: 'All notices. Admission notices are notices with category \u201CAdmissions\u201D \u2014 they appear on the Admissions page and in Announcements. Publication date and application closing date are separate fields.';
+    displayName: 'News & Notices \u2013 Notices (incl. Admission Notices)';
     pluralName: 'notices';
     singularName: 'notice';
   };
@@ -2326,6 +3177,12 @@ export interface ApiNoticeNotice extends Struct.CollectionTypeSchema {
     draftAndPublish: true;
   };
   attributes: {
+    admission_audience: Schema.Attribute.Enumeration<
+      ['all', 'bhutanese', 'international']
+    > &
+      Schema.Attribute.DefaultTo<'all'>;
+    application_closes: Schema.Attribute.Date;
+    application_opens: Schema.Attribute.Date;
     attachments: Schema.Attribute.Component<'shared.attachment', true>;
     audience: Schema.Attribute.JSON;
     body: Schema.Attribute.RichText & Schema.Attribute.Required;
@@ -2339,6 +3196,9 @@ export interface ApiNoticeNotice extends Struct.CollectionTypeSchema {
     expires_at: Schema.Attribute.DateTime & Schema.Attribute.Required;
     featured_for_international: Schema.Attribute.Boolean &
       Schema.Attribute.DefaultTo<false>;
+    intake: Schema.Attribute.String;
+    is_archived: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    is_featured: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
     last_reviewed: Schema.Attribute.Date & Schema.Attribute.Required;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
@@ -2348,12 +3208,17 @@ export interface ApiNoticeNotice extends Struct.CollectionTypeSchema {
       Schema.Attribute.Private;
     owning_unit: Schema.Attribute.Relation<'manyToOne', 'api::unit.unit'> &
       Schema.Attribute.Required;
+    programmes: Schema.Attribute.Relation<
+      'manyToMany',
+      'api::programme.programme'
+    >;
     publish_at: Schema.Attribute.DateTime & Schema.Attribute.Required;
     publishedAt: Schema.Attribute.DateTime;
     review_interval: Schema.Attribute.Enumeration<
       ['semester', 'annual', 'none']
     > &
       Schema.Attribute.DefaultTo<'none'>;
+    summary: Schema.Attribute.Text;
     title: Schema.Attribute.String & Schema.Attribute.Required;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
@@ -2518,12 +3383,21 @@ export interface ApiProgrammeProgramme extends Struct.CollectionTypeSchema {
 export interface ApiRecruitmentRecruitment extends Struct.CollectionTypeSchema {
   collectionName: 'recruitments';
   info: {
-    displayName: 'News & Notices \u2013 Recruitment';
+    description: 'Replaced by News & Notices \u2013 Recruitment (Vacancies). Hidden from the admin; kept only so its table is not dropped.';
+    displayName: 'News & Notices \u2013 Recruitment (old, not used)';
     pluralName: 'recruitments';
     singularName: 'recruitment';
   };
   options: {
     draftAndPublish: true;
+  };
+  pluginOptions: {
+    'content-manager': {
+      visible: false;
+    };
+    'content-type-builder': {
+      visible: false;
+    };
   };
   attributes: {
     apply_url: Schema.Attribute.String;
@@ -2582,16 +3456,19 @@ export interface ApiResearchCentreResearchCentre
     draftAndPublish: true;
   };
   attributes: {
+    acronym: Schema.Attribute.String;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     description: Schema.Attribute.RichText;
+    display_order: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
     expires_at: Schema.Attribute.DateTime;
     external_link: Schema.Attribute.String;
     focus_areas: Schema.Attribute.Relation<
       'manyToMany',
       'api::expertise.expertise'
     >;
+    is_featured: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
     last_reviewed: Schema.Attribute.Date & Schema.Attribute.Required;
     lead: Schema.Attribute.Relation<'oneToOne', 'api::person.person'>;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
@@ -2600,6 +3477,8 @@ export interface ApiResearchCentreResearchCentre
       'api::research-centre.research-centre'
     > &
       Schema.Attribute.Private;
+    logo: Schema.Attribute.Media<'images'>;
+    logo_alt: Schema.Attribute.String;
     members: Schema.Attribute.Relation<'manyToMany', 'api::person.person'>;
     name: Schema.Attribute.String & Schema.Attribute.Required;
     owning_unit: Schema.Attribute.Relation<'manyToOne', 'api::unit.unit'> &
@@ -2610,6 +3489,11 @@ export interface ApiResearchCentreResearchCentre
     > &
       Schema.Attribute.DefaultTo<'none'>;
     slug: Schema.Attribute.UID<'name'>;
+    summary: Schema.Attribute.Text &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 400;
+      }>;
+    themes: Schema.Attribute.Text;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -2620,6 +3504,7 @@ export interface ApiResearchOverviewResearchOverview
   extends Struct.SingleTypeSchema {
   collectionName: 'research_overview';
   info: {
+    description: 'The Research landing page (/research), top to bottom. Centres and projects are edited in Research \u2013 Centres and Research \u2013 Projects.';
     displayName: 'Research \u2013 Overview';
     pluralName: 'research-overviews';
     singularName: 'research-overview';
@@ -2629,24 +3514,130 @@ export interface ApiResearchOverviewResearchOverview
   };
   attributes: {
     cards: Schema.Attribute.Component<'shared.landing-card', true>;
+    centres_heading: Schema.Attribute.String;
+    centres_intro: Schema.Attribute.Text;
+    collaboration_heading: Schema.Attribute.String;
+    collaboration_office: Schema.Attribute.Relation<
+      'oneToOne',
+      'api::contact-person.contact-person'
+    >;
+    collaboration_text: Schema.Attribute.Text;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    expertise_heading: Schema.Attribute.String;
+    expertise_link: Schema.Attribute.Component<'shared.link-item', false>;
+    expertise_text: Schema.Attribute.Text;
     eyebrow: Schema.Attribute.String;
+    facilities: Schema.Attribute.Component<'research.facility', true>;
+    facilities_heading: Schema.Attribute.String;
+    facilities_intro: Schema.Attribute.Text;
     featured: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
+    grants: Schema.Attribute.Component<'research.grant', true>;
+    grants_heading: Schema.Attribute.String;
+    grants_intro: Schema.Attribute.Text;
     heading: Schema.Attribute.String & Schema.Attribute.Required;
+    hero_buttons: Schema.Attribute.Component<'shared.link-item', true>;
+    hero_image: Schema.Attribute.Media<'images'>;
+    hero_image_alt: Schema.Attribute.String;
     intro: Schema.Attribute.Text & Schema.Attribute.Required;
+    journal: Schema.Attribute.Component<'research.journal', false>;
+    journal_heading: Schema.Attribute.String;
+    journal_intro: Schema.Attribute.Text;
+    labels: Schema.Attribute.Component<'research.labels', false>;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
       'api::research-overview.research-overview'
     > &
       Schema.Attribute.Private;
+    news_heading: Schema.Attribute.String;
+    news_intro: Schema.Attribute.Text;
+    news_limit: Schema.Attribute.Integer &
+      Schema.Attribute.SetMinMax<
+        {
+          max: 12;
+          min: 1;
+        },
+        number
+      > &
+      Schema.Attribute.DefaultTo<6>;
+    news_stories: Schema.Attribute.Relation<'oneToMany', 'api::news.news'>;
+    policies: Schema.Attribute.Component<'research.resource', true>;
+    policies_heading: Schema.Attribute.String;
+    policies_intro: Schema.Attribute.Text;
+    projects_heading: Schema.Attribute.String;
+    projects_intro: Schema.Attribute.Text;
+    projects_limit: Schema.Attribute.Integer &
+      Schema.Attribute.SetMinMax<
+        {
+          max: 24;
+          min: 1;
+        },
+        number
+      > &
+      Schema.Attribute.DefaultTo<6>;
     publishedAt: Schema.Attribute.DateTime;
     sections: Schema.Attribute.DynamicZone<
       ['sections.rich-text', 'sections.image-text', 'sections.call-to-action']
     >;
     seo: Schema.Attribute.Component<'shared.seo', false>;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiResearchProjectResearchProject
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'research_projects';
+  info: {
+    description: 'Research projects, as listed on the official Research Centres and Projects page.';
+    displayName: 'Research \u2013 Projects';
+    pluralName: 'research-projects';
+    singularName: 'research-project';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    budget: Schema.Attribute.String;
+    centre: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::research-centre.research-centre'
+    >;
+    centre_label: Schema.Attribute.String;
+    co_investigators: Schema.Attribute.String;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    display_order: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
+    end_date: Schema.Attribute.Date;
+    funding_source: Schema.Attribute.String;
+    funding_type: Schema.Attribute.Enumeration<
+      ['college_grant', 'national', 'international']
+    > &
+      Schema.Attribute.DefaultTo<'college_grant'>;
+    is_featured: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    link_label: Schema.Attribute.String;
+    link_url: Schema.Attribute.String;
+    listed_status: Schema.Attribute.Enumeration<
+      ['ongoing', 'completed', 'not_stated']
+    > &
+      Schema.Attribute.DefaultTo<'not_stated'>;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::research-project.research-project'
+    > &
+      Schema.Attribute.Private;
+    period_label: Schema.Attribute.String;
+    principal_investigator: Schema.Attribute.String;
+    publishedAt: Schema.Attribute.DateTime;
+    source_note: Schema.Attribute.String;
+    start_date: Schema.Attribute.Date;
+    summary: Schema.Attribute.Text;
+    title: Schema.Attribute.String & Schema.Attribute.Required;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -2767,9 +3758,44 @@ export interface ApiStudentLifeOverviewStudentLifeOverview
   };
 }
 
+export interface ApiUnitCategoryUnitCategory
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'unit_categories';
+  info: {
+    description: 'Groups for the Administrative Units directory. Only categories with published units are shown.';
+    displayName: 'About \u2013 Administrative Units: Categories';
+    pluralName: 'unit-categories';
+    singularName: 'unit-category';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    description: Schema.Attribute.Text;
+    display_order: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
+    is_active: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::unit-category.unit-category'
+    > &
+      Schema.Attribute.Private;
+    name: Schema.Attribute.String & Schema.Attribute.Required;
+    publishedAt: Schema.Attribute.DateTime;
+    slug: Schema.Attribute.UID<'name'> & Schema.Attribute.Required;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiUnitUnit extends Struct.CollectionTypeSchema {
   collectionName: 'units';
   info: {
+    description: 'Departments, administrative offices, research centres and student bodies. Administrative ones appear on About \u2192 Administrative Units.';
     displayName: 'About \u2013 Administrative Units';
     pluralName: 'units';
     singularName: 'unit';
@@ -2778,28 +3804,91 @@ export interface ApiUnitUnit extends Struct.CollectionTypeSchema {
     draftAndPublish: true;
   };
   attributes: {
+    category: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::unit-category.unit-category'
+    >;
     contact: Schema.Attribute.Component<'shared.contact-block', false>;
     content_owner: Schema.Attribute.Relation<'oneToOne', 'api::person.person'>;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     description: Schema.Attribute.RichText;
+    display_order: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
+    documents: Schema.Attribute.Component<'shared.attachment', true>;
     head: Schema.Attribute.Relation<'oneToOne', 'api::person.person'>;
+    head_designation: Schema.Attribute.String;
+    head_name: Schema.Attribute.String;
+    head_portrait: Schema.Attribute.Media<'images'>;
+    head_portrait_alt: Schema.Attribute.String;
+    is_featured: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
     kind: Schema.Attribute.Enumeration<
       ['academic', 'administrative', 'research_centre', 'student_body']
     > &
       Schema.Attribute.Required;
     last_reviewed: Schema.Attribute.Date & Schema.Attribute.Required;
+    links: Schema.Attribute.Component<'shared.link-item', true>;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<'oneToMany', 'api::unit.unit'> &
       Schema.Attribute.Private;
+    location: Schema.Attribute.String;
     name: Schema.Attribute.String &
       Schema.Attribute.Required &
       Schema.Attribute.Unique;
+    office: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::contact-person.contact-person'
+    >;
     photo: Schema.Attribute.Media<'images'>;
     publishedAt: Schema.Attribute.DateTime;
+    responsibilities: Schema.Attribute.Component<'units.point', true>;
+    services: Schema.Attribute.Component<'units.point', true>;
     short_name: Schema.Attribute.String;
     slug: Schema.Attribute.UID<'name'>;
+    summary: Schema.Attribute.Text &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 300;
+      }>;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiUnitsPageUnitsPage extends Struct.SingleTypeSchema {
+  collectionName: 'units_page';
+  info: {
+    description: 'Hero, section headings and messages for the Administrative Units page.';
+    displayName: 'About \u2013 Administrative Units: Page Settings';
+    pluralName: 'units-pages';
+    singularName: 'units-page';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    directory_heading: Schema.Attribute.String;
+    directory_intro: Schema.Attribute.Text;
+    empty_message: Schema.Attribute.Text;
+    eyebrow: Schema.Attribute.String;
+    featured_heading: Schema.Attribute.String;
+    featured_intro: Schema.Attribute.Text;
+    hero_image: Schema.Attribute.Media<'images'>;
+    hero_image_alt: Schema.Attribute.String;
+    intro: Schema.Attribute.Text;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::units-page.units-page'
+    > &
+      Schema.Attribute.Private;
+    publishedAt: Schema.Attribute.DateTime;
+    seo: Schema.Attribute.Component<'shared.seo', false>;
+    subtitle: Schema.Attribute.String;
+    title: Schema.Attribute.String & Schema.Attribute.Required;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -2810,7 +3899,8 @@ export interface ApiVacancyAnnouncementVacancyAnnouncement
   extends Struct.CollectionTypeSchema {
   collectionName: 'vacancy_announcements';
   info: {
-    displayName: 'News & Notices \u2013 Vacancy Announcements';
+    description: 'Staff vacancies and their selection stages \u2014 shown on the Recruitment page.';
+    displayName: 'News & Notices \u2013 Recruitment (Vacancies)';
     pluralName: 'vacancy-announcements';
     singularName: 'vacancy-announcement';
   };
@@ -2855,7 +3945,6 @@ export interface ApiVacancyAnnouncementVacancyAnnouncement
         'shortlisted_written',
         'shortlisted_viva',
         'selection_result',
-        'general_notice',
       ]
     > &
       Schema.Attribute.Required;
@@ -2876,6 +3965,48 @@ export interface ApiVacancyAnnouncementVacancyAnnouncement
     >;
     written_exam_time: Schema.Attribute.String;
     written_exam_venue: Schema.Attribute.String;
+  };
+}
+
+export interface ApiVisionMissionPageVisionMissionPage
+  extends Struct.SingleTypeSchema {
+  collectionName: 'vision_mission_page';
+  info: {
+    description: 'The official vision, mission statements and core values. Keep the official wording exactly as approved.';
+    displayName: 'About \u2013 Vision, Mission & Core Values';
+    pluralName: 'vision-mission-pages';
+    singularName: 'vision-mission-page';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    closing_note: Schema.Attribute.Text;
+    core_values: Schema.Attribute.Component<'about.core-value', true>;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    hero_eyebrow: Schema.Attribute.String &
+      Schema.Attribute.DefaultTo<'WHO WE ARE'>;
+    hero_heading: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'Vision, Mission & Core Values'>;
+    hero_image: Schema.Attribute.Media<'images'>;
+    hero_intro: Schema.Attribute.Text;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::vision-mission-page.vision-mission-page'
+    > &
+      Schema.Attribute.Private;
+    missions: Schema.Attribute.Component<'about.mission-item', true>;
+    publishedAt: Schema.Attribute.DateTime;
+    seo_description: Schema.Attribute.String;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    vision_highlights: Schema.Attribute.Text;
+    vision_statement: Schema.Attribute.Text & Schema.Attribute.Required;
   };
 }
 
@@ -3394,6 +4525,10 @@ declare module '@strapi/strapi' {
       'api::about-page.about-page': ApiAboutPageAboutPage;
       'api::academic-guide.academic-guide': ApiAcademicGuideAcademicGuide;
       'api::academics-overview.academics-overview': ApiAcademicsOverviewAcademicsOverview;
+      'api::admission-bhutanese.admission-bhutanese': ApiAdmissionBhutaneseAdmissionBhutanese;
+      'api::admission-enquiry-setting.admission-enquiry-setting': ApiAdmissionEnquirySettingAdmissionEnquirySetting;
+      'api::admission-enquiry.admission-enquiry': ApiAdmissionEnquiryAdmissionEnquiry;
+      'api::admission-international-applicants.admission-international-applicants': ApiAdmissionInternationalApplicantsAdmissionInternationalApplicants;
       'api::admissions-overview.admissions-overview': ApiAdmissionsOverviewAdmissionsOverview;
       'api::alumni-achievement.alumni-achievement': ApiAlumniAchievementAlumniAchievement;
       'api::alumni-chapter.alumni-chapter': ApiAlumniChapterAlumniChapter;
@@ -3412,6 +4547,11 @@ declare module '@strapi/strapi' {
       'api::document.document': ApiDocumentDocument;
       'api::event.event': ApiEventEvent;
       'api::expertise.expertise': ApiExpertiseExpertise;
+      'api::facilities-page.facilities-page': ApiFacilitiesPageFacilitiesPage;
+      'api::facility-category.facility-category': ApiFacilityCategoryFacilityCategory;
+      'api::facility-gallery-image.facility-gallery-image': ApiFacilityGalleryImageFacilityGalleryImage;
+      'api::facility-quick-link.facility-quick-link': ApiFacilityQuickLinkFacilityQuickLink;
+      'api::facility.facility': ApiFacilityFacility;
       'api::faculty-profile.faculty-profile': ApiFacultyProfileFacultyProfile;
       'api::faculty-setting.faculty-setting': ApiFacultySettingFacultySetting;
       'api::feature.feature': ApiFeatureFeature;
@@ -3436,11 +4576,15 @@ declare module '@strapi/strapi' {
       'api::recruitment.recruitment': ApiRecruitmentRecruitment;
       'api::research-centre.research-centre': ApiResearchCentreResearchCentre;
       'api::research-overview.research-overview': ApiResearchOverviewResearchOverview;
+      'api::research-project.research-project': ApiResearchProjectResearchProject;
       'api::research-publication.research-publication': ApiResearchPublicationResearchPublication;
       'api::site-settings.site-settings': ApiSiteSettingsSiteSettings;
       'api::student-life-overview.student-life-overview': ApiStudentLifeOverviewStudentLifeOverview;
+      'api::unit-category.unit-category': ApiUnitCategoryUnitCategory;
       'api::unit.unit': ApiUnitUnit;
+      'api::units-page.units-page': ApiUnitsPageUnitsPage;
       'api::vacancy-announcement.vacancy-announcement': ApiVacancyAnnouncementVacancyAnnouncement;
+      'api::vision-mission-page.vision-mission-page': ApiVisionMissionPageVisionMissionPage;
       'plugin::content-releases.release': PluginContentReleasesRelease;
       'plugin::content-releases.release-action': PluginContentReleasesReleaseAction;
       'plugin::i18n.locale': PluginI18NLocale;

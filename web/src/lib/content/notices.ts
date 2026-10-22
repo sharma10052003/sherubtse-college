@@ -13,6 +13,8 @@ export interface Notice {
   publish_at: string;
   expires_at: string;
   urgency: 'normal' | 'urgent';
+  /** Ticked “Is featured” — pinned first on the homepage. */
+  is_featured: boolean;
   attachments: { label: string; file_url: string | null }[];
 }
 
@@ -26,6 +28,7 @@ function mapNotice(row: any): Notice {
     publish_at: row.publish_at,
     expires_at: row.expires_at,
     urgency: row.urgency ?? 'normal',
+    is_featured: !!row.is_featured,
     attachments: (row.attachments ?? []).map((a: any) => ({ label: a.label, file_url: a.file?.url ?? null })),
   };
 }
@@ -54,7 +57,7 @@ export async function getNoticesByUnit(unitSlug: string, limit = 10): Promise<No
   return (res?.data ?? []).map(mapNotice);
 }
 
-/** All unexpired notices, for the /news-notices/announcements listing. */
+/** All unexpired notices — Tenders, and the combined Announcements feed (announcement-feed.ts). */
 export async function getAllCurrentNotices(): Promise<Notice[]> {
   const res = await strapiGet<StrapiListResponse<any>>('notices', {
     filters: { expires_at: { $gt: new Date().toISOString() } },

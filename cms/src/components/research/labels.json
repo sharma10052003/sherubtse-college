@@ -1,0 +1,110 @@
+{
+  "collectionName": "components_research_labels",
+  "info": {
+    "displayName": "Research Page Labels",
+    "icon": "feather",
+    "description": "Small fixed words on the Research pages."
+  },
+  "options": {},
+  "attributes": {
+    "explore_centre": {
+      "type": "string"
+    },
+    "themes": {
+      "type": "string"
+    },
+    "pi": {
+      "type": "string"
+    },
+    "co_investigators": {
+      "type": "string"
+    },
+    "funding": {
+      "type": "string"
+    },
+    "period": {
+      "type": "string"
+    },
+    "budget": {
+      "type": "string"
+    },
+    "status_ongoing": {
+      "type": "string"
+    },
+    "status_completed": {
+      "type": "string"
+    },
+    "status_unconfirmed": {
+      "type": "string"
+    },
+    "tab_ongoing": {
+      "type": "string"
+    },
+    "tab_completed": {
+      "type": "string"
+    },
+    "view_all_projects": {
+      "type": "string"
+    },
+    "documents": {
+      "type": "string"
+    },
+    "read_more": {
+      "type": "string"
+    },
+    "contact": {
+      "type": "string"
+    },
+    "deadline": {
+      "type": "string"
+    },
+    "status_open": {
+      "type": "string"
+    },
+    "status_closed": {
+      "type": "string"
+    },
+    "issn_print": {
+      "type": "string"
+    },
+    "issn_online": {
+      "type": "string"
+    },
+    "current_issue": {
+      "type": "string"
+    },
+    "college_grants": {
+      "type": "string"
+    },
+    "university_grants": {
+      "type": "string"
+    },
+    "on_this_page": {
+      "type": "string"
+    },
+    "listed_projects": {
+      "type": "string"
+    },
+    "externally_funded": {
+      "type": "string"
+    },
+    "all_news": {
+      "type": "string"
+    },
+    "all_centres": {
+      "type": "string"
+    },
+    "all_funding": {
+      "type": "string"
+    },
+    "search_projects": {
+      "type": "string"
+    },
+    "no_results": {
+      "type": "string"
+    },
+    "show_all": {
+      "type": "string"
+    }
+  }
+}

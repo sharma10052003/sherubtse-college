@@ -1,0 +1,38 @@
+{
+  "collectionName": "components_facilities_section_laboratories",
+  "info": {
+    "displayName": "Section – Laboratories",
+    "icon": "layout",
+    "description": "Shows the Laboratories content from Page Settings, plus facilities in the chosen category as laboratory profiles."
+  },
+  "options": {},
+  "attributes": {
+    "heading": {
+      "type": "string"
+    },
+    "intro": {
+      "type": "text"
+    },
+    "anchor": {
+      "type": "string"
+    },
+    "background": {
+      "type": "enumeration",
+      "enum": [
+        "white",
+        "soft",
+        "navy"
+      ],
+      "default": "white"
+    },
+    "is_visible": {
+      "type": "boolean",
+      "default": true
+    },
+    "profiles_category": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::facility-category.facility-category"
+    }
+  }
+}

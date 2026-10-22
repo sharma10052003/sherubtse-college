@@ -1,0 +1,51 @@
+---
+// Every research project in Research – Projects, grouped by status
+// (ongoing, status not confirmed, completed). Status rule: lib/content/research.ts.
+import Layout from '../../../layouts/Layout.astro';
+import '../../../styles/research.css';
+import ProjectCard from '../../../components/research/ProjectCard.astro';
+import Icon from '../../../components/research/Icon.astro';
+import { getProjects, getResearchPage } from '../../../lib/content/research';
+
+const [page, projects] = await Promise.all([getResearchPage(), getProjects()]);
+const L = page.labels;
+const groups = [
+  { id: 'ongoing', label: L.status_ongoing, items: projects.filter((p) => p.status === 'ongoing') },
+  { id: 'unconfirmed', label: L.status_unconfirmed, items: projects.filter((p) => p.status === 'unconfirmed') },
+  { id: 'completed', label: L.status_completed, items: projects.filter((p) => p.status === 'completed') },
+].filter((g) => g.items.length > 0);
+---
+<Layout title={`${page.projects.heading} — Research`} description={page.projects.intro ?? undefined}>
+  <div class="rs" data-rs>
+    <header class="rs-hero rs-hero--compact">
+      <div class="wrap">
+        <nav class="rs-breadcrumb" aria-label="Breadcrumb">
+          <a href="/">Home</a><span aria-hidden="true">›</span><a href="/research">Research</a><span aria-hidden="true">›</span><span aria-current="page">{page.projects.heading}</span>
+        </nav>
+        <h1 class="rs-title">{page.projects.heading}</h1>
+        {page.projects.intro && <p class="rs-intro">{page.projects.intro}</p>}
+      </div>
+    </header>
+
+    <div class="rs-band">
+      <div class="wrap">
+        {groups.length > 0 ? (
+          groups.map((g) => (
+            <section class="rs-group" aria-labelledby={`rs-group-${g.id}`}>
+              <h2 class="rs-group-title" id={`rs-group-${g.id}`}>
+                <span class:list={['rs-status', `rs-status--${g.id}`]}>{g.label}</span>
+                <span class="rs-group-count">{g.items.length}</span>
+              </h2>
+              <div class="rs-projects">
+                {g.items.map((p) => <ProjectCard project={p} labels={L} showBudget />)}
+              </div>
+            </section>
+          ))
+        ) : (
+          <p class="rs-empty">{L.no_results}</p>
+        )}
+        <a class="rs-more" href="/research#projects"><Icon name="arrow" size={18} /> {page.heading}</a>
+      </div>
+    </div>
+  </div>
+</Layout>

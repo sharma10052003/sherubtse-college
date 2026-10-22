@@ -1,0 +1,108 @@
+---
+// A major editorial feature (Library, Laboratories): a half-width photograph
+// beside a numbered label, heading, the supplied introduction, the verified
+// feature list, the primary resource link, and an "Explore facility details"
+// toggle that reveals the "more information" text plus anything extra on the
+// linked facility record (location, hours, contact, documents, photos).
+import type { FeatureBlock, Facility } from '../../lib/content/facilities';
+import FacilityDetail from './FacilityDetail.astro';
+import { icon } from '../../lib/facility-icons';
+
+interface Props {
+  block: FeatureBlock;
+  id: string;
+  number: string;
+  fallbackIcon: string;
+  headingFallback: string;
+  linked: Facility | null;
+  expandLabel: string;
+}
+const { block: b, id, number, fallbackIcon, headingFallback, linked, expandLabel } = Astro.props;
+const label = b.label || 'Feature';
+const [primary, ...otherLinks] = b.links;
+const extras = linked
+  ? !!(linked.location || linked.building || linked.opening_hours || linked.access_conditions || linked.accessibility || linked.department || linked.contact || linked.documents.length || linked.images.length || linked.uses_html || linked.policies_html)
+  : false;
+const hasMore = !!b.more_html || extras || b.documents.length > 0 || otherLinks.length > 0;
+---
+<article class:list={['cf-story', 'cf-feature', { 'cf-feature--reverse': b.image_position === 'right' }]} aria-labelledby={`${id}-title`}>
+  <figure class="cf-feature-figure" data-cf-reveal>
+    {b.image ? (
+      <img src={b.image.url} alt={b.image.alt} loading="lazy" />
+    ) : (
+      <div class="cf-plate" aria-hidden="true">
+        <span class="cf-plate-no">{number}</span>
+        <span class="cf-plate-icon" set:html={icon(fallbackIcon)} />
+        <svg class="cf-plate-lines" viewBox="0 0 400 300" preserveAspectRatio="none">
+          <path d="M0 230 70 180l50 25 80-75 70 55 60-35 70 50" />
+          <path d="M0 255 90 220l70 20 90-45 80 30 70-15" />
+        </svg>
+      </div>
+    )}
+  </figure>
+
+  <div class="cf-feature-text" data-cf-reveal>
+    <p class="cf-label"><span class="cf-label-no">{number}</span>{label}</p>
+    <h3 class="cf-feature-title" id={`${id}-title`}>{b.heading || headingFallback}</h3>
+    {b.intro_html && <div class="cf-prose cf-feature-intro" set:html={b.intro_html} />}
+
+    {b.features.length > 0 && (
+      <ul class="cf-points">
+        {b.features.map((f) => (
+          <li>
+            <strong>{f.title}</strong>
+            {f.description && <span>{f.description}</span>}
+          </li>
+        ))}
+      </ul>
+    )}
+
+    <div class="cf-feature-actions">
+      {primary && (
+        <a class="cf-arrowlink" href={primary.url} {...(primary.external ? { target: '_blank', rel: 'noopener' } : {})}>
+          {primary.label}<Fragment set:html={icon(primary.external ? 'external' : 'arrow')} />
+          {primary.external && <span class="cf-sr">(opens in a new tab)</span>}
+        </a>
+      )}
+      {hasMore && (
+        <button type="button" class="cf-toggle" aria-expanded="false" aria-controls={`${id}-more`} data-cf-toggle>
+          <span>{expandLabel}</span><span class="cf-toggle-mark" aria-hidden="true"></span>
+        </button>
+      )}
+    </div>
+
+    {hasMore && (
+      <div class="cf-reveal" id={`${id}-more`} data-cf-region hidden>
+        <div class="cf-reveal-inner">
+          {b.more_html && (
+            <section class="cf-detail-block">
+              {b.more_heading && <h4>{b.more_heading}</h4>}
+              <div class="cf-prose" set:html={b.more_html} />
+            </section>
+          )}
+          {linked && extras && <FacilityDetail facility={linked} level={3} extrasOnly />}
+          {(otherLinks.length > 0 || b.documents.length > 0) && (
+            <ul class="cf-resources">
+              {otherLinks.map((l) => (
+                <li><a href={l.url} {...(l.external ? { target: '_blank', rel: 'noopener' } : {})}><span>{l.label}</span><Fragment set:html={icon(l.external ? 'external' : 'arrow')} /></a></li>
+              ))}
+              {b.documents.map((d) => (
+                <li><a href={d.url} target="_blank" rel="noopener"><span>{d.label}</span>{d.ext && <span class="cf-ext">{d.ext}</span>}<Fragment set:html={icon('download')} /></a></li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </div>
+    )}
+  </div>
+
+  {b.gallery.length > 0 && (
+    <div class="cf-strip">
+      {b.gallery.map((im) => (
+        <button type="button" class="cf-shot" data-cf-lightbox={im.url} data-cf-caption={im.alt}>
+          <img src={im.url} alt={im.alt} loading="lazy" />
+        </button>
+      ))}
+    </div>
+  )}
+</article>

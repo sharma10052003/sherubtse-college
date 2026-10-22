@@ -1,0 +1,29 @@
+{
+  "collectionName": "components_research_doc_links",
+  "info": {
+    "displayName": "Document Link",
+    "icon": "link",
+    "description": "A link to an official document or page."
+  },
+  "options": {},
+  "attributes": {
+    "label": {
+      "type": "string",
+      "required": true
+    },
+    "url": {
+      "type": "string",
+      "required": true
+    },
+    "file_type": {
+      "type": "enumeration",
+      "enum": [
+        "pdf",
+        "docx",
+        "page",
+        "other"
+      ],
+      "default": "page"
+    }
+  }
+}

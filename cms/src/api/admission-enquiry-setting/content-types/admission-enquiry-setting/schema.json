@@ -1,0 +1,85 @@
+{
+  "kind": "singleType",
+  "collectionName": "admission_enquiry_setting",
+  "info": {
+    "singularName": "admission-enquiry-setting",
+    "pluralName": "admission-enquiry-settings",
+    "displayName": "Admission – Enquiry Form Settings",
+    "description": "Wording, fields and routing for the Admissions enquiry form."
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "title": {
+      "type": "string"
+    },
+    "introduction": {
+      "type": "text"
+    },
+    "name_label": {
+      "type": "string"
+    },
+    "email_label": {
+      "type": "string"
+    },
+    "phone_label": {
+      "type": "string"
+    },
+    "show_phone": {
+      "type": "boolean",
+      "default": true
+    },
+    "phone_required": {
+      "type": "boolean",
+      "default": false
+    },
+    "applicant_category_label": {
+      "type": "string"
+    },
+    "programme_label": {
+      "type": "string"
+    },
+    "show_programme": {
+      "type": "boolean",
+      "default": true
+    },
+    "programme_required": {
+      "type": "boolean",
+      "default": false
+    },
+    "enquiry_category_label": {
+      "type": "string"
+    },
+    "enquiry_categories": {
+      "type": "component",
+      "repeatable": true,
+      "component": "admission.enquiry-option"
+    },
+    "message_label": {
+      "type": "string"
+    },
+    "consent_label": {
+      "type": "text"
+    },
+    "submit_label": {
+      "type": "string"
+    },
+    "confirmation_message": {
+      "type": "text"
+    },
+    "error_message": {
+      "type": "text"
+    },
+    "privacy_notice": {
+      "type": "text"
+    },
+    "privacy_policy_url": {
+      "type": "string"
+    },
+    "default_recipient_email": {
+      "type": "email"
+    }
+  }
+}

@@ -1,8 +1,9 @@
 ---
 import Layout from '../../../layouts/Layout.astro';
 import { getContactPageContent, getContactOffices } from '../../../lib/content/contact';
+import type { ContactOffice } from '../../../lib/content/contact';
 import { getSiteSettings } from '../../../lib/content/site-settings';
-import '../../../styles/contact.css';
+import '../../../styles/contact-page.css';
 
 const [content, offices, siteSettings] = await Promise.all([
   getContactPageContent(),
@@ -10,345 +11,888 @@ const [content, offices, siteSettings] = await Promise.all([
   getSiteSettings(),
 ]);
 
-const address = siteSettings.address || 'Sherubtse College, Kanglung, Trashigang, Bhutan';
-const directionsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
+const address = siteSettings.address || 'Sherubtse College, Kanglung, Trashigang 42003, Bhutan';
+// "Map URL" in Contact – Page overrides the directions link; otherwise it's a
+// Google Maps search for the address in Global – Site Settings.
+const directionsUrl = content.map_url || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
 
-// Real, already-in-use icon strokes (Footer.astro's pin/envelope/phone), plus
-// one simple glyph per office group — every icon shares the same stroke
-// treatment (fill:none, stroke-width 2) so a new one is a drop-in.
+// Admins may type a bare email address into a link field.
+const toHref = (link: string) => (/^[^\s@:/]+@[^\s@]+$/.test(link) ? `mailto:${link}` : link);
+const isExternal = (href: string) => /^https?:\/\//i.test(href);
+const withSubject = (href: string, subject: string | null) =>
+  subject && href.startsWith('mailto:') && !href.includes('?') ? `${href}?subject=${encodeURIComponent(subject)}` : href;
+const ictHref = content.ict_button_link ? withSubject(toHref(content.ict_button_link), content.ict_email_subject) : null;
+const showIct = Boolean(content.ict_heading || content.ict_text || ictHref);
+
+/** Shows the number as entered; dials it in international form (+975, trunk 0 dropped). */
+function telHref(phone: string) {
+  const digits = phone.replace(/\D/g, '');
+  if (digits.startsWith('975')) return `tel:+975${digits.slice(3).replace(/^0/, '')}`;
+  if (digits.startsWith('0')) return `tel:+975${digits.slice(1)}`;
+  return phone.trim().startsWith('+') ? `tel:+${digits}` : `tel:${digits}`;
+}
+
 const ICONS: Record<string, string> = {
   president: '<path d="M4 15 2 7l5.5 3.5L12 4l4.5 6.5L22 7l-2 8z"/><path d="M4 15h16v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"/>',
   academic: '<path d="M12 2 2 7l10 5 10-5-10-5z"/><path d="M6 10v6c0 1.5 3 3 6 3s6-1.5 6-3v-6"/><path d="M22 7v7"/>',
   student: '<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/>',
   research: '<path d="M9 3h6"/><path d="M10 3v6l-5.5 9.5A1.7 1.7 0 0 0 6 21h12a1.7 1.7 0 0 0 1.5-2.5L14 9V3"/><path d="M7.5 15h9"/>',
-  admin: '<rect x="3" y="7" width="18" height="13" rx="0"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M3 12h18"/>',
-  ict: '<rect x="3" y="4" width="18" height="12" rx="0"/><path d="M8 20h8M12 16v4"/><path d="M7 9a5 5 0 0 1 10 0"/>',
-  exam: '<rect x="5" y="3" width="14" height="18" rx="0"/><path d="M9 3v3h6V3"/><path d="m9 12 2 2 4-4"/>',
+  admin: '<rect x="3" y="7" width="18" height="13"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M3 12h18"/>',
+  ict: '<rect x="3" y="4" width="18" height="12"/><path d="M8 20h8M12 16v4"/><path d="M7 9a5 5 0 0 1 10 0"/>',
+  exam: '<rect x="5" y="3" width="14" height="18"/><path d="M9 3v3h6V3"/><path d="m9 12 2 2 4-4"/>',
   location: '<path d="M12 21s-7-6.1-7-11a7 7 0 0 1 14 0c0 4.9-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/>',
-  mail: '<rect x="3" y="5" width="18" height="14" rx="0"/><path d="M3 6l9 7 9-7"/>',
+  mail: '<rect x="3" y="5" width="18" height="14"/><path d="M3 6l9 7 9-7"/>',
   phone: '<path d="M4 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L14 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 2 6a2 2 0 0 1 2-2z"/>',
   clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/>',
   directions: '<path d="M3 11l18-8-8 18-2-8-8-2z"/>',
-  support: '<rect x="4" y="4" width="16" height="12" rx="0"/><path d="M9 20h6M12 16v4"/><path d="m8 8 2 2M16 8l-2 2"/>',
+  map: '<path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2z"/><path d="M9 4v14M15 6v14"/>',
+  support: '<path d="M4 14v-2a8 8 0 0 1 16 0v2"/><rect x="2" y="14" width="5" height="6"/><rect x="17" y="14" width="5" height="6"/><path d="M20 20a4 4 0 0 1-4 3h-3"/>',
+  search: '<circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/>',
+  close: '<path d="M6 6l12 12M18 6 6 18"/>',
+  arrow: '<path d="M5 12h14M13 6l6 6-6 6"/>',
+  down: '<path d="M12 5v14M6 13l6 6 6-6"/>',
+  send: '<path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4z"/>',
+  copy: '<rect x="9" y="9" width="12" height="12"/><path d="M5 15H3V3h12v2"/>',
+  check: '<path d="m5 12 5 5L20 7"/>',
+  external: '<path d="M14 4h6v6M20 4l-9 9"/><path d="M18 14v6H4V6h6"/>',
+  person: '<circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-3.9 3.1-6 7-6s7 2.1 7 6"/>',
 };
 
 function icon(name: string, className = '') {
-  return `<svg class="${className}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[name] ?? ''}</svg>`;
+  return `<svg class="${className}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${ICONS[name] ?? ICONS.admin}</svg>`;
 }
 
-// "How Can We Help?" categories, each mapped to one of the same 7 office
-// records above — one real data source for both the card grid and the
-// selector, instead of a second hardcoded list that could drift from it.
-const HELP_CATEGORIES = [
-  { emoji: '🎓', label: 'Admissions & Programmes', office: 'Academic Affairs' },
-  { emoji: '👥', label: 'Student Services', office: 'Student Affairs' },
-  { emoji: '📝', label: 'Examination & Records', office: 'Examination & Records' },
-  { emoji: '🔬', label: 'Research & Collaboration', office: 'Research & Industrial Linkages' },
-  { emoji: '🗂️', label: 'Administration', office: 'Administration' },
-  { emoji: '💻', label: 'ICT & Digital Services', office: 'ICT & Digital Services' },
-  { emoji: '🏛️', label: 'General Institutional Matters', office: 'Office of the President' },
-];
+// "How Can We Help?" topics come from Contact – Page; each names one office
+// by its Group Title in Contact – Offices, so every section shares one source
+// of contact details. Topics whose office doesn't exist are left out rather
+// than shown as a button that does nothing.
+const officeKey = (title: string) => title.trim().toLowerCase();
+const officeByKey = new Map(offices.map((o) => [officeKey(o.group_title), o]));
+const helpTopics = content.help_topics.filter((t) => officeByKey.has(officeKey(t.office)));
+const defaultOffice: ContactOffice | undefined =
+  (helpTopics[0] && officeByKey.get(officeKey(helpTopics[0].office))) || offices[0];
 
-const officesForClient = offices.map((o) => ({
-  group_title: o.group_title,
-  group_description: o.group_description,
-  full_name: o.full_name,
-  role_title: o.role_title,
-  email: o.email,
-  phone: o.phone,
-}));
+const isIct = (o: ContactOffice) => o.group_icon === 'ict';
+const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+
+// Search matches office name, person, designation, description, and the
+// "How Can We Help?" topics that point at the office (e.g. "admissions").
+const searchText = (o: ContactOffice) =>
+  [
+    o.group_title,
+    o.full_name,
+    o.role_title,
+    o.group_description,
+    ...helpTopics.filter((t) => officeKey(t.office) === officeKey(o.group_title)).map((t) => t.label),
+  ]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase();
+
+const L = content.labels;
+const fill = (template: string, vars: Record<string, string | number>) =>
+  template.replace(/\{(\w+)\}/g, (m, k) => (k in vars ? String(vars[k]) : m));
+
+const personLine = (o: ContactOffice) => [o.full_name, o.role_title].filter(Boolean).join(' — ');
 ---
 
-<Layout
-  title="Contact Us"
-  description="Connect with Sherubtse College, Royal University of Bhutan. Find contact information for academic, student, administrative, research, examination, and ICT services."
->
-  <section class="contact-hero">
-    <div class="wrap contact-hero-content">
-      <nav class="breadcrumb breadcrumb-on-dark" aria-label="Breadcrumb">
-        <a href="/">Home</a> › <a href="/about">About</a> › <span class="current">Contact Us</span>
-      </nav>
-      <p class="eyebrow">{content.hero_eyebrow}</p>
-      <h1 class="h-display">{content.hero_title}</h1>
-      <p class="contact-hero-sub">{content.hero_subtitle}</p>
-    </div>
-  </section>
-
-  <!-- Find the Right Office -->
-  <section class="band" aria-labelledby="find-office-heading">
-    <div class="wrap">
-      <div class="contact-section-head">
-        <h2 class="h2" id="find-office-heading">Find the Right Office</h2>
-        <p class="lede">Every office at a glance — who to contact, what they handle, and how to reach them directly.</p>
+<Layout title={content.page_title} description={content.seo_description}>
+  <div class="ct">
+    <!-- ====================== HERO + SEARCH ====================== -->
+    <section class="ct-hero" aria-labelledby="ct-title">
+      <div class="ct-hero-bg" aria-hidden="true">
+        {content.hero_image_url && <img class="ct-hero-photo" src={content.hero_image_url} alt="" data-parallax="0.12" />}
+        <svg class="ct-hero-range ct-hero-range--back" data-parallax="0.06" viewBox="0 0 1600 320" preserveAspectRatio="xMidYMax slice">
+          <path d="M0 320V190l120-50 110 30 160-120 130 80 140-60 170 110 150-90 160 100 130-60 130 70 100-30v240z" />
+        </svg>
+        <svg class="ct-hero-range ct-hero-range--front" data-parallax="0.12" viewBox="0 0 1600 320" preserveAspectRatio="xMidYMax slice">
+          <path d="M0 320V240l150-50 130 30 170-80 150 60 120-30 200 70 150-50 170 60 140-30 120 40 100-20v100z" />
+        </svg>
+        <div class="ct-kira"></div>
       </div>
-      <div class="contact-grid">
-        {
-          offices.map((office) => (
-            <article class="contact-card reveal">
-              <div class="contact-card-icon" set:html={icon(office.group_icon || 'admin')} />
-              <h3 class="h3">{office.group_title}</h3>
-              {office.group_description && <p class="contact-card-desc">{office.group_description}</p>}
-              {(office.full_name || office.role_title) && (
-                <p class="contact-card-person">
-                  {office.full_name && <span class="name">{office.full_name}</span>}
-                  {office.role_title && <span class="role">{office.role_title}</span>}
-                </p>
-              )}
-              <div class="contact-card-actions">
-                {office.email && (
-                  <a class="btn btn-primary" href={`mailto:${office.email}`}>
-                    Email Us
+
+      <div class="wrap ct-wide ct-hero-grid">
+        <div class="ct-hero-main ct-rise">
+          <nav class="ct-breadcrumb" aria-label="Breadcrumb">
+            <a href="/">Home</a> › <a href="/about">About</a> › <span aria-current="page">{content.page_title}</span>
+          </nav>
+          <p class="ct-eyebrow ct-eyebrow--light">{content.hero_eyebrow}</p>
+          <h1 id="ct-title" class="ct-hero-title">{content.hero_title}</h1>
+          {content.hero_subtitle && <p class="ct-hero-intro">{content.hero_subtitle}</p>}
+
+          <form class="ct-search" role="search" data-ct-search-form>
+            <label for="ct-search" class="ct-search-label">{content.search_label}</label>
+            <div class="ct-search-box">
+              <Fragment set:html={icon('search', 'ct-search-icon')} />
+              <input
+                id="ct-search"
+                type="search"
+                name="q"
+                autocomplete="off"
+                spellcheck="false"
+                placeholder={content.search_placeholder ?? ''}
+                aria-controls="ct-directory-grid"
+                aria-describedby="ct-search-status"
+              />
+              <button type="button" class="ct-search-clear" data-ct-search-clear aria-label={L.search_clear_label} hidden>
+                <Fragment set:html={icon('close')} />
+              </button>
+            </div>
+            <p class="ct-search-status" id="ct-search-status" aria-live="polite" data-ct-search-status>
+              {fill(L.search_count_text, { count: offices.length })}
+            </p>
+          </form>
+          <a href="#directory" class="ct-explore" data-ct-jump>
+            <span>{content.offices_heading}</span>
+            <Fragment set:html={icon('down')} />
+          </a>
+        </div>
+
+        <nav class="ct-quick ct-rise ct-rise--2" aria-label={L.quick_actions_label}>
+          <a href="#directory" class="ct-quick-item" data-ct-jump>
+            <span class="ct-quick-icon" set:html={icon('search')} />
+            <span class="ct-quick-text">
+              <strong>{content.quick_find_title}</strong>
+              {content.quick_find_text && <span>{content.quick_find_text}</span>}
+            </span>
+            <Fragment set:html={icon('arrow', 'ct-quick-arrow')} />
+          </a>
+          <a href="#enquiry" class="ct-quick-item" data-ct-jump>
+            <span class="ct-quick-icon" set:html={icon('send')} />
+            <span class="ct-quick-text">
+              <strong>{content.quick_enquiry_title}</strong>
+              {content.quick_enquiry_text && <span>{content.quick_enquiry_text}</span>}
+            </span>
+            <Fragment set:html={icon('arrow', 'ct-quick-arrow')} />
+          </a>
+          <a href="#location" class="ct-quick-item" data-ct-jump>
+            <span class="ct-quick-icon" set:html={icon('directions')} />
+            <span class="ct-quick-text">
+              <strong>{content.quick_directions_title}</strong>
+              {content.quick_directions_text && <span>{content.quick_directions_text}</span>}
+            </span>
+            <Fragment set:html={icon('arrow', 'ct-quick-arrow')} />
+          </a>
+        </nav>
+      </div>
+    </section>
+
+    <!-- ====================== OFFICE DIRECTORY ====================== -->
+    <section id="directory" class="ct-directory" aria-labelledby="ct-directory-h">
+      <div class="wrap ct-wide">
+        <header class="ct-head" data-ct-reveal>
+          <div>
+            <p class="ct-eyebrow">{L.directory_eyebrow}</p>
+            <h2 id="ct-directory-h" class="ct-h2" tabindex="-1">{content.offices_heading}</h2>
+          </div>
+          {content.offices_intro && <p class="ct-lede">{content.offices_intro}</p>}
+        </header>
+
+        <ul class="ct-grid" id="ct-directory-grid">
+          {
+            offices.map((o, i) => (
+              <li
+                class:list={['ct-office', { 'ct-office--ict': isIct(o) }]}
+                data-office={o.group_title}
+                data-search={searchText(o)}
+                data-ct-reveal
+                style={`--i:${i}`}
+              >
+                <div class="ct-office-top">
+                  <span class="ct-office-icon" set:html={icon(o.group_icon || 'admin')} />
+                </div>
+                <h3 class="ct-office-name">{o.group_title}</h3>
+                {o.group_description && <p class="ct-office-desc">{o.group_description}</p>}
+                {(o.full_name || o.role_title) && (
+                  <p class="ct-office-person">
+                    <Fragment set:html={icon('person')} />
+                    <span>
+                      {o.full_name && <strong>{o.full_name}</strong>}
+                      {o.role_title && <span>{o.role_title}</span>}
+                    </span>
+                  </p>
+                )}
+                {o.email && (
+                  <a class="ct-office-email" href={`mailto:${o.email}`}>
+                    {o.email}
                   </a>
                 )}
-                {office.phone && (
-                  <a class="btn btn-secondary" href={`tel:${office.phone.replace(/[^+\d]/g, '')}`}>
-                    Call Office
-                  </a>
-                )}
+                <div class="ct-office-actions">
+                  {o.email && (
+                    <a class="ct-btn ct-btn--navy" href={`mailto:${o.email}`} aria-label={`${content.email_button_label}: ${o.group_title}`}>
+                      <Fragment set:html={icon('mail')} />
+                      {content.email_button_label}
+                    </a>
+                  )}
+                  {o.phone && (
+                    <a class="ct-btn ct-btn--line" href={telHref(o.phone)} aria-label={`${content.call_button_label}: ${o.group_title}, ${o.phone}`}>
+                      <Fragment set:html={icon('phone')} />
+                      {content.call_button_label}
+                    </a>
+                  )}
+                  {isIct(o) && showIct && (
+                    <a class="ct-btn ct-btn--gold" href="#ict-support" data-ct-jump>
+                      <Fragment set:html={icon('support')} />
+                      {content.ict_card_button_label}
+                    </a>
+                  )}
+                </div>
+                <button type="button" class="ct-office-enquire" data-enquire={o.group_title}>
+                  {content.spotlight_enquiry_label}
+                  <Fragment set:html={icon('arrow')} />
+                </button>
+              </li>
+            ))
+          }
+        </ul>
+
+        <div class="ct-empty" data-ct-empty hidden>
+          <Fragment set:html={icon('search', 'ct-empty-icon')} />
+          <div>
+            <p class="ct-empty-title">
+              {content.search_empty_message} <span data-ct-empty-query></span>
+            </p>
+            <p class="ct-empty-text">{L.search_empty_hint}</p>
+            <div class="ct-empty-actions">
+              <button type="button" class="ct-btn ct-btn--navy" data-ct-search-reset>{L.search_reset_label}</button>
+              <a href="#enquiry" class="ct-btn ct-btn--line" data-ct-jump>{content.quick_enquiry_title}</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================== FINDER + ENQUIRY ====================== -->
+    <section id="help" class="ct-help" aria-labelledby="ct-help-h">
+      <div class="wrap ct-wide ct-help-grid">
+        <div class="ct-finder" data-ct-reveal>
+          <p class="ct-eyebrow">{L.finder_eyebrow}</p>
+          <h2 id="ct-help-h" class="ct-h2" tabindex="-1">{content.help_heading}</h2>
+          {content.help_intro && <p class="ct-lede">{content.help_intro}</p>}
+
+          {
+            helpTopics.length > 0 && (
+              <div class="ct-topics" role="group" aria-label={content.help_heading} data-ct-topics>
+                {helpTopics.map((t, i) => (
+                  <button type="button" class="ct-topic" data-office={t.office} aria-pressed={i === 0 ? 'true' : 'false'}>
+                    {t.emoji && (
+                      <span class="ct-topic-emoji" aria-hidden="true">
+                        {t.emoji}
+                      </span>
+                    )}
+                    <span class="ct-topic-label">{t.label}</span>
+                    <Fragment set:html={icon('check', 'ct-topic-check')} />
+                  </button>
+                ))}
               </div>
-            </article>
-          ))
-        }
-      </div>
-    </div>
-  </section>
+            )
+          }
 
-  <!-- How Can We Help? -->
-  <section class="band band-alt" aria-labelledby="help-heading">
-    <div class="wrap">
-      <div class="contact-section-head">
-        <h2 class="h2" id="help-heading">How Can We Help?</h2>
-        <p class="lede">Tell us what you need, and we'll point you to the right office.</p>
+          <div class="ct-spotlights" aria-live="polite">
+            {
+              offices.map((o) => (
+                <article
+                  class:list={['ct-spotlight', { 'ct-spotlight--ict': isIct(o) }]}
+                  data-spotlight={o.group_title}
+                  hidden={o !== defaultOffice}
+                  aria-labelledby={`ct-spot-${slug(o.group_title)}`}
+                >
+                  <div class="ct-spotlight-head">
+                    <span class="ct-spotlight-icon" set:html={icon(o.group_icon || 'admin')} />
+                    <div>
+                      <p class="ct-spotlight-kicker">{L.spotlight_kicker}</p>
+                      <h3 id={`ct-spot-${slug(o.group_title)}`} class="ct-spotlight-name">
+                        {o.group_title}
+                      </h3>
+                    </div>
+                  </div>
+                  {o.group_description && <p class="ct-spotlight-desc">“{o.group_description}”</p>}
+                  {personLine(o) && <p class="ct-spotlight-person">{personLine(o)}</p>}
+                  <dl class="ct-spotlight-list">
+                    {o.email && (
+                      <div>
+                        <dt>
+                          <Fragment set:html={icon('mail')} />
+                          {L.email_label}
+                        </dt>
+                        <dd>
+                          <a href={`mailto:${o.email}`}>{o.email}</a>
+                        </dd>
+                      </div>
+                    )}
+                    {o.phone && (
+                      <div>
+                        <dt>
+                          <Fragment set:html={icon('phone')} />
+                          {L.telephone_label}
+                        </dt>
+                        <dd>
+                          <a href={telHref(o.phone)}>{o.phone}</a>
+                        </dd>
+                      </div>
+                    )}
+                  </dl>
+                  <div class="ct-spotlight-actions">
+                    {o.email && (
+                      <a class="ct-btn ct-btn--navy" href={`mailto:${o.email}`}>
+                        <Fragment set:html={icon('mail')} />
+                        {content.email_button_label}
+                      </a>
+                    )}
+                    <button type="button" class="ct-btn ct-btn--gold" data-enquire={o.group_title}>
+                      <Fragment set:html={icon('send')} />
+                      {content.spotlight_enquiry_label}
+                    </button>
+                  </div>
+                </article>
+              ))
+            }
+          </div>
+
+          {
+            content.spotlight_other_office_label && (
+              <div class="ct-direct">
+                <label for="ct-office-select">{content.spotlight_other_office_label}</label>
+                <select id="ct-office-select" data-ct-office-select>
+                  {offices.map((o) => (
+                    <option value={o.group_title} selected={o === defaultOffice}>
+                      {o.group_title}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )
+          }
+        </div>
+
+        <div id="enquiry" class="ct-enquiry" data-ct-reveal>
+          <div class="ct-enquiry-head">
+            <span class="ct-enquiry-badge" set:html={icon('send')} />
+            <div>
+              <h2 id="ct-enquiry-h" class="ct-h2 ct-h2--sm" tabindex="-1">{content.enquiry_heading}</h2>
+              {content.enquiry_intro && <p class="ct-lede">{content.enquiry_intro}</p>}
+            </div>
+          </div>
+
+          <form class="ct-form" id="enquiryForm" novalidate aria-labelledby="ct-enquiry-h">
+            <p class="ct-form-note"><span aria-hidden="true">*</span> {L.form_required_note}</p>
+            <fieldset>
+              <legend>{L.form_details_legend}</legend>
+              <div class="ct-form-grid">
+                <div class="ct-field ct-field--full">
+                  <label for="enq-name">{content.form_name_label} <span class="ct-req" aria-hidden="true">*</span></label>
+                  <input type="text" id="enq-name" name="full_name" required maxlength="120" autocomplete="name" />
+                </div>
+                <div class="ct-field">
+                  <label for="enq-email">{content.form_email_label} <span class="ct-req" aria-hidden="true">*</span></label>
+                  <input type="email" id="enq-email" name="email" required maxlength="160" autocomplete="email" inputmode="email" />
+                </div>
+                <div class="ct-field">
+                  <label for="enq-phone">{content.form_phone_label} <span class="ct-optional">{L.form_optional_text}</span></label>
+                  <input type="tel" id="enq-phone" name="phone" maxlength="40" autocomplete="tel" />
+                </div>
+              </div>
+            </fieldset>
+            <fieldset>
+              <legend>{L.form_enquiry_legend}</legend>
+              <div class="ct-form-grid">
+                <div class="ct-field ct-field--full">
+                  <label for="enq-department">{content.form_department_label} <span class="ct-req" aria-hidden="true">*</span></label>
+                  <select id="enq-department" name="department" required>
+                    <option value="">{content.form_department_placeholder}</option>
+                    {offices.map((o) => <option value={o.group_title}>{o.group_title}</option>)}
+                    {content.form_other_department && (
+                      <option value={content.form_other_department}>{content.form_other_department}</option>
+                    )}
+                  </select>
+                </div>
+                <div class="ct-field ct-field--full">
+                  <label for="enq-subject">{content.form_subject_label} <span class="ct-req" aria-hidden="true">*</span></label>
+                  <input type="text" id="enq-subject" name="subject" required maxlength="200" />
+                </div>
+                <div class="ct-field ct-field--full">
+                  <label for="enq-message">{content.form_message_label} <span class="ct-req" aria-hidden="true">*</span></label>
+                  <textarea id="enq-message" name="message" required maxlength="5000" rows="5"></textarea>
+                </div>
+              </div>
+            </fieldset>
+            <div class="ct-hp" aria-hidden="true">
+              <label for="enq-hp">Leave this field empty</label>
+              <input type="text" id="enq-hp" name="hp_field" tabindex="-1" autocomplete="off" />
+            </div>
+            <div class="ct-form-foot">
+              <button type="submit" class="ct-btn ct-btn--navy ct-btn--lg">
+                <span class="ct-spinner" aria-hidden="true"></span>
+                <Fragment set:html={icon('send')} />
+                {content.form_submit_label}
+              </button>
+              <p class="ct-status" role="status" data-form-status></p>
+            </div>
+          </form>
+        </div>
       </div>
-      <div class="help-selector" role="group" aria-label="Choose what you need help with" id="helpSelector">
-        {
-          HELP_CATEGORIES.map((c, i) => (
-            <button type="button" class="help-chip" data-office={c.office} aria-pressed={i === 0 ? 'true' : 'false'}>
-              <span class="help-chip-emoji" aria-hidden="true">
-                {c.emoji}
+    </section>
+
+    <!-- ====================== COLLEGE CONTACT INFORMATION ====================== -->
+    <section class="ct-info" aria-labelledby="ct-info-h">
+      <div class="wrap ct-wide ct-info-grid">
+        <div class="ct-info-intro" data-ct-reveal>
+          <p class="ct-eyebrow ct-eyebrow--light">{L.info_eyebrow}</p>
+          <h2 id="ct-info-h" class="ct-h2 ct-h2--light">{content.info_heading}</h2>
+          {content.info_subtitle && <p class="ct-info-sub">{content.info_subtitle}</p>}
+          <div class="ct-kira ct-kira--inline" aria-hidden="true"></div>
+        </div>
+        <ul class="ct-info-list" data-ct-reveal>
+          <li class="ct-info-item ct-info-item--wide">
+            <span class="ct-info-icon" set:html={icon('location')} />
+            <div>
+              <h3>{L.address_label}</h3>
+              <p class="ct-info-value" data-ct-address>{address}</p>
+              <button type="button" class="ct-copy" data-ct-copy>
+                <Fragment set:html={icon('copy')} />
+                <span data-ct-copy-label>{L.copy_address_label}</span>
+              </button>
+            </div>
+          </li>
+          <li class="ct-info-item">
+            <span class="ct-info-icon" set:html={icon('mail')} />
+            <div>
+              <h3>{L.email_label}</h3>
+              <p class="ct-info-value">
+                {content.general_email ? <a href={`mailto:${content.general_email}`}>{content.general_email}</a> : L.not_confirmed_text}
+              </p>
+            </div>
+          </li>
+          <li class="ct-info-item">
+            <span class="ct-info-icon" set:html={icon('phone')} />
+            <div>
+              <h3>{L.phone_label}</h3>
+              <p class="ct-info-value">
+                {content.general_phone ? <a href={telHref(content.general_phone)}>{content.general_phone}</a> : L.not_confirmed_text}
+              </p>
+            </div>
+          </li>
+          <li class="ct-info-item ct-info-item--wide">
+            <span class="ct-info-icon" set:html={icon('clock')} />
+            <div>
+              <h3>{L.hours_label}</h3>
+              <p class="ct-info-value">{content.office_hours ?? L.not_confirmed_text}</p>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ====================== LOCATION ====================== -->
+    <section id="location" class="ct-location" aria-labelledby="ct-location-h">
+      <div class="wrap ct-wide ct-location-grid">
+        <figure class="ct-map" data-ct-reveal>
+          <svg viewBox="0 0 640 420" role="img" aria-labelledby="ct-map-title">
+            <title id="ct-map-title">{`${L.map_pin_label} — ${L.map_caption}`}</title>
+            <rect width="640" height="420" class="ct-map-sky" />
+            <path class="ct-map-hill ct-map-hill--3" d="M0 210 90 150l80 40 110-90 90 70 70-40 110 80 90-50v460H0z" />
+            <path class="ct-map-hill ct-map-hill--2" d="M0 260l120-50 90 30 120-70 110 60 90-30 110 50v230H0z" />
+            <path class="ct-map-hill ct-map-hill--1" d="M0 320l140-40 120 20 130-50 120 40 130-20v150H0z" />
+            <g class="ct-map-contours">
+              <path d="M40 370c80-30 160-30 240-10s170 10 320-30" />
+              <path d="M20 395c100-25 200-20 300-5s190 0 300-25" />
+            </g>
+            <path class="ct-map-road" d="M-10 400C90 360 150 380 230 330s150-40 230-60 120-50 200-40" />
+            <g class="ct-map-pin" transform="translate(320 250)">
+              <circle r="26" class="ct-map-pulse" />
+              <path d="M0 6s-14-12-14-22a14 14 0 0 1 28 0c0 10-14 22-14 22z" />
+              <circle cy="-16" r="5" class="ct-map-dot" />
+            </g>
+            <g class="ct-map-label" transform="translate(352 238)">
+              <rect x="0" y="-18" width="150" height="34" />
+              <text x="12" y="4">{L.map_pin_label}</text>
+            </g>
+          </svg>
+          <figcaption>{L.map_caption}</figcaption>
+        </figure>
+
+        <div class="ct-location-body" data-ct-reveal>
+          <p class="ct-eyebrow">{L.location_eyebrow}</p>
+          <h2 id="ct-location-h" class="ct-h2" tabindex="-1">{content.map_heading}</h2>
+          {content.map_intro && <p class="ct-lede">{content.map_intro}</p>}
+          <div class="ct-place">
+            <span class="ct-place-icon" set:html={icon('location')} />
+            <div>
+              <p class="ct-place-name">{content.map_place_name}</p>
+              <p class="ct-place-address">{address}</p>
+            </div>
+          </div>
+          <div class="ct-map-links">
+            <a class="ct-map-link ct-map-link--primary" href={directionsUrl} target="_blank" rel="noopener">
+              <span class="ct-map-link-icon" set:html={icon('directions')} />
+              <span class="ct-map-link-text">
+                <strong>{content.directions_label}</strong>
+                <span>{L.directions_note}</span>
               </span>
-              {c.label}
-            </button>
-          ))
-        }
+              <Fragment set:html={icon('external', 'ct-map-link-ext')} />
+              <span class="ct-sr">(opens Google Maps in a new tab)</span>
+            </a>
+            {
+              content.campus_map_url && (
+                <a class="ct-map-link" href={content.campus_map_url} target="_blank" rel="noopener">
+                  <span class="ct-map-link-icon" set:html={icon('map')} />
+                  <span class="ct-map-link-text">
+                    <strong>{content.campus_map_label}</strong>
+                    <span>{L.campus_map_note}</span>
+                  </span>
+                  <Fragment set:html={icon('external', 'ct-map-link-ext')} />
+                  <span class="ct-sr">(opens in a new tab)</span>
+                </a>
+              )
+            }
+          </div>
+        </div>
       </div>
-      <div class="help-result" id="helpResult" aria-live="polite"></div>
-    </div>
-  </section>
+    </section>
 
-  <!-- Have a Question? -->
-  <section class="band" aria-labelledby="enquiry-heading">
-    <div class="wrap">
-      <div class="contact-section-head">
-        <h2 class="h2" id="enquiry-heading">Have a Question?</h2>
-        <p class="lede">Send us a general enquiry and the right office will get back to you.</p>
-      </div>
-      <form class="contact-form" id="enquiryForm" novalidate>
-        <div class="form-grid cols-2">
-          <div class="form-field">
-            <label for="enq-name">Full Name *</label>
-            <input type="text" id="enq-name" name="full_name" required autocomplete="name" />
+    <!-- ====================== ICT SUPPORT ====================== -->
+    {
+      showIct && (
+        <section id="ict-support" class="ct-ict" aria-labelledby={content.ict_heading ? 'ct-ict-h' : undefined}>
+          <svg class="ct-ict-net" viewBox="0 0 600 300" preserveAspectRatio="xMaxYMid slice" aria-hidden="true">
+            <g class="ct-ict-lines">
+              <path d="M60 240 180 160 300 210 420 90 540 150" />
+              <path d="M180 160 250 60 420 90" />
+              <path d="M300 210 380 280 540 150" />
+              <path d="M250 60 120 40" />
+            </g>
+            <g class="ct-ict-nodes">
+              <circle cx="60" cy="240" r="5" />
+              <circle cx="180" cy="160" r="7" />
+              <circle cx="300" cy="210" r="5" />
+              <circle cx="420" cy="90" r="8" />
+              <circle cx="540" cy="150" r="6" />
+              <circle cx="250" cy="60" r="5" />
+              <circle cx="380" cy="280" r="4" />
+              <circle cx="120" cy="40" r="4" />
+            </g>
+          </svg>
+          <div class="wrap ct-wide ct-ict-inner" data-ct-reveal>
+            <span class="ct-ict-icon" set:html={icon('ict')} />
+            <div class="ct-ict-body">
+              <p class="ct-eyebrow ct-eyebrow--light">{L.ict_eyebrow}</p>
+              {content.ict_heading && (
+                <h2 id="ct-ict-h" class="ct-h2 ct-h2--light" tabindex="-1">
+                  {content.ict_heading}
+                </h2>
+              )}
+              {content.ict_text && <p>{content.ict_text}</p>}
+            </div>
+            {ictHref && (
+              <a
+                class="ct-btn ct-btn--gold ct-btn--lg"
+                href={ictHref}
+                target={isExternal(ictHref) ? '_blank' : undefined}
+                rel={isExternal(ictHref) ? 'noopener' : undefined}
+              >
+                <Fragment set:html={icon('mail')} />
+                {content.ict_button_label}
+              </a>
+            )}
           </div>
-          <div class="form-field">
-            <label for="enq-email">Email Address *</label>
-            <input type="email" id="enq-email" name="email" required autocomplete="email" />
-          </div>
-          <div class="form-field">
-            <label for="enq-phone">Phone Number</label>
-            <input type="tel" id="enq-phone" name="phone" autocomplete="tel" />
-          </div>
-          <div class="form-field">
-            <label for="enq-department">Select Department *</label>
-            <select id="enq-department" name="department" required>
-              <option value="">Choose a department…</option>
-              {offices.map((o) => <option value={o.group_title}>{o.group_title}</option>)}
-              <option value="Other / Not Sure">Other / Not Sure</option>
-            </select>
-          </div>
-          <div class="form-field span-2">
-            <label for="enq-subject">Subject *</label>
-            <input type="text" id="enq-subject" name="subject" required />
-          </div>
-          <div class="form-field span-2">
-            <label for="enq-message">Message *</label>
-            <textarea id="enq-message" name="message" required></textarea>
-          </div>
-        </div>
-        <button type="submit" class="btn btn-primary" style="margin-top:var(--s5)">
-          Submit Enquiry
-        </button>
-        <p class="form-status" id="enquiryFormStatus" role="status"></p>
-      </form>
-    </div>
-  </section>
+        </section>
+      )
+    }
 
-  <!-- Contact Information Highlight -->
-  <section class="band band-navy" aria-labelledby="info-heading">
-    <div class="wrap">
-      <h2 class="h2" id="info-heading">Sherubtse College</h2>
-      <p class="lede" style="margin-bottom:var(--s6)">Royal University of Bhutan &middot; Kanglung, Trashigang, Bhutan</p>
-      <div class="contact-info-grid">
-        <div class="contact-info-item">
-          <Fragment set:html={icon('location')} />
-          <div>
-            <h3>Address</h3>
-            <p>{address}</p>
-          </div>
-        </div>
-        <div class="contact-info-item">
-          <Fragment set:html={icon('mail')} />
-          <div>
-            <h3>Email</h3>
-            <p>{content.general_email ?? 'To be confirmed'}</p>
-          </div>
-        </div>
-        <div class="contact-info-item">
-          <Fragment set:html={icon('phone')} />
-          <div>
-            <h3>Phone</h3>
-            <p>{content.general_phone ?? 'To be confirmed'}</p>
-          </div>
-        </div>
-        <div class="contact-info-item">
-          <Fragment set:html={icon('clock')} />
-          <div>
-            <h3>Office Hours</h3>
-            <p>{content.office_hours ?? 'To be confirmed'}</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Interactive Map -->
-  <section class="band" aria-labelledby="map-heading">
-    <div class="wrap">
-      <div class="contact-section-head">
-        <h2 class="h2" id="map-heading">Find Us at Sherubtse</h2>
-        <p class="lede">Kanglung, Trashigang — the eastern hills of Bhutan.</p>
-      </div>
-      <div class="map-panel reveal">
-        <div class="map-pin" set:html={icon('location')} />
-        <p class="h3" style="margin:0">Sherubtse College</p>
-        <p class="small" style="margin:0">{address}</p>
-        <div class="map-panel-actions">
-          <a class="btn btn-primary" href={directionsUrl} target="_blank" rel="noopener">
-            <Fragment set:html={icon('directions')} /> Get Directions
-          </a>
-          <a class="btn btn-secondary" href="https://finalmap.sherubtse.edu.bt/" target="_blank" rel="noopener">
-            View Campus Map
-          </a>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ICT Support highlight -->
-  <section class="band band-alt" aria-labelledby="ict-heading">
-    <div class="wrap">
-      <div class="ict-support reveal">
-        <div class="ict-support-icon" set:html={icon('support')} />
-        <div class="ict-support-body">
-          <h2 class="h3" id="ict-heading">Need Technical Assistance?</h2>
-          <p>Wi-Fi, college systems, student/staff accounts, the website, network access, or other ICT services.</p>
-        </div>
-        <a class="btn btn-primary" href="mailto:ict.sherubtse@rub.edu.bt">ICT Support</a>
-      </div>
-    </div>
-  </section>
+    <p class="ct-sr" aria-live="polite" data-ct-announce></p>
+  </div>
 </Layout>
 
 <script
   is:inline
   define:vars={{
     strapiUrl: import.meta.env.PUBLIC_STRAPI_URL || 'http://localhost:1337',
-    offices: officesForClient,
+    texts: {
+      success: content.form_success_message,
+      error: content.form_error_message,
+      empty: content.search_empty_message,
+    },
+    labels: content.labels,
+    total: offices.length,
   }}
 >
-  // ---- "How Can We Help?" category selector ----
-  const selector = document.getElementById('helpSelector');
-  const result = document.getElementById('helpResult');
-  if (selector && result) {
-    const chips = Array.from(selector.querySelectorAll('.help-chip'));
+  (() => {
+    const root = document.querySelector('.ct');
+    if (!root) return;
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const announcer = root.querySelector('[data-ct-announce]');
+    const announce = (msg) => {
+      if (!announcer) return;
+      announcer.textContent = '';
+      requestAnimationFrame(() => (announcer.textContent = msg));
+    };
+    const key = (s) => (s || '').trim().toLowerCase();
+    const fill = (template, vars) => template.replace(/\{(\w+)\}/g, (m, k) => (k in vars ? String(vars[k]) : m));
 
-    function render(officeTitle) {
-      const office = offices.find((o) => o.group_title === officeTitle);
-      if (!office) {
-        result.innerHTML = '';
-        return;
-      }
-      const contactBits = [];
-      if (office.full_name || office.role_title) {
-        contactBits.push(`<span>${[office.full_name, office.role_title].filter(Boolean).join(' — ')}</span>`);
-      }
-      if (office.email) contactBits.push(`<a href="mailto:${office.email}">${office.email}</a>`);
-      if (office.phone) contactBits.push(`<a href="tel:${office.phone.replace(/[^+\d]/g, '')}">${office.phone}</a>`);
-      result.innerHTML = `
-        <p class="help-result-office">${office.group_title}</p>
-        ${office.group_description ? `<p class="help-result-desc">${office.group_description}</p>` : ''}
-        <div class="help-result-contact">${contactBits.join('')}</div>
-      `;
+    // ---- Scroll reveals (content is only hidden once JS has opted in) ----
+    const revealEls = Array.from(root.querySelectorAll('[data-ct-reveal]'));
+    if (reduceMotion || !('IntersectionObserver' in window)) {
+      revealEls.forEach((el) => el.classList.add('is-in'));
+    } else {
+      root.classList.add('ct-anim');
+      const io = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (!entry.isIntersecting) return;
+            entry.target.classList.add('is-in');
+            io.unobserve(entry.target);
+          });
+        },
+        { threshold: 0.1, rootMargin: '0px 0px -40px 0px' },
+      );
+      revealEls.forEach((el) => io.observe(el));
     }
 
-    function select(chip) {
-      chips.forEach((c) => c.setAttribute('aria-pressed', String(c === chip)));
-      result.classList.add('is-switching');
-      window.setTimeout(() => {
-        render(chip.dataset.office);
-        result.classList.remove('is-switching');
-      }, 120);
+    // ---- Gentle parallax on the hero's decorative layers ----
+    const layers = Array.from(root.querySelectorAll('[data-parallax]'));
+    if (!reduceMotion && layers.length) {
+      let ticking = false;
+      const update = () => {
+        ticking = false;
+        layers.forEach((el) => {
+          const rect = el.closest('section').getBoundingClientRect();
+          if (rect.bottom < 0) return;
+          el.style.transform = `translate3d(0, ${(Math.max(0, -rect.top) * Number(el.dataset.parallax)).toFixed(1)}px, 0)`;
+        });
+      };
+      addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } }, { passive: true });
     }
 
-    selector.addEventListener('click', (e) => {
-      const chip = e.target.closest('.help-chip');
-      if (chip) select(chip);
+    // ---- In-page jumps: smooth scroll, then focus the target heading ----
+    function jumpTo(id, focusEl) {
+      const target = document.getElementById(id);
+      if (!target) return;
+      target.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
+      const el = focusEl || target.querySelector('h2[tabindex="-1"]') || target;
+      if (!el.hasAttribute('tabindex') && !/^(INPUT|SELECT|TEXTAREA|BUTTON|A)$/.test(el.tagName)) el.setAttribute('tabindex', '-1');
+      setTimeout(() => el.focus({ preventScroll: true }), reduceMotion ? 0 : 450);
+      history.replaceState(null, '', `#${id}`);
+    }
+    root.addEventListener('click', (e) => {
+      const link = e.target.closest('a[data-ct-jump]');
+      if (!link) return;
+      e.preventDefault();
+      jumpTo(link.getAttribute('href').slice(1));
     });
 
-    render(chips[0]?.dataset.office);
-  }
-
-  // ---- Enquiry form: posts to Strapi's narrow public create-only
-  // endpoint (Public role has create on contact-enquiries only — no
-  // find/update/delete — see cms/src/index.ts), same pattern as the
-  // Alumni page's story/registration/newsletter forms. ----
-  function setStatus(el, kind, message) {
-    el.className = `form-status is-visible ${kind}`;
-    el.textContent = message;
-  }
-
-  const enquiryForm = document.getElementById('enquiryForm');
-  enquiryForm?.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const status = document.getElementById('enquiryFormStatus');
-    if (!enquiryForm.checkValidity()) {
-      enquiryForm.reportValidity();
-      return;
-    }
-    const fd = new FormData(enquiryForm);
-    setStatus(status, 'loading', 'Sending your enquiry…');
-    try {
-      const res = await fetch(`${strapiUrl}/api/contact-enquiries`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          data: {
-            full_name: fd.get('full_name'),
-            email: fd.get('email'),
-            phone: fd.get('phone') || null,
-            subject: fd.get('subject'),
-            department: fd.get('department') || null,
-            message: fd.get('message'),
-          },
-        }),
+    // ---- Live directory search ----
+    const search = document.getElementById('ct-search');
+    const clearBtn = root.querySelector('[data-ct-search-clear]');
+    const statusEl = root.querySelector('[data-ct-search-status]');
+    const cards = Array.from(root.querySelectorAll('.ct-office'));
+    const empty = root.querySelector('[data-ct-empty]');
+    const emptyQuery = root.querySelector('[data-ct-empty-query]');
+    // Accents and punctuation are ignored, so "wifi" finds "Wi-Fi".
+    const fold = (s) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, '');
+    let searchTimer;
+    function applySearch() {
+      const q = fold(search.value.trim());
+      const words = q.split(/\s+/).filter(Boolean);
+      let shown = 0;
+      cards.forEach((card) => {
+        const hay = fold(card.dataset.search);
+        const match = words.every((w) => hay.includes(w));
+        card.hidden = !match;
+        if (match) { shown++; card.classList.add('is-in'); }
       });
-      if (!res.ok) {
-        const body = await res.json().catch(() => null);
-        throw new Error(body?.error?.message || `Request failed (${res.status})`);
-      }
-      setStatus(status, 'success', "Thank you — your enquiry has been sent. The right office will be in touch soon.");
-      enquiryForm.reset();
-    } catch (err) {
-      setStatus(status, 'error', `Something went wrong: ${err.message}. Please try again or email ${offices[0]?.email || 'the College'}.`);
+      clearBtn.hidden = !q;
+      empty.hidden = shown > 0;
+      if (emptyQuery) emptyQuery.textContent = q ? `(“${search.value.trim()}”)` : '';
+      const msg = !q
+        ? fill(labels.search_count_text, { count: total })
+        : shown
+          ? fill(labels.search_match_text, { shown, count: total, query: search.value.trim() })
+          : `${texts.empty} (“${search.value.trim()}”)`;
+      statusEl.textContent = msg;
     }
-  });
+    function resetSearch(focus) {
+      search.value = '';
+      applySearch();
+      if (focus) search.focus();
+    }
+    if (search) {
+      search.addEventListener('input', () => { clearTimeout(searchTimer); searchTimer = setTimeout(applySearch, 120); });
+      search.addEventListener('keydown', (e) => { if (e.key === 'Escape' && search.value) { e.preventDefault(); resetSearch(true); } });
+      root.querySelector('[data-ct-search-form]').addEventListener('submit', (e) => {
+        e.preventDefault();
+        applySearch();
+        jumpTo('directory', document.getElementById('ct-directory-h'));
+      });
+      clearBtn.addEventListener('click', () => resetSearch(true));
+      root.querySelector('[data-ct-search-reset]')?.addEventListener('click', () => resetSearch(true));
+    }
+
+    // ---- Office finder: topics, spotlight panels, direct office picker, form ----
+    const topics = Array.from(root.querySelectorAll('.ct-topic'));
+    const spotlights = Array.from(root.querySelectorAll('[data-spotlight]'));
+    const officeSelect = root.querySelector('[data-ct-office-select]');
+    const form = document.getElementById('enquiryForm');
+    const deptSelect = form?.querySelector('#enq-department');
+
+    function selectOffice(title, { topic = null, setForm = true } = {}) {
+      const panel = spotlights.find((p) => key(p.dataset.spotlight) === key(title));
+      if (!panel) return false;
+      spotlights.forEach((p) => { p.hidden = p !== panel; });
+      if (!reduceMotion) { panel.classList.remove('is-switching'); void panel.offsetWidth; panel.classList.add('is-switching'); }
+      const activeTopic = topic || topics.find((t) => key(t.dataset.office) === key(title)) || null;
+      topics.forEach((t) => t.setAttribute('aria-pressed', String(t === activeTopic)));
+      if (officeSelect) officeSelect.value = panel.dataset.spotlight;
+      if (setForm && deptSelect) {
+        const opt = Array.from(deptSelect.options).find((o) => key(o.value) === key(title));
+        if (opt && deptSelect.value !== opt.value) {
+          deptSelect.value = opt.value;
+          clearError(deptSelect);
+        }
+      }
+      return true;
+    }
+
+    topics.forEach((t) =>
+      t.addEventListener('click', () => {
+        selectOffice(t.dataset.office, { topic: t });
+        announce(`${t.dataset.office} selected. The enquiry form department is set to ${t.dataset.office}.`);
+      }),
+    );
+    officeSelect?.addEventListener('change', () => {
+      selectOffice(officeSelect.value);
+      announce(`${officeSelect.value} selected.`);
+    });
+    deptSelect?.addEventListener('change', () => { if (deptSelect.value) selectOffice(deptSelect.value, { setForm: false }); });
+
+    // "Start an enquiry" from a spotlight or directory card: preselect the
+    // department (other typed details are kept) and move to the form.
+    root.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-enquire]');
+      if (!btn) return;
+      selectOffice(btn.dataset.enquire);
+      const firstEmpty = Array.from(form.querySelectorAll('input[required], textarea[required]')).find((el) => !el.value.trim());
+      jumpTo('enquiry', firstEmpty || form.querySelector('#enq-subject'));
+      announce(`Enquiry form: department set to ${btn.dataset.enquire}.`);
+    });
+
+    // ---- Copy address ----
+    const copyBtn = root.querySelector('[data-ct-copy]');
+    copyBtn?.addEventListener('click', async () => {
+      const text = root.querySelector('[data-ct-address]').textContent.trim();
+      const label = copyBtn.querySelector('[data-ct-copy-label]');
+      try {
+        await navigator.clipboard.writeText(text);
+        label.textContent = labels.copied_label;
+        copyBtn.classList.add('is-done');
+        announce('Address copied to the clipboard.');
+      } catch {
+        const range = document.createRange();
+        range.selectNodeContents(root.querySelector('[data-ct-address]'));
+        const sel = getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+        label.textContent = 'Press Ctrl+C to copy';
+      }
+      setTimeout(() => { label.textContent = labels.copy_address_label; copyBtn.classList.remove('is-done'); }, 2600);
+    });
+
+    // ---- Enquiry form: inline validation + honest submission states ----
+    const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+    // The label's own text, without the "*" / "(optional)" marker spans.
+    const fieldLabel = (input) => (input.labels?.[0]?.firstChild?.textContent || input.name).trim();
+
+    function clearError(input) { setError(input, ''); }
+    function setError(input, message) {
+      const field = input.closest('.ct-field');
+      let err = field?.querySelector('.ct-error');
+      if (message) {
+        if (!err && field) {
+          err = document.createElement('p');
+          err.className = 'ct-error';
+          err.id = `${input.id}-error`;
+          field.appendChild(err);
+        }
+        if (err) err.textContent = message;
+        input.setAttribute('aria-invalid', 'true');
+        if (err) input.setAttribute('aria-describedby', err.id);
+      } else {
+        input.removeAttribute('aria-invalid');
+        input.removeAttribute('aria-describedby');
+        err?.remove();
+      }
+    }
+    function check(input) {
+      if (input.name === 'hp_field') return true;
+      const value = input.value.trim();
+      let message = '';
+      if (input.required && !value) {
+        message = input.tagName === 'SELECT' ? labels.validation_department : fill(labels.validation_required, { field: fieldLabel(input).toLowerCase() });
+      } else if (input.type === 'email' && value && !EMAIL.test(value)) {
+        message = labels.validation_email;
+      }
+      setError(input, message);
+      return !message;
+    }
+    function setStatus(kind, message) {
+      const el = form.querySelector('[data-form-status]');
+      el.className = `ct-status is-${kind}`;
+      el.textContent = message;
+    }
+
+    if (form) {
+      form.querySelectorAll('input, textarea, select').forEach((el) => {
+        el.addEventListener('blur', () => { if (el.getAttribute('aria-invalid') === 'true' || el.value) check(el); });
+        el.addEventListener('input', () => { if (el.getAttribute('aria-invalid') === 'true') check(el); });
+        el.addEventListener('change', () => { if (el.getAttribute('aria-invalid') === 'true') check(el); });
+      });
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (form.dataset.busy === 'true') return;
+        const invalid = Array.from(form.querySelectorAll('input, textarea, select')).filter((el) => !check(el));
+        if (invalid.length) {
+          invalid[0].focus();
+          setStatus('error', labels.form_fix_message);
+          return;
+        }
+        const button = form.querySelector('button[type="submit"]');
+        const fd = new FormData(form);
+        const val = (k) => { const v = (fd.get(k) || '').toString().trim(); return v || null; };
+        form.dataset.busy = 'true';
+        form.setAttribute('aria-busy', 'true');
+        button.disabled = true;
+        button.classList.add('is-loading');
+        setStatus('loading', labels.form_sending_message);
+        try {
+          const res = await fetch(`${strapiUrl}/api/contact-enquiries`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              data: {
+                full_name: val('full_name'), email: val('email'), phone: val('phone'),
+                department: val('department'), subject: val('subject'), message: val('message'),
+                hp_field: fd.get('hp_field') || '',
+              },
+            }),
+          });
+          const body = await res.json().catch(() => null);
+          if (!res.ok) {
+            const err = new Error(body?.error?.message || `Request failed (${res.status})`);
+            err.status = res.status;
+            throw err;
+          }
+          setStatus('success', texts.success);
+          form.reset();
+        } catch (err) {
+          // Typed details stay in the form so the visitor can simply retry.
+          setStatus('error', err.status === 429 ? labels.rate_limit_message : `${texts.error} (${err.message})`);
+        } finally {
+          form.dataset.busy = 'false';
+          form.removeAttribute('aria-busy');
+          button.disabled = false;
+          button.classList.remove('is-loading');
+        }
+      });
+    }
+  })();
 </script>

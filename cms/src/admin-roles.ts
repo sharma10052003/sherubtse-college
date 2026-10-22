@@ -113,13 +113,27 @@ export async function ensureAdminRoles({ strapi }: { strapi: Core.Strapi }) {
       })),
   ];
 
+  // Content types and fields that existed at the last boot — anything not in
+  // this snapshot is new, and existing roles get access to it (below).
+  const SNAPSHOT = { type: 'core', name: 'seeds', key: 'admin_roles_schema_snapshot' } as const;
+  const previous = (await strapi.store.get(SNAPSHOT)) as Record<string, string[]> | null;
+  const current: Record<string, string[]> = {};
+  for (const p of allPerms) {
+    if (!p.subject) continue;
+    current[p.subject] = [...new Set([...(current[p.subject] ?? []), ...((p.properties?.fields as string[]) ?? [])])];
+  }
+
   for (const def of definitions) {
     let role = await roleService.findOne({ code: def.code });
-    if (role && !force) continue;
+    if (role && !force) {
+      await topUpRole(strapi, roleService, role.id, def.permissions(), previous);
+      continue;
+    }
     if (!role) role = await roleService.create({ name: def.name, code: def.code, description: def.description });
     await roleService.assignPermissions(role.id, def.permissions());
     strapi.log.info(`[admin-roles] ${force ? 'synced' : 'created'} role "${def.name}"`);
   }
+  await strapi.store.set({ ...SNAPSHOT, value: current });
 
   // Drop auto-created "<Group> Editor" roles for page groups that no longer
   // exist (e.g. after a content type is removed) — only when nobody uses them.
@@ -132,4 +146,45 @@ export async function ensureAdminRoles({ strapi }: { strapi: Core.Strapi }) {
       strapi.log.info(`[admin-roles] removed unused role "${r.name}"`);
     }
   }
+}
+
+/**
+ * Gives an existing role access to content types and fields added since the
+ * last boot, without touching anything else — so a permission a Super Admin
+ * deliberately removed is never re-added. On the very first run (no snapshot
+ * yet) it fills every gap: types the role has no permission for at all, and
+ * fields missing from permissions it already has (these roles are built by
+ * code with all fields, so a missing field can only be a newer one).
+ */
+async function topUpRole(
+  strapi: Core.Strapi,
+  roleService: any,
+  roleId: number,
+  desired: any[],
+  previous: Record<string, string[]> | null,
+) {
+  const existing: any[] = await strapi.db.query('admin::permission').findMany({ where: { role: { id: roleId } } });
+  const toAdd: any[] = [];
+  for (const perm of desired) {
+    if (!perm.subject) continue;
+    const isNewType = previous ? !(perm.subject in previous) : true;
+    const match = existing.find((e) => e.action === perm.action && e.subject === perm.subject);
+    if (!match) {
+      const roleHasType = existing.some((e) => e.subject === perm.subject);
+      if (isNewType && !roleHasType) toAdd.push(perm);
+      continue;
+    }
+    const want: string[] | undefined = perm.properties?.fields;
+    const have: string[] | undefined = match.properties?.fields;
+    if (!Array.isArray(want) || !Array.isArray(have)) continue;
+    const known = previous?.[perm.subject];
+    const missing = want.filter((f) => !have.includes(f) && (!known || !known.includes(f)));
+    if (missing.length > 0) {
+      await strapi.db.query('admin::permission').update({
+        where: { id: match.id },
+        data: { properties: { ...match.properties, fields: [...have, ...missing] } },
+      });
+    }
+  }
+  if (toAdd.length > 0) await roleService.addPermissions(roleId, toAdd);
 }

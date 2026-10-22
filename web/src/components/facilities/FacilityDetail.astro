@@ -1,0 +1,110 @@
+---
+// Everything known about one facility — used inside the detail panel on the
+// Campus Facilities page and as the body of a facility's own page. Every
+// block only appears when that information has been entered in Strapi.
+import type { Facility } from '../../lib/content/facilities';
+import { icon } from '../../lib/facility-icons';
+
+interface Props {
+  facility: Facility;
+  /** Heading level for the blocks inside (h3 in a panel, h2 on a page). */
+  level?: 2 | 3 | 4;
+  showImages?: boolean;
+  /** Only what isn't already shown by a linked feature: no description,
+   * feature list or links. */
+  extrasOnly?: boolean;
+}
+const { facility: f, level = 3, showImages = true, extrasOnly = false } = Astro.props;
+const showContent = !extrasOnly;
+const shownLinks = extrasOnly ? [] : f.links;
+const H = `h${level}` as 'h2' | 'h3' | 'h4';
+const info = [
+  ['pin', 'Location', f.location],
+  ['building', 'Building', f.building],
+  ['clock', 'Opening hours', f.opening_hours],
+  ['shield', 'Access', f.access_conditions],
+  ['access', 'Accessibility', f.accessibility],
+  ['people', 'Department', f.department],
+].filter(([, , v]) => v) as [string, string, string][];
+---
+<div class="cf-detail">
+  {showContent && f.content_html && <div class="cf-prose" set:html={f.content_html} />}
+
+  {!extrasOnly && f.features.length > 0 && (
+    <ul class="cf-detail-features">
+      {f.features.map((x) => (
+        <li>
+          <span class="cf-detail-feature-icon" set:html={icon(x.icon)} />
+          <span><strong>{x.title}</strong>{x.description && <span>{x.description}</span>}</span>
+        </li>
+      ))}
+    </ul>
+  )}
+
+  {info.length > 0 && (
+    <dl class="cf-info">
+      {info.map(([i, label, value]) => (
+        <div>
+          <dt><Fragment set:html={icon(i)} />{label}</dt>
+          <dd>{value}</dd>
+        </div>
+      ))}
+    </dl>
+  )}
+
+  {f.uses_html && (
+    <section class="cf-detail-block">
+      <H>Uses</H>
+      <div class="cf-prose" set:html={f.uses_html} />
+    </section>
+  )}
+  {f.policies_html && (
+    <section class="cf-detail-block">
+      <H>Guidelines</H>
+      <div class="cf-prose" set:html={f.policies_html} />
+    </section>
+  )}
+
+  {f.contact && (f.contact.office || f.contact.note) && (
+    <section class="cf-detail-block cf-contact">
+      <H>Contact</H>
+      {f.contact.office && <p class="cf-contact-office">{f.contact.office}</p>}
+      {f.contact.person && <p>{f.contact.person}</p>}
+      <p class="cf-contact-lines">
+        {f.contact.email && <a href={`mailto:${f.contact.email}`}><Fragment set:html={icon('mail')} />{f.contact.email}</a>}
+        {f.contact.phone && <a href={`tel:${f.contact.phone.replace(/[^+\d]/g, '')}`}><Fragment set:html={icon('phone')} />{f.contact.phone}</a>}
+      </p>
+      {f.contact.note && <p class="cf-note">{f.contact.note}</p>}
+    </section>
+  )}
+
+  {(shownLinks.length > 0 || f.documents.length > 0) && (
+    <ul class="cf-resources">
+      {shownLinks.map((l) => (
+        <li>
+          <a href={l.url} {...(l.external ? { target: '_blank', rel: 'noopener' } : {})}>
+            <Fragment set:html={icon(l.external ? 'external' : 'arrow')} /><span>{l.label}</span>
+            {l.external && <span class="cf-sr">(opens in a new tab)</span>}
+          </a>
+        </li>
+      ))}
+      {f.documents.map((d) => (
+        <li>
+          <a href={d.url} target="_blank" rel="noopener">
+            <Fragment set:html={icon('download')} /><span>{d.label}</span>{d.ext && <span class="cf-ext">{d.ext}</span>}
+          </a>
+        </li>
+      ))}
+    </ul>
+  )}
+
+  {showImages && f.images.length > 0 && (
+    <div class="cf-detail-photos">
+      {f.images.map((im) => (
+        <button type="button" class="cf-shot" data-cf-lightbox={im.url} data-cf-caption={im.alt}>
+          <img src={im.url} alt={im.alt} loading="lazy" />
+        </button>
+      ))}
+    </div>
+  )}
+</div>

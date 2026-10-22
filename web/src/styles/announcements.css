@@ -1020,3 +1020,48 @@
   min-width: 22ch;
   max-width: 40ch;
 }
+
+/* ---------- Combined Announcements feed (AnnouncementFeedBoard) ---------- */
+/* Four tiles (All / Vacancies / Important / General Notices) instead of the
+   Recruitment board's eight. */
+@media (min-width: 640px) {
+  .an-tiles.an-tiles-4 {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+.an-badge-kind {
+  border-color: var(--line-strong);
+  color: var(--ink-2);
+}
+.an-tone-normal {
+  border-color: var(--navy);
+  color: var(--navy);
+}
+.an-tone-success {
+  border-color: var(--open);
+  color: var(--open);
+}
+/* Warning and urgent are the only places colour carries meaning here, and the
+   label text ("Warning" / "Urgent") always says it too. */
+.an-tone-warning {
+  border-color: var(--gold-deep);
+  background: var(--gold);
+  color: var(--navy-deep);
+}
+.an-tone-danger {
+  border-color: var(--urgent);
+  background: var(--urgent);
+  color: #fff;
+}
+.an-card.an-card-warning {
+  border-top-color: var(--gold);
+}
+.an-card.an-card-danger {
+  border-top-color: var(--urgent);
+}
+.an-summary {
+  margin: 0 0 var(--s3);
+  color: var(--ink-2);
+  font-size: 0.92rem;
+  line-height: 1.55;
+}

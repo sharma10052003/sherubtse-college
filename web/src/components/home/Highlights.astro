@@ -1,0 +1,50 @@
+---
+// Latest Highlights — photo stories from News. “feature”: one large story
+// and smaller ones beside it; “grid”: equal cards. A story without photos
+// gets a typographic card instead of a broken image.
+import type { Highlight, HomeLabels } from '../../lib/content/homepage';
+import { fmtDate } from '../../lib/content/homepage';
+import Img from './Img.astro';
+
+interface Props { items: Highlight[]; layout: 'feature' | 'grid'; labels: HomeLabels; emptyText: string | null }
+const { items, layout, labels, emptyText } = Astro.props;
+const photos = (n: number) => labels.photos_count.replace('{n}', String(n));
+const camera = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>';
+const play = '<svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>';
+const pin = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M9 3h6l-1 6 4 4H6l4-4zM12 13v8"/></svg>';
+---
+<div data-expiring>
+  <ul class:list={['hm-hl', `hm-hl--${layout}`, `hm-hl--n${Math.min(items.length, 5)}`]}>
+    {items.map((h, i) => {
+      const big = layout === 'feature' && i === 0;
+      return (
+        <li class:list={['hm-hl-item', { 'hm-hl-item--big': big, 'hm-hl-item--noimg': !h.cover }]} data-expires={h.expires ?? undefined} data-reveal style={`--i:${i}`}>
+          <article class="hm-hl-card">
+            <div class="hm-hl-media">
+              {h.cover ? (
+                <Img image={h.cover} class="hm-hl-img" eager={i === 0} sizes={big ? '(min-width: 1000px) 60vw, 100vw' : '(min-width: 1000px) 25vw, (min-width: 640px) 50vw, 100vw'} />
+              ) : (
+                <span class="hm-hl-pattern" aria-hidden="true"></span>
+              )}
+              <span class="hm-hl-badges">
+                {h.pinned && <span class="hm-chip hm-chip--gold"><Fragment set:html={pin} />{labels.pinned}</span>}
+                {h.has_video && <span class="hm-chip"><Fragment set:html={play} /></span>}
+                {h.photos > 1 && <span class="hm-chip"><Fragment set:html={camera} />{photos(h.photos)}</span>}
+              </span>
+            </div>
+            <div class="hm-hl-body">
+              <p class="hm-meta">
+                {h.category && <span class="hm-meta-cat">{h.category}</span>}
+                <time datetime={h.date?.slice(0, 10)}>{fmtDate(h.date)}</time>
+              </p>
+              <h3 class="hm-hl-title"><a href={h.href}>{h.title}</a></h3>
+              {h.summary && <p class="hm-hl-summary">{h.summary}</p>}
+            </div>
+          </article>
+        </li>
+      );
+    })}
+  </ul>
+  {items.length > 1 && <p class="hm-swipe" aria-hidden="true">{labels.swipe_hint} →</p>}
+  {emptyText && <p class="hm-empty" data-empty hidden={items.length > 0}>{emptyText}</p>}
+</div>

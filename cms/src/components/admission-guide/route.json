@@ -1,0 +1,36 @@
+{
+  "collectionName": "components_admission_guide_routes",
+  "info": {
+    "displayName": "Application Route",
+    "icon": "bulletList",
+    "description": "One way to apply (e.g. for a group of programmes)."
+  },
+  "options": {},
+  "attributes": {
+    "title": {
+      "type": "string",
+      "required": true
+    },
+    "for_programmes": {
+      "type": "string"
+    },
+    "description": {
+      "type": "text"
+    },
+    "opens_on": {
+      "type": "date"
+    },
+    "closes_on": {
+      "type": "date"
+    },
+    "steps": {
+      "type": "text"
+    },
+    "portal_label": {
+      "type": "string"
+    },
+    "portal_url": {
+      "type": "string"
+    }
+  }
+}

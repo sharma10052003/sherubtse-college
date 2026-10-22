@@ -1,6 +1,13 @@
 ---
+// Alumni — the Sherubtse alumni community page. Every word comes from
+// "Alumni – Page" in Strapi; stories, events, chapters, achievements and
+// gallery come from their own collections and only appear when there is
+// real, published content. The three forms (story submission,
+// registration, newsletter) post to Strapi's create-only public endpoints,
+// which are guarded server-side (cms/src/policies/public-form-guard.ts):
+// stories always land as unpublished drafts for the Alumni Office to review.
 import Layout from '../../../layouts/Layout.astro';
-import '../../../styles/alumni.css';
+import '../../../styles/alumni-page.css';
 import {
   getAlumniSetting,
   getAlumniCopy,
@@ -22,7 +29,7 @@ const [copy, settings, distinguished, stories, alumniCount, events, chapters, ch
     getAlumniCopy(),
     getAlumniSetting(),
     getDistinguishedAlumni(),
-    getAlumniStories(9),
+    getAlumniStories(60),
     getAlumniCount(),
     getAlumniEvents(),
     getAlumniChapters(),
@@ -32,752 +39,1053 @@ const [copy, settings, distinguished, stories, alumniCount, events, chapters, ch
   ]);
 
 const upcomingEvents = events.filter((e) => !e.is_past);
-const pastEvents = events.filter((e) => e.is_past);
-
+const pastEvents = events.filter((e) => e.is_past).reverse();
 const L = copy.labels;
+
+// Real figures only — no "+" padding, no invented totals.
+const totalAlumni = settings.total_alumni_override ?? alumniCount;
+const storyCount = stories.length + distinguished.length;
 const stats = [
-  { label: L.total_alumni, value: `${settings.total_alumni_override ?? alumniCount}+` },
-  settings.years_of_legacy ? { label: L.years, value: `${settings.years_of_legacy}` } : null,
-  settings.countries_represented ? { label: L.countries, value: `${settings.countries_represented}` } : null,
-  { label: L.stories, value: `${stories.length + distinguished.length}+` },
-].filter((s): s is { label: string; value: string } => !!s);
+  { key: 'alumni', label: L.total_alumni, value: totalAlumni, icon: 'people' },
+  settings.years_of_legacy ? { key: 'years', label: L.years, value: settings.years_of_legacy, icon: 'cap' } : null,
+  settings.countries_represented ? { key: 'countries', label: L.countries, value: settings.countries_represented, icon: 'globe' } : null,
+  { key: 'stories', label: L.stories, value: storyCount, icon: 'book' },
+].filter((s): s is { key: string; label: string; value: number; icon: string } => !!s);
+
+const featuredStory = stories[0] ?? null;
+const moreStories = stories.slice(1);
+const storyCategories = Array.from(new Set(stories.map((s) => s.category).filter((c): c is string => !!c)));
+const INITIAL_STORIES = 6;
+
+const INTERESTS = ['Mentorship', 'Guest Lectures', 'Career Support', 'Internship Opportunities', 'Alumni Events', 'Volunteering', 'Supporting Students'];
+const COUNTRIES = [
+  'Bhutan', 'India', 'Nepal', 'Bangladesh', 'Sri Lanka', 'Maldives', 'Thailand', 'Singapore', 'Malaysia', 'Japan',
+  'South Korea', 'China', 'Australia', 'New Zealand', 'United States', 'Canada', 'United Kingdom', 'Ireland',
+  'Germany', 'Netherlands', 'Switzerland', 'Austria', 'Denmark', 'Norway', 'Sweden', 'Finland', 'France', 'Belgium',
+  'Italy', 'Spain', 'United Arab Emirates', 'Qatar', 'Kuwait', 'Saudi Arabia', 'Oman', 'Philippines', 'Indonesia', 'Vietnam',
+];
+const INDUSTRIES = [
+  'Civil Service', 'Education', 'Health', 'Banking & Finance', 'Information Technology', 'Agriculture & Livestock',
+  'Tourism & Hospitality', 'Energy & Hydropower', 'Research & Academia', 'Media & Communications', 'NGO / Civil Society',
+  'Private Business', 'Armed Forces & Police', 'Law & Justice', 'Engineering & Construction', 'Other',
+];
 
 function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+  return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 function formatTime(iso: string) {
   return new Date(iso).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
 }
+function initials(name: string) {
+  return name
+    .replace(/^Dasho\s+|^Dr\.?\s+/gi, '')
+    .split(' ')
+    .filter(Boolean)
+    .map((w) => w[0])
+    .slice(0, 2)
+    .join('')
+    .toUpperCase();
+}
+const pad = (n: number) => String(n).padStart(2, '0');
 
-// Icons for the "Why Alumni Matters" cards — the editor picks one by name.
-const MATTERS_ICONS: Record<string, string> = {
-  cap: '<path d="M12 2 2 7l10 5 10-5-10-5z" /><path d="M6 10v6c0 1.5 3 3 6 3s6-1.5 6-3v-6" />',
+const ICONS: Record<string, string> = {
+  cap: '<path d="M12 3 2 8l10 5 10-5-10-5z" /><path d="M6 10.5v5.5c0 1.5 3 3 6 3s6-1.5 6-3v-5.5" />',
   people: '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" />',
   shield: '<path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z" /><path d="M9 12l2 2 4-4" />',
   compass: '<circle cx="12" cy="12" r="10" /><path d="M16.24 7.76l-2.12 6.36-6.36 2.12 2.12-6.36 6.36-2.12z" />',
-  book: '<path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v17H6.5A2.5 2.5 0 0 0 4 21.5z" /><path d="M4 21.5V4.5" />',
+  book: '<path d="M3 5.5c2.7-1 5.7-1 9 1 3.3-2 6.3-2 9-1V19c-2.7-1-5.7-1-9 1-3.3-2-6.3-2-9-1V5.5z" /><path d="M12 6.5V20" />',
   star: '<path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z" />',
   heart: '<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8z" />',
   globe: '<circle cx="12" cy="12" r="10" /><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20" />',
-};
-const CONTACT_ICONS: Record<string, string> = {
-  phone: '<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" />',
-  email: '<rect x="2" y="4" width="20" height="16" rx="0" /><path d="m2 7 10 6 10-6" />',
+  calendar: '<rect x="3" y="5" width="18" height="16" /><path d="M8 3v4M16 3v4M3 10h18" />',
+  pin: '<path d="M12 21s-7-6.1-7-11a7 7 0 0 1 14 0c0 4.9-7 11-7 11z" /><circle cx="12" cy="10" r="2.5" />',
+  pen: '<path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z" />',
+  mail: '<rect x="2" y="4" width="20" height="16" /><path d="m2 7 10 6 10-6" />',
+  phone: '<path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.9.6 2.8.7a2 2 0 0 1 1.7 2z" />',
   person: '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />',
-  address: '<path d="M12 21s-7-6.1-7-11a7 7 0 0 1 14 0c0 4.9-7 11-7 11z" /><circle cx="12" cy="10" r="2.5" />',
+  trophy: '<path d="M8 4h8v6a4 4 0 0 1-8 0z" /><path d="M8 5H4v2a4 4 0 0 0 4 4M16 5h4v2a4 4 0 0 1-4 4" /><path d="M12 14v4M8 21h8" />',
 };
+const CONTACT_ICON: Record<string, string> = { phone: 'phone', email: 'mail', person: 'person', address: 'pin' };
+const icon = (name: string, size = 24) =>
+  `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[name] ?? ICONS.star}</svg>`;
+
 const galleryCategories = Array.from(new Set(gallery.map((g) => g.category)));
+const heroIsVideo = !!settings.hero_background_url && /\.(mp4|webm|mov)$/i.test(settings.hero_background_url);
 ---
 
 <Layout title="Alumni" description={copy.seo_description ?? undefined}>
-  <!-- 1. Hero / Welcome -->
-  <section class="alumni-hero">
-    <div class="alumni-hero-overlay"></div>
-    <div class="wrap">
-      <nav class="breadcrumb breadcrumb-on-dark" aria-label="Breadcrumb">
-        <a href="/">Home</a> › <a href="/about">About</a> › <span class="current">Alumni</span>
-      </nav>
-      {copy.hero.eyebrow && <p class="eyebrow">{copy.hero.eyebrow}</p>}
-      <h1 class="h-display">{copy.hero.heading}</h1>
-      {copy.hero.intro && <p class="alumni-hero-intro">{copy.hero.intro}</p>}
-      {copy.hero.tagline && <p class="alumni-hero-tagline">{copy.hero.tagline}</p>}
-      <div class="alumni-hero-buttons">
-        {copy.hero.button_label && <a href="#register" class="btn btn-primary">{copy.hero.button_label}</a>}
-        {copy.hero.secondary_button_label && <a href="#stories" class="btn btn-secondary btn-on-hero">{copy.hero.secondary_button_label}</a>}
-      </div>
-
-      <!-- 2. Alumni Statistics -->
-      {
-        settings.show_statistics && (
-          <div class="alumni-stats">
-            {stats.map((s) => (
-              <div>
-                <p class="alumni-stat-value">{s.value}</p>
-                <p class="alumni-stat-label">{s.label}</p>
-              </div>
-            ))}
-          </div>
-        )
-      }
-    </div>
-  </section>
-
-  <!-- 3. About Sherubtse Alumni Association -->
-  <section class="band">
-    <div class="wrap narrow reveal">
-      {copy.about.eyebrow && <p class="eyebrow">{copy.about.eyebrow}</p>}
-      <h2 class="h2">{copy.about.heading}</h2>
-      {copy.about.intro && <p class="lede" style="margin-top:var(--s4)">{copy.about.intro}</p>}
-      {copy.about.paragraphs.map((p) => <p>{p}</p>)}
-      {copy.about.button_label && <a href="#register" class="btn btn-primary" style="margin-top:var(--s3)">{copy.about.button_label}</a>}
-    </div>
-  </section>
-
-  <!-- 4. Why Alumni Matters -->
-  <section class="band band-alt">
-    <div class="wrap reveal">
-      {copy.matters.eyebrow && <p class="eyebrow">{copy.matters.eyebrow}</p>}
-      <h2 class="h2">{copy.matters.heading}</h2>
-      <div class="alumni-matters-grid">
-        {copy.matters_cards.map((card, i) => (
-          <div class="alumni-matters-card">
-            <div class="alumni-matters-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" set:html={MATTERS_ICONS[card.icon] ?? MATTERS_ICONS.star} />
-            </div>
-            <p class="alumni-matters-num">{String(i + 1).padStart(2, '0')}</p>
-            <h3 class="h3">{card.title}</h3>
-            <p>{card.text}</p>
-          </div>
-        ))}
-      </div>
-    </div>
-  </section>
-
-  <!-- 5. Distinguished Alumni -->
-  {
-    distinguished.length > 0 && (
-      <section class="band">
-        <div class="wrap reveal">
-          {copy.distinguished.eyebrow && <p class="eyebrow">{copy.distinguished.eyebrow}</p>}
-          <h2 class="h2">{copy.distinguished.heading}</h2>
-          <div class="distinguished-grid">
-            {distinguished.map((a) => (
-              <article class="distinguished-card">
-                {a.photo_url ? (
-                  <img src={a.photo_url} alt="" class="distinguished-photo" />
-                ) : (
-                  <div class="distinguished-photo-placeholder" aria-hidden="true">
-                    {a.full_name
-                      .replace(/^Dasho\s+|^Dr\.?\s+/gi, '')
-                      .split(' ')
-                      .filter(Boolean)
-                      .map((w) => w[0])
-                      .slice(0, 2)
-                      .join('')
-                      .toUpperCase()}
-                  </div>
-                )}
-                <div class="distinguished-body">
-                  <h3>{a.full_name}</h3>
-                  {a.current_role && <p class="distinguished-role">{a.current_role}</p>}
-                  {a.excerpt && <p class="distinguished-quote">"{a.excerpt}"</p>}
-                  <a href={`/about/alumni/${a.slug}`} class="read-more">
-                    Read More <span aria-hidden="true">→</span>
-                  </a>
-                </div>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
-    )
-  }
-
-  <!-- 6. Alumni Stories -->
-  <section class="band band-alt" id="stories">
-    <div class="wrap reveal">
-      {copy.stories.eyebrow && <p class="eyebrow">{copy.stories.eyebrow}</p>}
-      <h2 class="h2">{copy.stories.heading}</h2>
-      {copy.stories.intro && <p class="alumni-section-intro" style="margin-top:var(--s3)">{copy.stories.intro}</p>}
-      {
-        stories.length > 0 ? (
-          <div class="stories-grid">
-            {stories.map((s) => (
-              <article class="story-card">
-                {s.photo_url ? (
-                  <img src={s.photo_url} alt="" class="story-photo" />
-                ) : (
-                  <div class="story-photo-placeholder" aria-hidden="true">
-                    {s.full_name
-                      .split(' ')
-                      .filter(Boolean)
-                      .map((w) => w[0])
-                      .slice(0, 2)
-                      .join('')
-                      .toUpperCase()}
-                  </div>
-                )}
-                <div class="story-body">
-                  {s.category && <p class="story-category">{ALUMNI_CATEGORY_LABELS[s.category] ?? s.category}</p>}
-                  <h3>
-                    <a href={`/about/alumni/${s.slug}`}>{s.article_title ?? s.full_name}</a>
-                  </h3>
-                  <p class="story-meta">
-                    {s.full_name}
-                    {s.current_role ? ` · ${s.current_role}` : ''}
-                  </p>
-                  {s.excerpt && <p class="story-excerpt">{s.excerpt}</p>}
-                  <a href={`/about/alumni/${s.slug}`} class="read-more">
-                    Read More <span aria-hidden="true">→</span>
-                  </a>
-                </div>
-              </article>
-            ))}
-          </div>
+  <div class="al">
+    <!-- ====================== 1. HERO ====================== -->
+    <section class="al-hero" aria-labelledby="al-hero-title">
+      <div class="al-hero-bg" aria-hidden="true">
+        {settings.hero_background_url && (heroIsVideo ? (
+          <video class="al-hero-media" src={settings.hero_background_url} autoplay muted loop playsinline data-parallax="0.15"></video>
         ) : (
-          <p class="small" style="margin-top:var(--s5)">{copy.texts.stories_empty}</p>
-        )
-      }
-    </div>
-  </section>
+          <img class="al-hero-media" src={settings.hero_background_url} alt="" data-parallax="0.15" />
+        ))}
+        <svg class="al-hero-rings" viewBox="0 0 600 600">
+          <circle pathLength="1" cx="300" cy="300" r="290" />
+          <circle pathLength="1" cx="300" cy="300" r="220" />
+          <circle pathLength="1" cx="300" cy="300" r="150" />
+          <circle pathLength="1" cx="300" cy="300" r="80" />
+          <path pathLength="1" d="M300 10v580M10 300h580" />
+        </svg>
+        <svg class="al-hero-range" data-parallax="0.12" viewBox="0 0 1600 300" preserveAspectRatio="xMidYMax slice">
+          <path d="M0 300V200l150-60 120 40 170-110 150 90 120-40 200 120 150-80 170 90 140-50 130 60v140z" />
+        </svg>
+      </div>
 
-  <!-- 7. Submit a story -->
-  <section class="band">
-    <div class="wrap narrow reveal">
-      {copy.story_form.eyebrow && <p class="eyebrow">{copy.story_form.eyebrow}</p>}
-      <h2 class="h2">{copy.story_form.heading}</h2>
-      {copy.story_form.intro && <p class="alumni-section-intro" style="margin-top:var(--s3)">{copy.story_form.intro}</p>}
-      <form class="alumni-form" id="storyForm">
-        <div class="form-grid cols-2">
-          <div class="form-field">
-            <label for="story-name">Full Name *</label>
-            <input type="text" id="story-name" name="full_name" required />
-          </div>
-          <div class="form-field">
-            <label for="story-email">Email *</label>
-            <input type="email" id="story-email" name="email" required />
-          </div>
-          <div class="form-field">
-            <label for="story-year">Graduation Year</label>
-            <input type="number" id="story-year" name="graduation_year" min="1968" max="2100" />
-          </div>
-          <div class="form-field">
-            <label for="story-programme">Programme</label>
-            <input type="text" id="story-programme" name="programme" />
-          </div>
-          <div class="form-field">
-            <label for="story-role">Current Designation</label>
-            <input type="text" id="story-role" name="current_role" />
-          </div>
-          <div class="form-field">
-            <label for="story-org">Organization</label>
-            <input type="text" id="story-org" name="organization" />
-          </div>
-          <div class="form-field span-2">
-            <label for="story-title">Article Title *</label>
-            <input type="text" id="story-title" name="article_title" required />
-          </div>
-          <div class="form-field span-2">
-            <label for="story-content">Article Content *</label>
-            <textarea id="story-content" name="story" required rows="8"></textarea>
-          </div>
-          <div class="form-field span-2">
-            <label for="story-category">Category</label>
-            <select id="story-category" name="category">
-              <option value="">Choose a category</option>
-              {Object.entries(ALUMNI_CATEGORY_LABELS).map(([value, label]) => (
-                <option value={value}>{label}</option>
-              ))}
-            </select>
-          </div>
+      <div class="wrap al-wide al-hero-inner">
+        <nav class="al-breadcrumb" aria-label="Breadcrumb"><a href="/">Home</a> › <a href="/about">About</a> › <span aria-current="page">Alumni</span></nav>
+        {copy.hero.eyebrow && <p class="al-eyebrow al-hero-eyebrow">{copy.hero.eyebrow}</p>}
+        <h1 id="al-hero-title" class="al-hero-title">{copy.hero.heading}</h1>
+        {copy.hero.intro && <p class="al-hero-intro">{copy.hero.intro}</p>}
+        {copy.hero.tagline && (
+          <blockquote class="al-hero-quote">
+            <span aria-hidden="true">&#8220;</span>{copy.hero.tagline.replace(/^[“"]|[”"]$/g, '')}<span aria-hidden="true">&#8221;</span>
+          </blockquote>
+        )}
+        <div class="al-actions">
+          {copy.hero.button_label && <a href="#register" class="al-btn al-btn--gold" data-al-jump>{copy.hero.button_label}</a>}
+          {copy.hero.secondary_button_label && <a href="#stories" class="al-btn al-btn--ghost" data-al-jump>{copy.hero.secondary_button_label}</a>}
         </div>
-        <label class="form-consent" style="margin-top:var(--s4)">
-          <input type="checkbox" name="consent" required />
-          <span>{copy.texts.story_consent}</span>
-        </label>
-        <div class="form-actions">
-          <button type="submit" class="btn btn-primary">{copy.story_form.button_label}</button>
-        </div>
-        <div class="form-status" id="storyFormStatus" role="status"></div>
-      </form>
-    </div>
-  </section>
+      </div>
+    </section>
 
-  <!-- 8. Alumni Events -->
-  {
-    settings.show_events && (
-      <section class="band band-alt">
-        <div class="wrap reveal">
-          {copy.events.eyebrow && <p class="eyebrow">{copy.events.eyebrow}</p>}
-          <h2 class="h2">{copy.events.heading}</h2>
-          <div class="events-tabs" role="tablist">
-            <button type="button" class="events-tab" role="tab" aria-selected="true" aria-controls="upcoming-events-panel" id="upcomingEventsTab">
-              {L.upcoming_events}
-            </button>
-            <button type="button" class="events-tab" role="tab" aria-selected="false" aria-controls="past-events-panel" id="pastEventsTab">
-              {L.past_events}
-            </button>
-          </div>
-          <div id="upcoming-events-panel" class="events-panel" role="tabpanel" aria-labelledby="upcomingEventsTab">
-            {upcomingEvents.length > 0 ? (
-              <div class="events-grid">
-                {upcomingEvents.map((e) => (
-                  <article class="event-card">
-                    {e.image_url ? (
-                      <img src={e.image_url} alt="" class="event-photo" />
-                    ) : (
-                      <div class="event-photo-placeholder" aria-hidden="true">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="1" /><path d="M8 3v4M16 3v4M3 10h18" /></svg>
-                      </div>
-                    )}
-                    <div class="event-body">
-                      <p class="event-date">{formatDate(e.starts_at)} · {formatTime(e.starts_at)}</p>
-                      <h3>{e.title}</h3>
-                      {e.venue && (
-                        <p class="event-venue">
-                          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" /></svg>
-                          {e.venue}
-                        </p>
-                      )}
-                      {e.description && <p class="event-desc">{e.description}</p>}
-                      {e.registration_link && (
-                        <a href={e.registration_link} class="btn btn-secondary" target="_blank" rel="noopener noreferrer">
-                          Register
-                        </a>
-                      )}
-                    </div>
-                  </article>
-                ))}
+    <!-- ====================== 2. STATISTICS ====================== -->
+    {settings.show_statistics && (
+      <section class="al-stats-wrap" aria-label="Our growing community">
+        <div class="wrap al-wide">
+          <dl class="al-stats" data-al-reveal>
+            {stats.map((s) => (
+              <div class="al-stat">
+                <span class="al-stat-icon" set:html={icon(s.icon, 22)} />
+                <dt class="al-stat-label">{s.label}</dt>
+                <dd class="al-stat-value" data-count={s.value}>{s.value.toLocaleString('en-GB')}</dd>
               </div>
-            ) : (
-              <p class="small" style="margin-top:var(--s5)">{copy.texts.upcoming_empty}</p>
-            )}
+            ))}
+          </dl>
+        </div>
+      </section>
+    )}
+
+    <!-- ====================== 3. ABOUT ====================== -->
+    <section id="about" class="al-section al-about" aria-labelledby="al-about-h">
+      <div class="wrap al-wide al-about-grid">
+        <div class="al-about-visual" data-al-reveal aria-hidden="true">
+          <svg viewBox="0 0 400 400" class="al-community">
+            <g class="al-community-lines">
+              <path pathLength="1" d="M200 60L330 140L330 280L200 340L70 280L70 140Z" />
+              <path pathLength="1" d="M200 60L200 340M70 140L330 280M330 140L70 280" />
+            </g>
+            <circle class="al-node al-node--hub" cx="200" cy="200" r="34" />
+            {[[200, 60], [330, 140], [330, 280], [200, 340], [70, 280], [70, 140]].map(([x, y], i) => (
+              <g class="al-node-group" style={`--d:${300 + i * 120}ms`}>
+                <circle class="al-node" cx={x} cy={y} r="22" />
+                <circle class="al-node-head" cx={x} cy={y - 6} r="6" />
+                <path class="al-node-body" d={`M${x - 10} ${y + 12}a10 10 0 0 1 20 0`} />
+              </g>
+            ))}
+            <text x="200" y="207" class="al-community-label">S</text>
+          </svg>
+        </div>
+        <div class="al-about-copy" data-al-reveal style="--d:120ms">
+          {copy.about.eyebrow && <p class="al-eyebrow">{copy.about.eyebrow}</p>}
+          <h2 id="al-about-h" class="al-h2" tabindex="-1">{copy.about.heading}</h2>
+          {copy.about.intro && <p class="al-lede">{copy.about.intro}</p>}
+          {copy.about.paragraphs.map((p) => <p class="al-body">{p}</p>)}
+          {copy.about.tagline && <p class="al-highlight">{copy.about.tagline}</p>}
+          {copy.about.button_label && <a href="#register" class="al-btn al-btn--navy" data-al-jump>{copy.about.button_label}</a>}
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================== 4. WHY ALUMNI MATTERS ====================== -->
+    {copy.matters_cards.length > 0 && (
+      <section id="why" class="al-section al-why" aria-labelledby="al-why-h">
+        <div class="wrap al-wide">
+          <div class="al-head" data-al-reveal>
+            {copy.matters.eyebrow && <p class="al-eyebrow">{copy.matters.eyebrow}</p>}
+            <h2 id="al-why-h" class="al-h2">{copy.matters.heading}</h2>
           </div>
-          <div id="past-events-panel" class="events-panel" role="tabpanel" aria-labelledby="pastEventsTab" hidden>
-            {pastEvents.length > 0 ? (
-              <div class="events-grid">
-                {pastEvents.map((e) => (
-                  <article class="event-card">
-                    {e.image_url ? (
-                      <img src={e.image_url} alt="" class="event-photo" />
-                    ) : (
-                      <div class="event-photo-placeholder" aria-hidden="true">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="1" /><path d="M8 3v4M16 3v4M3 10h18" /></svg>
-                      </div>
-                    )}
-                    <div class="event-body">
-                      <p class="event-date">{formatDate(e.starts_at)}</p>
-                      <h3>{e.title}</h3>
-                      {e.venue && <p class="event-venue">{e.venue}</p>}
-                      {e.description && <p class="event-desc">{e.description}</p>}
-                    </div>
-                  </article>
-                ))}
-              </div>
-            ) : (
-              <p class="small" style="margin-top:var(--s5)">{copy.texts.past_empty}</p>
-            )}
+          <div class="al-journey-wrap" data-al-reveal>
+          <svg class="al-journey-line" viewBox="0 0 1000 20" preserveAspectRatio="none" aria-hidden="true">
+            <path class="al-draw" pathLength="1" d="M0 10H1000" />
+          </svg>
+          <ol class="al-journey" role="list">
+            {copy.matters_cards.map((card, i) => (
+              <li class={`al-why-card al-why-card--${(i % 4) + 1}`} data-al-reveal style={`--d:${i * 130}ms`}>
+                <span class="al-why-num">{pad(i + 1)}</span>
+                <span class="al-why-icon" set:html={icon(card.icon, 30)} />
+                <h3 class="al-why-title">{card.title}</h3>
+                <p class="al-why-text">{card.text}</p>
+              </li>
+            ))}
+          </ol>
           </div>
         </div>
       </section>
-    )
-  }
+    )}
 
-  <!-- 9. Career & Mentorship / Give Back -->
-  <section class="band">
-    <div class="wrap narrow reveal">
-      {copy.mentorship.eyebrow && <p class="eyebrow">{copy.mentorship.eyebrow}</p>}
-      <h2 class="h2">{copy.mentorship.heading}</h2>
-      {copy.mentorship.intro && <p class="lede" style="margin-top:var(--s4)">{copy.mentorship.intro}</p>}
-      {copy.mentorship.paragraphs.map((p) => <p>{p}</p>)}
-      <div class="mentorship-buttons">
-        {copy.mentorship.button_label && <a href="#register" class="btn btn-primary">{copy.mentorship.button_label}</a>}
-        {copy.mentorship.secondary_button_label && <a href="#register" class="btn btn-secondary">{copy.mentorship.secondary_button_label}</a>}
-      </div>
-    </div>
-  </section>
-
-  <!-- 11. Sherubteans Around the World + Chapters -->
-  <section class="band world-band">
-    <div class="wrap reveal">
-      {copy.global_reach.eyebrow && <p class="eyebrow" style="color:var(--gold)">{copy.global_reach.eyebrow}</p>}
-      <h2 class="h2">{copy.global_reach.heading}</h2>
-      <div class="world-stats">
-        <div>
-          <p class="world-stat-value">{settings.total_alumni_override ?? alumniCount}+</p>
-          <p class="world-stat-label">{L.alumni}</p>
+    <!-- ====================== 5. DISTINGUISHED ALUMNI (when published) ====================== -->
+    {distinguished.length > 0 && (
+      <section class="al-section al-distinguished" aria-labelledby="al-dist-h">
+        <div class="wrap al-wide">
+          <div class="al-head" data-al-reveal>
+            {copy.distinguished.eyebrow && <p class="al-eyebrow">{copy.distinguished.eyebrow}</p>}
+            <h2 id="al-dist-h" class="al-h2">{copy.distinguished.heading}</h2>
+          </div>
+          <div class="al-dist-grid">
+            {distinguished.map((a, i) => (
+              <article class="al-dist-card" data-al-reveal style={`--d:${i * 100}ms`}>
+                {a.photo_url ? <img src={a.photo_url} alt={`Portrait of ${a.full_name}`} loading="lazy" class="al-dist-photo" /> : <span class="al-dist-photo al-initials" aria-hidden="true">{initials(a.full_name)}</span>}
+                <div class="al-dist-body">
+                  <h3 class="al-dist-name">{a.full_name}</h3>
+                  {a.current_role && <p class="al-dist-role">{a.current_role}</p>}
+                  {a.excerpt && <p class="al-dist-quote">“{a.excerpt}”</p>}
+                  <a href={`/about/alumni/${a.slug}`} class="al-link">Read story <span aria-hidden="true">→</span></a>
+                </div>
+              </article>
+            ))}
+          </div>
         </div>
-        {settings.countries_represented && (
+      </section>
+    )}
+
+    <!-- ====================== 6. ALUMNI STORIES ====================== -->
+    <section id="stories" class="al-section al-stories" aria-labelledby="al-stories-h">
+      <div class="wrap al-wide">
+        <div class="al-head al-head--split" data-al-reveal>
           <div>
-            <p class="world-stat-value">{settings.countries_represented}</p>
-            <p class="world-stat-label">{L.countries}</p>
+            {copy.stories.eyebrow && <p class="al-eyebrow">{copy.stories.eyebrow}</p>}
+            <h2 id="al-stories-h" class="al-h2" tabindex="-1">{copy.stories.heading}</h2>
+            {copy.stories.intro && <p class="al-body al-head-intro">{copy.stories.intro}</p>}
           </div>
-        )}
-        {settings.show_chapters && chapterCount > 0 && (
-          <div>
-            <p class="world-stat-value">{chapterCount}</p>
-            <p class="world-stat-label">{L.chapters}</p>
+          <a href="#share" class="al-btn al-btn--navy" data-al-jump>
+            <span set:html={icon('pen', 18)} /> Share Your Story
+          </a>
+        </div>
+
+        {stories.length > 0 ? (
+          <>
+            {storyCategories.length > 1 && (
+              <div class="al-filters" role="group" aria-label="Filter stories by category" data-story-filters>
+                <button type="button" aria-pressed="true" data-filter="all">All</button>
+                {storyCategories.map((c) => (
+                  <button type="button" aria-pressed="false" data-filter={c}>{ALUMNI_CATEGORY_LABELS[c] ?? c}</button>
+                ))}
+              </div>
+            )}
+
+            <div class="al-story-layout">
+              {featuredStory && (
+                <article class="al-story al-story--featured" data-category={featuredStory.category ?? ''} data-al-reveal>
+                  <div class="al-story-media">
+                    {featuredStory.photo_url ? <img src={featuredStory.photo_url} alt="" loading="lazy" /> : <span class="al-initials al-initials--xl" aria-hidden="true">{initials(featuredStory.full_name)}</span>}
+                  </div>
+                  <div class="al-story-body">
+                    {featuredStory.category && <p class="al-tag">{ALUMNI_CATEGORY_LABELS[featuredStory.category] ?? featuredStory.category}</p>}
+                    <h3 class="al-story-title al-story-title--lg">{featuredStory.article_title ?? featuredStory.full_name}</h3>
+                    {featuredStory.excerpt && <p class="al-story-excerpt">{featuredStory.excerpt}</p>}
+                    <p class="al-story-meta">
+                      <strong>{featuredStory.full_name}</strong>
+                      {[featuredStory.graduation_year && `Class of ${featuredStory.graduation_year}`, featuredStory.programme, featuredStory.current_role].filter(Boolean).map((m) => <span>{m}</span>)}
+                    </p>
+                    <a href={`/about/alumni/${featuredStory.slug}`} class="al-link">Read story <span aria-hidden="true">→</span></a>
+                  </div>
+                </article>
+              )}
+
+              {moreStories.length > 0 && (
+                <div class="al-story-grid" data-story-grid>
+                  {moreStories.map((s, i) => (
+                    <article class={`al-story${i >= INITIAL_STORIES ? ' is-hidden-more' : ''}`} data-category={s.category ?? ''} data-al-reveal style={`--d:${(i % 3) * 100}ms`}>
+                      <div class="al-story-media al-story-media--sm">
+                        {s.photo_url ? <img src={s.photo_url} alt="" loading="lazy" /> : <span class="al-initials" aria-hidden="true">{initials(s.full_name)}</span>}
+                      </div>
+                      <div class="al-story-body">
+                        {s.category && <p class="al-tag">{ALUMNI_CATEGORY_LABELS[s.category] ?? s.category}</p>}
+                        <h3 class="al-story-title">{s.article_title ?? s.full_name}</h3>
+                        {s.excerpt && <p class="al-story-excerpt">{s.excerpt}</p>}
+                        <p class="al-story-meta">
+                          <strong>{s.full_name}</strong>
+                          {[s.graduation_year && `Class of ${s.graduation_year}`, s.programme].filter(Boolean).map((m) => <span>{m}</span>)}
+                        </p>
+                        <a href={`/about/alumni/${s.slug}`} class="al-link">Read story <span aria-hidden="true">→</span></a>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              )}
+            </div>
+            <p class="al-filter-empty" data-story-empty hidden>No stories in this category yet.</p>
+            {moreStories.length > INITIAL_STORIES && (
+              <div class="al-center"><button type="button" class="al-btn al-btn--outline" data-story-more>Load more stories</button></div>
+            )}
+          </>
+        ) : (
+          <div class="al-empty" data-al-reveal>
+            <svg class="al-empty-art" viewBox="0 0 120 120" aria-hidden="true">
+              <rect x="22" y="18" width="62" height="80" />
+              <path d="M34 36h38M34 48h38M34 60h26" />
+              <path class="al-empty-pen" d="M78 92l22-22 8 8-22 22-10 2z" />
+            </svg>
+            <div>
+              <p class="al-empty-title">{copy.texts.stories_empty}</p>
+              <p class="al-body">Be the first to tell your Sherubtse story — your journey could inspire the students walking the same paths today.</p>
+              <a href="#share" class="al-btn al-btn--navy" data-al-jump>Share Your Story</a>
+            </div>
           </div>
         )}
       </div>
+    </section>
 
-      {
-        settings.show_chapters && chapters.length > 0 && (
-          <div class="chapters-grid">
+    <!-- ====================== 7. SUBMIT YOUR STORY ====================== -->
+    <section id="share" class="al-section al-share" aria-labelledby="al-share-h">
+      <div class="wrap al-wide al-form-layout">
+        <div class="al-form-aside" data-al-reveal>
+          {copy.story_form.eyebrow && <p class="al-eyebrow">{copy.story_form.eyebrow}</p>}
+          <h2 id="al-share-h" class="al-h2" tabindex="-1">{copy.story_form.heading}</h2>
+          {copy.story_form.intro && <p class="al-note"><span set:html={icon('shield', 20)} />{copy.story_form.intro}</p>}
+        </div>
+
+        <form class="al-form" id="storyForm" novalidate data-al-reveal style="--d:120ms">
+          <fieldset class="al-fieldset">
+            <legend>About you</legend>
+            <div class="al-grid">
+              <div class="al-field">
+                <label for="story-name">Full Name <span class="al-req" aria-hidden="true">*</span></label>
+                <input type="text" id="story-name" name="full_name" required autocomplete="name" />
+              </div>
+              <div class="al-field">
+                <label for="story-email">Email <span class="al-req" aria-hidden="true">*</span></label>
+                <input type="email" id="story-email" name="email" required autocomplete="email" />
+              </div>
+              <div class="al-field">
+                <label for="story-year">Graduation Year</label>
+                <input type="number" id="story-year" name="graduation_year" min="1968" max="2100" inputmode="numeric" />
+              </div>
+              <div class="al-field">
+                <label for="story-programme">Programme</label>
+                <input type="text" id="story-programme" name="programme" />
+              </div>
+              <div class="al-field">
+                <label for="story-role">Current Designation</label>
+                <input type="text" id="story-role" name="current_role" autocomplete="organization-title" />
+              </div>
+              <div class="al-field">
+                <label for="story-org">Organization</label>
+                <input type="text" id="story-org" name="organization" autocomplete="organization" />
+              </div>
+            </div>
+          </fieldset>
+
+          <fieldset class="al-fieldset">
+            <legend>Your story</legend>
+            <div class="al-grid">
+              <div class="al-field al-span-2">
+                <label for="story-title">Article Title <span class="al-req" aria-hidden="true">*</span></label>
+                <input type="text" id="story-title" name="article_title" required maxlength="200" />
+              </div>
+              <div class="al-field al-span-2">
+                <label for="story-category">Category</label>
+                <select id="story-category" name="category">
+                  <option value="">Choose a category</option>
+                  {Object.entries(ALUMNI_CATEGORY_LABELS).map(([value, label]) => <option value={value}>{label}</option>)}
+                </select>
+              </div>
+              <div class="al-field al-span-2">
+                <label for="story-content">Article Content <span class="al-req" aria-hidden="true">*</span></label>
+                <textarea id="story-content" name="story" required rows="9" aria-describedby="story-content-hint"></textarea>
+                <p class="al-hint" id="story-content-hint">Write as much as you like — separate paragraphs with a blank line.</p>
+              </div>
+            </div>
+          </fieldset>
+
+          <div class="al-hp" aria-hidden="true">
+            <label for="story-hp">Leave this field empty</label>
+            <input type="text" id="story-hp" name="hp_field" tabindex="-1" autocomplete="off" />
+          </div>
+
+          <div class="al-consent-wrap">
+            <label class="al-consent">
+              <input type="checkbox" name="consent" required />
+              <span>{copy.texts.story_consent} <span class="al-req" aria-hidden="true">*</span></span>
+            </label>
+          </div>
+
+          <div class="al-form-foot">
+            <p class="al-req-note"><span class="al-req" aria-hidden="true">*</span> Required</p>
+            <button type="submit" class="al-btn al-btn--navy">{copy.story_form.button_label || 'Submit Your Story'}</button>
+          </div>
+          <div class="al-status" role="status" aria-live="polite" data-form-status></div>
+        </form>
+      </div>
+    </section>
+
+    <!-- ====================== 8. EVENTS ====================== -->
+    {settings.show_events && (
+      <section id="events" class="al-section al-events" aria-labelledby="al-events-h">
+        <div class="wrap al-wide">
+          <div class="al-head al-head--split" data-al-reveal>
+            <div>
+              {copy.events.eyebrow && <p class="al-eyebrow">{copy.events.eyebrow}</p>}
+              <h2 id="al-events-h" class="al-h2">{copy.events.heading}</h2>
+            </div>
+            <div class="al-tabs" role="tablist" aria-label="Alumni events">
+              <button type="button" role="tab" id="al-tab-upcoming" aria-controls="al-panel-upcoming" aria-selected="true" tabindex="0">
+                {L.upcoming_events} <span class="al-tab-count">{upcomingEvents.length}</span>
+              </button>
+              <button type="button" role="tab" id="al-tab-past" aria-controls="al-panel-past" aria-selected="false" tabindex="-1">
+                {L.past_events} <span class="al-tab-count">{pastEvents.length}</span>
+              </button>
+            </div>
+          </div>
+
+          {[
+            { id: 'upcoming', list: upcomingEvents, empty: copy.texts.upcoming_empty },
+            { id: 'past', list: pastEvents, empty: copy.texts.past_empty },
+          ].map((tab) => (
+            <div id={`al-panel-${tab.id}`} role="tabpanel" aria-labelledby={`al-tab-${tab.id}`} class="al-tabpanel" hidden={tab.id === 'past'} tabindex="0">
+              {tab.list.length > 0 ? (
+                <div class="al-event-list">
+                  {tab.list.map((e, i) => (
+                    <article class={`al-event${tab.id === 'upcoming' && i === 0 ? ' al-event--next' : ''}${tab.id === 'past' ? ' al-event--past' : ''}`}>
+                      <div class="al-event-date" aria-hidden="true">
+                        <span class="al-event-day">{new Date(e.starts_at).toLocaleDateString('en-GB', { day: '2-digit' })}</span>
+                        <span class="al-event-month">{new Date(e.starts_at).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })}</span>
+                      </div>
+                      {e.image_url && <img class="al-event-img" src={e.image_url} alt="" loading="lazy" />}
+                      <div class="al-event-body">
+                        {tab.id === 'upcoming' && i === 0 && <p class="al-tag al-tag--gold">Next up</p>}
+                        <h3 class="al-event-title">{e.title}</h3>
+                        <p class="al-event-meta">
+                          <span set:html={icon('calendar', 16)} />{formatDate(e.starts_at)}{tab.id === 'upcoming' && `, ${formatTime(e.starts_at)}`}
+                          {e.venue && <><span set:html={icon('pin', 16)} />{e.venue}</>}
+                        </p>
+                        {e.description && <p class="al-event-desc">{e.description}</p>}
+                        <div class="al-event-actions">
+                          <a href={`/news-notices/events/${e.id}`} class="al-link">Event details <span aria-hidden="true">→</span></a>
+                          {tab.id === 'upcoming' && e.registration_link && (
+                            <a href={e.registration_link} class="al-btn al-btn--navy al-btn--sm" target="_blank" rel="noopener noreferrer">Register</a>
+                          )}
+                        </div>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              ) : (
+                <div class="al-empty al-empty--compact">
+                  <span class="al-empty-icon" set:html={icon('calendar', 34)} />
+                  <p class="al-empty-title">{tab.empty}</p>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </section>
+    )}
+
+    <!-- ====================== 9. GIVE BACK ====================== -->
+    <section id="give-back" class="al-section al-give" aria-labelledby="al-give-h">
+      <div class="wrap al-wide al-give-grid">
+        <div class="al-give-panel" data-al-reveal>
+          <svg class="al-give-art" viewBox="0 0 240 160" aria-hidden="true">
+            <circle cx="70" cy="52" r="18" />
+            <path d="M40 120c0-18 13-32 30-32s30 14 30 32" />
+            <circle cx="170" cy="62" r="14" />
+            <path d="M146 120c0-14 10-26 24-26s24 12 24 26" />
+            <path class="al-give-arrow" d="M104 70c20-16 40-16 52-4" />
+            <path class="al-give-arrow" d="M150 60l6 6-8 3" />
+          </svg>
+          <p class="al-give-label">Ways to give back</p>
+          <ul class="al-chips" role="list">
+            {INTERESTS.map((i) => <li>{i}</li>)}
+          </ul>
+        </div>
+        <div class="al-give-copy" data-al-reveal style="--d:120ms">
+          {copy.mentorship.eyebrow && <p class="al-eyebrow">{copy.mentorship.eyebrow}</p>}
+          <h2 id="al-give-h" class="al-h2">{copy.mentorship.heading}</h2>
+          {copy.mentorship.intro && <p class="al-lede">{copy.mentorship.intro}</p>}
+          {copy.mentorship.paragraphs.map((p) => <p class="al-body">{p}</p>)}
+          <div class="al-actions">
+            {copy.mentorship.button_label && <a href="#register" class="al-btn al-btn--navy" data-al-jump data-interest="Mentorship">{copy.mentorship.button_label}</a>}
+            {copy.mentorship.secondary_button_label && <a href="#register" class="al-btn al-btn--outline" data-al-jump data-interest="Supporting Students">{copy.mentorship.secondary_button_label}</a>}
+          </div>
+          <p class="al-hint">These buttons take you to the registration form with the matching interest ticked. The Alumni Office follows up personally — nothing is assigned automatically.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================== 10. AROUND THE WORLD ====================== -->
+    <section id="world" class="al-section al-world" aria-labelledby="al-world-h">
+      <div class="wrap al-wide al-world-grid">
+        <div class="al-world-copy" data-al-reveal>
+          {copy.global_reach.eyebrow && <p class="al-eyebrow al-eyebrow--light">{copy.global_reach.eyebrow}</p>}
+          <h2 id="al-world-h" class="al-h2 al-h2--light">{copy.global_reach.heading}</h2>
+          {copy.global_reach.intro && <p class="al-lede al-lede--light">{copy.global_reach.intro}</p>}
+          <dl class="al-world-stats">
+            <div><dt>{L.alumni}</dt><dd>{totalAlumni.toLocaleString('en-GB')}</dd></div>
+            {settings.countries_represented && <div><dt>{L.countries}</dt><dd>{settings.countries_represented}</dd></div>}
+            {settings.show_chapters && chapterCount > 0 && <div><dt>{L.chapters}</dt><dd>{chapterCount}</dd></div>}
+          </dl>
+          <a href="#register" class="al-btn al-btn--gold" data-al-jump>{copy.register.button_label || 'Register as Alumni'}</a>
+        </div>
+        <figure class="al-globe" data-al-reveal style="--d:150ms">
+          <svg viewBox="0 0 400 400" aria-hidden="true">
+            <circle class="al-globe-sphere" cx="200" cy="200" r="170" />
+            <g class="al-globe-grid">
+              <ellipse cx="200" cy="200" rx="170" ry="60" /><ellipse cx="200" cy="200" rx="170" ry="120" />
+              <path d="M30 200h340" />
+              <ellipse cx="200" cy="200" rx="60" ry="170" /><ellipse cx="200" cy="200" rx="120" ry="170" />
+              <path d="M200 30v340" />
+            </g>
+            <g class="al-globe-arcs">
+              <path class="al-draw" pathLength="1" d="M262 168C300 110 340 100 360 120" />
+              <path class="al-draw" pathLength="1" d="M262 168C220 120 150 110 100 140" />
+              <path class="al-draw" pathLength="1" d="M262 168C250 230 200 280 140 290" />
+              <path class="al-draw" pathLength="1" d="M262 168C320 200 330 250 310 300" />
+            </g>
+            <circle class="al-globe-home" cx="262" cy="168" r="6" />
+            <circle class="al-globe-home-ring" cx="262" cy="168" r="14" />
+          </svg>
+          <figcaption>Kanglung, Bhutan — where every Sherubtsean's journey begins.</figcaption>
+        </figure>
+        {settings.show_chapters && chapters.length > 0 && (
+          <ul class="al-chapters" role="list">
             {chapters.map((c) => (
-              <div class="chapter-card">
-                <p class="chapter-country">{c.country}</p>
+              <li class="al-chapter">
+                <p class="al-tag al-tag--gold">{c.country}</p>
                 <h3>{c.name}</h3>
                 {c.description && <p>{c.description}</p>}
                 {c.contact_email && <a href={`mailto:${c.contact_email}`}>{c.contact_email}</a>}
-              </div>
+              </li>
             ))}
-          </div>
-        )
-      }
-    </div>
-  </section>
+          </ul>
+        )}
+      </div>
+    </section>
 
-  <!-- 12. Sherubtse Memories -->
-  {
-    settings.show_gallery && gallery.length > 0 && (
-      <section class="band band-alt">
-        <div class="wrap reveal">
-          {copy.gallery.eyebrow && <p class="eyebrow">{copy.gallery.eyebrow}</p>}
-          <h2 class="h2">{copy.gallery.heading}</h2>
-          <div class="alumni-gallery-filters" id="alumniGalleryFilters">
-            <button type="button" data-filter="all" aria-pressed="true">
-              {L.gallery_all}
-            </button>
-            {galleryCategories.map((cat) => (
-              <button type="button" data-filter={cat} aria-pressed="false">
-                {GALLERY_CATEGORY_LABELS[cat] ?? cat}
-              </button>
-            ))}
+    <!-- ====================== GALLERY & ACHIEVEMENTS (when published) ====================== -->
+    {settings.show_gallery && gallery.length > 0 && (
+      <section class="al-section al-gallery" aria-labelledby="al-gallery-h">
+        <div class="wrap al-wide">
+          <div class="al-head al-head--split" data-al-reveal>
+            <div>
+              {copy.gallery.eyebrow && <p class="al-eyebrow">{copy.gallery.eyebrow}</p>}
+              <h2 id="al-gallery-h" class="al-h2">{copy.gallery.heading}</h2>
+            </div>
+            {galleryCategories.length > 1 && (
+              <div class="al-filters" role="group" aria-label="Filter photos" data-gallery-filters>
+                <button type="button" aria-pressed="true" data-filter="all">{L.gallery_all || 'All'}</button>
+                {galleryCategories.map((c) => <button type="button" aria-pressed="false" data-filter={c}>{GALLERY_CATEGORY_LABELS[c] ?? c}</button>)}
+              </div>
+            )}
           </div>
-          <div class="alumni-gallery-grid" id="alumniGalleryGrid">
+          <div class="al-gallery-grid" data-gallery-grid>
             {gallery.map((img) => (
-              <button type="button" data-lightbox-trigger data-src={img.image_url} data-category={img.category}>
+              <button type="button" class="al-gallery-item" data-category={img.category} data-lightbox={img.image_url} aria-label={img.caption ? `View photo: ${img.caption}` : 'View photo'}>
                 <img src={img.image_url} alt={img.caption ?? ''} loading="lazy" />
               </button>
             ))}
           </div>
         </div>
+        <div class="al-lightbox" id="alLightbox" hidden role="dialog" aria-modal="true" aria-label="Photo viewer">
+          <button type="button" class="al-lightbox-close" aria-label="Close photo viewer">✕</button>
+          <img src="" alt="" />
+        </div>
       </section>
-    )
-  }
+    )}
 
-  <!-- 13. Alumni Achievements -->
-  {
-    settings.show_achievements && achievements.length > 0 && (
-      <section class="band">
-        <div class="wrap reveal">
-          {copy.achievements.eyebrow && <p class="eyebrow">{copy.achievements.eyebrow}</p>}
-          <h2 class="h2">{copy.achievements.heading}</h2>
-          <div class="achievements-grid">
-            {achievements.map((a) => (
-              <div class="achievement-card">
-                <div class="achievement-icon">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4h8v6a4 4 0 0 1-8 0z" /><path d="M8 5H4v2a4 4 0 0 0 4 4" /><path d="M16 5h4v2a4 4 0 0 1-4 4" /><path d="M12 14v4" /><path d="M8 22h8" /><path d="M9 18h6l1 4H8z" /></svg>
-                </div>
+    {settings.show_achievements && achievements.length > 0 && (
+      <section class="al-section al-achievements" aria-labelledby="al-ach-h">
+        <div class="wrap al-wide">
+          <div class="al-head" data-al-reveal>
+            {copy.achievements.eyebrow && <p class="al-eyebrow">{copy.achievements.eyebrow}</p>}
+            <h2 id="al-ach-h" class="al-h2">{copy.achievements.heading}</h2>
+          </div>
+          <ul class="al-ach-grid" role="list">
+            {achievements.map((a, i) => (
+              <li class="al-ach" data-al-reveal style={`--d:${(i % 3) * 100}ms`}>
+                <span class="al-ach-icon" set:html={icon('trophy', 26)} />
                 <div>
-                  <p class="achievement-name">
-                    {a.alumni_name}
-                    {a.year && ` · ${a.year}`}
-                  </p>
-                  <h3>{a.title}</h3>
-                  <p class="small" style="margin:0 0 var(--s1)">{ACHIEVEMENT_CATEGORY_LABELS[a.category] ?? a.category}</p>
-                  {a.description && <p>{a.description}</p>}
+                  <p class="al-tag">{ACHIEVEMENT_CATEGORY_LABELS[a.category] ?? a.category}{a.year && ` · ${a.year}`}</p>
+                  <h3 class="al-ach-title">{a.title}</h3>
+                  <p class="al-ach-name">{a.alumni_name}</p>
+                  {a.description && <p class="al-body">{a.description}</p>}
                 </div>
-              </div>
+              </li>
             ))}
-          </div>
+          </ul>
         </div>
       </section>
-    )
-  }
+    )}
 
-  <!-- 15. Join / Register as Alumni -->
-  <section class="band band-alt" id="register">
-    <div class="wrap narrow reveal">
-      {copy.register.eyebrow && <p class="eyebrow">{copy.register.eyebrow}</p>}
-      <h2 class="h2">{copy.register.heading}</h2>
-      {copy.register.intro && <p class="lede" style="margin-top:var(--s3)">{copy.register.intro}</p>}
-      <form class="alumni-form" id="registerForm">
-        <h3 class="h3">Personal Information</h3>
-        <div class="form-grid cols-2" style="margin-top:var(--s4)">
-          <div class="form-field">
-            <label for="reg-name">Full Name *</label>
-            <input type="text" id="reg-name" name="full_name" required />
-          </div>
-          <div class="form-field">
-            <label for="reg-email">Email *</label>
-            <input type="email" id="reg-email" name="email" required />
-          </div>
-          <div class="form-field">
-            <label for="reg-phone">Phone Number</label>
-            <input type="tel" id="reg-phone" name="phone" />
-          </div>
+    <!-- ====================== 12. REGISTRATION ====================== -->
+    <section id="register" class="al-section al-register" aria-labelledby="al-register-h">
+      <div class="wrap al-wide al-form-layout">
+        <div class="al-form-aside" data-al-reveal>
+          {copy.register.eyebrow && <p class="al-eyebrow">{copy.register.eyebrow}</p>}
+          <h2 id="al-register-h" class="al-h2" tabindex="-1">{copy.register.heading}</h2>
+          {copy.register.intro && <p class="al-lede">{copy.register.intro}</p>}
+          <ul class="al-reasons" role="list">
+            <li><span set:html={icon('mail', 20)} />Alumni news, events and reunion invitations</li>
+            <li><span set:html={icon('people', 20)} />Reconnect with classmates and mentors</li>
+            <li><span set:html={icon('heart', 20)} />Ways to support today's Sherubtseans</li>
+          </ul>
+          <p class="al-note"><span set:html={icon('shield', 20)} />Your details go only to the Alumni Office. Contact details are never published.</p>
         </div>
 
-        <h3 class="h3" style="margin-top:var(--s6)">Academic Information</h3>
-        <div class="form-grid cols-2" style="margin-top:var(--s4)">
-          <div class="form-field">
-            <label for="reg-programme">Programme</label>
-            <input type="text" id="reg-programme" name="programme" />
-          </div>
-          <div class="form-field">
-            <label for="reg-year">Graduation Year</label>
-            <input type="number" id="reg-year" name="graduation_year" min="1968" max="2100" />
-          </div>
-          <div class="form-field span-2">
-            <label for="reg-period">Academic Period (e.g. 2005–2011)</label>
-            <input type="text" id="reg-period" name="academic_period" />
-          </div>
-        </div>
+        <form class="al-form" id="registerForm" novalidate data-al-reveal style="--d:120ms">
+          <fieldset class="al-fieldset">
+            <legend><span class="al-step">1</span> Personal information</legend>
+            <div class="al-grid">
+              <div class="al-field">
+                <label for="reg-name">Full Name <span class="al-req" aria-hidden="true">*</span></label>
+                <input type="text" id="reg-name" name="full_name" required autocomplete="name" />
+              </div>
+              <div class="al-field">
+                <label for="reg-email">Email <span class="al-req" aria-hidden="true">*</span></label>
+                <input type="email" id="reg-email" name="email" required autocomplete="email" />
+              </div>
+              <div class="al-field">
+                <label for="reg-phone">Phone Number</label>
+                <input type="tel" id="reg-phone" name="phone" autocomplete="tel" />
+              </div>
+            </div>
+          </fieldset>
 
-        <h3 class="h3" style="margin-top:var(--s6)">Professional Information</h3>
-        <div class="form-grid cols-2" style="margin-top:var(--s4)">
-          <div class="form-field">
-            <label for="reg-org">Current Organization</label>
-            <input type="text" id="reg-org" name="organization" />
-          </div>
-          <div class="form-field">
-            <label for="reg-designation">Current Designation</label>
-            <input type="text" id="reg-designation" name="designation" />
-          </div>
-          <div class="form-field">
-            <label for="reg-industry">Industry</label>
-            <input type="text" id="reg-industry" name="industry" />
-          </div>
-          <div class="form-field">
-            <label for="reg-country">Country</label>
-            <input type="text" id="reg-country" name="country" />
-          </div>
-          <div class="form-field">
-            <label for="reg-city">City</label>
-            <input type="text" id="reg-city" name="city" />
-          </div>
-        </div>
+          <fieldset class="al-fieldset">
+            <legend><span class="al-step">2</span> Academic information</legend>
+            <div class="al-grid">
+              <div class="al-field">
+                <label for="reg-programme">Programme</label>
+                <input type="text" id="reg-programme" name="programme" />
+              </div>
+              <div class="al-field">
+                <label for="reg-year">Graduation Year</label>
+                <input type="number" id="reg-year" name="graduation_year" min="1968" max="2100" inputmode="numeric" />
+              </div>
+              <div class="al-field al-span-2">
+                <label for="reg-period">Academic Period</label>
+                <input type="text" id="reg-period" name="academic_period" placeholder="e.g. 2005–2011" aria-describedby="reg-period-hint" />
+                <p class="al-hint" id="reg-period-hint">The years you studied at Sherubtse.</p>
+              </div>
+            </div>
+          </fieldset>
 
-        <h3 class="h3" style="margin-top:var(--s6)">Engagement Interests</h3>
-        <div class="form-checkboxes" style="margin-top:var(--s4)">
-          {
-            ['Mentorship', 'Guest Lectures', 'Career Support', 'Internship Opportunities', 'Alumni Events', 'Volunteering', 'Supporting Students'].map(
-              (interest) => (
-                <label class="form-checkbox-item">
+          <fieldset class="al-fieldset">
+            <legend><span class="al-step">3</span> Professional information</legend>
+            <div class="al-grid">
+              <div class="al-field">
+                <label for="reg-org">Current Organization</label>
+                <input type="text" id="reg-org" name="organization" autocomplete="organization" />
+              </div>
+              <div class="al-field">
+                <label for="reg-designation">Current Designation</label>
+                <input type="text" id="reg-designation" name="designation" autocomplete="organization-title" />
+              </div>
+              <div class="al-field">
+                <label for="reg-industry">Industry</label>
+                <input type="text" id="reg-industry" name="industry" list="al-industries" />
+                <datalist id="al-industries">{INDUSTRIES.map((i) => <option value={i} />)}</datalist>
+              </div>
+              <div class="al-field">
+                <label for="reg-country">Country</label>
+                <input type="text" id="reg-country" name="country" list="al-countries" autocomplete="country-name" />
+                <datalist id="al-countries">{COUNTRIES.map((c) => <option value={c} />)}</datalist>
+              </div>
+              <div class="al-field">
+                <label for="reg-city">City</label>
+                <input type="text" id="reg-city" name="city" autocomplete="address-level2" />
+              </div>
+            </div>
+          </fieldset>
+
+          <fieldset class="al-fieldset">
+            <legend><span class="al-step">4</span> Engagement interests <span class="al-optional">(choose any)</span></legend>
+            <div class="al-interests">
+              {INTERESTS.map((interest) => (
+                <label class="al-interest">
                   <input type="checkbox" name="interests" value={interest} />
                   <span>{interest}</span>
                 </label>
-              )
-            )
-          }
-        </div>
+              ))}
+            </div>
+          </fieldset>
 
-        <label class="form-consent" style="margin-top:var(--s5)">
-          <input type="checkbox" name="consent_directory" />
-          <span>{copy.texts.register_consent}</span>
-        </label>
+          <div class="al-hp" aria-hidden="true">
+            <label for="reg-hp">Leave this field empty</label>
+            <input type="text" id="reg-hp" name="hp_field" tabindex="-1" autocomplete="off" />
+          </div>
 
-        <div class="form-actions">
-          <button type="submit" class="btn btn-primary">{copy.register.button_label}</button>
-        </div>
-        <div class="form-status" id="registerFormStatus" role="status"></div>
-      </form>
-    </div>
-  </section>
+          <div class="al-consent-wrap">
+            <label class="al-consent">
+              <input type="checkbox" name="consent_directory" />
+              <span>{copy.texts.register_consent} <span class="al-optional">(optional)</span></span>
+            </label>
+          </div>
 
-  <!-- 16. Alumni Newsletter -->
-  {
-    settings.show_newsletter && (
-      <section class="band newsletter-band">
-        <div class="wrap narrow reveal">
-          {copy.newsletter.eyebrow && <p class="eyebrow" style="color:var(--gold)">{copy.newsletter.eyebrow}</p>}
-          <h2 class="h2">{copy.newsletter.heading}</h2>
-          {copy.newsletter.intro && <p style="color:#c9d0e4;margin-top:var(--s3)">{copy.newsletter.intro}</p>}
-          <form class="newsletter-form" id="newsletterForm">
-            <input type="email" name="email" placeholder={copy.texts.newsletter_placeholder} required aria-label="Email address" />
-            <button type="submit" class="btn btn-primary">{copy.newsletter.button_label}</button>
+          <div class="al-form-foot">
+            <p class="al-req-note"><span class="al-req" aria-hidden="true">*</span> Required</p>
+            <button type="submit" class="al-btn al-btn--gold">{copy.register.button_label || 'Register as Alumni'}</button>
+          </div>
+          <div class="al-status" role="status" aria-live="polite" data-form-status></div>
+        </form>
+      </div>
+    </section>
+
+    <!-- ====================== 13. NEWSLETTER ====================== -->
+    {settings.show_newsletter && (
+      <section id="newsletter" class="al-newsletter" aria-labelledby="al-news-h">
+        <div class="wrap al-wide al-newsletter-grid">
+          <div data-al-reveal>
+            {copy.newsletter.eyebrow && <p class="al-eyebrow al-eyebrow--light">{copy.newsletter.eyebrow}</p>}
+            <h2 id="al-news-h" class="al-h2 al-h2--light">{copy.newsletter.heading}</h2>
+            {copy.newsletter.intro && <p class="al-lede al-lede--light">{copy.newsletter.intro}</p>}
+          </div>
+          <form class="al-news-form" id="newsletterForm" novalidate data-al-reveal style="--d:120ms">
+            <div class="al-news-row">
+              <label for="news-email" class="al-sr">Email address</label>
+              <input type="email" id="news-email" name="email" required autocomplete="email" placeholder={copy.texts.newsletter_placeholder || 'Your email address'} />
+              <button type="submit" class="al-btn al-btn--gold">{copy.newsletter.button_label || 'Subscribe'}</button>
+            </div>
+            <div class="al-hp" aria-hidden="true">
+              <label for="news-hp">Leave this field empty</label>
+              <input type="text" id="news-hp" name="hp_field" tabindex="-1" autocomplete="off" />
+            </div>
+            <p class="al-news-privacy">We'll only use your email to send the alumni newsletter. Ask the Alumni Office to unsubscribe at any time.</p>
+            <div class="al-status al-status--light" role="status" aria-live="polite" data-form-status></div>
           </form>
-          <div class="form-status" id="newsletterFormStatus" role="status"></div>
         </div>
       </section>
-    )
-  }
+    )}
 
-  <!-- 17. Contact Alumni Office -->
-  <section class="band">
-    <div class="wrap narrow reveal">
-      {copy.contact.eyebrow && <p class="eyebrow">{copy.contact.eyebrow}</p>}
-      <h2 class="h2">{copy.contact.heading}</h2>
-      {copy.contact.intro && <p class="lede" style="margin-top:var(--s3)">{copy.contact.intro}</p>}
-      <div class="alumni-contact-grid">
-        {copy.contact_items.map((item) => (
-          <div class="alumni-contact-item">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" set:html={CONTACT_ICONS[item.kind] ?? CONTACT_ICONS.phone} />
-            {item.link ? <a href={item.link}>{item.label}</a> : <span>{item.label}</span>}
-          </div>
-        ))}
+    <!-- ====================== 14. CONTACT ====================== -->
+    <section id="contact" class="al-section al-contact" aria-labelledby="al-contact-h">
+      <div class="wrap al-wide al-contact-grid">
+        <div data-al-reveal>
+          {copy.contact.eyebrow && <p class="al-eyebrow">{copy.contact.eyebrow}</p>}
+          <h2 id="al-contact-h" class="al-h2">{copy.contact.heading}</h2>
+          {copy.contact.intro && <p class="al-lede">{copy.contact.intro}</p>}
+        </div>
+        <ul class="al-contact-list" role="list" data-al-reveal style="--d:120ms">
+          {copy.contact_items.map((item) => (
+            <li class="al-contact-item">
+              <span class="al-contact-icon" set:html={icon(CONTACT_ICON[item.kind] ?? 'phone', 22)} />
+              <span class="al-contact-kind">{item.kind === 'phone' ? 'Telephone' : item.kind === 'email' ? 'Email' : item.kind === 'address' ? 'Address' : 'Office'}</span>
+              {item.link ? <a href={item.link} class="al-contact-value">{item.label}</a> : <span class="al-contact-value">{item.label}</span>}
+            </li>
+          ))}
+        </ul>
       </div>
-    </div>
-  </section>
+    </section>
 
-  {
-    gallery.length > 0 && (
-      <div class="alumni-lightbox" id="alumniLightbox" hidden role="dialog" aria-modal="true" aria-label="Photo viewer">
-        <button type="button" class="alumni-lightbox-close" id="alumniLightboxClose" aria-label="Close photo viewer">
-          ✕
-        </button>
-        <img src="" alt="" id="alumniLightboxImage" />
-      </div>
-    )
-  }
+    <p class="al-sr" aria-live="polite" data-al-announce></p>
+  </div>
 </Layout>
 
-<style>
-  .breadcrumb-on-dark,
-  .breadcrumb-on-dark a {
-    color: #c9d0e4;
-  }
-  .breadcrumb-on-dark .current {
-    color: #fff;
-  }
-</style>
-
 <script is:inline define:vars={{ strapiUrl: import.meta.env.PUBLIC_STRAPI_URL || 'http://localhost:1337', texts: copy.texts }}>
-  // ---- Events tabs ----
-  const upcomingTab = document.getElementById('upcomingEventsTab');
-  const pastTab = document.getElementById('pastEventsTab');
-  const upcomingPanel = document.getElementById('upcoming-events-panel');
-  const pastPanel = document.getElementById('past-events-panel');
-  if (upcomingTab && pastTab && upcomingPanel && pastPanel) {
-    const activate = (tab, panel, otherTab, otherPanel) => {
-      tab.setAttribute('aria-selected', 'true');
-      otherTab.setAttribute('aria-selected', 'false');
-      panel.hidden = false;
-      otherPanel.hidden = true;
+  (() => {
+    const root = document.querySelector('.al');
+    if (!root) return;
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const announcer = root.querySelector('[data-al-announce]');
+    const announce = (msg) => { if (announcer) { announcer.textContent = ''; requestAnimationFrame(() => (announcer.textContent = msg)); } };
+
+    // ---- Scroll reveals (content is only hidden once JS has opted in) ----
+    const revealEls = Array.from(root.querySelectorAll('[data-al-reveal]'));
+    if (reduceMotion || !('IntersectionObserver' in window)) {
+      revealEls.forEach((el) => el.classList.add('is-in'));
+    } else {
+      root.classList.add('al-anim');
+      const io = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          entry.target.classList.add('is-in');
+          io.unobserve(entry.target);
+        });
+      }, { threshold: 0.12, rootMargin: '0px 0px -50px 0px' });
+      revealEls.forEach((el) => io.observe(el));
+    }
+
+    // ---- Count-up for real, nonzero statistics only ----
+    const counters = Array.from(root.querySelectorAll('[data-count]')).filter((el) => Number(el.dataset.count) > 0);
+    if (!reduceMotion && counters.length && 'IntersectionObserver' in window) {
+      const run = (el) => {
+        const target = Number(el.dataset.count);
+        const start = performance.now();
+        const tick = (now) => {
+          const p = Math.min(1, (now - start) / 1200);
+          el.textContent = Math.round(target * (1 - Math.pow(1 - p, 3))).toLocaleString('en-GB');
+          if (p < 1) requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+      };
+      const cio = new IntersectionObserver((entries) => {
+        entries.forEach((e) => { if (e.isIntersecting) { run(e.target); cio.unobserve(e.target); } });
+      }, { threshold: 0.6 });
+      counters.forEach((el) => cio.observe(el));
+    }
+
+    // ---- Gentle parallax on decorative layers ----
+    const layers = Array.from(root.querySelectorAll('[data-parallax]'));
+    if (!reduceMotion && layers.length) {
+      let ticking = false;
+      const update = () => {
+        ticking = false;
+        layers.forEach((el) => {
+          const section = el.closest('section');
+          const rect = section.getBoundingClientRect();
+          if (rect.bottom < 0 || rect.top > innerHeight) return;
+          el.style.transform = `translate3d(0, ${(Math.max(0, -rect.top) * Number(el.dataset.parallax)).toFixed(1)}px, 0)`;
+        });
+      };
+      addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } }, { passive: true });
+    }
+
+    // ---- In-page jumps: smooth scroll, then move focus to the target heading ----
+    const registerForm = document.getElementById('registerForm');
+    root.querySelectorAll('[data-al-jump]').forEach((link) => {
+      link.addEventListener('click', (e) => {
+        const id = link.getAttribute('href').slice(1);
+        const target = document.getElementById(id);
+        if (!target) return;
+        e.preventDefault();
+        const interest = link.dataset.interest;
+        if (interest && registerForm) {
+          const box = registerForm.querySelector(`input[name="interests"][value="${CSS.escape(interest)}"]`);
+          if (box && !box.checked) { box.checked = true; announce(`${interest} selected in the registration form.`); }
+        }
+        target.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
+        const focusTarget = target.querySelector('h2[tabindex="-1"]') || target;
+        if (!focusTarget.hasAttribute('tabindex')) focusTarget.setAttribute('tabindex', '-1');
+        setTimeout(() => focusTarget.focus({ preventScroll: true }), reduceMotion ? 0 : 450);
+        history.replaceState(null, '', `#${id}`);
+      });
+    });
+
+    // ---- Story filters + load more ----
+    const storyFilters = root.querySelector('[data-story-filters]');
+    const storyCards = Array.from(root.querySelectorAll('#stories .al-story'));
+    const moreBtn = root.querySelector('[data-story-more]');
+    const storyEmpty = root.querySelector('[data-story-empty]');
+    let storyFilter = 'all';
+    let showAll = false;
+    const applyStories = () => {
+      let visible = 0;
+      storyCards.forEach((card) => {
+        const match = storyFilter === 'all' || card.dataset.category === storyFilter;
+        const hiddenByMore = !showAll && storyFilter === 'all' && card.classList.contains('is-hidden-more');
+        card.hidden = !match || hiddenByMore;
+        if (!card.hidden) { visible++; card.classList.add('is-in'); }
+      });
+      if (storyEmpty) storyEmpty.hidden = visible > 0;
+      if (moreBtn) moreBtn.hidden = showAll || storyFilter !== 'all';
     };
-    upcomingTab.addEventListener('click', () => activate(upcomingTab, upcomingPanel, pastTab, pastPanel));
-    pastTab.addEventListener('click', () => activate(pastTab, pastPanel, upcomingTab, upcomingPanel));
-  }
-
-  // ---- Gallery filter + lightbox ----
-  const galleryFilters = document.getElementById('alumniGalleryFilters');
-  const galleryGrid = document.getElementById('alumniGalleryGrid');
-  if (galleryFilters && galleryGrid) {
-    const buttons = Array.from(galleryFilters.querySelectorAll('button'));
-    const items = Array.from(galleryGrid.querySelectorAll('[data-lightbox-trigger]'));
-    galleryFilters.addEventListener('click', (e) => {
-      const btn = e.target.closest('button');
+    if (storyCards.length) applyStories();
+    storyFilters?.addEventListener('click', (e) => {
+      const btn = e.target.closest('button[data-filter]');
       if (!btn) return;
-      buttons.forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
-      const filter = btn.dataset.filter;
-      items.forEach((item) => {
-        const show = filter === 'all' || item.dataset.category === filter;
-        item.style.display = show ? '' : 'none';
+      storyFilter = btn.dataset.filter;
+      storyFilters.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
+      applyStories();
+    });
+    moreBtn?.addEventListener('click', () => { showAll = true; applyStories(); announce('All stories shown.'); });
+
+    // ---- Event tabs (arrow keys move between tabs) ----
+    const tabs = Array.from(root.querySelectorAll('[role="tab"]'));
+    const selectTab = (tab, focus) => {
+      tabs.forEach((t) => {
+        const on = t === tab;
+        t.setAttribute('aria-selected', String(on));
+        t.tabIndex = on ? 0 : -1;
+        const panel = document.getElementById(t.getAttribute('aria-controls'));
+        if (panel) { panel.hidden = !on; if (on) panel.classList.add('is-switching'); }
+      });
+      if (focus) tab.focus();
+      requestAnimationFrame(() => requestAnimationFrame(() => root.querySelectorAll('.al-tabpanel').forEach((p) => p.classList.remove('is-switching'))));
+    };
+    tabs.forEach((tab, i) => {
+      tab.addEventListener('click', () => selectTab(tab, false));
+      tab.addEventListener('keydown', (e) => {
+        if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+        e.preventDefault();
+        selectTab(tabs[(i + (e.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length], true);
       });
     });
-  }
 
-  const lightbox = document.getElementById('alumniLightbox');
-  if (lightbox) {
-    const lbImage = document.getElementById('alumniLightboxImage');
-    const closeBtn = document.getElementById('alumniLightboxClose');
-    const triggers = Array.from(document.querySelectorAll('[data-lightbox-trigger]'));
-    let lastFocused = null;
-    function open(src) {
-      lastFocused = document.activeElement;
-      lbImage.src = src;
-      lightbox.hidden = false;
-      closeBtn.focus();
-      document.addEventListener('keydown', onKeydown);
-    }
-    function close() {
-      lightbox.hidden = true;
-      document.removeEventListener('keydown', onKeydown);
-      lastFocused?.focus();
-    }
-    function onKeydown(e) {
-      if (e.key === 'Escape') close();
-    }
-    triggers.forEach((t) => t.addEventListener('click', () => open(t.dataset.src)));
-    closeBtn.addEventListener('click', close);
-    lightbox.addEventListener('click', (e) => {
-      if (e.target === lightbox) close();
+    // ---- Gallery filter + lightbox ----
+    const galleryFilters = root.querySelector('[data-gallery-filters]');
+    galleryFilters?.addEventListener('click', (e) => {
+      const btn = e.target.closest('button[data-filter]');
+      if (!btn) return;
+      galleryFilters.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
+      root.querySelectorAll('.al-gallery-item').forEach((item) => {
+        item.hidden = !(btn.dataset.filter === 'all' || item.dataset.category === btn.dataset.filter);
+      });
     });
-  }
+    const lightbox = document.getElementById('alLightbox');
+    if (lightbox) {
+      const img = lightbox.querySelector('img');
+      const close = lightbox.querySelector('.al-lightbox-close');
+      let last = null;
+      const onKey = (e) => { if (e.key === 'Escape') hide(); };
+      const hide = () => { lightbox.hidden = true; document.removeEventListener('keydown', onKey); last?.focus(); };
+      root.querySelectorAll('[data-lightbox]').forEach((btn) => btn.addEventListener('click', () => {
+        last = btn; img.src = btn.dataset.lightbox; img.alt = btn.querySelector('img')?.alt || '';
+        lightbox.hidden = false; close.focus(); document.addEventListener('keydown', onKey);
+      }));
+      close.addEventListener('click', hide);
+      lightbox.addEventListener('click', (e) => { if (e.target === lightbox) hide(); });
+    }
 
-  // ---- Forms: POST straight to Strapi's narrow public create-only
-  // endpoints (Public role has create-only on these three, nothing
-  // else — see cms/src/index.ts). Every submission lands as an
-  // unpublished draft server-side regardless of what's sent here. ----
-  function setStatus(el, kind, message) {
-    el.className = `form-status is-visible ${kind}`;
-    el.textContent = message;
-  }
+    // ---- Forms ----
+    const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+    const fieldLabel = (input) => (input.labels?.[0]?.textContent || input.name).replace('*', '').trim();
 
-  async function postToStrapi(path, data) {
-    const res = await fetch(`${strapiUrl}/api/${path}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ data }),
-    });
-    if (!res.ok) {
+    function setError(input, message) {
+      const field = input.closest('.al-field, .al-consent-wrap, .al-news-row');
+      let err = field?.querySelector('.al-error');
+      if (message) {
+        if (!err && field) {
+          err = document.createElement('p');
+          err.className = 'al-error';
+          err.id = `${input.id || input.name}-error`;
+          field.appendChild(err);
+        }
+        if (err) err.textContent = message;
+        input.setAttribute('aria-invalid', 'true');
+        const ids = new Set((input.getAttribute('aria-describedby') || '').split(' ').filter(Boolean));
+        if (err) ids.add(err.id);
+        input.setAttribute('aria-describedby', [...ids].join(' '));
+      } else {
+        input.removeAttribute('aria-invalid');
+        if (err) {
+          const ids = (input.getAttribute('aria-describedby') || '').split(' ').filter((id) => id && id !== err.id);
+          ids.length ? input.setAttribute('aria-describedby', ids.join(' ')) : input.removeAttribute('aria-describedby');
+          err.remove();
+        }
+      }
+    }
+
+    function check(input) {
+      if (input.name === 'hp_field') return true;
+      const value = input.type === 'checkbox' ? input.checked : input.value.trim();
+      let message = '';
+      if (input.required && !value) {
+        message = input.type === 'checkbox' ? 'Please tick this box to continue.' : `Please enter your ${fieldLabel(input).toLowerCase()}.`;
+      } else if (input.type === 'email' && value && !EMAIL.test(value)) {
+        message = 'Please enter a valid email address, e.g. name@example.com.';
+      } else if (input.type === 'number' && value) {
+        const n = Number(value);
+        if (!Number.isInteger(n) || n < Number(input.min) || n > Number(input.max)) message = `Please enter a year between ${input.min} and ${input.max}.`;
+      }
+      setError(input, message);
+      return !message;
+    }
+
+    function validate(form) {
+      const inputs = Array.from(form.querySelectorAll('input, textarea, select')).filter((el) => el.name !== 'interests');
+      const invalid = inputs.filter((el) => !check(el));
+      if (invalid.length) invalid[0].focus();
+      return invalid.length === 0;
+    }
+
+    function setStatus(form, kind, message) {
+      const el = form.querySelector('[data-form-status]');
+      el.className = `al-status is-${kind}${form.id === 'newsletterForm' ? ' al-status--light' : ''}`;
+      el.textContent = message;
+    }
+
+    async function post(path, data) {
+      const res = await fetch(`${strapiUrl}/api/${path}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ data }),
+      });
       const body = await res.json().catch(() => null);
-      throw new Error(body?.error?.message || `Request failed (${res.status})`);
+      if (!res.ok) {
+        const err = new Error(body?.error?.message || `Request failed (${res.status})`);
+        err.status = res.status;
+        throw err;
+      }
+      return body;
     }
-    return res.json();
-  }
 
-  const storyForm = document.getElementById('storyForm');
-  storyForm?.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const status = document.getElementById('storyFormStatus');
-    const fd = new FormData(storyForm);
-    setStatus(status, 'loading', 'Submitting your story…');
-    try {
-      await postToStrapi('alumnis?status=draft', {
-        full_name: fd.get('full_name'),
-        email: fd.get('email'),
-        graduation_year: fd.get('graduation_year') ? Number(fd.get('graduation_year')) : null,
-        programme: fd.get('programme') || null,
-        current_role: fd.get('current_role') || null,
-        organization: fd.get('organization') || null,
-        article_title: fd.get('article_title'),
-        story: fd.get('story'),
-        category: fd.get('category') || null,
-        consent: fd.get('consent') === 'on',
+    function wire(form, { path, build, success, onError }) {
+      if (!form) return;
+      form.querySelectorAll('input, textarea, select').forEach((el) => {
+        el.addEventListener('blur', () => { if (el.getAttribute('aria-invalid') === 'true' || el.value) check(el); });
+        el.addEventListener('change', () => { if (el.getAttribute('aria-invalid') === 'true') check(el); });
       });
-      setStatus(status, 'success', texts.story_success);
-      storyForm.reset();
-    } catch (err) {
-      setStatus(status, 'error', `${texts.error} (${err.message})`);
-    }
-  });
-
-  const registerForm = document.getElementById('registerForm');
-  registerForm?.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const status = document.getElementById('registerFormStatus');
-    const fd = new FormData(registerForm);
-    const interests = fd.getAll('interests').join(', ');
-    setStatus(status, 'loading', 'Submitting your registration…');
-    try {
-      await postToStrapi('alumni-registrations', {
-        full_name: fd.get('full_name'),
-        email: fd.get('email'),
-        phone: fd.get('phone') || null,
-        programme: fd.get('programme') || null,
-        graduation_year: fd.get('graduation_year') ? Number(fd.get('graduation_year')) : null,
-        academic_period: fd.get('academic_period') || null,
-        organization: fd.get('organization') || null,
-        designation: fd.get('designation') || null,
-        industry: fd.get('industry') || null,
-        country: fd.get('country') || null,
-        city: fd.get('city') || null,
-        interests: interests || null,
-        consent_directory: fd.get('consent_directory') === 'on',
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (form.dataset.busy === 'true') return;
+        if (!validate(form)) { setStatus(form, 'error', 'Please fix the highlighted fields and try again.'); return; }
+        const button = form.querySelector('button[type="submit"]');
+        form.dataset.busy = 'true';
+        form.setAttribute('aria-busy', 'true');
+        button.disabled = true;
+        button.classList.add('is-loading');
+        setStatus(form, 'loading', 'Sending…');
+        try {
+          await post(path, build(new FormData(form)));
+          setStatus(form, 'success', success);
+          form.reset();
+        } catch (err) {
+          const out = onError ? onError(err) : `${texts.error} (${err.message})`;
+          if (typeof out === 'string') setStatus(form, 'error', out);
+          else setStatus(form, out.kind, out.message);
+        } finally {
+          form.dataset.busy = 'false';
+          form.removeAttribute('aria-busy');
+          button.disabled = false;
+          button.classList.remove('is-loading');
+        }
       });
-      setStatus(status, 'success', texts.register_success);
-      registerForm.reset();
-    } catch (err) {
-      setStatus(status, 'error', `${texts.error} (${err.message})`);
     }
-  });
 
-  const newsletterForm = document.getElementById('newsletterForm');
-  newsletterForm?.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const status = document.getElementById('newsletterFormStatus');
-    const fd = new FormData(newsletterForm);
-    setStatus(status, 'loading', 'Subscribing…');
-    try {
-      await postToStrapi('newsletter-subscribers', { email: fd.get('email'), consent: true });
-      setStatus(status, 'success', texts.newsletter_success);
-      newsletterForm.reset();
-    } catch (err) {
-      const already = /already|unique/i.test(err.message);
-      setStatus(status, already ? 'success' : 'error', already ? texts.newsletter_already : `${texts.error} (${err.message})`);
-    }
-  });
+    const val = (fd, k) => { const v = (fd.get(k) || '').toString().trim(); return v || null; };
+    const num = (fd, k) => (fd.get(k) ? Number(fd.get(k)) : null);
+    const rateMessage = (err) => (err.status === 429 ? err.message : null);
+
+    wire(document.getElementById('storyForm'), {
+      path: 'alumnis?status=draft',
+      success: texts.story_success,
+      build: (fd) => ({
+        full_name: val(fd, 'full_name'), email: val(fd, 'email'), graduation_year: num(fd, 'graduation_year'),
+        programme: val(fd, 'programme'), current_role: val(fd, 'current_role'), organization: val(fd, 'organization'),
+        article_title: val(fd, 'article_title'), story: val(fd, 'story'), category: val(fd, 'category'),
+        consent: fd.get('consent') === 'on', hp_field: fd.get('hp_field') || '',
+      }),
+      onError: (err) => rateMessage(err) || `${texts.error} (${err.message})`,
+    });
+
+    wire(registerForm, {
+      path: 'alumni-registrations',
+      success: texts.register_success,
+      build: (fd) => ({
+        full_name: val(fd, 'full_name'), email: val(fd, 'email'), phone: val(fd, 'phone'),
+        programme: val(fd, 'programme'), graduation_year: num(fd, 'graduation_year'), academic_period: val(fd, 'academic_period'),
+        organization: val(fd, 'organization'), designation: val(fd, 'designation'), industry: val(fd, 'industry'),
+        country: val(fd, 'country'), city: val(fd, 'city'), interests: fd.getAll('interests').join(', ') || null,
+        consent_directory: fd.get('consent_directory') === 'on', hp_field: fd.get('hp_field') || '',
+      }),
+      onError: (err) =>
+        /already_registered/.test(err.message)
+          ? 'This email address is already registered with the Alumni Office. If your details have changed, please contact the office directly.'
+          : rateMessage(err) || `${texts.error} (${err.message})`,
+    });
+
+    wire(document.getElementById('newsletterForm'), {
+      path: 'newsletter-subscribers',
+      success: texts.newsletter_success,
+      build: (fd) => ({ email: val(fd, 'email'), consent: true, hp_field: fd.get('hp_field') || '' }),
+      onError: (err) =>
+        /unique/i.test(err.message)
+          ? { kind: 'success', message: texts.newsletter_already }
+          : rateMessage(err) || `${texts.error} (${err.message})`,
+    });
+  })();
 </script>

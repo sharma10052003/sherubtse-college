@@ -1,0 +1,33 @@
+{
+  "kind": "singleType",
+  "collectionName": "vision_mission_page",
+  "info": {
+    "singularName": "vision-mission-page",
+    "pluralName": "vision-mission-pages",
+    "displayName": "About – Vision, Mission & Core Values",
+    "description": "The official vision, mission statements and core values. Keep the official wording exactly as approved."
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "attributes": {
+    "hero_eyebrow": { "type": "string", "default": "WHO WE ARE" },
+    "hero_heading": { "type": "string", "required": true, "default": "Vision, Mission & Core Values" },
+    "hero_intro": { "type": "text" },
+    "hero_image": { "type": "media", "multiple": false, "allowedTypes": ["images"] },
+    "vision_statement": { "type": "text", "required": true },
+    "vision_highlights": { "type": "text" },
+    "missions": {
+      "type": "component",
+      "repeatable": true,
+      "component": "about.mission-item"
+    },
+    "core_values": {
+      "type": "component",
+      "repeatable": true,
+      "component": "about.core-value"
+    },
+    "closing_note": { "type": "text" },
+    "seo_description": { "type": "string" }
+  }
+}

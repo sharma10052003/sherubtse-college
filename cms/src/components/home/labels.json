@@ -1,0 +1,68 @@
+{
+  "collectionName": "components_home_labels",
+  "info": {
+    "displayName": "Homepage Labels",
+    "icon": "feather",
+    "description": "Small fixed words used across the homepage."
+  },
+  "options": {},
+  "attributes": {
+    "read_more": {
+      "type": "string"
+    },
+    "view_photos": {
+      "type": "string"
+    },
+    "photos_count": {
+      "type": "string"
+    },
+    "pinned": {
+      "type": "string"
+    },
+    "featured": {
+      "type": "string"
+    },
+    "deadline": {
+      "type": "string"
+    },
+    "closes_soon": {
+      "type": "string"
+    },
+    "closed": {
+      "type": "string"
+    },
+    "today": {
+      "type": "string"
+    },
+    "register": {
+      "type": "string"
+    },
+    "all_day": {
+      "type": "string"
+    },
+    "pause_video": {
+      "type": "string"
+    },
+    "play_video": {
+      "type": "string"
+    },
+    "open_programme": {
+      "type": "string"
+    },
+    "download": {
+      "type": "string"
+    },
+    "visit": {
+      "type": "string"
+    },
+    "source": {
+      "type": "string"
+    },
+    "ticker_label": {
+      "type": "string"
+    },
+    "swipe_hint": {
+      "type": "string"
+    }
+  }
+}

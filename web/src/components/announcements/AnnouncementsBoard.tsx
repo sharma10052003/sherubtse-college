@@ -78,7 +78,7 @@ function AnnouncementCard({ item }: { item: AnnouncementCardData }) {
       </div>
 
       <h3 className="an-card-title">
-        <a href={`/news-notices/announcements/${item.slug}`}>{item.title}</a>
+        <a href={`/news-notices/recruitment/${item.slug}`}>{item.title}</a>
       </h3>
       {item.position_name && <p className="an-position">{item.position_name}</p>}
 
@@ -96,7 +96,7 @@ function AnnouncementCard({ item }: { item: AnnouncementCardData }) {
             </span>
           )}
         </div>
-        <a href={`/news-notices/announcements/${item.slug}`} className="btn btn-secondary an-view">
+        <a href={`/news-notices/recruitment/${item.slug}`} className="btn btn-secondary an-view">
           View <span className="an-view-arrow" aria-hidden="true">→</span>
         </a>
       </div>
@@ -117,7 +117,7 @@ function SpotlightCard({ item }: { item: AnnouncementCardData }) {
           <span className={`an-status an-status-${item.status}`}>{item.status === 'open' ? 'Open' : 'Closed'}</span>
         </div>
         <h2 className="an-spotlight-title">
-          <a href={`/news-notices/announcements/${item.slug}`}>{item.title}</a>
+          <a href={`/news-notices/recruitment/${item.slug}`}>{item.title}</a>
         </h2>
         {item.position_name && <p className="an-spotlight-position">{item.position_name}</p>}
         <p className="an-spotlight-desc">{excerpt(item.description, 200)}</p>
@@ -127,7 +127,7 @@ function SpotlightCard({ item }: { item: AnnouncementCardData }) {
           </p>
           <DeadlinePill item={item} />
         </div>
-        <a href={`/news-notices/announcements/${item.slug}`} className="btn btn-primary an-view">
+        <a href={`/news-notices/recruitment/${item.slug}`} className="btn btn-primary an-view">
           View Details <span className="an-view-arrow" aria-hidden="true">→</span>
         </a>
       </div>
@@ -228,8 +228,8 @@ export default function AnnouncementsBoard({ items, typeOptions }: Props) {
             type="search"
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Search announcements"
-            aria-label="Search announcements"
+            placeholder="Search vacancies, positions or stages"
+            aria-label="Search recruitment postings"
           />
         </div>
         <select value={sort} onChange={(e) => setSort(e.target.value as SortKey)} aria-label="Sort by">
@@ -254,12 +254,12 @@ export default function AnnouncementsBoard({ items, typeOptions }: Props) {
       </div>
 
       <p className="an-count">
-        {filtered.length} announcement{filtered.length === 1 ? '' : 's'}
+        {filtered.length} posting{filtered.length === 1 ? '' : 's'}
         {showSpotlight ? ' below the latest posting' : ' found'}
       </p>
 
       {filtered.length === 0 ? (
-        <p className="an-empty">No announcements match these filters.</p>
+        <p className="an-empty">No recruitment postings match these filters.</p>
       ) : (
         <div className="an-grid">
           {filtered.map((item) => (

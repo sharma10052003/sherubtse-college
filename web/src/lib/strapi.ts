@@ -60,3 +60,34 @@ export function mediaUrl(media: { url?: string } | null | undefined): string | n
   if (!media?.url) return null;
   return media.url.startsWith('http') ? media.url : `${STRAPI_URL}${media.url}`;
 }
+
+export interface ResponsiveImage {
+  src: string;
+  srcset: string | null;
+  width: number | null;
+  height: number | null;
+  alt: string;
+}
+
+/**
+ * An image with a srcset built from the sizes Strapi generates on upload
+ * (small 500px, medium 750px, large 1000px) plus the original, so browsers
+ * download only the size they need. Alt text: the given text, else the
+ * Media Library's alternative text.
+ */
+export function responsiveImage(media: any, alt?: string | null): ResponsiveImage | null {
+  const src = mediaUrl(media);
+  if (!src || (media?.mime && !String(media.mime).startsWith('image/'))) return null;
+  const sizes = Object.values<any>(media.formats ?? {})
+    .filter((f) => f?.url && f.width && !/^thumbnail/.test(f.name ?? ''))
+    .map((f) => ({ url: mediaUrl(f)!, width: f.width as number }));
+  if (media.width) sizes.push({ url: src, width: media.width });
+  const unique = [...new Map(sizes.sort((a, b) => a.width - b.width).map((s) => [s.width, s])).values()];
+  return {
+    src: unique.find((s) => s.width >= 1000)?.url ?? src,
+    srcset: unique.length > 1 ? unique.map((s) => `${s.url} ${s.width}w`).join(', ') : null,
+    width: media.width ?? null,
+    height: media.height ?? null,
+    alt: (alt ?? media.alternativeText ?? '').trim(),
+  };
+}

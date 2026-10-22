@@ -1,0 +1,89 @@
+{
+  "kind": "singleType",
+  "collectionName": "admission_international_applicants",
+  "info": {
+    "singularName": "admission-international-applicants",
+    "pluralName": "admission-international-applicantss",
+    "displayName": "Admission – International Applicants",
+    "description": "Everything on the international applicants page (/admissions/international), in the same order as its tabs."
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "card_title": {
+      "type": "string",
+      "required": true
+    },
+    "card_description": {
+      "type": "text"
+    },
+    "intro": {
+      "type": "text"
+    },
+    "key_facts": {
+      "type": "component",
+      "repeatable": true,
+      "component": "admission-guide.fact"
+    },
+    "apply_intro": {
+      "type": "richtext"
+    },
+    "application_routes": {
+      "type": "component",
+      "repeatable": true,
+      "component": "admission-guide.route"
+    },
+    "required_documents": {
+      "type": "text"
+    },
+    "requirements_intro": {
+      "type": "richtext"
+    },
+    "requirements": {
+      "type": "component",
+      "repeatable": true,
+      "component": "admission-guide.requirement"
+    },
+    "fees_intro": {
+      "type": "richtext"
+    },
+    "fees": {
+      "type": "component",
+      "repeatable": true,
+      "component": "admission-guide.fee"
+    },
+    "fees_note": {
+      "type": "richtext"
+    },
+    "scholarships_intro": {
+      "type": "richtext"
+    },
+    "scholarships": {
+      "type": "component",
+      "repeatable": true,
+      "component": "admission-guide.scholarship"
+    },
+    "faqs": {
+      "type": "component",
+      "repeatable": true,
+      "component": "admission-guide.faq"
+    },
+    "more_info": {
+      "type": "component",
+      "repeatable": true,
+      "component": "admission-guide.info"
+    },
+    "contacts": {
+      "type": "component",
+      "repeatable": true,
+      "component": "admission-guide.contact"
+    },
+    "links": {
+      "type": "component",
+      "repeatable": true,
+      "component": "shared.link-item"
+    }
+  }
+}

@@ -10,12 +10,13 @@
     "draftAndPublish": false
   },
   "attributes": {
-    "full_name": { "type": "string", "required": true },
-    "email": { "type": "string", "required": true },
-    "phone": { "type": "string" },
-    "subject": { "type": "string", "required": true },
-    "department": { "type": "string" },
-    "message": { "type": "text", "required": true },
+    "full_name": { "type": "string", "required": true, "maxLength": 120 },
+    "email": { "type": "email", "required": true },
+    "phone": { "type": "string", "maxLength": 40 },
+    "subject": { "type": "string", "required": true, "maxLength": 200 },
+    "department": { "type": "string", "maxLength": 120 },
+    "office_email": { "type": "email" },
+    "message": { "type": "text", "required": true, "maxLength": 5000 },
     "reviewed": { "type": "boolean", "default": false }
   }
 }

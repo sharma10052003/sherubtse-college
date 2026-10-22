@@ -1,0 +1,41 @@
+{
+  "collectionName": "components_facilities_section_links",
+  "info": {
+    "displayName": "Section – Useful Links",
+    "icon": "layout",
+    "description": "Cards from About – Campus Facilities: Quick Links."
+  },
+  "options": {},
+  "attributes": {
+    "heading": {
+      "type": "string"
+    },
+    "intro": {
+      "type": "text"
+    },
+    "anchor": {
+      "type": "string"
+    },
+    "background": {
+      "type": "enumeration",
+      "enum": [
+        "white",
+        "soft",
+        "navy"
+      ],
+      "default": "white"
+    },
+    "is_visible": {
+      "type": "boolean",
+      "default": true
+    },
+    "columns": {
+      "type": "enumeration",
+      "enum": [
+        "three",
+        "four"
+      ],
+      "default": "four"
+    }
+  }
+}

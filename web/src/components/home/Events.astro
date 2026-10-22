@@ -1,0 +1,40 @@
+---
+// Upcoming Events — sorted by start date (Bhutan time). An event leaves the
+// list once it has ended, also between builds (HomeRuntime).
+import type { HomeEvent, HomeLabels } from '../../lib/content/homepage';
+import { fmtDate, fmtTime } from '../../lib/content/homepage';
+
+interface Props { items: HomeEvent[]; labels: HomeLabels; emptyText: string | null }
+const { items, labels, emptyText } = Astro.props;
+const pinIcon = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="9" r="2.5"/></svg>';
+const clock = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
+const sameDay = (a: string, b: string | null) => !b || fmtDate(a) === fmtDate(b);
+---
+<div data-expiring>
+  <ul class="hm-events">
+    {items.map((e) => (
+      <li class:list={['hm-event', { 'hm-event--featured': e.featured }]} data-expires={e.expires} data-reveal>
+        <time class="hm-event-date" datetime={e.starts_at}>
+          <span class="hm-event-day">{fmtDate(e.starts_at, { day: 'numeric' })}</span>
+          <span class="hm-event-month">{fmtDate(e.starts_at, { month: 'short' })}</span>
+          <span class="hm-event-weekday">{fmtDate(e.starts_at, { weekday: 'short' })}</span>
+        </time>
+        <div class="hm-event-body">
+          {(e.category || e.featured) && (
+            <p class="hm-notice-tags">
+              {e.category && <span class="hm-tag">{e.category}</span>}
+              {e.featured && <span class="hm-tag hm-tag--gold">{labels.featured}</span>}
+            </p>
+          )}
+          <h3 class="hm-notice-title"><a href={e.href}>{e.title}</a></h3>
+          <p class="hm-event-meta">
+            <span><Fragment set:html={clock} />{sameDay(e.starts_at, e.ends_at) ? `${fmtTime(e.starts_at)}${e.ends_at ? ` – ${fmtTime(e.ends_at)}` : ''}` : `${fmtDate(e.starts_at, { day: 'numeric', month: 'short' })} – ${fmtDate(e.ends_at!, { day: 'numeric', month: 'short' })}`}</span>
+            {e.venue && <span><Fragment set:html={pinIcon} />{e.venue}</span>}
+          </p>
+          {e.registration && <a class="hm-event-reg" href={e.registration} target={/^https?:/i.test(e.registration) ? '_blank' : undefined} rel="noopener">{labels.register}<span class="hm-sr">: {e.title}</span></a>}
+        </div>
+      </li>
+    ))}
+  </ul>
+  {emptyText && <p class="hm-empty" data-empty hidden={items.length > 0}>{emptyText}</p>}
+</div>

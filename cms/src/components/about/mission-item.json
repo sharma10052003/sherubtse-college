@@ -1,0 +1,19 @@
+{
+  "collectionName": "components_about_mission_items",
+  "info": {
+    "displayName": "Mission Statement",
+    "icon": "rocket",
+    "description": "One official mission statement, with a short display title."
+  },
+  "options": {},
+  "attributes": {
+    "title": { "type": "string", "required": true },
+    "statement": { "type": "text", "required": true },
+    "theme": {
+      "type": "enumeration",
+      "enum": ["learning", "research"],
+      "default": "learning",
+      "required": true
+    }
+  }
+}

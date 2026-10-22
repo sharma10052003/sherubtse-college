@@ -1,0 +1,61 @@
+{
+  "collectionName": "components_home_events",
+  "info": {
+    "displayName": "Upcoming Events",
+    "icon": "calendar",
+    "description": "Events from News & Notices – Events. Past events drop off automatically."
+  },
+  "options": {},
+  "attributes": {
+    "heading": {
+      "type": "string"
+    },
+    "intro": {
+      "type": "text"
+    },
+    "is_visible": {
+      "type": "boolean",
+      "default": true
+    },
+    "background": {
+      "type": "enumeration",
+      "enum": [
+        "white",
+        "soft",
+        "navy"
+      ],
+      "default": "white"
+    },
+    "width": {
+      "type": "enumeration",
+      "enum": [
+        "full",
+        "half"
+      ],
+      "default": "full"
+    },
+    "anchor": {
+      "type": "string",
+      "regex": "^[a-z0-9-]*$"
+    },
+    "limit": {
+      "type": "integer",
+      "default": 4,
+      "min": 1,
+      "max": 12
+    },
+    "featured_first": {
+      "type": "boolean",
+      "default": false
+    },
+    "empty_text": {
+      "type": "string"
+    },
+    "button_label": {
+      "type": "string"
+    },
+    "button_url": {
+      "type": "string"
+    }
+  }
+}

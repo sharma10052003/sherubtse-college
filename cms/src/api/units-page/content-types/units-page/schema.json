@@ -1,0 +1,59 @@
+{
+  "kind": "singleType",
+  "collectionName": "units_page",
+  "info": {
+    "singularName": "units-page",
+    "pluralName": "units-pages",
+    "displayName": "About – Administrative Units: Page Settings",
+    "description": "Hero, section headings and messages for the Administrative Units page."
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "eyebrow": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string",
+      "required": true
+    },
+    "subtitle": {
+      "type": "string"
+    },
+    "intro": {
+      "type": "text"
+    },
+    "hero_image": {
+      "type": "media",
+      "multiple": false,
+      "allowedTypes": [
+        "images"
+      ]
+    },
+    "hero_image_alt": {
+      "type": "string"
+    },
+    "featured_heading": {
+      "type": "string"
+    },
+    "featured_intro": {
+      "type": "text"
+    },
+    "directory_heading": {
+      "type": "string"
+    },
+    "directory_intro": {
+      "type": "text"
+    },
+    "empty_message": {
+      "type": "text"
+    },
+    "seo": {
+      "type": "component",
+      "repeatable": false,
+      "component": "shared.seo"
+    }
+  }
+}

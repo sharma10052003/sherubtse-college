@@ -1,0 +1,95 @@
+{
+  "collectionName": "components_admission_guide_page_labels",
+  "info": {
+    "displayName": "Page Labels",
+    "icon": "feather",
+    "description": "Fixed words on the Admissions pages: tab names, buttons and status badges. Leave a field empty to use the default."
+  },
+  "options": {},
+  "attributes": {
+    "card_button": {
+      "type": "string"
+    },
+    "switch_label": {
+      "type": "string"
+    },
+    "tab_apply": {
+      "type": "string"
+    },
+    "tab_requirements": {
+      "type": "string"
+    },
+    "tab_fees": {
+      "type": "string"
+    },
+    "tab_scholarships": {
+      "type": "string"
+    },
+    "tab_notices": {
+      "type": "string"
+    },
+    "tab_faqs": {
+      "type": "string"
+    },
+    "tab_more": {
+      "type": "string"
+    },
+    "tab_contact": {
+      "type": "string"
+    },
+    "documents_heading": {
+      "type": "string"
+    },
+    "status_open": {
+      "type": "string"
+    },
+    "status_upcoming": {
+      "type": "string"
+    },
+    "status_closed": {
+      "type": "string"
+    },
+    "deadline_label": {
+      "type": "string"
+    },
+    "minimum_label": {
+      "type": "string"
+    },
+    "selection_label": {
+      "type": "string"
+    },
+    "seats_label": {
+      "type": "string"
+    },
+    "links_heading": {
+      "type": "string"
+    },
+    "notices_empty": {
+      "type": "string"
+    },
+    "notices_past": {
+      "type": "string"
+    },
+    "notices_all": {
+      "type": "string"
+    },
+    "ask_button": {
+      "type": "string"
+    },
+    "filter_all": {
+      "type": "string"
+    },
+    "date_next": {
+      "type": "string"
+    },
+    "date_passed": {
+      "type": "string"
+    },
+    "faq_expand": {
+      "type": "string"
+    },
+    "faq_collapse": {
+      "type": "string"
+    }
+  }
+}

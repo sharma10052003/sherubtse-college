@@ -1,9 +1,11 @@
 ---
 import { Image } from 'astro:assets';
-import spatialMap from '../assets/spatial-map.jpg';
+import logo from '../assets/sherubtse-logo.png';
 import { getSiteSettings, getFooter } from '../lib/content/site-settings';
+import { getNavigation } from '../lib/content/navigation';
 
-const [settings, footer] = await Promise.all([getSiteSettings(), getFooter()]);
+// The crest is the same one the header uses (Global – Header & Navigation → Logo).
+const [settings, footer, nav] = await Promise.all([getSiteSettings(), getFooter(), getNavigation()]);
 const year = new Date().getFullYear();
 const mapsUrl = settings.address
   ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(settings.address)}`
@@ -16,6 +18,13 @@ function isExternal(url: string) {
 <footer class="site-footer">
   <div class="wrap footer-grid">
     <div class="footer-brand">
+      <a href="/" class="footer-logo" aria-label={`${nav.logo_alt} — home`}>
+        {nav.logo_url ? (
+          <img src={nav.logo_url} alt={nav.logo_alt} width="96" height="96" loading="lazy" decoding="async" />
+        ) : (
+          <Image src={logo} alt={nav.logo_alt} width={96} height={96} />
+        )}
+      </a>
       {footer.tagline && <p class="footer-tagline">{footer.tagline}</p>}
       {footer.motto && <p class="footer-motto">{footer.motto}</p>}
       <!-- No social icons here: the live site has none to source (checked
@@ -25,16 +34,6 @@ function isExternal(url: string) {
            icons linking to guessed accounts would be fabricating an
            official presence that may not exist; real accounts can be
            added here once someone confirms them. -->
-      {footer.map_url && (
-        <a href={footer.map_url} target="_blank" rel="noopener" class="footer-map-link">
-          {footer.map_image_url ? (
-            <img src={footer.map_image_url} alt={footer.map_label ?? 'Campus map'} width="148" height="147" loading="lazy" />
-          ) : (
-            <Image src={spatialMap} alt={footer.map_label ?? 'Campus map'} width={148} height={147} />
-          )}
-          {footer.map_label && <span>{footer.map_label}</span>}
-        </a>
-      )}
     </div>
 
     {footer.link_groups.map((group) => (

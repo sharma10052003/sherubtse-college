@@ -1,0 +1,120 @@
+{
+  "kind": "collectionType",
+  "collectionName": "facilities",
+  "info": {
+    "singularName": "facility",
+    "pluralName": "facilities",
+    "displayName": "About – Campus Facilities: Facilities",
+    "description": "One verified campus facility, shown as a numbered story on Campus Facilities. Only publish confirmed information."
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "name": {
+      "type": "string",
+      "required": true
+    },
+    "slug": {
+      "type": "uid",
+      "targetField": "name",
+      "required": true
+    },
+    "categories": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::facility-category.facility-category"
+    },
+    "summary": {
+      "type": "text",
+      "maxLength": 280
+    },
+    "content": {
+      "type": "richtext"
+    },
+    "main_image": {
+      "type": "media",
+      "multiple": false,
+      "allowedTypes": [
+        "images"
+      ]
+    },
+    "image_alt": {
+      "type": "string"
+    },
+    "images": {
+      "type": "media",
+      "multiple": true,
+      "allowedTypes": [
+        "images"
+      ]
+    },
+    "features": {
+      "type": "component",
+      "repeatable": true,
+      "component": "facilities.feature"
+    },
+    "uses": {
+      "type": "richtext"
+    },
+    "location": {
+      "type": "string"
+    },
+    "building": {
+      "type": "string"
+    },
+    "opening_hours": {
+      "type": "string"
+    },
+    "access_conditions": {
+      "type": "text"
+    },
+    "accessibility": {
+      "type": "text"
+    },
+    "policies": {
+      "type": "richtext"
+    },
+    "department": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::unit.unit"
+    },
+    "contact": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::contact-person.contact-person"
+    },
+    "contact_note": {
+      "type": "string"
+    },
+    "links": {
+      "type": "component",
+      "repeatable": true,
+      "component": "shared.link-item"
+    },
+    "documents": {
+      "type": "component",
+      "repeatable": true,
+      "component": "shared.attachment"
+    },
+    "display_mode": {
+      "type": "enumeration",
+      "enum": [
+        "page",
+        "panel",
+        "card_only"
+      ],
+      "default": "panel"
+    },
+    "is_featured": {
+      "type": "boolean",
+      "default": false
+    },
+    "display_order": {
+      "type": "integer",
+      "default": 0
+    }
+  }
+}

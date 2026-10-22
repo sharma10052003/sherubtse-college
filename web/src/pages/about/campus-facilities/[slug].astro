@@ -1,0 +1,99 @@
+---
+// One facility's own page — built for facilities whose "Display mode" in
+// Strapi is "Page" (others open as a panel on Campus Facilities, or have no
+// detail view). Content: lib/content/facilities.ts; styles: facilities.css.
+import Layout from '../../../layouts/Layout.astro';
+import '../../../styles/facilities.css';
+import FacilityDetail from '../../../components/facilities/FacilityDetail.astro';
+import { getFacilities, getFacilityBySlug } from '../../../lib/content/facilities';
+import { icon } from '../../../lib/facility-icons';
+
+export async function getStaticPaths() {
+  const all = await getFacilities();
+  return all.filter((f) => f.display_mode === 'page').map((f) => ({ params: { slug: f.slug } }));
+}
+
+const { slug } = Astro.params as { slug: string };
+const facility = await getFacilityBySlug(slug);
+if (!facility || facility.display_mode !== 'page') return Astro.redirect('/about/campus-facilities', 404);
+
+const all = await getFacilities();
+const related = all
+  .filter((f) => f.slug !== facility.slug && f.display_mode !== 'card_only' && f.categories.some((c) => facility.categories.some((x) => x.slug === c.slug)))
+  .slice(0, 3);
+const categoriesIcon = facility.categories[0]?.icon ?? 'building';
+const hrefOf = (f: (typeof all)[number]) => (f.display_mode === 'page' ? `/about/campus-facilities/${f.slug}` : `/about/campus-facilities#facilities`);
+---
+<Layout title={facility.name} description={facility.summary ?? undefined}>
+  <div class="cf" data-cf>
+    <header class="cf-opening cf-opening--detail">
+      <div class="wrap cf-wide cf-opening-grid">
+        <div class="cf-opening-text">
+          <nav class="cf-breadcrumb" aria-label="Breadcrumb">
+            <a href="/">Home</a> › <a href="/about">About</a> › <a href="/about/campus-facilities">Campus Facilities</a> › <span aria-current="page">{facility.name}</span>
+          </nav>
+          <p class="cf-eyebrow"><span class="cf-eyebrow-rule" aria-hidden="true"></span>{facility.categories.map((c) => c.name).join(' · ') || 'Campus Facilities'}</p>
+          <h1 class="cf-display cf-display--detail">{facility.name}</h1>
+          {facility.summary && <p class="cf-standfirst">{facility.summary}</p>}
+        </div>
+        <figure class:list={['cf-opening-figure', { 'cf-opening-figure--plate': !facility.main_image }]}>
+          <span class="cf-frame" aria-hidden="true"></span>
+          {facility.main_image ? (
+            <div class="cf-opening-photos"><img class="cf-opening-img is-active" src={facility.main_image.url} alt={facility.main_image.alt} /></div>
+          ) : (
+            <div class="cf-plate cf-plate--opening" aria-hidden="true">
+              <span class="cf-plate-icon" set:html={icon(categoriesIcon)} />
+              <span class="cf-plate-caption">Kanglung, Trashigang</span>
+            </div>
+          )}
+        </figure>
+      </div>
+    </header>
+
+    <section class="cf-section cf-bg-white">
+      <div class="wrap cf-wide cf-detail-layout">
+        <FacilityDetail facility={facility} level={2} />
+        <aside class="cf-detail-side">
+          <a class="cf-back" href="/about/campus-facilities"><Fragment set:html={icon('back')} /> All campus facilities</a>
+          {related.length > 0 && (
+            <div class="cf-related">
+              <h2>Related facilities</h2>
+              <ul>
+                {related.map((r) => (
+                  <li><a href={hrefOf(r)}><strong>{r.name}</strong>{r.summary && <span>{r.summary}</span>}</a></li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </aside>
+      </div>
+    </section>
+
+    <div class="cf-lightbox" data-cf-box hidden role="dialog" aria-modal="true" aria-label="Photo viewer">
+      <button type="button" class="cf-lightbox-btn cf-lightbox-close" data-cf-box-close aria-label="Close photo"><Fragment set:html={icon('close')} /></button>
+      <figure><img alt="" /><figcaption></figcaption></figure>
+    </div>
+  </div>
+</Layout>
+
+<script is:inline>
+  (() => {
+    const box = document.querySelector('[data-cf-box]');
+    if (!box) return;
+    const img = box.querySelector('img');
+    const cap = box.querySelector('figcaption');
+    let opener = null;
+    const onKey = (e) => { if (e.key === 'Escape') close(); };
+    const close = () => { box.hidden = true; document.removeEventListener('keydown', onKey); opener?.focus(); };
+    document.addEventListener('click', (e) => {
+      const shot = e.target.closest('[data-cf-lightbox]');
+      if (!shot) return;
+      opener = shot;
+      img.src = shot.dataset.cfLightbox; img.alt = shot.dataset.cfCaption || ''; cap.textContent = shot.dataset.cfCaption || '';
+      box.hidden = false; box.querySelector('[data-cf-box-close]').focus();
+      document.addEventListener('keydown', onKey);
+    });
+    box.querySelector('[data-cf-box-close]').addEventListener('click', close);
+    box.addEventListener('click', (e) => { if (e.target === box) close(); });
+  })();
+</script>
