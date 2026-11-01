@@ -1,0 +1,131 @@
+---
+// Alumni stories: the distinguished alumni and every published story, with
+// category filters. Wording and stories are edited in Strapi (Alumni – Page, Alumni).
+import AlumniShell from '../../../components/alumni/AlumniShell.astro';
+import AlumniSubHero from '../../../components/alumni/AlumniSubHero.astro';
+import AlumniFoot from '../../../components/alumni/AlumniFoot.astro';
+import { getAlumniCopy, getDistinguishedAlumni, getAlumniStories, ALUMNI_CATEGORY_LABELS } from '../../../lib/content/alumni';
+import { icon, initials } from '../../../lib/content/alumni-ui';
+const [copy, distinguished, stories] = await Promise.all([getAlumniCopy(), getDistinguishedAlumni(), getAlumniStories(60)]);
+const featuredStory = stories[0] ?? null;
+const moreStories = stories.slice(1);
+const storyCategories = Array.from(new Set(stories.map((s) => s.category).filter((c): c is string => !!c)));
+const INITIAL_STORIES = 6;
+---
+
+<AlumniShell title="Alumni stories" description={copy.seo_description ?? undefined} texts={copy.texts}>
+<AlumniSubHero page="stories" />
+    <!-- ====================== 5. DISTINGUISHED ALUMNI (when published) ====================== -->
+    {distinguished.length > 0 && (
+      <section class="al-section al-distinguished" aria-labelledby="al-dist-h">
+        <div class="wrap al-wide">
+          <div class="al-head" data-al-reveal>
+            {copy.distinguished.eyebrow && <p class="al-eyebrow">{copy.distinguished.eyebrow}</p>}
+            <h2 id="al-dist-h" class="al-h2">{copy.distinguished.heading}</h2>
+          </div>
+          <div class="al-dist-grid">
+            {distinguished.map((a, i) => (
+              <article class="al-dist-card" data-al-reveal style={`--d:${i * 100}ms`}>
+                {a.photo_url ? <img src={a.photo_url} alt={`Portrait of ${a.full_name}`} loading="lazy" class="al-dist-photo" /> : <span class="al-dist-photo al-initials" aria-hidden="true">{initials(a.full_name)}</span>}
+                <div class="al-dist-body">
+                  <h3 class="al-dist-name">{a.full_name}</h3>
+                  {a.current_role && <p class="al-dist-role">{a.current_role}</p>}
+                  {a.excerpt && <p class="al-dist-quote">“{a.excerpt}”</p>}
+                  <a href={`/about/alumni/${a.slug}`} class="al-link">Read story <span aria-hidden="true">→</span></a>
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+    )}
+
+    <!-- ====================== 6. ALUMNI STORIES ====================== -->
+    <section id="stories" class="al-section al-stories" aria-labelledby="al-stories-h">
+      <div class="wrap al-wide">
+        <div class="al-head al-head--split" data-al-reveal>
+          <div>
+            {copy.stories.eyebrow && <p class="al-eyebrow">{copy.stories.eyebrow}</p>}
+            <h2 id="al-stories-h" class="al-h2" tabindex="-1">{copy.stories.heading}</h2>
+            {copy.stories.intro && <p class="al-body al-head-intro">{copy.stories.intro}</p>}
+          </div>
+          <a href="/about/alumni/share-your-story" class="al-btn al-btn--navy">
+            <span set:html={icon('pen', 18)} /> Share Your Story
+          </a>
+        </div>
+
+        {stories.length > 0 ? (
+          <>
+            {storyCategories.length > 1 && (
+              <div class="al-filters" role="group" aria-label="Filter stories by category" data-story-filters>
+                <button type="button" aria-pressed="true" data-filter="all">All</button>
+                {storyCategories.map((c) => (
+                  <button type="button" aria-pressed="false" data-filter={c}>{ALUMNI_CATEGORY_LABELS[c] ?? c}</button>
+                ))}
+              </div>
+            )}
+
+            <div class="al-story-layout">
+              {featuredStory && (
+                <article class="al-story al-story--featured" data-category={featuredStory.category ?? ''} data-al-reveal>
+                  <div class="al-story-media">
+                    {featuredStory.photo_url ? <img src={featuredStory.photo_url} alt="" loading="lazy" /> : <span class="al-initials al-initials--xl" aria-hidden="true">{initials(featuredStory.full_name)}</span>}
+                  </div>
+                  <div class="al-story-body">
+                    {featuredStory.category && <p class="al-tag">{ALUMNI_CATEGORY_LABELS[featuredStory.category] ?? featuredStory.category}</p>}
+                    <h3 class="al-story-title al-story-title--lg">{featuredStory.article_title ?? featuredStory.full_name}</h3>
+                    {featuredStory.excerpt && <p class="al-story-excerpt">{featuredStory.excerpt}</p>}
+                    <p class="al-story-meta">
+                      <strong>{featuredStory.full_name}</strong>
+                      {[featuredStory.graduation_year && `Class of ${featuredStory.graduation_year}`, featuredStory.programme, featuredStory.current_role].filter(Boolean).map((m) => <span>{m}</span>)}
+                    </p>
+                    <a href={`/about/alumni/${featuredStory.slug}`} class="al-link">Read story <span aria-hidden="true">→</span></a>
+                  </div>
+                </article>
+              )}
+
+              {moreStories.length > 0 && (
+                <div class="al-story-grid" data-story-grid>
+                  {moreStories.map((s, i) => (
+                    <article class={`al-story${i >= INITIAL_STORIES ? ' is-hidden-more' : ''}`} data-category={s.category ?? ''} data-al-reveal style={`--d:${(i % 3) * 100}ms`}>
+                      <div class="al-story-media al-story-media--sm">
+                        {s.photo_url ? <img src={s.photo_url} alt="" loading="lazy" /> : <span class="al-initials" aria-hidden="true">{initials(s.full_name)}</span>}
+                      </div>
+                      <div class="al-story-body">
+                        {s.category && <p class="al-tag">{ALUMNI_CATEGORY_LABELS[s.category] ?? s.category}</p>}
+                        <h3 class="al-story-title">{s.article_title ?? s.full_name}</h3>
+                        {s.excerpt && <p class="al-story-excerpt">{s.excerpt}</p>}
+                        <p class="al-story-meta">
+                          <strong>{s.full_name}</strong>
+                          {[s.graduation_year && `Class of ${s.graduation_year}`, s.programme].filter(Boolean).map((m) => <span>{m}</span>)}
+                        </p>
+                        <a href={`/about/alumni/${s.slug}`} class="al-link">Read story <span aria-hidden="true">→</span></a>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              )}
+            </div>
+            <p class="al-filter-empty" data-story-empty hidden>No stories in this category yet.</p>
+            {moreStories.length > INITIAL_STORIES && (
+              <div class="al-center"><button type="button" class="al-btn al-btn--outline" data-story-more>Load more stories</button></div>
+            )}
+          </>
+        ) : (
+          <div class="al-empty" data-al-reveal>
+            <svg class="al-empty-art" viewBox="0 0 120 120" aria-hidden="true">
+              <rect x="22" y="18" width="62" height="80" />
+              <path d="M34 36h38M34 48h38M34 60h26" />
+              <path class="al-empty-pen" d="M78 92l22-22 8 8-22 22-10 2z" />
+            </svg>
+            <div>
+              <p class="al-empty-title">{copy.texts.stories_empty}</p>
+              <p class="al-body">Be the first to tell your Sherubtse story — your journey could inspire the students walking the same paths today.</p>
+              <a href="/about/alumni/share-your-story" class="al-btn al-btn--navy">Share Your Story</a>
+            </div>
+          </div>
+        )}
+      </div>
+    </section>
+<AlumniFoot />
+</AlumniShell>

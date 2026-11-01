@@ -1,0 +1,474 @@
+/**
+ * Research landing page only (research/index.astro, .rs-landing), layered on
+ * research.css; the Research Projects page keeps its own look. Rounded and
+ * moving, matching About, Academics and Admissions, with its own hero: a
+ * slowly drawing "research network" of nodes and links, and a live
+ * "Research at a glance" panel over the photo. No drop shadows. Motion stops
+ * for visitors who ask for less motion.
+ */
+
+.rs-landing {
+  --rsl-r: 24px;
+  --rsl-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.rs-landing .wrap {
+  max-width: 1600px;
+  padding-inline: clamp(var(--s4), 3vw, var(--s7));
+}
+
+/* ---------- Hero ---------- */
+.rs-landing .rs-hero {
+  background: radial-gradient(120% 140% at 80% 20%, var(--navy-mid) 0%, var(--navy) 50%, var(--navy-deep) 100%);
+}
+.rs-landing .rs-hero-motif {
+  opacity: 0.05;
+}
+/* The research network: links draw themselves, nodes glow in turn. */
+.rsl-network {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  -webkit-mask-image: linear-gradient(100deg, rgba(0, 0, 0, 0.25) 0%, #000 55%);
+  mask-image: linear-gradient(100deg, rgba(0, 0, 0, 0.25) 0%, #000 55%);
+  animation: rsl-drift 30s ease-in-out infinite alternate;
+}
+@keyframes rsl-drift {
+  to {
+    transform: translate(-24px, 14px) scale(1.04);
+  }
+}
+.rsl-edge {
+  stroke: rgba(255, 255, 255, 0.22);
+  stroke-width: 1;
+  stroke-dasharray: 140;
+  stroke-dashoffset: 140;
+  animation: rsl-draw 9s ease-in-out infinite;
+  animation-delay: calc(var(--k, 0) * -1s);
+}
+@keyframes rsl-draw {
+  0% {
+    stroke-dashoffset: 140;
+  }
+  35%,
+  70% {
+    stroke-dashoffset: 0;
+  }
+  100% {
+    stroke-dashoffset: -140;
+  }
+}
+.rsl-node {
+  fill: rgba(255, 255, 255, 0.55);
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: rsl-glow 5s ease-in-out infinite;
+  animation-delay: calc(var(--k, 0) * -0.7s);
+}
+.rsl-node--gold {
+  fill: var(--gold);
+}
+@keyframes rsl-glow {
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.6);
+  }
+}
+.rs-landing .rs-eyebrow {
+  display: inline-block;
+  padding: 5px 14px;
+  border: 1px solid rgba(240, 180, 41, 0.6);
+  border-radius: 999px;
+}
+.rs-landing .rs-btn {
+  border-radius: 999px;
+}
+.rs-landing .rs-hero-frame {
+  border-radius: calc(var(--rsl-r) + 6px);
+}
+.rs-landing .rs-hero-img {
+  border-radius: var(--rsl-r);
+}
+
+/* Photo + "at a glance" panel */
+.rsl-side {
+  position: relative;
+}
+.rsl-side--photo {
+  padding-bottom: var(--s8);
+}
+.rsl-glance {
+  position: relative;
+  z-index: 2;
+  padding: var(--s5);
+  border: 2px solid var(--gold);
+  border-radius: var(--rsl-r);
+  background: #fff;
+  color: var(--ink);
+  animation: rsl-float 7s ease-in-out infinite;
+}
+.rsl-side--photo .rsl-glance {
+  position: absolute;
+  left: -32px;
+  bottom: 0;
+  width: min(380px, 92%);
+}
+@keyframes rsl-float {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  50% {
+    translate: 0 -8px;
+  }
+}
+.rsl-glance-title {
+  margin: 0 0 var(--s3);
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold-ink);
+}
+.rsl-glance-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.rsl-glance-list li {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto auto;
+  column-gap: 10px;
+  align-items: center;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--paper-2);
+  transition: border-color 0.25s, background 0.25s;
+}
+.rsl-glance-list li:hover {
+  border-color: var(--navy);
+  background: #fff;
+}
+.rsl-glance-icon {
+  grid-row: span 2;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--navy);
+  color: var(--gold);
+}
+.rsl-glance-num {
+  font-family: var(--font-serif);
+  font-size: 1.7rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--navy);
+  font-variant-numeric: tabular-nums;
+}
+.rsl-glance-label {
+  font-size: 0.76rem;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--ink-2);
+}
+.rsl-glance-label em {
+  display: block;
+  font-style: normal;
+  font-weight: 600;
+  color: var(--open);
+}
+
+/* ---------- In-page navigation: a rounded bar ---------- */
+.rs-landing .rs-nav-list {
+  overflow: hidden;
+  border: 2px solid var(--navy);
+  border-radius: var(--rsl-r);
+}
+.rs-landing .rs-nav-link::after {
+  left: 18%;
+  right: 18%;
+  border-radius: 0 0 4px 4px;
+}
+.rs-landing .rs-nav-icon {
+  border-radius: 50%;
+}
+.rs-landing .rs-nav.is-stuck .rs-nav-list {
+  border-radius: 999px;
+}
+
+/* ---------- Sections ---------- */
+.rs-landing .rs-band--soft {
+  background: linear-gradient(180deg, #f4f6fa 0%, #eef2f9 100%);
+}
+.rs-landing .rs-chips li,
+.rs-landing .rs-pill {
+  border-radius: 999px;
+}
+
+/* Centres */
+.rs-landing .rs-centres {
+  gap: var(--s6);
+}
+.rs-landing .rs-centre {
+  border: 2px solid var(--navy);
+  border-radius: var(--rsl-r);
+  transition: border-color 0.3s, transform 0.4s var(--rsl-ease);
+}
+.rs-landing .rs-centre:hover,
+.rs-landing .rs-centre:focus-within {
+  border-color: var(--gold);
+  transform: translateY(-6px);
+}
+.rs-landing .rs-centre-mark {
+  border-bottom-style: dashed;
+}
+.rs-landing .rs-centre-explore {
+  padding: 8px 16px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--navy);
+  color: #fff;
+  transition: background 0.25s, color 0.25s, gap 0.3s var(--rsl-ease);
+}
+.rs-landing .rs-centre:hover .rs-centre-explore {
+  gap: 14px;
+  background: var(--gold);
+  color: var(--navy);
+}
+.rs-landing .rs-expertise {
+  border: 2px solid var(--navy);
+  border-left-width: 2px;
+  border-radius: 999px;
+  background: #fff;
+  padding-inline: var(--s5) var(--s6);
+}
+.rs-landing .rs-expertise-icon {
+  border-radius: 50%;
+}
+
+/* Projects */
+.rs-landing .rs-tabs {
+  display: inline-flex;
+  gap: 4px;
+  padding: 5px;
+  border: 1.5px solid var(--navy);
+  border-radius: 999px;
+  background: #fff;
+}
+.rs-landing .rs-tab {
+  border: 0;
+  border-radius: 999px;
+}
+.rs-landing .rs-tab[aria-selected='true'] {
+  background: var(--navy);
+  color: #fff;
+}
+.rs-landing .rs-tab-count {
+  border-radius: 999px;
+}
+.rs-landing .rs-project {
+  border: 1.5px solid var(--line-strong);
+  border-radius: 20px;
+  box-shadow: inset 5px 0 0 var(--rsl-status, var(--line-strong));
+  transition: border-color 0.25s, transform 0.35s var(--rsl-ease);
+}
+.rs-landing .rs-project--ongoing {
+  --rsl-status: var(--open);
+}
+.rs-landing .rs-project--completed {
+  --rsl-status: var(--navy);
+}
+.rs-landing .rs-project:hover {
+  border-color: var(--navy);
+  transform: translateY(-4px);
+}
+.rs-landing .rs-status,
+.rs-landing .rs-project-centre {
+  border-radius: 999px;
+}
+.rs-landing .rs-more {
+  padding: 10px 20px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--navy);
+  color: #fff;
+  transition: background 0.25s, gap 0.3s var(--rsl-ease);
+}
+.rs-landing .rs-more:hover {
+  gap: 14px;
+  background: var(--navy-mid);
+}
+.rs-landing .rs-more--inline {
+  background: transparent;
+  color: var(--navy-mid);
+  padding: 0;
+  border-bottom: 2px solid var(--gold);
+  border-radius: 0;
+}
+
+/* Journal */
+.rs-landing .rs-journal-card {
+  border-radius: 28px;
+}
+.rs-landing .rs-journal-cover {
+  border-radius: 12px;
+}
+.rs-landing .rs-articles ol {
+  display: grid;
+  gap: var(--s3);
+}
+.rs-landing .rs-articles li {
+  padding: var(--s3) var(--s4);
+  border: 1.5px solid var(--line-strong);
+  border-radius: 18px;
+  background: #fff;
+  transition: border-color 0.25s, transform 0.35s var(--rsl-ease);
+}
+.rs-landing .rs-articles li:hover {
+  border-color: var(--navy);
+  transform: translateX(4px);
+}
+
+/* Grants (navy band) */
+.rs-landing .rs-grant {
+  border: 1.5px solid rgba(240, 180, 41, 0.55);
+  border-radius: var(--rsl-r);
+  transition: background 0.3s, border-color 0.3s, transform 0.35s var(--rsl-ease);
+}
+.rs-landing .rs-grant:hover,
+.rs-landing .rs-grant:focus-within {
+  border-color: var(--gold);
+  transform: translateY(-4px);
+}
+.rs-landing .rs-docs,
+.rs-landing .rs-docs summary,
+.rs-landing .rs-docs a {
+  border-radius: 14px;
+}
+.rs-landing .rs-docs-count,
+.rs-landing .rs-doc-type {
+  border-radius: 999px;
+}
+.rs-landing .rs-unigrants > li {
+  border-radius: 20px;
+}
+.rs-landing .rs-unigrant-links a {
+  border-radius: 999px;
+}
+
+/* Facilities & collaboration */
+.rs-landing .rs-facility {
+  overflow: hidden;
+  border: 1.5px solid var(--navy);
+  border-radius: 22px;
+  transition: border-color 0.25s, transform 0.35s var(--rsl-ease);
+}
+.rs-landing .rs-facility:hover,
+.rs-landing .rs-facility:focus-within {
+  border-color: var(--gold);
+  transform: translateY(-5px);
+}
+.rs-landing .rs-facility-img {
+  border-radius: 14px;
+  transition: transform 0.6s var(--rsl-ease);
+}
+.rs-landing .rs-facility:hover .rs-facility-img {
+  transform: scale(1.04);
+}
+.rs-landing .rs-facility-icon {
+  border-radius: 50%;
+}
+.rs-landing .rs-collab {
+  border-radius: var(--rsl-r);
+}
+
+/* Policies */
+.rs-landing .rs-policies {
+  gap: var(--s3);
+}
+.rs-landing .rs-policy {
+  border: 1.5px solid var(--line-strong);
+  border-radius: 20px;
+  transition: border-color 0.25s, transform 0.35s var(--rsl-ease);
+}
+.rs-landing .rs-policy:hover,
+.rs-landing .rs-policy:focus-within {
+  border-color: var(--navy);
+  box-shadow: none;
+  transform: translateX(4px);
+}
+.rs-landing .rs-policy-icon {
+  border-radius: 50%;
+}
+
+/* News */
+.rs-landing .rs-news-item {
+  padding: var(--s3);
+  border: 1.5px solid var(--line-strong);
+  border-radius: var(--rsl-r);
+  background: #fff;
+  transition: border-color 0.25s, transform 0.35s var(--rsl-ease);
+}
+.rs-landing .rs-news-item:hover {
+  border-color: var(--navy);
+  transform: translateY(-5px);
+}
+.rs-landing .rs-news-media {
+  overflow: hidden;
+  border-radius: 16px;
+}
+
+/* ---------- Smaller screens ---------- */
+@media (max-width: 999px) {
+  .rsl-side--photo .rsl-glance {
+    left: var(--s3);
+  }
+}
+@media (max-width: 699px) {
+  .rs-landing {
+    --rsl-r: 20px;
+  }
+  .rsl-side--photo {
+    padding-bottom: 0;
+  }
+  .rsl-side--photo .rsl-glance {
+    position: relative;
+    left: auto;
+    width: auto;
+    margin-top: calc(-1 * var(--s6));
+    margin-inline: var(--s3);
+  }
+  .rs-landing .rs-expertise {
+    border-radius: 22px;
+  }
+  .rs-landing .rs-nav-list,
+  .rs-landing .rs-nav.is-stuck .rs-nav-list {
+    border-radius: 0;
+    border-inline: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rs-landing *,
+  .rs-landing *::before,
+  .rs-landing *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+  .rsl-edge {
+    stroke-dashoffset: 0;
+  }
+}

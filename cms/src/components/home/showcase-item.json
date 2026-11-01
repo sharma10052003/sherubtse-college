@@ -1,0 +1,19 @@
+{
+  "collectionName": "components_home_showcase_items",
+  "info": { "displayName": "Special content item", "icon": "star", "description": "One picture, greeting, announcement or celebration on the homepage." },
+  "options": {},
+  "attributes": {
+    "is_enabled": { "type": "boolean", "default": true },
+    "kind": { "type": "enumeration", "enum": ["image", "greeting", "announcement", "celebration", "quote", "update"], "default": "announcement" },
+    "title": { "type": "string" },
+    "text": { "type": "text" },
+    "image": { "type": "media", "multiple": false, "allowedTypes": ["images"] },
+    "image_alt": { "type": "string" },
+    "size": { "type": "enumeration", "enum": ["small", "medium", "large", "wide"], "default": "medium" },
+    "accent": { "type": "enumeration", "enum": ["white", "navy", "gold"], "default": "white" },
+    "link_label": { "type": "string" },
+    "link_url": { "type": "string" },
+    "start_at": { "type": "datetime" },
+    "end_at": { "type": "datetime" }
+  }
+}

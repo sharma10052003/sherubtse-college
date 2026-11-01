@@ -1,0 +1,386 @@
+/**
+ * About landing page (pages/about/index.astro). Scoped under .ab.
+ * Rounded and moving by the project owner's request (the rest of the site
+ * keeps square corners): a navy hero with floating campus photos, a strip
+ * of live figures, and an even grid of cards that fill with navy and tilt
+ * toward the pointer. No shadows — depth comes from tone and movement. All motion
+ * stops for visitors who ask for less motion.
+ */
+
+.ab {
+  --ab-r: 24px;
+  --ab-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  overflow-x: clip;
+}
+/* Wider than the site's usual 1140px, so large screens aren't left with
+   empty margins either side. */
+.ab .wrap {
+  max-width: 1600px;
+  padding-inline: clamp(var(--s4), 3vw, var(--s7));
+}
+.ab :focus-visible {
+  outline: 3px solid var(--gold);
+  outline-offset: 3px;
+}
+
+/* ---------- Hero ---------- */
+.ab-hero {
+  position: relative;
+  overflow: hidden;
+  padding: var(--s7) 0 calc(var(--s9) + var(--s5));
+  background: linear-gradient(140deg, var(--navy-deep) 0%, var(--navy) 55%, var(--navy-mid) 100%);
+  color: #fff;
+}
+.ab-hero-pattern {
+  position: absolute;
+  inset: 0;
+  background-image: url('/patterns/knot-gold.svg');
+  background-size: 120px;
+  opacity: 0.07;
+  -webkit-mask-image: linear-gradient(100deg, transparent 30%, #000 90%);
+  mask-image: linear-gradient(100deg, transparent 30%, #000 90%);
+  pointer-events: none;
+}
+/* Soft light that drifts slowly behind everything. */
+.ab-orb {
+  position: absolute;
+  width: 520px;
+  height: 520px;
+  border-radius: 50%;
+  filter: blur(70px);
+  opacity: 0.32;
+  pointer-events: none;
+  animation: ab-drift 18s ease-in-out infinite alternate;
+}
+.ab-orb--gold {
+  top: -200px;
+  right: 8%;
+  background: var(--gold);
+  opacity: 0.18;
+}
+.ab-orb--sky {
+  bottom: -260px;
+  left: -120px;
+  background: #4f7bd9;
+  animation-delay: -9s;
+}
+@keyframes ab-drift {
+  to {
+    transform: translate(60px, 40px) scale(1.12);
+  }
+}
+.ab-hero-grid {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--s7);
+  align-items: center;
+}
+.ab-hero--photos .ab-hero-grid {
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+}
+.ab-breadcrumb {
+  display: flex;
+  gap: 8px;
+  margin-bottom: var(--s5);
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.75);
+}
+.ab-breadcrumb a {
+  color: #fff;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.35);
+}
+.ab-breadcrumb a:hover {
+  border-color: var(--gold);
+}
+.ab-eyebrow {
+  display: inline-block;
+  margin: 0 0 var(--s3);
+  padding: 5px 14px;
+  border: 1px solid rgba(240, 180, 41, 0.6);
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold-light);
+}
+.ab-title {
+  margin: 0;
+  max-width: 15ch;
+  font-family: var(--font-serif);
+  font-size: clamp(2.3rem, 1.5rem + 3.2vw, 4.2rem);
+  line-height: 1.04;
+  text-wrap: balance;
+}
+.ab-intro {
+  margin: var(--s4) 0 0;
+  max-width: 58ch;
+  font-size: 1.08rem;
+  line-height: 1.65;
+  color: rgba(255, 255, 255, 0.86);
+}
+.ab-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: var(--s6) 0 0;
+  padding: 0;
+  list-style: none;
+}
+.ab-facts li {
+  display: grid;
+  gap: 2px;
+  padding: 10px 18px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.07);
+  font-weight: 700;
+  font-size: 0.98rem;
+  transition: background 0.25s, border-color 0.25s, transform 0.3s var(--ab-ease);
+}
+.ab-facts li:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(240, 180, 41, 0.6);
+  transform: translateY(-2px);
+}
+.ab-facts span {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gold-light);
+}
+
+/* Floating photo collage */
+.ab-collage {
+  --px: 0;
+  --py: 0;
+  position: relative;
+  min-height: 440px;
+}
+.ab-photo {
+  position: absolute;
+  margin: 0;
+  overflow: hidden;
+  border: 4px solid rgba(255, 255, 255, 0.92);
+  border-radius: var(--ab-r);
+  background: var(--navy-deep);
+  animation: ab-float 7s ease-in-out infinite;
+}
+.ab-photo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scale(1.06);
+  transition: transform 0.8s var(--ab-ease);
+}
+.ab-photo:hover img {
+  transform: scale(1.12);
+}
+.ab-photo--1 {
+  inset: 0 34% 14% 0;
+  translate: calc(var(--px) * -14px) calc(var(--py) * -14px);
+}
+.ab-photo--2 {
+  top: 6%;
+  right: 0;
+  width: 40%;
+  height: 42%;
+  translate: calc(var(--px) * 22px) calc(var(--py) * 22px);
+  animation-delay: -2.3s;
+}
+.ab-photo--3 {
+  right: 6%;
+  bottom: 0;
+  width: 44%;
+  height: 40%;
+  translate: calc(var(--px) * 30px) calc(var(--py) * 30px);
+  animation-delay: -4.6s;
+}
+.ab-collage--n1 .ab-photo--1 {
+  inset: 0 0 10% 0;
+}
+.ab-collage--n2 .ab-photo--1 {
+  inset: 0 30% 8% 0;
+}
+.ab-collage--n2 .ab-photo--2 {
+  top: auto;
+  bottom: 0;
+  height: 50%;
+}
+@keyframes ab-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+.ab-badge {
+  position: absolute;
+  left: -18px;
+  bottom: -6px;
+  z-index: 2;
+  padding: 16px 22px;
+  border-radius: 20px;
+  background: var(--gold);
+  color: var(--navy);
+  animation: ab-float 6s ease-in-out infinite;
+  animation-delay: -1.2s;
+}
+.ab-badge-num {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: 2.6rem;
+  font-weight: 700;
+  line-height: 1;
+}
+.ab-badge-label {
+  margin: 4px 0 0;
+  max-width: 14ch;
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+@keyframes ab-rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+}
+.ab-rise {
+  animation: ab-rise 0.8s var(--ab-ease) both;
+  animation-delay: calc(var(--d, 0) * 90ms);
+}
+
+/* ---------- Live figures ---------- */
+.ab-stats-wrap {
+  position: relative;
+  z-index: 2;
+  margin-top: calc(-1 * (var(--s8) + 4px));
+}
+.ab-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  margin: 0;
+  padding: var(--s3);
+  list-style: none;
+  border: 1px solid var(--line);
+  border-radius: 28px;
+  background: #fff;
+}
+.ab-stat {
+  position: relative;
+  padding: var(--s4) var(--s4);
+  text-align: center;
+  border-radius: 20px;
+  transition: background 0.25s;
+}
+.ab-stat:hover {
+  background: var(--paper-2);
+}
+.ab-stat + .ab-stat::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 22%;
+  bottom: 22%;
+  width: 1px;
+  background: var(--line);
+}
+.ab-stat-num {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: clamp(1.9rem, 1.4rem + 1.4vw, 2.6rem);
+  font-weight: 700;
+  line-height: 1;
+  color: var(--navy);
+  font-variant-numeric: tabular-nums;
+}
+.ab-stat-label {
+  margin: 6px 0 0;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--gold-ink);
+}
+
+/* ---------- Boxes: components/LandingCards.astro + landing-cards.css ---------- */
+.ab-band {
+  padding: var(--s7) 0 var(--s9);
+}
+
+.ab-blocks {
+  margin-top: var(--s8);
+}
+.ab-empty {
+  color: var(--ink-2);
+}
+
+/* ---------- Reveal ---------- */
+.ab-anim [data-reveal] {
+  opacity: 0;
+  translate: 0 40px;
+  transition: opacity 0.8s var(--ab-ease), translate 0.8s var(--ab-ease), transform 0.35s var(--ab-ease), border-color 0.3s, color 0.35s;
+  transition-delay: calc(min(var(--i, 0), 7) * 80ms), calc(min(var(--i, 0), 7) * 80ms), 0s, 0s, 0s;
+}
+.ab-anim [data-reveal].is-in {
+  opacity: 1;
+  translate: 0 0;
+}
+
+/* ---------- Smaller screens ---------- */
+@media (max-width: 999px) {
+  .ab-hero--photos .ab-hero-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .ab-collage {
+    min-height: 360px;
+  }
+}
+@media (max-width: 699px) {
+  .ab {
+    --ab-r: 20px;
+  }
+  .ab-hero {
+    padding: var(--s6) 0 calc(var(--s8) + var(--s4));
+  }
+  .ab-collage {
+    min-height: 280px;
+  }
+  .ab-badge {
+    left: 8px;
+    bottom: -12px;
+    padding: 12px 16px;
+  }
+  .ab-badge-num {
+    font-size: 2rem;
+  }
+  .ab-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    border-radius: 24px;
+  }
+  .ab-stat::before {
+    display: none;
+  }
+  .ab-stats > :first-child:nth-last-child(odd) {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ab *,
+  .ab *::before,
+  .ab *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}

@@ -181,6 +181,15 @@ const LABEL_DEFAULTS = {
   date_passed: "Passed",
   faq_expand: "Open all",
   faq_collapse: "Close all",
+  finder_heading: "Find what you need",
+  finder_intro: "Choose who is applying, then pick a topic.",
+  finder_applicant: "I am applying as",
+  next_date_heading: "Next key date",
+  days_to_go: "{count} days to go",
+  day_to_go: "1 day to go",
+  today_label: "Today",
+  latest_notice_heading: "Latest admission notice",
+  jump_dates: "Key dates",
 };
 export type Labels = typeof LABEL_DEFAULTS;
 

@@ -1,4 +1,240 @@
 ---
-import SectionOverview from '../../components/templates/SectionOverview.astro';
+// Academics landing page. Content is edited in Strapi → Academics – Overview
+// (eyebrow, heading, intro, boxes, extra sections, labels). Everything above
+// the boxes is live: the programme showcase and department cards come from
+// Programmes and Departments, the figures are counted from them and from
+// faculty profiles, and the calendar strip shows upcoming Academic Calendar
+// dates (it stays hidden while none are published). The boxes are the same
+// as the About page's (components/LandingCards.astro). Styles: academics.css (.ac).
+import Layout from '../../layouts/Layout.astro';
+import SectionBlocks from '../../components/SectionBlocks.astro';
+import LandingCards from '../../components/LandingCards.astro';
+import '../../styles/academics.css';
+import { getLandingPage } from '../../lib/content/landing';
+import { getProgrammes } from '../../lib/content/programmes';
+import { getDepartments } from '../../lib/content/departments';
+import { getFacultyDirectory } from '../../lib/content/faculty';
+import { getCalendarEntries } from '../../lib/content/calendar-entries';
+
+const settle = <T,>(p: Promise<T>, fallback: T) => p.catch(() => fallback);
+const [page, programmes, departments, faculty, calendar] = await Promise.all([
+  getLandingPage('academics-overview'),
+  settle(getProgrammes(), []),
+  settle(getDepartments(), []),
+  settle(getFacultyDirectory(), []),
+  settle(getCalendarEntries(), []),
+]);
+
+// Wording from Academics – Overview → Labels (defaults match the Strapi seed).
+const DEFAULTS: Record<string, string> = {
+  showcase_heading: 'Our programmes', showcase_all: 'See all programmes',
+  departments_heading: 'Explore by department', department_programmes: '{count} programmes', department_faculty: '{count} faculty',
+  stat_departments: 'Departments', stat_programmes: 'Programmes', stat_faculty: 'Faculty members', stat_dates: 'Upcoming dates',
+  calendar_heading: 'Coming up on the academic calendar', calendar_all: 'Full calendar',
+  meta_departments: '{count} departments', meta_programmes: '{count} programmes', meta_calendar: '{count} upcoming dates',
+  explore_label: 'Explore',
+};
+const raw = page?.labels ?? {};
+const t = (k: string) => (typeof raw[k] === 'string' && raw[k].trim() ? raw[k].trim() : DEFAULTS[k] ?? '');
+const fill = (k: string, n: number) => t(k).replace('{count}', String(n));
+
+// Upcoming calendar dates (the nightly rebuild keeps this current).
+const today = new Date().toISOString().slice(0, 10);
+const upcoming = calendar.filter((e) => (e.ends_on || e.starts_on) >= today).slice(0, 6);
+const fmtDay = (iso: string) => new Date(`${iso}T00:00:00`).toLocaleDateString('en-GB', { day: 'numeric' });
+const fmtMonth = (iso: string) => new Date(`${iso}T00:00:00`).toLocaleDateString('en-GB', { month: 'short' });
+
+// Live figures.
+const stats = [
+  { n: departments.length, label: t('stat_departments'), icon: 'grid' },
+  { n: programmes.length, label: t('stat_programmes'), icon: 'cap' },
+  { n: faculty.length, label: t('stat_faculty'), icon: 'people' },
+  { n: upcoming.length, label: t('stat_dates'), icon: 'calendar' },
+].filter((s) => s.n > 0 && s.label);
+const STAT_ICONS: Record<string, string> = {
+  grid: '<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',
+  cap: '<path d="m2 9 10-5 10 5-10 5z"/><path d="M6 11v5c0 1.7 2.7 3 6 3s6-1.3 6-3v-5"/><path d="M22 9v6"/>',
+  people: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14.4c2 .7 3.5 2.6 3.5 5.6"/>',
+  calendar: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+};
+
+// Departments, with how many programmes and faculty each has.
+const depts = departments.map((d) => ({
+  name: d.name.replace(/^Department of\s+/i, ''),
+  full: d.name,
+  url: `/academics/departments/${d.slug}`,
+  programmes: d.programmes.length || programmes.filter((p) => p.department_slug === d.slug).length,
+  faculty: d.faculty_count,
+}));
+
+// A small live note on boxes that have something to count.
+const pathOf = (url: string) => url.replace(/[?#].*$/, '').replace(/\/$/, '');
+const META: Record<string, string> = {
+  '/academics/departments': departments.length ? fill('meta_departments', departments.length) : '',
+  '/academics/programmes': programmes.length ? fill('meta_programmes', programmes.length) : '',
+  '/academics/calendar': upcoming.length ? fill('meta_calendar', upcoming.length) : '',
+};
+const cards = (page?.cards ?? []).map((c) => ({ ...c, meta: META[pathOf(c.url)] ?? '' }));
+const heading = page?.heading ?? 'Academics';
+const arrow = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
+const capIcon = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m2 9 10-5 10 5-10 5z"/><path d="M6 11v5c0 1.7 2.7 3 6 3s6-1.3 6-3v-5"/></svg>';
 ---
-<SectionOverview type="academics-overview" title="Academics" />
+<Layout title="Academics" description={page?.seo_description ?? page?.intro ?? undefined}>
+  <div class="ac" data-ac>
+    <!-- ============ HERO ============ -->
+    <header class:list={['ac-hero', { 'ac-hero--show': programmes.length > 0 }]}>
+      <span class="ac-hero-dots" aria-hidden="true"></span>
+      <span class="ac-hero-arc" aria-hidden="true"></span>
+      <div class="wrap ac-hero-grid">
+        <div class="ac-hero-text">
+          <nav class="ac-breadcrumb ac-rise" style="--d:0" aria-label="Breadcrumb">
+            <a href="/">Home</a><span aria-hidden="true">›</span><span aria-current="page">Academics</span>
+          </nav>
+          {page?.eyebrow && page.eyebrow !== heading && <p class="ac-eyebrow ac-rise" style="--d:1">{page.eyebrow}</p>}
+          <h1 class="ac-title ac-rise" style="--d:2">{heading}</h1>
+          {page?.intro && <p class="ac-intro ac-rise" style="--d:3">{page.intro}</p>}
+
+          {depts.length > 0 && (
+            <div class="ac-depts ac-rise" style="--d:4">
+              <p class="ac-mini">{t('departments_heading')}</p>
+              <ul>
+                {depts.map((d) => (
+                  <li>
+                    <a href={d.url} title={d.full}>
+                      <span class="ac-dept-name">{d.name}</span>
+                      <span class="ac-dept-meta">
+                        {d.programmes > 0 && <span>{fill('department_programmes', d.programmes)}</span>}
+                        {d.faculty > 0 && <span>{fill('department_faculty', d.faculty)}</span>}
+                      </span>
+                      <span class="ac-dept-go" aria-hidden="true"><Fragment set:html={arrow} /></span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+
+        {programmes.length > 0 && (
+          <aside class="ac-show ac-rise" style="--d:3" aria-labelledby="ac-show-h">
+            <div class="ac-show-head">
+              <h2 class="ac-show-title" id="ac-show-h">{t('showcase_heading')}</h2>
+              <span class="ac-show-count">{programmes.length}</span>
+            </div>
+            <div class="ac-show-viewport" data-ac-marquee>
+              <ul class="ac-show-track" style={`--n:${programmes.length}`}>
+                {[0, 1].map((copy) =>
+                  programmes.map((p) => (
+                    <li aria-hidden={copy === 1 ? 'true' : undefined}>
+                      <a href={`/academics/programmes/${p.slug}`} tabindex={copy === 1 ? '-1' : undefined}>
+                        <span class="ac-show-icon"><Fragment set:html={capIcon} /></span>
+                        <span class="ac-show-text">
+                          <strong>{p.programme_name}</strong>
+                          {p.department_name && <span>{p.department_name.replace(/^Department of\s+/i, '')}</span>}
+                        </span>
+                        <span class="ac-show-go"><Fragment set:html={arrow} /></span>
+                      </a>
+                    </li>
+                  )),
+                )}
+              </ul>
+            </div>
+            <a class="ac-show-all" href="/academics/programmes">{t('showcase_all')} <Fragment set:html={arrow} /></a>
+          </aside>
+        )}
+      </div>
+    </header>
+
+    <!-- ============ LIVE FIGURES ============ -->
+    {stats.length > 1 && (
+      <section class="ac-stats-wrap" aria-label={heading}>
+        <div class="wrap">
+          <ul class="ac-stats">
+            {stats.map((s, i) => (
+              <li class="ac-stat" data-ac-reveal style={`--i:${i}`}>
+                <span class="ac-stat-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" set:html={STAT_ICONS[s.icon]} />
+                </span>
+                <span>
+                  <span class="ac-stat-num" data-count={s.n}>{s.n}</span>
+                  <span class="ac-stat-label">{s.label}</span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+    )}
+
+    <!-- ============ CALENDAR (only when dates are published) ============ -->
+    {upcoming.length > 0 && (
+      <section class="ac-cal" aria-labelledby="ac-cal-h">
+        <div class="wrap">
+          <div class="ac-cal-head">
+            <h2 class="ac-cal-title" id="ac-cal-h">{t('calendar_heading')}</h2>
+            <a class="ac-cal-all" href="/academics/calendar">{t('calendar_all')} <Fragment set:html={arrow} /></a>
+          </div>
+          <ul class="ac-cal-list">
+            {upcoming.map((e, i) => (
+              <li class="ac-date" data-ac-reveal style={`--i:${i}`}>
+                <span class="ac-date-day"><strong>{fmtDay(e.starts_on)}</strong>{fmtMonth(e.starts_on)}</span>
+                <span class="ac-date-text">
+                  <span class="ac-date-cat">{e.category}</span>
+                  {e.title}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+    )}
+
+    <!-- ============ BOXES ============ -->
+    <section class="ac-band" aria-label={heading}>
+      <div class="wrap">
+        {cards.length > 0 ? (
+          <LandingCards cards={cards} exploreLabel={t('explore_label')} label={heading} />
+        ) : (
+          <p class="ac-empty">This page is temporarily unavailable. Please check back shortly.</p>
+        )}
+        {page && page.blocks.length > 0 && (
+          <div class="ac-blocks">
+            <SectionBlocks blocks={page.blocks} />
+          </div>
+        )}
+      </div>
+    </section>
+  </div>
+</Layout>
+
+<script is:inline>
+  (() => {
+    const root = document.querySelector('[data-ac]');
+    if (!root) return;
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // Numbers count up when they come into view.
+    const count = (el) => {
+      const target = Number(el.dataset.count);
+      if (!target || reduce) return;
+      const t0 = performance.now();
+      const step = (now) => {
+        const p = Math.min(1, (now - t0) / 1300);
+        el.textContent = String(Math.round(target * (1 - Math.pow(1 - p, 3))));
+        if (p < 1) requestAnimationFrame(step);
+      };
+      el.textContent = '0';
+      requestAnimationFrame(step);
+    };
+
+    if (reduce || !('IntersectionObserver' in window)) return;
+    root.classList.add('ac-anim');
+    const io = new IntersectionObserver((entries) => entries.forEach((en) => {
+      if (!en.isIntersecting) return;
+      en.target.classList.add('is-in');
+      en.target.querySelectorAll('[data-count]').forEach(count);
+      io.unobserve(en.target);
+    }), { rootMargin: '0px 0px -6% 0px', threshold: 0.05 });
+    root.querySelectorAll('[data-ac-reveal]').forEach((el) => io.observe(el));
+  })();
+</script>

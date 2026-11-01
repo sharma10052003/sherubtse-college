@@ -1,0 +1,17 @@
+{
+  "kind": "singleType",
+  "collectionName": "newsletters_page",
+  "info": {
+    "singularName": "newsletters-page",
+    "pluralName": "newsletters-pages",
+    "displayName": "Newsletter – Page",
+    "description": "Hero text and wording of the Newsletter page. The newsletters themselves are edited under Newsletter – Editions."
+  },
+  "options": { "draftAndPublish": false },
+  "attributes": {
+    "hero_eyebrow": { "type": "string" },
+    "hero_heading": { "type": "string" },
+    "hero_intro": { "type": "text" },
+    "labels": { "type": "json" }
+  }
+}

@@ -14,6 +14,9 @@ import Campus from './Campus.astro';
 import Stats from './Stats.astro';
 import Resources from './Resources.astro';
 import LinkCards from './LinkCards.astro';
+import Celebration from './Celebration.astro';
+import Updates from './Updates.astro';
+import Showcase from './Showcase.astro';
 import SectionBlocks from '../SectionBlocks.astro';
 
 interface Props { s: Section; labels: HomeLabels; paired?: boolean }
@@ -21,7 +24,9 @@ const { s, labels, paired = false } = Astro.props;
 const headingId = `hm-${s.key.replace(/[^a-z0-9]+/gi, '-')}`;
 const light = s.background === 'navy';
 // These two draw their own heading inside their layout.
-const ownHead = s.kind === 'introduction' || s.kind === 'message';
+const ownHead = s.kind === 'introduction' || s.kind === 'message' || s.kind === 'celebration';
+const starts = s.kind === 'celebration' ? s.from : null;
+const ends = s.kind === 'celebration' ? s.until : null;
 
 ---
 <section
@@ -29,10 +34,17 @@ const ownHead = s.kind === 'introduction' || s.kind === 'message';
   id={s.anchor ?? undefined}
   aria-labelledby={s.heading ? headingId : undefined}
   data-section={s.kind}
+  data-starts={starts ?? undefined}
+  data-ends={ends ?? undefined}
+  hidden={starts ? Date.parse(starts) > Date.now() : undefined}
 >
   <div class:list={{ wrap: !paired }}>
+    {s.kind === 'showcase' && s.eyebrow && <p class="hm-eyebrow hm-eyebrow--section">{s.eyebrow}</p>}
     {!ownHead && <SectionHead id={headingId} heading={s.heading} intro={s.intro} button={s.button} light={light} />}
-    {s.kind === 'highlights' && <Highlights items={s.items} layout={s.layout} labels={labels} emptyText={s.empty_text} />}
+    {s.kind === 'highlights' && <Highlights items={s.items} layout={s.layout} seconds={s.seconds} labels={labels} emptyText={s.empty_text} />}
+    {s.kind === 'updates' && <Updates s={s} labels={labels} />}
+    {s.kind === 'celebration' && <Celebration s={s} headingId={headingId} labels={labels} />}
+    {s.kind === 'showcase' && <Showcase s={s} labels={labels} />}
     {s.kind === 'notices' && <Notices items={s.items} labels={labels} emptyText={s.empty_text} />}
     {s.kind === 'events' && <Events items={s.items} labels={labels} emptyText={s.empty_text} />}
     {s.kind === 'introduction' && <Introduction s={s} headingId={headingId} />}

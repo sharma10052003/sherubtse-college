@@ -1,0 +1,201 @@
+---
+// Academic Regulations — the College's Student Academic Guide, laid out as a searchable guide.
+// Every word comes from Strapi → Academics – Regulations Page (hero text, key figures, topics and
+// their rules, links, wording); nothing is written here. The content follows the College's own
+// Student Academic Guide and points to the Wheel of Academic Law for the full rules.
+// Styles: regulations.css (.rg).
+import Layout from '../../layouts/Layout.astro';
+import '../../styles/regulations.css';
+import { icon } from '../../lib/facility-icons';
+import { getRegulationsPage } from '../../lib/content/regulations';
+import { REGULATIONS_HERO_DEFAULTS, makeRegulationsLabels } from '../../lib/content/regulations-labels';
+
+const page = await getRegulationsPage();
+const t = makeRegulationsLabels(page.labels);
+const fill = (s: string, n: number) => s.replace('{count}', String(n));
+const eyebrow = page.hero_eyebrow || REGULATIONS_HERO_DEFAULTS.hero_eyebrow;
+const heading = page.hero_heading || REGULATIONS_HERO_DEFAULTS.hero_heading;
+const intro = page.hero_intro || REGULATIONS_HERO_DEFAULTS.hero_intro;
+const topics = page.topics.filter((x) => x.items.length > 0);
+const total = topics.reduce((n, x) => n + x.items.length, 0);
+---
+<Layout title={heading} description={intro}>
+  <div class="rg" data-rg>
+    <!-- =========================== HERO =========================== -->
+    <header class="rg-hero">
+      <span class="rg-glow rg-glow--a" aria-hidden="true"></span>
+      <span class="rg-glow rg-glow--b" aria-hidden="true"></span>
+      <div class="wrap rg-hero-grid">
+        <div class="rg-hero-text">
+          <nav class="rg-crumbs rg-rise" style="--d:0" aria-label="Breadcrumb">
+            <a href="/">Home</a><span aria-hidden="true">›</span><a href="/academics">Academics</a><span aria-hidden="true">›</span><span aria-current="page">{heading}</span>
+          </nav>
+          <p class="rg-eyebrow rg-rise" style="--d:1">{eyebrow}</p>
+          <h1 class="rg-title rg-rise" style="--d:2">{heading}</h1>
+          <p class="rg-intro rg-rise" style="--d:3">{intro}</p>
+          {page.wheel_url && (
+            <p class="rg-hero-actions rg-rise" style="--d:4">
+              <a class="rg-btn rg-btn--gold" href={page.wheel_url} target="_blank" rel="noopener">
+                <Fragment set:html={icon('download')} />{t('wheel_button')}<span class="rg-sr"> (opens in a new tab)</span>
+              </a>
+            </p>
+          )}
+        </div>
+
+        {page.key_figures.length > 0 && (
+          <ul class="rg-figures rg-rise" style="--d:3" aria-label={t('figures_label')}>
+            {page.key_figures.map((f) => (
+              <li class="rg-figure">
+                <strong>{f.highlight}</strong>
+                <span class="rg-figure-title">{f.title}</span>
+                {f.text && <span class="rg-figure-text">{f.text}</span>}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </header>
+
+    {topics.length === 0 ? (
+      <div class="wrap rg-wide"><p class="rg-empty-static">The regulations will appear here once they are added in Strapi.</p></div>
+    ) : (
+      <div class="wrap rg-body">
+        <!-- =========================== INDEX RAIL =========================== -->
+        <aside class="rg-rail" data-rg-rail>
+          <div class="rg-rail-inner">
+            <label class="rg-search">
+              <span class="rg-sr">{t('search_label')}</span>
+              <Fragment set:html={icon('search')} />
+              <input type="search" placeholder={t('search_placeholder')} autocomplete="off" data-rg-search />
+            </label>
+            <p class="rg-count" role="status" aria-live="polite" data-rg-count data-one={t('count_one')} data-many={t('count_many')}>{fill(total === 1 ? t('count_one') : t('count_many'), total)}</p>
+            <nav aria-label={t('index_label')}>
+              <p class="rg-rail-title">{t('index_label')}</p>
+              <ol class="rg-index">
+                {topics.map((x) => (
+                  <li><a href={`#${x.key}`} data-rg-link={x.key}><span class="rg-index-icon" aria-hidden="true" set:html={icon(x.icon)} /><span>{x.title}</span></a></li>
+                ))}
+              </ol>
+            </nav>
+            <span class="rg-progress" aria-hidden="true"><span data-rg-bar></span></span>
+          </div>
+        </aside>
+
+        <!-- =========================== TOPICS =========================== -->
+        <main class="rg-main">
+          {topics.map((x) => (
+            <section class="rg-topic" id={x.key} data-rg-topic data-rg-reveal aria-labelledby={`rg-h-${x.key}`}>
+              <header class="rg-topic-head">
+                <span class="rg-topic-icon" aria-hidden="true" set:html={icon(x.icon)} />
+                <div>
+                  <h2 id={`rg-h-${x.key}`}>{x.title}</h2>
+                  {x.intro && <p>{x.intro}</p>}
+                </div>
+                <span class="rg-topic-count">{fill(t('topic_count'), x.items.length)}</span>
+              </header>
+              <ul class="rg-rules" style={`--cols:${x.items.length === 1 ? 1 : 2}`}>
+                {x.items.map((r) => (
+                  <li class="rg-rule" data-rg-rule data-text={`${r.title} ${r.text ?? ''} ${r.highlight ?? ''} ${x.title}`.toLowerCase()}>
+                    <article class:list={['rg-card', { 'rg-card--figure': r.highlight }]}>
+                      {r.highlight && <p class="rg-card-figure">{r.highlight}</p>}
+                      <h3>{r.title}</h3>
+                      {r.text && <p>{r.text}</p>}
+                    </article>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ))}
+
+          <div class="rg-none" data-rg-none hidden>
+            <p>{t('empty_message')}</p>
+            <button type="button" class="rg-btn rg-btn--line" data-rg-clear>{t('clear_label')}</button>
+          </div>
+
+          <!-- =========================== FULL REGULATIONS + HELP =========================== -->
+          <div class="rg-bands">
+            {page.wheel_url && (
+              <aside class="rg-band rg-band--wheel" data-rg-reveal>
+                <span class="rg-band-icon" aria-hidden="true" set:html={icon('book')} />
+                <div>
+                  <h2>{t('wheel_heading')}</h2>
+                  <p>{t('wheel_text')}</p>
+                  {page.source_note && <p class="rg-band-note">{page.source_note}</p>}
+                </div>
+                <a class="rg-btn rg-btn--gold" href={page.wheel_url} target="_blank" rel="noopener">{page.wheel_label || t('wheel_button')}<Fragment set:html={icon('external')} /><span class="rg-sr"> (opens in a new tab)</span></a>
+              </aside>
+            )}
+            <aside class="rg-band rg-band--help" data-rg-reveal>
+              <span class="rg-band-icon" aria-hidden="true" set:html={icon('mail')} />
+              <div>
+                <h2>{t('contact_heading')}</h2>
+                <p>{t('contact_text')}</p>
+              </div>
+              <a class="rg-btn rg-btn--line" href={t('contact_url')}>{t('contact_button')}<Fragment set:html={icon('arrow')} /></a>
+            </aside>
+          </div>
+        </main>
+      </div>
+    )}
+  </div>
+</Layout>
+
+<script is:inline>
+  (() => {
+    const root = document.querySelector('[data-rg]');
+    if (!root) return;
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // The index rail sticks just under the site header.
+    const masthead = document.querySelector('.masthead');
+    const setTop = () => root.style.setProperty('--rg-top', `${masthead ? masthead.getBoundingClientRect().height : 0}px`);
+    setTop(); addEventListener('resize', setTop, { passive: true });
+
+    // Reveals (content is visible without them).
+    if (!reduce && 'IntersectionObserver' in window) {
+      root.classList.add('rg-anim');
+      const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('is-in'); io.unobserve(e.target); } }), { rootMargin: '0px 0px -6% 0px', threshold: 0.04 });
+      root.querySelectorAll('[data-rg-reveal]').forEach((el) => io.observe(el));
+    }
+
+    // ---- Index: highlight the topic being read, with a reading-progress bar ----
+    const links = [...root.querySelectorAll('[data-rg-link]')];
+    const topics = [...root.querySelectorAll('[data-rg-topic]')];
+    const bar = root.querySelector('[data-rg-bar]');
+    const mark = () => {
+      const y = innerHeight * 0.3;
+      let cur = null;
+      topics.forEach((s) => { if (!s.hidden && s.getBoundingClientRect().top <= y) cur = s.id; });
+      links.forEach((l) => { const on = l.dataset.rgLink === cur; l.classList.toggle('is-on', on); if (on) l.setAttribute('aria-current', 'true'); else l.removeAttribute('aria-current'); });
+      const main = root.querySelector('.rg-main');
+      if (bar && main) {
+        const r = main.getBoundingClientRect();
+        const p = Math.min(1, Math.max(0, (innerHeight * 0.3 - r.top) / Math.max(1, r.height - innerHeight * 0.4)));
+        bar.style.transform = `scaleX(${p.toFixed(3)})`;
+      }
+    };
+    addEventListener('scroll', mark, { passive: true }); mark();
+
+    // ---- Search across every rule; topics with no match fold away ----
+    const search = root.querySelector('[data-rg-search]');
+    const rules = [...root.querySelectorAll('[data-rg-rule]')];
+    const count = root.querySelector('[data-rg-count]');
+    const none = root.querySelector('[data-rg-none]');
+    if (!search) return;
+    const apply = () => {
+      const q = search.value.trim().toLowerCase();
+      let n = 0;
+      rules.forEach((li) => { const ok = !q || li.dataset.text.includes(q); li.hidden = !ok; if (ok) n++; });
+      topics.forEach((s) => {
+        const any = [...s.querySelectorAll('[data-rg-rule]')].some((li) => !li.hidden);
+        s.hidden = !any;
+        if (any) s.classList.add('is-in');
+      });
+      links.forEach((l) => { const s = root.querySelector('#' + l.dataset.rgLink); l.parentElement.hidden = !!s && s.hidden; });
+      count.textContent = (n === 1 ? count.dataset.one : count.dataset.many).replace('{count}', String(n));
+      none.hidden = n > 0;
+    };
+    search.addEventListener('input', apply);
+    root.querySelector('[data-rg-clear]')?.addEventListener('click', () => { search.value = ''; apply(); search.focus(); });
+  })();
+</script>

@@ -1,0 +1,28 @@
+{
+  "kind": "collectionType",
+  "collectionName": "exam_resources",
+  "info": {
+    "singularName": "exam-resource",
+    "pluralName": "exam-resources",
+    "displayName": "Examinations – Documents & Notices",
+    "description": "Timetables, results, notices, circulars and guidelines shown on the Examinations page."
+  },
+  "options": { "draftAndPublish": true },
+  "attributes": {
+    "title": { "type": "string", "required": true },
+    "kind": {
+      "type": "enumeration",
+      "enum": ["timetable", "result", "notice", "circular", "guideline", "form", "record"],
+      "default": "notice",
+      "required": true
+    },
+    "session": { "type": "string" },
+    "published_on": { "type": "date" },
+    "summary": { "type": "text" },
+    "file": { "type": "media", "multiple": false, "allowedTypes": ["files", "images"] },
+    "external_url": { "type": "string" },
+    "applies_to": { "type": "string" },
+    "is_featured": { "type": "boolean", "default": false },
+    "display_order": { "type": "integer", "default": 0 }
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "collectionName": "components_chat_quick_questions",
+  "info": {
+    "displayName": "Quick question",
+    "icon": "question"
+  },
+  "options": {},
+  "attributes": {
+    "label": { "type": "string", "required": true },
+    "question": { "type": "string" }
+  }
+}

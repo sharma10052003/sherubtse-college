@@ -1,12 +1,14 @@
 ---
-// Content page — genuinely bespoke static pages only (Page type,
-// restricted to Super Admin: Vision & Mission, Core Values, History,
-// About — Build Brief §02). Note this route is more specific than
-// about/[slug] handled by units/index.astro etc. only because those live
-// under their own subpaths (about/units) — Astro resolves the literal
-// subpath first.
+// Text page (About – Text Pages in Strapi). Today this serves the Privacy
+// Policy and the Accessibility Statement linked from the footer; any other
+// text page added in Strapi gets the same layout. The body is written in
+// simple Markdown (## headings, - lists, **bold**, [links](…)), and every
+// ## heading becomes an entry in the "On this page" list. Rounded design by
+// the project owner's request. Styles: policy.css (.pg).
 import Layout from '../../layouts/Layout.astro';
+import '../../styles/policy.css';
 import { getAllPageSlugs, getPageBySlug } from '../../lib/content/pages';
+import { renderArticle } from '../../lib/article-text';
 
 export async function getStaticPaths() {
   // Slugs with their own designed page in this folder — skipped here so the
@@ -19,11 +21,67 @@ export async function getStaticPaths() {
 const { slug } = Astro.params;
 const page = await getPageBySlug(slug as string);
 if (!page) return Astro.redirect('/about', 404);
+
+// Markdown → HTML, then give each ## heading an id for the contents list.
+const toc: { id: string; label: string }[] = [];
+const used = new Set<string>();
+const html = renderArticle(page.body).html.replace(/<h2>(.*?)<\/h2>/g, (_m, inner: string) => {
+  const label = inner.replace(/<[^>]+>/g, '');
+  let id = label.toLowerCase().replace(/&[a-z#0-9]+;/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'section';
+  while (used.has(id)) id += '-2';
+  used.add(id);
+  toc.push({ id, label });
+  return `<h2 id="${id}">${inner}</h2>`;
+});
+const updated = page.updated
+  ? new Date(page.updated.length === 10 ? `${page.updated}T00:00:00` : page.updated).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
+  : null;
+const arrow = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
 ---
 <Layout title={page.title}>
-  <div class="wrap narrow" style="padding-top:var(--s5);padding-bottom:var(--s7)">
-    <nav class="breadcrumb" aria-label="Breadcrumb"><a href="/">Home</a> › <a href="/about">About</a> › <span class="current">{page.title}</span></nav>
-    <h1 class="h1">{page.title}</h1>
-    <div class="article-body" style="margin-top:var(--s5)" set:html={page.body.replace(/\n/g, '<br>')} />
+  <div class="pg" data-pg>
+    <header class="pg-hero">
+      <span class="pg-orb" aria-hidden="true"></span>
+      <div class="wrap pg-hero-inner">
+        <nav class="pg-breadcrumb" aria-label="Breadcrumb">
+          <a href="/">Home</a><span aria-hidden="true">›</span><a href="/about">About</a><span aria-hidden="true">›</span><span aria-current="page">{page.title}</span>
+        </nav>
+        <h1 class="pg-title">{page.title}</h1>
+        {updated && <p class="pg-updated"><span class="pg-dot" aria-hidden="true"></span>Last reviewed <time datetime={page.updated ?? undefined}>{updated}</time></p>}
+      </div>
+    </header>
+
+    <div class="wrap pg-layout">
+      {toc.length > 1 && (
+        <nav class="pg-toc" aria-labelledby="pg-toc-h">
+          <h2 class="pg-toc-title" id="pg-toc-h">On this page</h2>
+          <ol>
+            {toc.map((t) => <li><a href={`#${t.id}`}>{t.label}</a></li>)}
+          </ol>
+        </nav>
+      )}
+      <article class="pg-body" set:html={html} />
+    </div>
+
+    <div class="wrap pg-foot">
+      <a class="pg-pill" href="/about/contact">Contact the College <Fragment set:html={arrow} /></a>
+      <a class="pg-pill pg-pill--line" href="/">Back to home</a>
+    </div>
   </div>
 </Layout>
+
+<script is:inline>
+  (() => {
+    const root = document.querySelector('[data-pg]');
+    if (!root || !('IntersectionObserver' in window)) return;
+    // Highlight the section being read in the contents list.
+    const links = Array.from(root.querySelectorAll('.pg-toc a'));
+    const byId = new Map(links.map((a) => [a.getAttribute('href').slice(1), a]));
+    const io = new IntersectionObserver((entries) => entries.forEach((en) => {
+      if (!en.isIntersecting) return;
+      links.forEach((a) => a.removeAttribute('aria-current'));
+      byId.get(en.target.id)?.setAttribute('aria-current', 'true');
+    }), { rootMargin: '-20% 0px -70% 0px' });
+    root.querySelectorAll('.pg-body h2[id]').forEach((h) => io.observe(h));
+  })();
+</script>

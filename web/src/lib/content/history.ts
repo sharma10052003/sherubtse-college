@@ -20,8 +20,8 @@ export interface HistoryContent {
   values_text: string | null;
   video_url: string | null;
   brochure_url: string | null;
-  then_image_url: string | null;
-  now_image_url: string | null;
+  /** Small wording from About – History Page → Labels. */
+  labels: Record<string, string>;
 }
 
 export interface TimelineItem {
@@ -71,17 +71,16 @@ interface RawHistoryContent {
   values_text?: string | null;
   video_url?: string | null;
   brochure?: StrapiMedia | null;
-  then_image?: StrapiMedia | null;
-  now_image?: StrapiMedia | null;
+  labels?: Record<string, string> | null;
 }
 
 /** Single "History Content" entry — the hero, founding story, Vision of
- * the Third King, Father Mackey, motto/identity, then/now, video and
- * brochure fields. Returns null if it hasn't been filled in yet, so the
+ * the Third King, Father Mackey, motto/identity, video and brochure
+ * fields, plus the small wording (Labels). Returns null if it hasn't been filled in yet, so the
  * page can render nothing rather than a half-empty layout. */
 export async function getHistoryContent(): Promise<HistoryContent | null> {
   const res = await strapiGet<StrapiSingleResponse<RawHistoryContent>>('history-content', {
-    populate: ['hero_image', 'king_photo', 'mackey_photo', 'brochure', 'then_image', 'now_image'],
+    populate: ['hero_image', 'king_photo', 'mackey_photo', 'brochure'],
   });
   const row = res?.data;
   if (!row || !row.hero_title) return null;
@@ -104,8 +103,7 @@ export async function getHistoryContent(): Promise<HistoryContent | null> {
     values_text: row.values_text ?? null,
     video_url: row.video_url ?? null,
     brochure_url: mediaUrl(row.brochure),
-    then_image_url: mediaUrl(row.then_image),
-    now_image_url: mediaUrl(row.now_image),
+    labels: row.labels && typeof row.labels === 'object' ? row.labels : {},
   };
 }
 

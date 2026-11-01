@@ -1,17 +1,17 @@
 ---
-// History & Heritage — a dedicated, richer page than the generic Page
-// type used elsewhere in /about/[slug] (that route still exists for
-// other About pages; this file is more specific so Astro resolves it
-// first for exactly this path, same pattern already used by
-// about/units/index.astro). Ported from the PHP prototype's
-// about/history.php + includes/pages/history.php + assets/js/pages/
-// history.js, same ten sections and the same five dedicated Strapi
-// content types (history-content, history-timeline-items,
-// history-legacy-items, history-tradition-items, history-gallery-images)
-// — restyled to this rebuild's locked navy/gold, no-rounded-corners,
-// no-drop-shadow rules rather than the prototype's maroon/rounded/
-// shadowed look.
+// History & Heritage. Everything is edited in Strapi:
+//  - About – History Page: the hero, founding story, the Third King, Father
+//    Mackey, motto / emblem / values, documentary link, brochure, and the
+//    small wording (Labels);
+//  - About – History Timeline / Legacy / Traditions / Gallery: the lists
+//    (add, remove and reorder entries there).
+// Design: a slowly drifting hero photograph with a giant founding-year
+// watermark, a sticky chapter bar that follows your reading, arch-framed
+// portraits, a timeline whose gold line draws as you scroll, a heritage
+// gallery with a photo viewer, and a navy motto stage. Rounded and moving
+// by the project owner's request. Styles: history.css (.hx).
 import Layout from '../../layouts/Layout.astro';
+import '../../styles/history.css';
 import {
   getHistoryContent,
   getHistoryTimeline,
@@ -21,14 +21,60 @@ import {
   GALLERY_CATEGORY_LABELS,
   iconPaths,
 } from '../../lib/content/history';
+import { getLandingPage } from '../../lib/content/landing';
 
-const history = await getHistoryContent();
-const timeline = await getHistoryTimeline();
-const legacyItems = await getHistoryLegacyItems();
-const traditionItems = await getHistoryTraditionItems();
-const galleryImages = await getHistoryGalleryImages();
+const settle = <T,>(p: Promise<T>, fallback: T) => p.catch(() => fallback);
+const [history, timeline, legacyItems, traditionItems, galleryImages, overview] = await Promise.all([
+  getHistoryContent(),
+  getHistoryTimeline(),
+  getHistoryLegacyItems(),
+  getHistoryTraditionItems(),
+  getHistoryGalleryImages(),
+  settle(getLandingPage('about-overview'), null),
+]);
+
+// Wording from About – History Page → Labels (defaults match the Strapi seed).
+const DEFAULTS: Record<string, string> = {
+  years_label: '{count} years of learning', since_label: 'Since {year}', scroll_label: 'Read our story',
+  nav_label: 'Chapters', nav_story: 'Founding', nav_people: 'The founders', nav_timeline: 'Milestones', nav_gallery: 'Gallery',
+  nav_motto: 'Motto', nav_legacy: 'Legacy', nav_traditions: 'Traditions', nav_video: 'Documentary',
+  story_eyebrow: 'Founding Story', story_heading: 'How It Began',
+  king_eyebrow: 'Vision of the Third King', king_heading: 'His Majesty Jigme Dorji Wangchuck', mackey_eyebrow: 'Founding Principal',
+  timeline_eyebrow: 'Historical Timeline', timeline_heading: 'Milestones',
+  gallery_eyebrow: 'Heritage Gallery', gallery_heading: 'Moments from Our History', gallery_all: 'All', gallery_filter_label: 'Filter photos by category',
+  motto_eyebrow: 'Motto & Identity', meaning_label: 'What it means', emblem_label: 'The Emblem', values_label: 'Our Values',
+  legacy_eyebrow: 'Legacy & Achievements', legacy_heading: 'Our Legacy',
+  traditions_eyebrow: 'Traditions & Culture', traditions_heading: 'Living Traditions',
+  video_eyebrow: 'Documentary', video_heading: 'Watch Our Story',
+  brochure_heading: 'Download the Heritage Brochure', brochure_text: 'A printable keepsake of Sherubtse College’s history, milestones and legacy.', brochure_button: 'Download Brochure',
+};
+const raw = history?.labels ?? {};
+const t = (k: string) => (typeof raw[k] === 'string' && raw[k].trim() ? raw[k].trim() : DEFAULTS[k] ?? '');
+
+// The founding year comes from About – Overview → Labels, like the About page.
+const foundedYear = Number((overview?.labels?.founded_value ?? '').match(/\d{4}/)?.[0] ?? 0) || null;
+const years = foundedYear ? new Date().getFullYear() - foundedYear : 0;
 
 const presentCategories = [...new Set(galleryImages.map((g) => g.category))];
+const people = history ? !!(history.vision_king_text || history.mackey_bio) : false;
+
+// Chapters shown in the sticky bar: only the sections that exist.
+const chapters = history
+  ? [
+      { id: 'story', label: t('nav_story'), show: !!history.founding_story },
+      { id: 'founders', label: t('nav_people'), show: people },
+      { id: 'timeline', label: t('nav_timeline'), show: timeline.length > 0 },
+      { id: 'gallery', label: t('nav_gallery'), show: galleryImages.length > 0 },
+      { id: 'motto', label: t('nav_motto'), show: !!history.motto },
+      { id: 'legacy', label: t('nav_legacy'), show: legacyItems.length > 0 },
+      { id: 'traditions', label: t('nav_traditions'), show: traditionItems.length > 0 },
+      { id: 'video', label: t('nav_video'), show: !!history.video_url },
+    ].filter((c) => c.show)
+  : [];
+
+const initial = (name: string) => (name.replace(/^(Father|Dr\.?|Mr\.?|His Majesty)\s+/i, '').trim()[0] ?? '').toUpperCase();
+const arrowDown = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M6 13l6 6 6-6"/></svg>';
+const download = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 11l5 5 5-5M5 20h14"/></svg>';
 ---
 <Layout title="History & Heritage" description={history?.hero_intro ?? 'The history of Sherubtse College.'}>
   {!history ? (
@@ -38,208 +84,252 @@ const presentCategories = [...new Set(galleryImages.map((g) => g.category))];
       <p class="small" style="margin-top:var(--s4)">This page will appear here once added in Strapi.</p>
     </div>
   ) : (
-    <article class="history-page">
-      <!-- 1. Hero -->
-      <section class="history-hero" style={history.hero_image_url ? `background-image:url(${history.hero_image_url});background-position:center ${history.hero_image_position}` : undefined}>
-        <div class="history-hero-overlay"></div>
-        <div class="wrap history-hero-breadcrumb-row">
-          <nav class="breadcrumb breadcrumb-on-dark" aria-label="Breadcrumb"><a href="/">Home</a> › <a href="/about">About</a> › <span class="current">History & Heritage</span></nav>
-        </div>
-        <div class="wrap history-hero-inner">
-          <h1 class="h-display">{history.hero_title}</h1>
-          <p class="history-hero-subtitle">{history.hero_subtitle}</p>
-          <p class="history-hero-intro">{history.hero_intro}</p>
-        </div>
-      </section>
-
-      <!-- 2. Founding Story -->
-      <section class="band">
-        <div class="wrap narrow reveal">
-          <p class="eyebrow">Founding Story</p>
-          <h2 class="h2">How It Began</h2>
-          <p class="history-prose">{history.founding_story}</p>
-        </div>
-      </section>
-
-      <!-- 3. Vision of the Third King (moved ahead of the Timeline per
-           direct request: King and Mackey now come right after the
-           founding story, milestones after them) -->
-      <section class="band band-alt">
-        <div class="wrap">
-          <div class="history-portrait-card history-portrait-card-reverse reveal">
-            <div class="history-portrait-photo">
-              {history.king_photo_url ? (
-                <img src={history.king_photo_url} alt="His Majesty Jigme Dorji Wangchuck, the Third Druk Gyalpo" loading="lazy" />
-              ) : (
-                <div class="history-portrait-placeholder">1:1</div>
-              )}
-            </div>
-            <div>
-              <p class="eyebrow">Vision of the Third King</p>
-              <h2 class="h2">His Majesty Jigme Dorji Wangchuck</h2>
-              <p class="history-prose">{history.vision_king_text}</p>
-            </div>
+    <article class="hx" data-hx>
+      <!-- ============ HERO ============ -->
+      <header class:list={['hx-hero', { 'hx-hero--photo': history.hero_image_url }]}>
+        {history.hero_image_url && (
+          <img class="hx-hero-img" src={history.hero_image_url} alt="" style={`object-position:center ${history.hero_image_position}`} loading="eager" decoding="async" fetchpriority="high" />
+        )}
+        <span class="hx-hero-shade" aria-hidden="true"></span>
+        {foundedYear && <span class="hx-mark" aria-hidden="true" data-hx-mark>{foundedYear}</span>}
+        <span class="hx-hero-line" aria-hidden="true"></span>
+        <div class="wrap hx-hero-inner">
+          <nav class="hx-breadcrumb hx-rise" style="--d:0" aria-label="Breadcrumb">
+            <a href="/">Home</a><span aria-hidden="true">›</span><a href="/about">About</a><span aria-hidden="true">›</span><span aria-current="page">History & Heritage</span>
+          </nav>
+          <h1 class="hx-title hx-rise" style="--d:1">{history.hero_title}</h1>
+          <p class="hx-subtitle hx-rise" style="--d:2">{history.hero_subtitle}</p>
+          <p class="hx-intro hx-rise" style="--d:3">{history.hero_intro}</p>
+          <div class="hx-chips hx-rise" style="--d:4">
+            {foundedYear && <span class="hx-chip">{t('since_label').replace('{year}', String(foundedYear))}</span>}
+            {years > 0 && <span class="hx-chip hx-chip--gold"><strong data-hx-count={years}>{years}</strong>{t('years_label').replace('{count}', '').trim()}</span>}
+            {chapters.length > 0 && <a class="hx-chip hx-chip--link" href={`#${chapters[0].id}`}>{t('scroll_label')} <Fragment set:html={arrowDown} /></a>}
           </div>
         </div>
-      </section>
+      </header>
 
-      <!-- 4. Father Mackey -->
-      <section class="band">
-        <div class="wrap">
-          <div class="history-portrait-card reveal">
-            <div class="history-portrait-photo">
-              {history.mackey_photo_url ? (
-                <img src={history.mackey_photo_url} alt={history.mackey_name} loading="lazy" />
-              ) : (
-                <div class="history-portrait-placeholder">1:1</div>
-              )}
-            </div>
-            <div>
-              <p class="eyebrow">Founding Principal</p>
-              <h2 class="h2">{history.mackey_name}</h2>
-              <p class="history-prose">{history.mackey_bio}</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- 5. Historical Timeline -->
-      {timeline.length > 0 && (
-        <section class="band band-alt">
+      <!-- ============ CHAPTER BAR ============ -->
+      {chapters.length > 1 && (
+        <nav class="hx-nav" aria-label={t('nav_label')} data-hx-nav>
           <div class="wrap">
-            <p class="eyebrow">Historical Timeline</p>
-            <h2 class="h2 reveal">Milestones</h2>
-            <div class="history-timeline" id="historyTimeline">
-              <span class="history-timeline-progress" id="historyTimelineProgress" aria-hidden="true"></span>
-              {timeline.map((item, i) => (
-                <div class={`history-timeline-item history-timeline-item-${i % 2 === 0 ? 'left' : 'right'} reveal`} style={`--i:${i}`}>
-                  <span class="history-timeline-dot" aria-hidden="true"></span>
-                  <div class="history-timeline-card">
-                    <span class="history-timeline-year">{item.year}</span>
-                    <h3 class="h3">{item.event}</h3>
-                    {item.description && <p class="small">{item.description}</p>}
-                  </div>
-                </div>
-              ))}
+            <ul>
+              {chapters.map((c) => <li><a href={`#${c.id}`} data-hx-link>{c.label}</a></li>)}
+            </ul>
+          </div>
+        </nav>
+      )}
+
+      <!-- ============ FOUNDING STORY ============ -->
+      {history.founding_story && (
+        <section class="hx-band" id="story" aria-labelledby="hx-story-h">
+          <div class="wrap hx-story" data-hx-reveal>
+            <header class="hx-head">
+              <p class="hx-eyebrow">{t('story_eyebrow')}</p>
+              <h2 class="hx-h2" id="hx-story-h">{t('story_heading')}</h2>
+            </header>
+            <div class="hx-story-card">
+              <span class="hx-quote" aria-hidden="true">“</span>
+              <p class="hx-dropcap">{history.founding_story}</p>
             </div>
           </div>
         </section>
       )}
 
-      <!-- 6. Heritage Gallery -->
-      {galleryImages.length > 0 && (
-        <section class="band" id="heritage-gallery">
-          <div class="wrap">
-            <p class="eyebrow">Heritage Gallery</p>
-            <h2 class="h2 reveal">Moments from Our History</h2>
+      <!-- ============ THE FOUNDERS: the Third King and Father Mackey ============ -->
+      {people && (
+        <section class="hx-band hx-band--soft" id="founders" aria-label={t('nav_people')}>
+          <div class="wrap hx-people">
+            {history.vision_king_text && (
+              <article class="hx-person" data-hx-reveal style="--i:0">
+                <div class="hx-arch">
+                  {history.king_photo_url ? (
+                    <img src={history.king_photo_url} alt="His Majesty Jigme Dorji Wangchuck, the Third Druk Gyalpo" loading="lazy" decoding="async" />
+                  ) : (
+                    <span class="hx-initial" aria-hidden="true">{initial(t('king_heading'))}</span>
+                  )}
+                </div>
+                <div class="hx-person-body">
+                  <p class="hx-eyebrow">{t('king_eyebrow')}</p>
+                  <h2 class="hx-h3">{t('king_heading')}</h2>
+                  <p class="hx-prose">{history.vision_king_text}</p>
+                </div>
+              </article>
+            )}
+            {history.mackey_bio && (
+              <article class="hx-person" data-hx-reveal style="--i:1">
+                <div class="hx-arch">
+                  {history.mackey_photo_url ? (
+                    <img src={history.mackey_photo_url} alt={history.mackey_name} loading="lazy" decoding="async" />
+                  ) : (
+                    <span class="hx-initial" aria-hidden="true">{initial(history.mackey_name)}</span>
+                  )}
+                </div>
+                <div class="hx-person-body">
+                  <p class="hx-eyebrow">{t('mackey_eyebrow')}</p>
+                  <h2 class="hx-h3">{history.mackey_name}</h2>
+                  <p class="hx-prose">{history.mackey_bio}</p>
+                </div>
+              </article>
+            )}
+          </div>
+        </section>
+      )}
 
+      <!-- ============ TIMELINE ============ -->
+      {timeline.length > 0 && (
+        <section class="hx-band" id="timeline" aria-labelledby="hx-timeline-h">
+          <div class="wrap">
+            <header class="hx-head hx-head--center" data-hx-reveal>
+              <p class="hx-eyebrow">{t('timeline_eyebrow')}</p>
+              <h2 class="hx-h2" id="hx-timeline-h">{t('timeline_heading')}</h2>
+            </header>
+            <div class="hx-timeline" data-hx-timeline>
+              <span class="hx-spine" aria-hidden="true"><span class="hx-spine-fill" data-hx-spine></span></span>
+              <ol>
+                {timeline.map((item, i) => (
+                  <li class:list={['hx-step', i % 2 === 0 ? 'hx-step--left' : 'hx-step--right', { 'hx-step--now': i === timeline.length - 1 && timeline.length > 1 }]} data-hx-reveal>
+                    <span class="hx-node" aria-hidden="true"></span>
+                    <div class="hx-step-card">
+                      <span class="hx-year">{item.year}</span>
+                      <h3 class="hx-step-title">{item.event}</h3>
+                      {item.description && <p class="hx-step-text">{item.description}</p>}
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          </div>
+        </section>
+      )}
+
+      <!-- ============ HERITAGE GALLERY ============ -->
+      {galleryImages.length > 0 && (
+        <section class="hx-band hx-band--soft" id="gallery" aria-labelledby="hx-gallery-h">
+          <div class="wrap">
+            <header class="hx-head" data-hx-reveal>
+              <p class="hx-eyebrow">{t('gallery_eyebrow')}</p>
+              <h2 class="hx-h2" id="hx-gallery-h">{t('gallery_heading')}</h2>
+            </header>
             {presentCategories.length > 1 && (
-              <div class="history-gallery-filters" role="tablist" aria-label="Filter photos by category">
-                <button type="button" class="is-active" data-filter="all" role="tab" aria-selected="true">All</button>
+              <div class="hx-filters" role="group" aria-label={t('gallery_filter_label')}>
+                <button type="button" class="is-active" data-filter="all" aria-pressed="true">{t('gallery_all')}</button>
                 {presentCategories.map((cat) => (
-                  <button type="button" data-filter={cat} role="tab" aria-selected="false">{GALLERY_CATEGORY_LABELS[cat]}</button>
+                  <button type="button" data-filter={cat} aria-pressed="false">{GALLERY_CATEGORY_LABELS[cat]}</button>
                 ))}
               </div>
             )}
-
-            <div class="history-gallery-grid">
+            <div class="hx-gallery">
               {galleryImages.map((img, i) => (
-                <button type="button" class="history-gallery-item reveal" data-category={img.category} data-index={i} style={`--i:${i % 6}`}>
-                  <img src={img.image_url ?? ''} alt={img.caption ?? ''} loading="lazy" />
-                  {img.caption && <span class="history-gallery-caption">{img.caption}</span>}
+                <button type="button" class="hx-photo" data-category={img.category} data-index={i}>
+                  <img src={img.image_url ?? ''} alt={img.caption ?? ''} loading="lazy" decoding="async" />
+                  {img.caption && <span class="hx-photo-caption">{img.caption}</span>}
                 </button>
               ))}
             </div>
           </div>
-
-          <div class="history-lightbox" id="historyLightbox" hidden role="dialog" aria-modal="true" aria-label="Photo viewer">
-            <button type="button" class="history-lightbox-close" id="historyLightboxClose" aria-label="Close photo viewer">✕</button>
-            <button type="button" class="history-lightbox-nav history-lightbox-nav-prev" id="historyLightboxPrev" aria-label="Previous photo">‹</button>
-            <figure class="history-lightbox-figure">
-              <img src="" alt="" id="historyLightboxImage" />
-              <figcaption id="historyLightboxCaption"></figcaption>
+          <div class="hx-lightbox" id="hxLightbox" hidden role="dialog" aria-modal="true" aria-label="Photo viewer">
+            <button type="button" class="hx-lb-btn hx-lb-close" id="hxLbClose" aria-label="Close photo viewer">✕</button>
+            <button type="button" class="hx-lb-btn hx-lb-prev" id="hxLbPrev" aria-label="Previous photo">‹</button>
+            <figure class="hx-lb-figure">
+              <img src="" alt="" id="hxLbImage" />
+              <figcaption id="hxLbCaption"></figcaption>
             </figure>
-            <button type="button" class="history-lightbox-nav history-lightbox-nav-next" id="historyLightboxNext" aria-label="Next photo">›</button>
+            <button type="button" class="hx-lb-btn hx-lb-next" id="hxLbNext" aria-label="Next photo">›</button>
           </div>
         </section>
       )}
 
-      <!-- 7. Motto & Identity -->
-      <section class="band band-alt">
-        <div class="wrap narrow reveal">
-          <p class="eyebrow">Motto & Identity</p>
-          <h2 class="history-motto">&ldquo;{history.motto}&rdquo;</h2>
-          {history.motto_meaning && <p class="history-prose">{history.motto_meaning}</p>}
-          {history.emblem_meaning && (<><h3 class="h3">The Emblem</h3><p class="history-prose">{history.emblem_meaning}</p></>)}
-          {history.values_text && (<><h3 class="h3">Our Values</h3><p class="history-prose">{history.values_text}</p></>)}
-        </div>
-      </section>
-
-      <!-- 8. Legacy & Achievements -->
-      {legacyItems.length > 0 && (
-        <section class="band">
+      <!-- ============ MOTTO & IDENTITY ============ -->
+      {history.motto && (
+        <section class="hx-motto" id="motto" aria-labelledby="hx-motto-h">
+          <span class="hx-motto-pattern" aria-hidden="true"></span>
           <div class="wrap">
-            <p class="eyebrow">Legacy & Achievements</p>
-            <h2 class="h2 reveal">Our Legacy</h2>
-            <div class="history-card-grid">
-              {legacyItems.map((item) => (
-                <div class="card">
-                  <svg class="history-card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" set:html={iconPaths(item.icon)} />
-                  <p>{item.text}</p>
-                </div>
-              ))}
+            <div class="hx-motto-head" data-hx-reveal>
+              <p class="hx-eyebrow hx-eyebrow--light">{t('motto_eyebrow')}</p>
+              <h2 class="hx-motto-text" id="hx-motto-h"><span aria-hidden="true">“</span>{history.motto}<span aria-hidden="true">”</span></h2>
             </div>
-          </div>
-        </section>
-      )}
-
-      <!-- 9. Traditions & Culture -->
-      {traditionItems.length > 0 && (
-        <section class="band band-alt">
-          <div class="wrap">
-            <p class="eyebrow">Traditions & Culture</p>
-            <h2 class="h2 reveal">Living Traditions</h2>
-            <div class="history-card-grid">
-              {traditionItems.map((item) => (
-                <div class="card">
-                  <svg class="history-card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" set:html={iconPaths(item.icon)} />
-                  <h3 class="h3">{item.title}</h3>
-                  {item.description && <p class="small">{item.description}</p>}
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
-      <!-- 10a. Then vs Now -->
-      {history.then_image_url && history.now_image_url && (
-        <section class="band">
-          <div class="wrap narrow">
-            <p class="eyebrow">Then vs Now</p>
-            <h2 class="h2 reveal">Decades of Growth</h2>
-            <div class="history-slider" id="historyThenNowSlider">
-              <img class="history-slider-now" src={history.now_image_url} alt="Sherubtse College today" />
-              <div class="history-slider-then-wrap">
-                <img class="history-slider-then" src={history.then_image_url} alt="Sherubtse College in its early years" />
+            {(history.motto_meaning || history.emblem_meaning || history.values_text) && (
+              <div class="hx-motto-grid">
+                {history.motto_meaning && (
+                  <div class="hx-motto-card" data-hx-reveal style="--i:0">
+                    <h3>{t('meaning_label')}</h3>
+                    <p>{history.motto_meaning}</p>
+                  </div>
+                )}
+                {history.emblem_meaning && (
+                  <div class="hx-motto-card" data-hx-reveal style="--i:1">
+                    <h3>{t('emblem_label')}</h3>
+                    <p>{history.emblem_meaning}</p>
+                  </div>
+                )}
+                {history.values_text && (
+                  <div class="hx-motto-card" data-hx-reveal style="--i:2">
+                    <h3>{t('values_label')}</h3>
+                    <p>{history.values_text}</p>
+                  </div>
+                )}
               </div>
-              <div class="history-slider-handle" aria-hidden="true"></div>
-              <label class="sr-only-focusable" for="historyThenNowRange">Drag to compare then and now</label>
-              <input type="range" id="historyThenNowRange" min="0" max="100" value="50" />
-              <span class="history-slider-label history-slider-label-then">Then</span>
-              <span class="history-slider-label history-slider-label-now">Now</span>
-            </div>
+            )}
           </div>
         </section>
       )}
 
-      <!-- 10b. Documentary -->
+      <!-- ============ LEGACY ============ -->
+      {legacyItems.length > 0 && (
+        <section class="hx-band" id="legacy" aria-labelledby="hx-legacy-h">
+          <div class="wrap">
+            <header class="hx-head" data-hx-reveal>
+              <p class="hx-eyebrow">{t('legacy_eyebrow')}</p>
+              <h2 class="hx-h2" id="hx-legacy-h">{t('legacy_heading')}</h2>
+            </header>
+            <ul class="hx-cards">
+              {legacyItems.map((item, i) => (
+                <li class="hx-card" data-hx-reveal style={`--i:${i}`}>
+                  <span class="hx-card-fill" aria-hidden="true"></span>
+                  <span class="hx-card-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" set:html={iconPaths(item.icon)} />
+                  </span>
+                  <p class="hx-card-text">{item.text}</p>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+      )}
+
+      <!-- ============ TRADITIONS ============ -->
+      {traditionItems.length > 0 && (
+        <section class="hx-band hx-band--soft" id="traditions" aria-labelledby="hx-trad-h">
+          <div class="wrap">
+            <header class="hx-head" data-hx-reveal>
+              <p class="hx-eyebrow">{t('traditions_eyebrow')}</p>
+              <h2 class="hx-h2" id="hx-trad-h">{t('traditions_heading')}</h2>
+            </header>
+            <ul class="hx-cards hx-cards--trad">
+              {traditionItems.map((item, i) => (
+                <li class="hx-card" data-hx-reveal style={`--i:${i}`}>
+                  <span class="hx-card-fill" aria-hidden="true"></span>
+                  <span class="hx-card-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" set:html={iconPaths(item.icon)} />
+                  </span>
+                  <h3 class="hx-card-title">{item.title}</h3>
+                  {item.description && <p class="hx-card-text">{item.description}</p>}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+      )}
+
+      <!-- ============ DOCUMENTARY ============ -->
       {history.video_url && (
-        <section class="band band-alt">
-          <div class="wrap narrow reveal">
-            <p class="eyebrow">Documentary</p>
-            <h2 class="h2">Watch Our Story</h2>
-            <div class="history-video-frame">
+        <section class="hx-band" id="video" aria-labelledby="hx-video-h">
+          <div class="wrap hx-video-wrap" data-hx-reveal>
+            <header class="hx-head hx-head--center">
+              <p class="hx-eyebrow">{t('video_eyebrow')}</p>
+              <h2 class="hx-h2" id="hx-video-h">{t('video_heading')}</h2>
+            </header>
+            <div class="hx-video">
               {/\.mp4($|\?)/i.test(history.video_url) ? (
                 <video controls src={history.video_url}></video>
               ) : (
@@ -250,15 +340,17 @@ const presentCategories = [...new Set(galleryImages.map((g) => g.category))];
         </section>
       )}
 
-      <!-- 10c. Brochure -->
+      <!-- ============ BROCHURE ============ -->
       {history.brochure_url && (
-        <section class="band">
-          <div class="wrap narrow history-brochure-inner reveal">
-            <div>
-              <h2 class="h2">Download the Heritage Brochure</h2>
-              <p class="history-prose">A printable keepsake of Sherubtse College's history, milestones and legacy.</p>
+        <section class="hx-end">
+          <div class="wrap">
+            <div class="hx-brochure" data-hx-reveal>
+              <div>
+                <h2 class="hx-brochure-title">{t('brochure_heading')}</h2>
+                <p>{t('brochure_text')}</p>
+              </div>
+              <a class="hx-btn" href={history.brochure_url} download>{t('brochure_button')} <Fragment set:html={download} /></a>
             </div>
-            <a class="btn btn-primary" href={history.brochure_url} download>Download Brochure</a>
           </div>
         </section>
       )}
@@ -266,460 +358,150 @@ const presentCategories = [...new Set(galleryImages.map((g) => g.category))];
   )}
 </Layout>
 
-<style>
-  .history-prose {
-    font-size: 1.05rem;
-    line-height: 1.7;
-    color: var(--ink-2);
-  }
-
-  /* ---- 1. Hero ---- */
-  .history-hero {
-    position: relative;
-    min-height: 480px;
-    display: flex;
-    align-items: flex-end;
-    background-color: var(--navy);
-    background-size: cover;
-    background-position: center;
-    color: #fff;
-    padding-block: var(--s8);
-  }
-  @media (min-width: 760px) {
-    .history-hero {
-      min-height: 620px;
-    }
-  }
-  @media (min-width: 1024px) {
-    .history-hero {
-      min-height: 720px;
-    }
-  }
-  .history-hero-overlay {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(180deg, rgba(8, 18, 52, 0.75), rgba(8, 18, 52, 0.55));
-  }
-  .history-hero-breadcrumb-row {
-    position: absolute;
-    top: var(--s6);
-    left: 0;
-    right: 0;
-  }
-  .history-hero-inner {
-    position: relative;
-    max-width: 46rem;
-  }
-  .history-hero-inner .h-display {
-    color: #fff;
-  }
-  /* .breadcrumb .current normally uses var(--ink) (near-black), correct
-     on the white pages it was designed for but invisible here against
-     the hero's dark navy overlay — needs its own override, not just the
-     link colour. */
-  .breadcrumb-on-dark, .breadcrumb-on-dark a { color: #c9d0e4; }
-  .breadcrumb-on-dark .current { color: #fff; }
-  .history-hero-subtitle {
-    font-size: 1.2rem;
-    color: var(--gold-light);
-    font-weight: 600;
-    margin: var(--s3) 0 0;
-  }
-  .history-hero-intro {
-    font-size: 1.05rem;
-    line-height: 1.6;
-    color: rgba(255, 255, 255, 0.9);
-    margin: var(--s4) 0 0;
-  }
-
-  /* ---- 3. Timeline ---- */
-  .history-timeline {
-    position: relative;
-    max-width: 54rem;
-    margin: var(--s6) auto 0;
-  }
-  .history-timeline::before {
-    content: '';
-    position: absolute;
-    left: 50%;
-    top: 0;
-    bottom: 0;
-    width: 3px;
-    background: var(--line-strong);
-    transform: translateX(-50%);
-  }
-  .history-timeline-progress {
-    position: absolute;
-    left: 50%;
-    top: 0;
-    bottom: 0;
-    width: 3px;
-    background: var(--gold);
-    transform: translateX(-50%);
-    clip-path: inset(0 0 100% 0);
-    transition: clip-path 120ms linear;
-  }
-  .history-timeline-item {
-    position: relative;
-    width: 50%;
-    padding: 0 var(--s7) var(--s7);
-  }
-  .history-timeline-item-left { left: 0; text-align: right; }
-  .history-timeline-item-right { left: 50%; text-align: left; }
-  .history-timeline-dot {
-    position: absolute;
-    top: 4px;
-    width: 16px;
-    height: 16px;
-    background: var(--gold);
-    border: 3px solid var(--paper-2);
-  }
-  .history-timeline-item-left .history-timeline-dot { right: -8px; }
-  .history-timeline-item-right .history-timeline-dot { left: -8px; }
-  .history-timeline-card {
-    display: inline-block;
-    max-width: 22rem;
-    text-align: left;
-    background: #fff;
-    border: 1px solid var(--line);
-    padding: var(--s4) var(--s5);
-  }
-  .history-timeline-year {
-    display: inline-block;
-    background: var(--navy);
-    color: #fff;
-    font-family: var(--font-serif);
-    font-weight: 700;
-    font-size: 0.85rem;
-    padding: 2px 12px;
-    margin-bottom: var(--s2);
-  }
-  @media (max-width: 700px) {
-    .history-timeline::before,
-    .history-timeline-progress { left: 20px; }
-    .history-timeline-item,
-    .history-timeline-item-left,
-    .history-timeline-item-right {
-      width: 100%;
-      left: 0;
-      text-align: left;
-      padding: 0 0 var(--s6) var(--s7);
-    }
-    .history-timeline-item-left .history-timeline-dot,
-    .history-timeline-item-right .history-timeline-dot { left: 14px; right: auto; }
-    .history-timeline-card { max-width: none; }
-  }
-
-  /* ---- 4/5. Portrait card ---- */
-  .history-portrait-card {
-    display: grid;
-    grid-template-columns: minmax(0, 0.6fr) minmax(0, 1.4fr);
-    gap: var(--s7);
-    align-items: center;
-  }
-  .history-portrait-card-reverse { grid-template-columns: minmax(0, 1.4fr) minmax(0, 0.6fr); }
-  .history-portrait-card-reverse .history-portrait-photo { order: 2; }
-  /* Circular, per direct request specifically for these two portraits —
-     a deliberate, named exception to the site's own no-rounded-corners
-     rule, not applied anywhere else. Sized up from 16rem: at 4:5 the
-     photos were being cropped down to only showing about half of each
-     picture; 1:1 plus a larger box shows much more of the actual frame. */
-  .history-portrait-photo {
-    aspect-ratio: 1 / 1;
-    max-width: 20rem;
-    border-radius: 50%;
-    overflow: hidden;
-    margin: 0 auto;
-  }
-  .history-portrait-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
-  .history-portrait-placeholder {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--paper-2);
-    border: 1px solid var(--line);
-    color: var(--ink-2);
-  }
-  @media (max-width: 700px) {
-    .history-portrait-card,
-    .history-portrait-card-reverse { grid-template-columns: 1fr; text-align: center; }
-    .history-portrait-card-reverse .history-portrait-photo { order: 0; }
-  }
-
-  /* ---- 6. Gallery ---- */
-  .history-gallery-filters { display: flex; flex-wrap: wrap; gap: var(--s3); margin: var(--s5) 0; }
-  .history-gallery-filters button {
-    font-family: inherit;
-    font-size: 0.85rem;
-    font-weight: 600;
-    padding: 8px 18px;
-    border: 1px solid var(--line-strong);
-    background: #fff;
-    color: var(--ink-2);
-    cursor: pointer;
-  }
-  .history-gallery-filters button.is-active { background: var(--navy); border-color: var(--navy); color: #fff; }
-  .history-gallery-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    grid-auto-rows: 130px;
-    gap: var(--s4);
-  }
-  @media (max-width: 900px) { .history-gallery-grid { grid-template-columns: repeat(3, 1fr); } }
-  @media (max-width: 560px) { .history-gallery-grid { grid-template-columns: repeat(2, 1fr); } }
-  .history-gallery-item {
-    display: block;
-    width: 100%;
-    height: 100%;
-    position: relative;
-    border: 0;
-    padding: 0;
-    background: none;
-    overflow: hidden;
-    cursor: pointer;
-  }
-  .history-gallery-item[hidden] { display: none; }
-  .history-gallery-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
-  .history-gallery-caption {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    padding: var(--s2) var(--s3);
-    background: linear-gradient(0deg, rgba(0, 0, 0, 0.72), rgba(0, 0, 0, 0));
-    color: #fff;
-    font-size: 0.8rem;
-  }
-  .history-lightbox {
-    position: fixed;
-    inset: 0;
-    z-index: 200;
-    background: rgba(8, 10, 15, 0.94);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: var(--s6);
-  }
-  .history-lightbox[hidden] { display: none; }
-  .history-lightbox-figure { max-width: 90vw; max-height: 85vh; margin: 0; display: flex; flex-direction: column; align-items: center; gap: var(--s3); }
-  .history-lightbox-figure img { max-width: 90vw; max-height: 75vh; object-fit: contain; }
-  .history-lightbox-figure figcaption { color: rgba(255, 255, 255, 0.85); font-size: 0.85rem; text-align: center; }
-  .history-lightbox-close, .history-lightbox-nav {
-    position: fixed;
-    background: rgba(255, 255, 255, 0.12);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    color: #fff;
-    width: 44px;
-    height: 44px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.2rem;
-    cursor: pointer;
-  }
-  .history-lightbox-close { top: var(--s5); right: var(--s5); }
-  .history-lightbox-nav-prev { left: var(--s5); top: 50%; transform: translateY(-50%); }
-  .history-lightbox-nav-next { right: var(--s5); top: 50%; transform: translateY(-50%); }
-
-  /* ---- 7. Motto ---- */
-  .history-motto {
-    font-family: var(--font-serif);
-    font-style: italic;
-    font-weight: 700;
-    color: var(--navy);
-    font-size: clamp(1.6rem, 3.5vw, 2.2rem);
-    margin: 0 0 var(--s4);
-  }
-
-  /* ---- 8/9. Card grids ---- */
-  .history-card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--s5); margin-top: var(--s5); }
-  .history-card-icon { width: 28px; height: 28px; color: var(--gold-ink); margin: 0 0 var(--s2); display: block; }
-
-  /* ---- 10a. Then/Now slider ---- */
-  .history-slider {
-    position: relative;
-    aspect-ratio: 16 / 10;
-    overflow: hidden;
-    user-select: none;
-    margin-top: var(--s5);
-  }
-  .history-slider-now, .history-slider-then { width: 100%; height: 100%; object-fit: cover; display: block; }
-  .history-slider-now { position: absolute; inset: 0; }
-  .history-slider-then-wrap {
-    position: absolute;
-    inset: 0;
-    clip-path: inset(0 calc(100% - var(--slider-pos, 50%)) 0 0);
-  }
-  .history-slider-handle {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: var(--slider-pos, 50%);
-    width: 3px;
-    background: #fff;
-    transform: translateX(-50%);
-    pointer-events: none;
-  }
-  .history-slider input[type='range'] {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    margin: 0;
-    opacity: 0;
-    cursor: ew-resize;
-  }
-  .history-slider-label {
-    position: absolute;
-    bottom: var(--s3);
-    padding: 4px 12px;
-    background: rgba(0, 0, 0, 0.6);
-    color: #fff;
-    font-size: 0.72rem;
-    font-weight: 700;
-    text-transform: uppercase;
-  }
-  .history-slider-label-then { left: var(--s3); }
-  .history-slider-label-now { right: var(--s3); }
-
-  /* ---- 10b. Video ---- */
-  .history-video-frame { position: relative; width: 100%; aspect-ratio: 16 / 9; overflow: hidden; background: #000; margin-top: var(--s5); }
-  .history-video-frame iframe, .history-video-frame video { width: 100%; height: 100%; border: none; display: block; }
-
-  /* ---- 10c. Brochure ---- */
-  .history-brochure-inner { display: flex; align-items: center; justify-content: space-between; gap: var(--s5); flex-wrap: wrap; }
-</style>
-
 <script>
-  // Timeline scroll-driven progress line, Heritage Gallery filter +
-  // lightbox, and the Then/Now comparison slider. Ported from the PHP
-  // prototype's history.js — same behaviour, no view-transitions API
-  // dependency (kept simple: instant swap, since this rebuild's JS
-  // budget is deliberately minimal). The fade/slide-in reveal itself is
-  // handled by the site-wide scroll-reveal in Layout.astro (this page's
-  // .reveal / .card elements are already covered by it), not duplicated
-  // here.
-  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const root = document.querySelector<HTMLElement>('[data-hx]');
+  if (root) {
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const fine = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
 
-  // ---- Timeline progress ----
-  const timelineEl = document.getElementById('historyTimeline');
-  const progressEl = document.getElementById('historyTimelineProgress');
-  if (timelineEl && progressEl) {
-    if (reduceMotion) {
-      progressEl.style.clipPath = 'inset(0 0 0% 0)';
-    } else {
+    // ---- Sticky chapter bar: sits under the site header, highlights the chapter being read ----
+    const masthead = document.querySelector('.masthead');
+    const setTop = () => root.style.setProperty('--hx-top', `${masthead ? masthead.getBoundingClientRect().height : 0}px`);
+    setTop();
+    window.addEventListener('resize', setTop);
+    const links = Array.from(root.querySelectorAll<HTMLAnchorElement>('[data-hx-link]'));
+    if (links.length && 'IntersectionObserver' in window) {
+      const byId = new Map(links.map((a) => [a.getAttribute('href')!.slice(1), a]));
+      const spy = new IntersectionObserver(
+        (entries) =>
+          entries.forEach((en) => {
+            if (!en.isIntersecting) return;
+            links.forEach((a) => a.removeAttribute('aria-current'));
+            const a = byId.get(en.target.id);
+            if (a) {
+              a.setAttribute('aria-current', 'true');
+              a.scrollIntoView({ block: 'nearest', inline: 'center', behavior: reduce ? 'auto' : 'smooth' });
+            }
+          }),
+        { rootMargin: '-35% 0px -60% 0px' },
+      );
+      byId.forEach((_, id) => {
+        const s = document.getElementById(id);
+        if (s) spy.observe(s);
+      });
+    }
+
+    // ---- Hero: the founding-year watermark drifts as you scroll; the years count up ----
+    const mark = root.querySelector<HTMLElement>('[data-hx-mark]');
+    if (mark && !reduce) {
       let ticking = false;
-      const updateProgress = () => {
-        const rect = timelineEl.getBoundingClientRect();
-        const vh = window.innerHeight;
-        const total = rect.height + vh * 0.5;
-        const scrolled = vh * 0.5 - rect.top;
-        const pct = Math.max(0, Math.min(1, total > 0 ? scrolled / total : 0));
-        (progressEl as HTMLElement).style.clipPath = `inset(0 0 ${(1 - pct) * 100}% 0)`;
-        ticking = false;
-      };
       window.addEventListener(
         'scroll',
         () => {
-          if (!ticking) {
-            window.requestAnimationFrame(updateProgress);
-            ticking = true;
-          }
+          if (ticking) return;
+          ticking = true;
+          requestAnimationFrame(() => {
+            mark.style.setProperty('--shift', `${Math.min(window.scrollY, 900) * -0.18}px`);
+            ticking = false;
+          });
         },
-        { passive: true }
+        { passive: true },
       );
-      window.addEventListener('resize', updateProgress);
-      updateProgress();
     }
-  }
-
-  // ---- Gallery filter + lightbox ----
-  const gallerySection = document.querySelector('.history-gallery-grid');
-  if (gallerySection) {
-    const images = Array.from(document.querySelectorAll<HTMLButtonElement>('.history-gallery-item')).map((el) => ({
-      src: el.querySelector('img')?.getAttribute('src') ?? '',
-      caption: el.querySelector('img')?.getAttribute('alt') ?? '',
-      category: el.dataset.category ?? '',
-    }));
-    const filterButtons = document.querySelectorAll<HTMLButtonElement>('.history-gallery-filters button');
-    const items = document.querySelectorAll<HTMLButtonElement>('.history-gallery-item');
-
-    filterButtons.forEach((btn) => {
-      btn.addEventListener('click', () => {
-        filterButtons.forEach((b) => {
-          b.classList.remove('is-active');
-          b.setAttribute('aria-selected', 'false');
-        });
-        btn.classList.add('is-active');
-        btn.setAttribute('aria-selected', 'true');
-        const filter = btn.dataset.filter;
-        items.forEach((item) => {
-          item.hidden = !(filter === 'all' || item.dataset.category === filter);
-        });
-      });
-    });
-
-    const lightbox = document.getElementById('historyLightbox');
-    if (lightbox && images.length) {
-      const lbImage = document.getElementById('historyLightboxImage') as HTMLImageElement | null;
-      const lbCaption = document.getElementById('historyLightboxCaption');
-      const closeBtn = document.getElementById('historyLightboxClose');
-      const prevBtn = document.getElementById('historyLightboxPrev');
-      const nextBtn = document.getElementById('historyLightboxNext');
-      let currentIndex = 0;
-      let lastFocused: HTMLElement | null = null;
-
-      const setContent = (index: number) => {
-        currentIndex = (index + images.length) % images.length;
-        const img = images[currentIndex];
-        if (lbImage) {
-          lbImage.src = img.src;
-          lbImage.alt = img.caption;
-        }
-        if (lbCaption) lbCaption.textContent = img.caption;
+    const counter = root.querySelector<HTMLElement>('[data-hx-count]');
+    if (counter && !reduce) {
+      const target = Number(counter.dataset.hxCount);
+      const t0 = performance.now();
+      const step = (now: number) => {
+        const p = Math.min(1, (now - t0) / 1400);
+        counter.textContent = String(Math.round(target * (1 - Math.pow(1 - p, 3))));
+        if (p < 1) requestAnimationFrame(step);
       };
-
-      const open = (index: number) => {
-        lastFocused = document.activeElement as HTMLElement | null;
-        setContent(index);
-        lightbox.hidden = false;
-        document.body.style.overflow = 'hidden';
-        closeBtn?.focus();
-      };
-
-      const close = () => {
-        lightbox.hidden = true;
-        document.body.style.overflow = '';
-        lastFocused?.focus();
-      };
-
-      items.forEach((item) => {
-        item.addEventListener('click', () => open(parseInt(item.dataset.index ?? '0', 10)));
-      });
-
-      closeBtn?.addEventListener('click', close);
-      prevBtn?.addEventListener('click', () => setContent(currentIndex - 1));
-      nextBtn?.addEventListener('click', () => setContent(currentIndex + 1));
-      lightbox.addEventListener('click', (e) => {
-        if (e.target === lightbox) close();
-      });
-      document.addEventListener('keydown', (e) => {
-        if (lightbox.hidden) return;
-        if (e.key === 'Escape') close();
-        if (e.key === 'ArrowLeft') setContent(currentIndex - 1);
-        if (e.key === 'ArrowRight') setContent(currentIndex + 1);
-      });
+      counter.textContent = '0';
+      requestAnimationFrame(step);
     }
-  }
 
-  // ---- Then/Now slider ----
-  const slider = document.getElementById('historyThenNowSlider') as HTMLElement | null;
-  const range = document.getElementById('historyThenNowRange') as HTMLInputElement | null;
-  if (slider && range) {
-    const update = () => slider.style.setProperty('--slider-pos', `${range.value}%`);
-    range.addEventListener('input', update);
-    update();
+    // ---- Timeline: the gold line fills as you scroll ----
+    const timeline = root.querySelector<HTMLElement>('[data-hx-timeline]');
+    const fill = root.querySelector<HTMLElement>('[data-hx-spine]');
+    if (timeline && fill) {
+      if (reduce) {
+        fill.style.transform = 'scaleY(1)';
+      } else {
+        let ticking = false;
+        const update = () => {
+          const rect = timeline.getBoundingClientRect();
+          const vh = window.innerHeight;
+          const pct = Math.max(0, Math.min(1, (vh * 0.6 - rect.top) / (rect.height + vh * 0.1)));
+          fill.style.transform = `scaleY(${pct})`;
+          // A step lights up once the line reaches it.
+          timeline.querySelectorAll<HTMLElement>('.hx-step').forEach((s) => s.classList.toggle('is-lit', s.getBoundingClientRect().top < vh * 0.6));
+          ticking = false;
+        };
+        window.addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } }, { passive: true });
+        window.addEventListener('resize', update);
+        update();
+      }
+    }
+
+    // ---- Gallery filter + photo viewer ----
+    const grid = root.querySelector('.hx-gallery');
+    if (grid) {
+      const items = Array.from(root.querySelectorAll<HTMLButtonElement>('.hx-photo'));
+      const images = items.map((el) => ({ src: el.querySelector('img')?.getAttribute('src') ?? '', caption: el.querySelector('img')?.getAttribute('alt') ?? '' }));
+      const buttons = Array.from(root.querySelectorAll<HTMLButtonElement>('.hx-filters button'));
+      buttons.forEach((btn) =>
+        btn.addEventListener('click', () => {
+          buttons.forEach((b) => { b.classList.remove('is-active'); b.setAttribute('aria-pressed', 'false'); });
+          btn.classList.add('is-active');
+          btn.setAttribute('aria-pressed', 'true');
+          items.forEach((item) => { item.hidden = !(btn.dataset.filter === 'all' || item.dataset.category === btn.dataset.filter); });
+        }),
+      );
+
+      const lb = document.getElementById('hxLightbox');
+      if (lb && images.length) {
+        const img = document.getElementById('hxLbImage') as HTMLImageElement;
+        const cap = document.getElementById('hxLbCaption')!;
+        const closeBtn = document.getElementById('hxLbClose')!;
+        let current = 0;
+        let lastFocused: HTMLElement | null = null;
+        const show = (i: number) => {
+          current = (i + images.length) % images.length;
+          img.src = images[current].src;
+          img.alt = images[current].caption;
+          cap.textContent = images[current].caption;
+        };
+        const open = (i: number) => { lastFocused = document.activeElement as HTMLElement | null; show(i); lb.hidden = false; document.body.style.overflow = 'hidden'; closeBtn.focus(); };
+        const close = () => { lb.hidden = true; document.body.style.overflow = ''; lastFocused?.focus(); };
+        items.forEach((it) => it.addEventListener('click', () => open(parseInt(it.dataset.index ?? '0', 10))));
+        closeBtn.addEventListener('click', close);
+        document.getElementById('hxLbPrev')!.addEventListener('click', () => show(current - 1));
+        document.getElementById('hxLbNext')!.addEventListener('click', () => show(current + 1));
+        lb.addEventListener('click', (e) => { if (e.target === lb) close(); });
+        document.addEventListener('keydown', (e) => {
+          if (lb.hidden) return;
+          if (e.key === 'Escape') close();
+          if (e.key === 'ArrowLeft') show(current - 1);
+          if (e.key === 'ArrowRight') show(current + 1);
+        });
+      }
+    }
+
+    // ---- Gentle reveal (cards slide in from the side on the timeline) ----
+    if (!reduce && 'IntersectionObserver' in window) {
+      root.classList.add('hx-anim');
+      const io = new IntersectionObserver(
+        (entries) =>
+          entries.forEach((en) => {
+            if (!en.isIntersecting) return;
+            en.target.classList.add('is-in');
+            io.unobserve(en.target);
+          }),
+        { rootMargin: '0px 0px -8% 0px', threshold: 0.05 },
+      );
+      root.querySelectorAll('[data-hx-reveal]').forEach((el) => io.observe(el));
+    }
+    void fine;
   }
 </script>

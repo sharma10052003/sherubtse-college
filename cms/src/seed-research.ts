@@ -16,7 +16,7 @@ import { applyAdminHelp, type HelpMap } from './admin-help';
  * Runs once per SEED_VERSION and only fills fields that are still empty.
  */
 
-const SEED_VERSION = 2;
+const SEED_VERSION = 3;
 const STORE = { type: 'core', name: 'seeds', key: 'research_version' } as const;
 const OVERVIEW = 'api::research-overview.research-overview';
 const CENTRE = 'api::research-centre.research-centre';
@@ -278,6 +278,17 @@ const LABELS = {
   search_projects: 'Search projects, investigators or funders',
   no_results: 'No projects match these filters.',
   show_all: 'All',
+  // v3 — the hero “at a glance” panel and document type tags
+  glance_heading: 'Research at a glance',
+  stat_centres: 'Research centres',
+  stat_projects: 'Research projects',
+  stat_ongoing: 'Ongoing now',
+  stat_grants: 'Grant schemes',
+  stat_facilities: 'Research facilities',
+  type_pdf: 'PDF',
+  type_docx: 'DOCX',
+  type_page: 'Web page',
+  type_link: 'Link',
 };
 
 const HELP: HelpMap = {

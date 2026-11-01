@@ -1,0 +1,80 @@
+---
+// King's Birthday & Celebrations — a greeting section (Strapi → Home – King's Birthday &
+// Celebrations). A large greeting beside a portrait or a slideshow of pictures, the full
+// message, and cards of short wishes. It can be switched off, moved (before/after the
+// President's Message, top, bottom) and scheduled; the schedule is re-checked in the browser
+// (HomeRuntime) so it appears and disappears on time between site builds.
+import Img from './Img.astro';
+import type { Section, HomeLabels } from '../../lib/content/homepage';
+type S = Extract<Section, { kind: 'celebration' }>;
+interface Props { s: S; headingId: string; labels: HomeLabels }
+const { s, headingId, labels } = Astro.props;
+const star = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2 2.9 6.2 6.8.9-5 4.7 1.3 6.7L12 17.1 6 20.5l1.3-6.7-5-4.7 6.8-.9z" fill="currentColor"/></svg>';
+const arrow = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
+const hasVisual = !!s.portrait || s.gallery.length > 0;
+---
+<div class:list={['hm-cel', `hm-cel--${s.theme}`, { 'hm-cel--visual': hasVisual }]} data-cel>
+  <span class="hm-cel-star hm-cel-star--1" aria-hidden="true" set:html={star} />
+  <span class="hm-cel-star hm-cel-star--2" aria-hidden="true" set:html={star} />
+  <span class="hm-cel-star hm-cel-star--3" aria-hidden="true" set:html={star} />
+  <div class="hm-cel-grid">
+    <div class="hm-cel-text" data-reveal="left">
+      {s.eyebrow && <p class="hm-cel-eyebrow">{s.eyebrow}{s.date_label && <span class="hm-cel-date">{s.date_label}</span>}</p>}
+      {s.heading && <h2 class="hm-cel-title" id={headingId}>{s.heading}</h2>}
+      {s.greeting && <p class="hm-cel-greeting">{s.greeting}</p>}
+      {s.message_html && <div class="hm-cel-message hm-prose" set:html={s.message_html} />}
+      {s.button && <a class="hm-cel-btn" href={s.button.url}>{s.button.label} <Fragment set:html={arrow} /></a>}
+    </div>
+    {hasVisual && (
+      <div class="hm-cel-visual" data-reveal="right">
+        {s.gallery.length > 0 ? (
+          <div class="hm-cel-show" data-cel-show aria-label="Slideshow">
+            {s.gallery.map((g, i) => (
+              <figure class:list={['hm-cel-slide', { 'is-on': i === 0 }]} data-cel-slide>
+                <Img image={g} class="hm-cel-img" sizes="(min-width: 1000px) 40vw, 100vw" eager={i === 0} />
+              </figure>
+            ))}
+            {s.portrait && <Img image={s.portrait} class="hm-cel-portrait" sizes="160px" />}
+          </div>
+        ) : (
+          <figure class="hm-cel-frame">
+            <Img image={s.portrait!} class="hm-cel-img hm-cel-img--arch" sizes="(min-width: 1000px) 34vw, 80vw" eager />
+          </figure>
+        )}
+      </div>
+    )}
+  </div>
+
+  {s.wishes.length > 0 && (
+    <div class="hm-cel-wishes">
+      <h3 class="hm-cel-wishes-h">{labels.wishes_heading}</h3>
+      <ul>
+        {s.wishes.map((w, i) => (
+          <li data-reveal style={`--i:${i % 4}`}>
+            <blockquote>
+              <p>{w.text}</p>
+              <footer><strong>{w.from}</strong>{w.role && <span>{w.role}</span>}</footer>
+            </blockquote>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )}
+</div>
+
+<script is:inline>
+  (() => {
+    if (window.__hmCel) return;
+    window.__hmCel = true;
+    const init = () => {
+      const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+      document.querySelectorAll('[data-cel-show]').forEach((box) => {
+        const slides = [...box.querySelectorAll('[data-cel-slide]')];
+        if (slides.length < 2 || reduce) return;
+        let at = 0;
+        setInterval(() => { slides[at].classList.remove('is-on'); at = (at + 1) % slides.length; slides[at].classList.add('is-on'); }, 5000);
+      });
+    };
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+  })();
+</script>

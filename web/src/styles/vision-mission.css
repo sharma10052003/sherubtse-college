@@ -259,15 +259,13 @@
   gap: var(--s4);
   margin-bottom: var(--s7);
 }
-.vm-step-num {
-  font-family: var(--font-serif);
-  font-weight: 700;
-  font-size: 2.6rem;
-  line-height: 1;
-  color: var(--gold-ink);
-}
-.vm-step--light .vm-step-num {
-  color: var(--vm-gold);
+/* A small gold diamond marks each section title (no numbering). */
+.vm-step-mark {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  rotate: 45deg;
+  background: var(--vm-gold);
 }
 .vm-step-line {
   width: 64px;
@@ -460,13 +458,6 @@
 .vm-mpanel:hover .vm-mpanel-icon {
   background: var(--vm-accent);
   color: #fff;
-}
-.vm-mpanel-num {
-  font-weight: 700;
-  font-size: 0.78rem;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--vm-accent);
 }
 .vm-mpanel-title {
   font-family: var(--font-serif);
@@ -681,12 +672,6 @@
   stroke-dashoffset: 1;
   transition: none;
 }
-.vm-value-detail-num {
-  font-size: 0.78rem;
-  font-weight: 700;
-  letter-spacing: 0.2em;
-  color: var(--vm-accent);
-}
 .vm-value-detail-icon {
   color: var(--vm-accent);
 }
@@ -884,6 +869,53 @@
   }
   .vm-step-label span::before {
     content: none;
+  }
+}
+
+/* ======================= ROUNDED CORNERS =======================
+   Every box on this page is rounded, to match the other pages. Only the
+   corners are changed here; the layout and wording are as before. */
+.vm-scroll {
+  border-radius: 999px;
+  padding-inline: var(--s5);
+}
+.vm-mpanel {
+  border: 1.5px solid var(--line);
+  border-top: 5px solid var(--vm-accent-line);
+  border-radius: 30px;
+}
+.vm-mpanel:hover {
+  border-color: var(--vm-accent-line);
+}
+.vm-mpanel-icon {
+  border-radius: 50%;
+  border-width: 2px;
+}
+.vm-value {
+  border-radius: 24px;
+}
+.vm-value-detail {
+  border: 1.5px solid var(--line);
+  border-top: 6px solid var(--vm-accent);
+  border-radius: 30px;
+}
+.vm-thread-node {
+  border: 1.5px solid transparent;
+  border-radius: 26px;
+  padding-top: var(--s4);
+  transition: border-color 0.3s ease, background-color 0.3s ease;
+}
+.vm-thread-node:hover {
+  border-color: var(--vm-navy);
+  background: #fff;
+}
+.vm-thread-dot {
+  margin-bottom: var(--s2);
+}
+@media (max-width: 699px) {
+  .vm-mpanel,
+  .vm-value-detail {
+    border-radius: 24px;
   }
 }
 

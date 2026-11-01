@@ -1244,14 +1244,46 @@
   color: rgba(255, 255, 255, 0.8);
 }
 
-/* ---------- Motion ---------- */
+/* ---------- Motion ----------
+   Entrance on scroll, played once per element (HomeRuntime adds .is-in).
+   data-reveal picks the direction: (empty) rise · left · right · zoom.
+   --i staggers items in a list. */
+.hm-anim {
+  overflow-x: clip; /* items waiting to slide in from the right never widen the page */
+}
 .hm-anim [data-reveal] {
   opacity: 0;
-  transform: translateY(20px);
-  transition: opacity 0.7s var(--hm-ease), transform 0.7s var(--hm-ease);
-  transition-delay: calc(var(--i, 0) * 70ms);
+  transform: translate3d(0, 56px, 0);
+  transition: opacity 0.9s var(--hm-ease), transform 0.9s var(--hm-ease);
+  transition-delay: calc(min(var(--i, 0), 5) * 110ms);
+  will-change: opacity, transform;
+}
+.hm-anim [data-reveal='left'] {
+  transform: translate3d(-72px, 0, 0);
+}
+.hm-anim [data-reveal='right'] {
+  transform: translate3d(72px, 0, 0);
+}
+.hm-anim [data-reveal='zoom'] {
+  transform: scale(0.88);
 }
 .hm-anim [data-reveal].is-in {
+  opacity: 1;
+  transform: none;
+  will-change: auto;
+}
+/* Section heads: the heading slides in, then the intro and button follow. */
+.hm-anim .hm-head[data-reveal] .hm-lede,
+.hm-anim .hm-head[data-reveal] .hm-more {
+  opacity: 0;
+  transform: translate3d(0, 18px, 0);
+  transition: opacity 0.7s var(--hm-ease) 0.3s, transform 0.7s var(--hm-ease) 0.3s;
+}
+.hm-anim .hm-head[data-reveal] .hm-more {
+  transition-delay: 0.45s;
+}
+.hm-anim .hm-head[data-reveal].is-in .hm-lede,
+.hm-anim .hm-head[data-reveal].is-in .hm-more {
   opacity: 1;
   transform: none;
 }

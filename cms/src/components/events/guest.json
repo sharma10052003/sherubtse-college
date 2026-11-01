@@ -1,0 +1,11 @@
+{
+  "collectionName": "components_events_guests",
+  "info": { "displayName": "Guest", "icon": "user" },
+  "options": {},
+  "attributes": {
+    "name": { "type": "string", "required": true },
+    "role": { "type": "string" },
+    "note": { "type": "text" },
+    "photo": { "type": "media", "multiple": false, "allowedTypes": ["images"] }
+  }
+}

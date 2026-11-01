@@ -19,6 +19,10 @@ export interface Department {
   name: string;
   short_description: string | null;
   description: string | null;
+  vision: string | null;
+  mission: string | null;
+  seo_title: string | null;
+  seo_description: string | null;
   banner_url: string | null;
   logo_url: string | null;
   theme_color: string | null;
@@ -36,6 +40,10 @@ function mapDepartment(row: any): Department {
     name: row.department_name,
     short_description: row.short_description ?? null,
     description: row.description ?? null,
+    vision: row.vision ?? null,
+    mission: row.mission ?? null,
+    seo_title: row.seo_title ?? null,
+    seo_description: row.seo_description ?? null,
     banner_url: mediaUrl(row.banner_image),
     logo_url: mediaUrl(row.department_logo),
     theme_color: row.theme_color ?? null,
@@ -79,4 +87,23 @@ export async function getDepartmentBySlug(slug: string): Promise<Department | nu
   });
   const row = res?.data?.[0];
   return row ? mapDepartment(row) : null;
+}
+
+export interface DepartmentsPage {
+  hero_eyebrow: string | null;
+  hero_heading: string | null;
+  hero_intro: string | null;
+  labels: Record<string, string>;
+}
+
+/** Hero text and wording of the Departments page (Academics – Departments Page). */
+export async function getDepartmentsPage(): Promise<DepartmentsPage> {
+  const res = await strapiGet<{ data: any }>('departments-page', {});
+  const p = res?.data ?? null;
+  return {
+    hero_eyebrow: p?.hero_eyebrow ?? null,
+    hero_heading: p?.hero_heading ?? null,
+    hero_intro: p?.hero_intro ?? null,
+    labels: p?.labels && typeof p.labels === 'object' ? p.labels : {},
+  };
 }

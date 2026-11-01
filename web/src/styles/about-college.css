@@ -1,0 +1,733 @@
+/**
+ * About the College — leadership (pages/about/about-the-college.astro).
+ * Scoped under .lg. Rounded and moving by the project owner's request, with
+ * this page's own look: the President in an arch-shaped portrait (the shape
+ * of a traditional Bhutanese window) inside slowly turning gold rings, and
+ * below an org-chart style team row where gold lines branch down from a
+ * trunk to each Dean. No drop shadows. Motion stops for visitors who ask for
+ * less motion.
+ */
+
+.lg {
+  --lg-r: 24px;
+  --lg-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  overflow-x: clip;
+}
+.lg .wrap {
+  max-width: 1600px;
+  padding-inline: clamp(var(--s4), 3vw, var(--s7));
+}
+.lg :focus-visible {
+  outline: 3px solid var(--gold);
+  outline-offset: 3px;
+}
+
+/* ---------- Hero ---------- */
+.lg-hero {
+  position: relative;
+  overflow: hidden;
+  padding: var(--s7) 0 var(--s9);
+  background: radial-gradient(110% 130% at 85% 40%, var(--navy-mid) 0%, var(--navy) 48%, var(--navy-deep) 100%);
+  color: #fff;
+}
+.lg-glow {
+  position: absolute;
+  top: -200px;
+  left: -120px;
+  width: 520px;
+  height: 520px;
+  border-radius: 50%;
+  background: var(--gold);
+  opacity: 0.12;
+  filter: blur(90px);
+  pointer-events: none;
+  animation: lg-drift 18s ease-in-out infinite alternate;
+}
+@keyframes lg-drift {
+  to {
+    transform: translate(90px, 60px) scale(1.12);
+  }
+}
+.lg-hero-grid {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--s7);
+  align-items: center;
+}
+.lg-hero:not(.lg-hero--solo) .lg-hero-grid {
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+}
+.lg-breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: var(--s5);
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.75);
+}
+.lg-breadcrumb a {
+  color: #fff;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.35);
+}
+.lg-breadcrumb a:hover {
+  border-color: var(--gold);
+}
+.lg-eyebrow {
+  display: inline-block;
+  margin: 0 0 var(--s3);
+  padding: 5px 14px;
+  border: 1px solid rgba(240, 180, 41, 0.6);
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold-light);
+}
+.lg-title {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: clamp(2.4rem, 1.5rem + 3.4vw, 4.4rem);
+  line-height: 1.04;
+}
+.lg-intro {
+  margin: var(--s4) 0 0;
+  max-width: 56ch;
+  font-size: 1.08rem;
+  line-height: 1.65;
+  color: rgba(255, 255, 255, 0.86);
+}
+@keyframes lg-rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+}
+.lg-rise {
+  animation: lg-rise 0.8s var(--lg-ease) both;
+  animation-delay: calc(var(--d, 0) * 90ms);
+}
+
+/* The President, named in the hero */
+.lg-pres {
+  position: relative;
+  margin-top: var(--s6);
+  padding: var(--s5) var(--s6);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: var(--lg-r);
+  background: rgba(8, 18, 52, 0.5);
+}
+.lg-pres-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 var(--s2);
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gold-light);
+}
+.lg-pres-label span {
+  width: 28px;
+  height: 3px;
+  border-radius: 3px;
+  background: var(--gold);
+}
+.lg-pres-name {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: clamp(1.8rem, 1.3rem + 1.6vw, 2.6rem);
+  line-height: 1.1;
+  color: #fff;
+}
+.lg-pres-role {
+  margin: 6px 0 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.82);
+}
+.lg-pres-bio {
+  margin: var(--s3) 0 0;
+  max-width: 54ch;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.84);
+}
+.lg-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s3);
+  margin-top: var(--s4);
+}
+.lg-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 46px;
+  padding: 10px 20px;
+  border: 2px solid transparent;
+  border-radius: 999px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: gap 0.3s var(--lg-ease), background 0.25s, color 0.25s, border-color 0.25s;
+}
+.lg-btn--gold {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: var(--navy);
+}
+.lg-btn--gold:hover {
+  gap: 14px;
+  background: var(--gold-light);
+  border-color: var(--gold-light);
+}
+.lg-btn--line {
+  border-color: rgba(255, 255, 255, 0.75);
+  color: #fff;
+}
+.lg-btn--line:hover {
+  background: #fff;
+  color: var(--navy);
+}
+
+/* Arch portrait inside turning rings */
+.lg-stage {
+  --px: 0;
+  --py: 0;
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: min(100%, 520px);
+  aspect-ratio: 1;
+  margin-inline: auto;
+}
+.lg-ring {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+.lg-ring--a {
+  inset: 0;
+  border: 2px dashed rgba(240, 180, 41, 0.55);
+  animation: lg-turn 70s linear infinite;
+}
+.lg-ring--b {
+  inset: 9%;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  animation: lg-turn 110s linear infinite reverse;
+}
+@keyframes lg-turn {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.lg-dot {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--gold);
+  animation: lg-pulse 3.4s ease-in-out infinite;
+}
+.lg-dot--1 {
+  top: 12%;
+  right: 10%;
+}
+.lg-dot--2 {
+  bottom: 14%;
+  left: 6%;
+  width: 11px;
+  height: 11px;
+  background: #fff;
+  animation-delay: -1.7s;
+}
+@keyframes lg-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.5);
+    opacity: 1;
+  }
+}
+.lg-arch {
+  position: relative;
+  z-index: 1;
+  width: 66%;
+  aspect-ratio: 4 / 5;
+  margin: 0;
+  overflow: hidden;
+  border: 5px solid var(--gold);
+  border-radius: 999px 999px 28px 28px;
+  background: var(--navy-deep);
+  translate: calc(var(--px) * -14px) calc(var(--py) * -14px);
+  animation: lg-float 7s ease-in-out infinite;
+}
+@keyframes lg-float {
+  0%,
+  100% {
+    margin-top: 0;
+  }
+  50% {
+    margin-top: -10px;
+  }
+}
+.lg-arch img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+}
+.lg-initials {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  font-family: var(--font-serif);
+  font-size: 4rem;
+  font-weight: 700;
+  color: var(--gold);
+}
+.lg-tag {
+  position: absolute;
+  z-index: 2;
+  bottom: 6%;
+  left: 50%;
+  translate: -50% 0;
+  margin: 0;
+  padding: 8px 20px;
+  border-radius: 999px;
+  background: var(--gold);
+  color: var(--navy);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* ---------- Team ---------- */
+.lg-band {
+  padding: var(--s8) 0 var(--s7);
+}
+.lg-head {
+  max-width: 62ch;
+  margin-bottom: var(--s6);
+}
+.lg-h2 {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: clamp(1.9rem, 1.3rem + 1.8vw, 2.9rem);
+  line-height: 1.1;
+  color: var(--navy);
+}
+.lg-h2::after {
+  content: '';
+  display: block;
+  width: 56px;
+  height: 4px;
+  margin-top: var(--s3);
+  border-radius: 4px;
+  background: var(--gold);
+}
+.lg-lede {
+  margin: var(--s3) 0 0;
+  line-height: 1.65;
+  color: var(--ink-2);
+}
+.lg-group {
+  display: flex;
+  justify-content: center;
+  margin: 0 0 var(--s5);
+}
+.lg-group span {
+  padding: 7px 20px;
+  border: 2px solid var(--navy);
+  border-radius: 999px;
+  background: #fff;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--navy);
+}
+.lg-group--plain {
+  justify-content: flex-start;
+}
+
+/* The tree: a trunk, a bus line, a stub down to each Dean (desktop only). */
+.lg-tree {
+  --gap: var(--s6);
+  position: relative;
+  padding-top: 0;
+}
+.lg-trunk,
+.lg-bus {
+  display: none;
+}
+.lg-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--gap);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.lg-grid--auto {
+  --gap: var(--s6);
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+}
+.lg-item {
+  position: relative;
+}
+
+/* Cards */
+.lg-card {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  border: 2px solid var(--navy);
+  border-radius: var(--lg-r);
+  background: #fff;
+  color: var(--navy);
+  transition: border-color 0.3s, color 0.35s, transform 0.4s var(--lg-ease);
+}
+.lg-card:hover,
+.lg-card:focus-within {
+  border-color: var(--gold);
+  color: #fff;
+  transform: translateY(-6px);
+}
+.lg-card-fill {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(160deg, var(--navy-mid) 0%, var(--navy) 55%, var(--navy-deep) 100%);
+  transform: translateY(101%);
+  transition: transform 0.55s var(--lg-ease);
+}
+.lg-card:hover .lg-card-fill,
+.lg-card:focus-within .lg-card-fill {
+  transform: none;
+}
+.lg-photo {
+  position: relative;
+  width: min(72%, 300px);
+  aspect-ratio: 4 / 5;
+  margin: var(--s5) auto 0;
+  overflow: hidden;
+  border: 4px solid var(--gold);
+  border-radius: 999px 999px 22px 22px;
+  background: var(--navy-deep);
+  transition: transform 0.5s var(--lg-ease), border-color 0.3s;
+}
+.lg-card:hover .lg-photo {
+  transform: scale(1.03);
+  border-color: #fff;
+}
+.lg-photo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  transition: transform 0.7s var(--lg-ease);
+}
+.lg-card:hover .lg-photo img {
+  transform: scale(1.06);
+}
+.lg-card-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: var(--s4) var(--s5) var(--s5);
+  text-align: center;
+}
+.lg-role {
+  margin: 0;
+  padding: 4px 14px;
+  border-radius: 999px;
+  background: #fdf3d8;
+  color: var(--gold-ink);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  transition: background 0.3s, color 0.3s;
+}
+.lg-card:hover .lg-role {
+  background: rgba(255, 255, 255, 0.14);
+  color: var(--gold-light);
+}
+.lg-name {
+  margin: var(--s2) 0 0;
+  font-family: var(--font-serif);
+  font-size: 1.45rem;
+  line-height: 1.2;
+  color: inherit;
+}
+.lg-bio {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  margin: var(--s2) 0 0;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: var(--ink-2);
+  transition: color 0.35s;
+}
+.lg-card:hover .lg-bio {
+  color: rgba(255, 255, 255, 0.84);
+}
+.lg-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: auto;
+  padding: 9px 18px;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: var(--paper-2);
+  color: var(--navy);
+  font-size: 0.88rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: gap 0.3s var(--lg-ease), background 0.3s, color 0.3s, border-color 0.3s;
+}
+.lg-card-body .lg-bio + .lg-link,
+.lg-card-body .lg-name + .lg-link {
+  margin-top: var(--s4);
+}
+.lg-link::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+.lg-card:hover .lg-link {
+  gap: 14px;
+  background: var(--gold);
+  border-color: var(--gold);
+  color: var(--navy);
+}
+.lg-more-people {
+  margin-top: var(--s8);
+}
+
+/* ---------- Contact note and continue exploring ---------- */
+.lg-end {
+  padding: var(--s6) 0 var(--s9);
+}
+.lg-note {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s4);
+  padding: var(--s5) var(--s6);
+  border-radius: var(--lg-r);
+  background: var(--navy);
+  color: #fff;
+}
+.lg-note p {
+  margin: 0;
+  font-size: 1.08rem;
+}
+.lg-more {
+  margin-top: var(--s6);
+}
+.lg-more-title {
+  margin: 0 0 var(--s3);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold-ink);
+}
+.lg-more ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.lg-more a {
+  display: inline-block;
+  padding: 9px 18px;
+  border: 2px solid var(--navy);
+  border-radius: 999px;
+  color: var(--navy);
+  font-weight: 700;
+  text-decoration: none;
+  transition: background 0.25s, color 0.25s, border-color 0.25s, transform 0.3s var(--lg-ease);
+}
+.lg-more a:hover {
+  background: var(--navy);
+  border-color: var(--navy);
+  color: #fff;
+  transform: translateY(-2px);
+}
+.lg-fallback {
+  padding: var(--s5);
+  border: 2px solid var(--navy);
+  border-radius: var(--lg-r);
+  color: var(--ink-2);
+}
+
+/* ---------- Reveal ---------- */
+.lg-anim [data-lg-reveal] {
+  opacity: 0;
+  translate: 0 34px;
+  transition: opacity 0.8s var(--lg-ease), translate 0.8s var(--lg-ease);
+  transition-delay: calc(min(var(--i, 0), 6) * 110ms);
+}
+.lg-anim [data-lg-reveal].is-in {
+  opacity: 1;
+  translate: 0 0;
+}
+
+/* ---------- Tablet ---------- */
+@media (min-width: 700px) {
+  .lg-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* ---------- Desktop: the org-chart lines ---------- */
+@media (min-width: 1100px) {
+  .lg-grid {
+    grid-template-columns: repeat(var(--cols, 3), minmax(0, 1fr));
+  }
+  .lg-trunk {
+    display: block;
+    position: absolute;
+    top: -30px;
+    left: 50%;
+    width: 3px;
+    height: 76px;
+    margin-left: -1.5px;
+    border-radius: 3px;
+    background: var(--gold);
+    transform: scaleY(0);
+    transform-origin: top;
+    transition: transform 0.6s var(--lg-ease);
+  }
+  /* The “Deans” pill sits on the trunk. */
+  .lg-tree {
+    padding-top: 46px;
+  }
+  .lg-group {
+    position: relative;
+    z-index: 1;
+    margin-bottom: 34px;
+  }
+  /* A short line from the “Deans” pill down to the horizontal line. */
+  .lg-tree .lg-group span {
+    position: relative;
+  }
+  .lg-tree .lg-group span::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    width: 3px;
+    height: 14px;
+    margin-left: -1.5px;
+    background: var(--gold);
+  }
+  .lg-bus {
+    display: block;
+    position: absolute;
+    top: 99px;
+    left: calc((100% - (var(--cols) - 1) * var(--gap)) / var(--cols) / 2);
+    right: calc((100% - (var(--cols) - 1) * var(--gap)) / var(--cols) / 2);
+    height: 3px;
+    border-radius: 3px;
+    background: var(--gold);
+    transform: scaleX(0);
+    transform-origin: center;
+    transition: transform 0.8s var(--lg-ease) 0.4s;
+  }
+  .lg-item--stub::before {
+    content: '';
+    position: absolute;
+    top: -17px;
+    left: 50%;
+    width: 3px;
+    height: 17px;
+    margin-left: -1.5px;
+    border-radius: 3px;
+    background: var(--gold);
+    transform: scaleY(0);
+    transform-origin: top;
+    transition: transform 0.4s var(--lg-ease) 1s;
+  }
+  .lg-anim .lg-tree.is-in .lg-trunk,
+  .lg-anim .lg-tree.is-in .lg-item--stub::before {
+    transform: scaleY(1);
+  }
+  .lg-anim .lg-tree.is-in .lg-bus {
+    transform: scaleX(1);
+  }
+  /* Without the reveal script the lines simply show. */
+  .lg:not(.lg-anim) .lg-trunk,
+  .lg:not(.lg-anim) .lg-item--stub::before {
+    transform: none;
+  }
+  .lg:not(.lg-anim) .lg-bus {
+    transform: none;
+  }
+}
+
+/* ---------- Phones ---------- */
+@media (max-width: 999px) {
+  .lg-hero:not(.lg-hero--solo) .lg-hero-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .lg-stage {
+    width: min(100%, 420px);
+    order: -1;
+  }
+}
+@media (max-width: 699px) {
+  .lg {
+    --lg-r: 20px;
+  }
+  .lg-hero {
+    padding: var(--s6) 0 var(--s8);
+  }
+  .lg-stage {
+    width: min(86%, 340px);
+  }
+  .lg-pres {
+    padding: var(--s4);
+  }
+  .lg-note {
+    padding: var(--s5) var(--s4);
+  }
+  .lg-photo {
+    width: min(64%, 260px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lg *,
+  .lg *::before,
+  .lg *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}

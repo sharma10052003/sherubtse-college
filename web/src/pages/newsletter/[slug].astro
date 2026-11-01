@@ -1,225 +1,169 @@
 ---
+// One newsletter issue: a large cover, what is in it, and a page-turning reader that opens on
+// the PDF (or straight to a shared page, #read=<slug>&p=<page>). Everything comes from Strapi →
+// Newsletter – Editions; wording from Newsletter – Page. Styles: newsletter-hub.css (.nlx).
 import Layout from '../../layouts/Layout.astro';
+import NewsletterReader from '../../components/newsletter/NewsletterReader.astro';
+import '../../styles/newsletter-hub.css';
+import { icon } from '../../lib/facility-icons';
 import { strapiGet } from '../../lib/strapi';
 import type { StrapiListResponse } from '../../lib/strapi';
-import { getNewsletterBySlug, getRelatedNewsletters, EDITION_LABELS } from '../../lib/content/newsletter';
-import '../../styles/newsletter.css';
+import { getNewsletterBySlug, getRelatedNewsletters, getNeighbours, getNewslettersPage } from '../../lib/content/newsletter';
+import { makeNewslettersLabels } from '../../lib/content/newsletters-labels';
 
 export async function getStaticPaths() {
-  const res = await strapiGet<StrapiListResponse<{ slug: string }>>('newsletters', {
-    fields: ['slug'],
-    pagination: { pageSize: 200 },
-  });
+  const res = await strapiGet<StrapiListResponse<{ slug: string }>>('newsletters', { fields: ['slug'], pagination: { pageSize: 300 } });
   return (res?.data ?? []).map((n) => ({ params: { slug: n.slug } }));
 }
 
 const { slug } = Astro.params;
-const newsletter = await getNewsletterBySlug(slug as string);
-if (!newsletter) return Astro.redirect('/newsletter', 404);
+const n = await getNewsletterBySlug(slug as string);
+if (!n) return Astro.redirect('/newsletter', 404);
 
-const related = await getRelatedNewsletters(newsletter);
-
-function initials(title: string): string {
-  const parts = title.split(' ').filter(Boolean);
-  return (parts.length > 1 ? parts.map((w) => w[0]).slice(0, 2).join('') : title.slice(0, 2)).toUpperCase();
-}
-
-const editionLabel = EDITION_LABELS[newsletter.edition];
-const publishedYear = newsletter.publication_date ? new Date(newsletter.publication_date).getFullYear() : newsletter.year;
-const pageTitle = `${newsletter.title} — ${editionLabel} Edition ${newsletter.year}`;
-const pageDescription =
-  newsletter.description ??
-  `Read the ${editionLabel} Edition ${newsletter.year} of ${newsletter.title}, the official Sherubtse College newsletter.`;
-const downloadFilename = `The-Tower-${editionLabel}-${newsletter.year}.pdf`;
+const [related, { newer, older }, page] = await Promise.all([getRelatedNewsletters(n, 4), getNeighbours(n), getNewslettersPage()]);
+const t = makeNewslettersLabels(page.labels);
+const initials = (s: string) => s.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
+const pageTitle = `${n.title} — ${n.issue_label}`;
+const description = n.description ?? `Read ${n.title}, ${n.issue_label}, published by Sherubtse College.`;
+const readAttrs = { 'data-nlr-open': '', 'data-pdf': n.pdf_url ?? '', 'data-slug': n.slug, 'data-title': n.title, 'data-sub': n.issue_label, 'data-doc': n.documentId };
+const sameSeries = related.filter((r) => r.title === n.title);
+const others = related.filter((r) => r.title !== n.title);
 ---
-
-<Layout title={pageTitle} description={pageDescription} ogImage={newsletter.cover_image_url ?? undefined}>
-  <section class="nl-detail-hero">
-    <div class="wrap">
-      <nav class="breadcrumb" aria-label="Breadcrumb">
-        <a href="/">Home</a> › <a href="/newsletter">Newsletter</a> ›{' '}
-        <span class="current">
-          {editionLabel} {newsletter.year}
-        </span>
-      </nav>
-      <div class="nl-detail-grid" style="margin-top:var(--s6)">
-        <div>
-          {newsletter.cover_image_url ? (
-            <img src={newsletter.cover_image_url} alt="" class="nl-detail-cover" />
-          ) : (
-            <div class="nl-detail-cover-placeholder" aria-hidden="true">
-              <span>{initials(newsletter.title)}</span>
+<Layout title={pageTitle} description={description} ogImage={n.cover_image_url ?? undefined}>
+  <div class="nlx" data-nlx>
+    <header class="nlx-hero nlx-issue-hero">
+      <span class="nlx-glow nlx-glow--a" aria-hidden="true"></span>
+      <span class="nlx-glow nlx-glow--b" aria-hidden="true"></span>
+      <div class="wrap">
+        <nav class="nlx-crumbs nlx-rise" style="--d:0" aria-label="Breadcrumb">
+          <a href="/">Home</a><span aria-hidden="true">›</span><a href="/news-notices">News &amp; Notices</a><span aria-hidden="true">›</span><a href="/newsletter">Newsletters</a><span aria-hidden="true">›</span><span aria-current="page">{n.issue_label}</span>
+        </nav>
+        <div class="nlx-issue-grid">
+          <div class="nlx-issue-book nlx-rise" style="--d:2" data-nlx-stack>
+            <span class="nlx-hero-cover">
+              {n.cover_image_url
+                ? <img src={n.cover_image_url} alt={`Cover of ${pageTitle}`} />
+                : <span class="nlx-plain"><b>{initials(n.title)}</b><i>{n.issue_label}</i></span>}
+              <span class="nlx-shine" aria-hidden="true"></span>
+            </span>
+          </div>
+          <div>
+            <p class="nlx-issue-series nlx-rise" style="--d:1">{n.title}</p>
+            <h1 class="nlx-issue-title nlx-rise" style="--d:2">{n.issue_label}</h1>
+            <ul class="nlx-issue-meta nlx-rise" style="--d:3">
+              <li>{n.year}</li>
+              {n.unit_name && <li>{t('detail_published_by')} {n.unit_name}</li>}
+            </ul>
+            {n.description && <p class="nlx-issue-text nlx-rise" style="--d:3">{n.description}</p>}
+            <div class="nlx-actions nlx-rise" style="--d:4">
+              {n.pdf_url ? (
+                <>
+                  <button type="button" class="nlx-btn nlx-btn--gold" {...readAttrs}><Fragment set:html={icon('journal')} />{t('detail_read')}</button>
+                  <a class="nlx-btn nlx-btn--ghost" href={n.pdf_url} download data-nlx-dl><Fragment set:html={icon('download')} />{t('download_label')}</a>
+                </>
+              ) : n.external_url ? (
+                <a class="nlx-btn nlx-btn--gold" href={n.external_url} target="_blank" rel="noopener"><Fragment set:html={icon('external')} />{t('external_label')}</a>
+              ) : null}
             </div>
-          )}
-        </div>
-        <div>
-          <h1 class="h-display" style="color:#fff">
-            {newsletter.title}
-          </h1>
-          <p class="nl-detail-edition">
-            {editionLabel} Edition {newsletter.year}
-          </p>
-          <p class="nl-detail-sub">Official Newsletter of Sherubtse College</p>
-          <p class="nl-detail-sub">Published: {publishedYear}</p>
-          <div class="nl-detail-actions">
-            <a href="#reader" class="btn btn-primary" id="readOnlineBtn">
-              Read Newsletter
-            </a>
-            {newsletter.pdf_url && (
-              <a href={newsletter.pdf_url} download={downloadFilename} class="btn btn-secondary btn-on-hero" id="downloadBtn">
-                Download PDF
-              </a>
-            )}
+            <div class="nlx-share nlx-rise" style="--d:5">
+              <span>{t('detail_share')}</span>
+              <button type="button" data-nlx-copy data-copied={t('detail_copied')}><Fragment set:html={icon('link')} /><span>{t('detail_copy')}</span></button>
+              <a href="#" data-nlx-share="whatsapp" target="_blank" rel="noopener">WhatsApp</a>
+              <a href="#" data-nlx-share="facebook" target="_blank" rel="noopener">Facebook</a>
+              <a href="#" data-nlx-share="mail">Email</a>
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  </section>
+    </header>
 
-  <div class="wrap" style="padding-block:var(--s8)">
-    <div class="nl-detail-body reveal">
-      <h2 class="h2">About This Edition</h2>
-      {newsletter.description && <p class="lede">{newsletter.description}</p>}
-
-      {newsletter.topics.length > 0 && (
-        <>
-          <h3 class="h3" style="margin-top:var(--s6)">
-            Featured Topics
-          </h3>
-          <ul class="nl-detail-topics">
-            {newsletter.topics.map((t) => (
-              <li>{t}</li>
-            ))}
-          </ul>
-        </>
-      )}
-
-      {newsletter.closing_message && <p style="margin-top:var(--s6);font-style:italic;color:var(--ink-2)">{newsletter.closing_message}</p>}
-
-      <div class="nl-share-row">
-        <span>Share this edition</span>
-        <button type="button" class="nl-share-btn" id="shareCopyLink" title="Copy link" aria-label="Copy link">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" /><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" /></svg>
-        </button>
-        <a class="nl-share-btn" id="shareEmail" title="Share by email" aria-label="Share by email" href="#">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="0" /><path d="m2 7 10 6 10-6" /></svg>
-        </a>
-        <a class="nl-share-btn" id="shareWhatsapp" title="Share on WhatsApp" aria-label="Share on WhatsApp" href="#" target="_blank" rel="noopener noreferrer">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.5 8.5 0 0 1-11.83 7.82L4 21l1.68-5.17A8.5 8.5 0 1 1 21 11.5z" /></svg>
-        </a>
-        <a class="nl-share-btn" id="shareFacebook" title="Share on Facebook" aria-label="Share on Facebook" href="#" target="_blank" rel="noopener noreferrer">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" /></svg>
-        </a>
-        <a class="nl-share-btn" id="shareX" title="Share on X" aria-label="Share on X" href="#" target="_blank" rel="noopener noreferrer">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4l16 16M20 4 4 20" /></svg>
-        </a>
-      </div>
-
-      {newsletter.pdf_url && (
-        <div class="nl-reader" id="reader">
-          <div class="nl-reader-toolbar">
-            <strong>{newsletter.title} — {editionLabel} {newsletter.year}</strong>
-            <div class="nl-reader-toolbar-actions">
-              <a href={newsletter.pdf_url} target="_blank" rel="noopener noreferrer" class="btn btn-secondary" id="openNewTabBtn">
-                Open in New Tab
-              </a>
-              <a href={newsletter.pdf_url} download={downloadFilename} class="btn btn-secondary" id="downloadBtn2">
-                Download
-              </a>
-            </div>
-          </div>
-          <iframe src={`${newsletter.pdf_url}#view=FitH`} title={`${newsletter.title} PDF viewer`} loading="lazy" />
+    {(n.topics.length > 0 || n.closing_message) && (
+      <section class="nlx-section">
+        <div class="wrap">
+          <header class="nlx-head" data-nlx-reveal><h2>{t('detail_topics')}</h2></header>
+          {n.topics.length > 0 && <ul class="nlx-topics" data-nlx-reveal>{n.topics.map((x) => <li>{x}</li>)}</ul>}
+          {n.closing_message && <p class="nlx-closing" data-nlx-reveal>{n.closing_message}</p>}
         </div>
-      )}
-    </div>
+      </section>
+    )}
+
+    {(newer || older) && (
+      <section class="nlx-section">
+        <div class="wrap">
+          <nav class="nlx-pager" aria-label={n.title} data-nlx-reveal>
+            {newer ? <a href={`/newsletter/${newer.slug}`} rel="next"><small>{t('detail_newer')}</small><strong>{newer.issue_label}</strong></a> : <span></span>}
+            {older && <a href={`/newsletter/${older.slug}`} rel="prev"><small>{t('detail_older')}</small><strong>{older.issue_label}</strong></a>}
+          </nav>
+        </div>
+      </section>
+    )}
 
     {related.length > 0 && (
-      <div class="reveal" style="margin-top:var(--s8)">
-        <p class="eyebrow">Explore More Editions</p>
-        <h2 class="h2">Related Newsletters</h2>
-        <div class="nl-related-grid">
-          {related.map((n) => (
-            <article class="nl-card">
-              {n.cover_image_url ? (
-                <img src={n.cover_image_url} alt="" class="nl-card-cover" />
-              ) : (
-                <div class="nl-card-cover-placeholder" aria-hidden="true">
-                  <span>{initials(n.title)}</span>
-                  <span class="nl-card-cover-sub">
-                    {EDITION_LABELS[n.edition]} {n.year}
-                  </span>
-                </div>
-              )}
-              <div class="nl-card-body">
-                <h3>{n.title}</h3>
-                <p class="nl-card-edition">
-                  {EDITION_LABELS[n.edition]} Edition {n.year}
-                </p>
-                <div class="nl-card-actions">
-                  <a href={`/newsletter/${n.slug}`} class="btn btn-secondary">
-                    View Details
+      <section class="nlx-section nlx-section--tint">
+        <div class="wrap">
+          <header class="nlx-head" data-nlx-reveal><h2>{sameSeries.length > 0 ? t('detail_more') : t('detail_other')}</h2></header>
+          <ul class="nlx-grid">
+            {[...sameSeries, ...others].map((r, i) => (
+              <li class="nlx-item" data-nlx-reveal style={`--d:${i}`}>
+                <article class="nlx-card">
+                  <a class="nlx-cover" href={`/newsletter/${r.slug}`} tabindex="-1" aria-hidden="true">
+                    {r.cover_image_url ? <img src={r.cover_image_url} alt="" loading="lazy" /> : <span class="nlx-plain"><b>{initials(r.title)}</b><i>{r.issue_label}</i></span>}
+                    <span class="nlx-shine" aria-hidden="true"></span>
                   </a>
-                </div>
-              </div>
-            </article>
-          ))}
+                  <div class="nlx-card-body">
+                    <p class="nlx-series">{r.title}</p>
+                    <h3><a href={`/newsletter/${r.slug}`}>{r.issue_label}</a></h3>
+                  </div>
+                </article>
+              </li>
+            ))}
+          </ul>
+          <p class="nlx-tip"><a href="/newsletter">{t('browse')} →</a></p>
         </div>
-      </div>
+      </section>
     )}
   </div>
+
+  <NewsletterReader />
 </Layout>
 
-<script define:vars={{
-  strapiUrl: import.meta.env.PUBLIC_STRAPI_URL || 'http://localhost:1337',
-  newsletterDocId: newsletter.documentId,
-  pageUrl: Astro.url.href,
-  pageTitle,
-}} is:inline>
-  // ---- View/download tracking — fire-and-forget, narrow public
-  // endpoints that only increment a counter (see cms/src/api/newsletter
-  // /routes/newsletter.ts). Never blocks the actual read/download.
-  function track(kind) {
-    if (!newsletterDocId) return;
-    fetch(`${strapiUrl}/api/newsletters/${newsletterDocId}/track-${kind}`, { method: 'POST' }).catch(() => {});
-  }
+<script define:vars={{ strapiUrl: import.meta.env.PUBLIC_STRAPI_URL || 'http://localhost:1337', docId: n.documentId, title: pageTitle }}>
+  (() => {
+    const root = document.querySelector('[data-nlx]');
+    if (!root) return;
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const url = location.origin + location.pathname;
 
-  let viewTracked = false;
-  function trackViewOnce() {
-    if (viewTracked) return;
-    viewTracked = true;
-    track('view');
-  }
-  document.getElementById('readOnlineBtn')?.addEventListener('click', trackViewOnce);
-  document.getElementById('openNewTabBtn')?.addEventListener('click', trackViewOnce);
-
-  ['downloadBtn', 'downloadBtn2'].forEach((id) => {
-    document.getElementById(id)?.addEventListener('click', () => track('download'));
-  });
-
-  // ---- Share ----
-  document.getElementById('shareCopyLink')?.addEventListener('click', async () => {
-    try {
-      await navigator.clipboard.writeText(pageUrl);
-      const btn = document.getElementById('shareCopyLink');
-      const original = btn.innerHTML;
-      btn.textContent = '✓';
-      setTimeout(() => {
-        btn.innerHTML = original;
-      }, 1500);
-    } catch {
-      window.prompt('Copy this link:', pageUrl);
+    if (!reduce && 'IntersectionObserver' in window) {
+      root.classList.add('nlx-anim');
+      const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('is-in'); io.unobserve(e.target); } }), { rootMargin: '0px 0px -6% 0px', threshold: 0.05 });
+      root.querySelectorAll('[data-nlx-reveal]').forEach((n) => io.observe(n));
     }
-  });
+    const book = root.querySelector('[data-nlx-stack]');
+    if (book && !reduce && matchMedia('(hover: hover)').matches) {
+      book.addEventListener('pointermove', (e) => {
+        const r = book.getBoundingClientRect();
+        book.style.setProperty('--rx', (((e.clientY - r.top) / r.height - 0.5) * -12).toFixed(2) + 'deg');
+        book.style.setProperty('--ry', (((e.clientX - r.left) / r.width - 0.5) * 16).toFixed(2) + 'deg');
+      });
+      book.addEventListener('pointerleave', () => { book.style.setProperty('--rx', '0deg'); book.style.setProperty('--ry', '0deg'); });
+      book.addEventListener('click', () => root.querySelector('[data-nlr-open]')?.click());
+    }
 
-  const emailLink = document.getElementById('shareEmail');
-  if (emailLink) emailLink.href = `mailto:?subject=${encodeURIComponent(pageTitle)}&body=${encodeURIComponent(pageUrl)}`;
-
-  const whatsappLink = document.getElementById('shareWhatsapp');
-  if (whatsappLink) whatsappLink.href = `https://wa.me/?text=${encodeURIComponent(pageTitle + ' — ' + pageUrl)}`;
-
-  const fbLink = document.getElementById('shareFacebook');
-  if (fbLink) fbLink.href = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(pageUrl)}`;
-
-  const xLink = document.getElementById('shareX');
-  if (xLink) xLink.href = `https://twitter.com/intent/tweet?text=${encodeURIComponent(pageTitle)}&url=${encodeURIComponent(pageUrl)}`;
+    // Share links
+    const targets = {
+      whatsapp: 'https://wa.me/?text=' + encodeURIComponent(title + ' — ' + url),
+      facebook: 'https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(url),
+      mail: 'mailto:?subject=' + encodeURIComponent(title) + '&body=' + encodeURIComponent(url),
+    };
+    root.querySelectorAll('[data-nlx-share]').forEach((a) => { a.href = targets[a.dataset.nlxShare]; });
+    const copy = root.querySelector('[data-nlx-copy]');
+    copy.addEventListener('click', async () => {
+      const label = copy.querySelector('span');
+      try { await navigator.clipboard.writeText(url); const was = label.textContent; label.textContent = copy.dataset.copied; setTimeout(() => { label.textContent = was; }, 1800); }
+      catch (e) { window.prompt('Copy this link:', url); }
+    });
+    // Count a download
+    root.querySelector('[data-nlx-dl]')?.addEventListener('click', () => { fetch(`${strapiUrl}/api/newsletters/${docId}/track-download`, { method: 'POST' }).catch(() => {}); });
+  })();
 </script>

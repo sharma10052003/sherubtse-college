@@ -17,6 +17,10 @@ const { labels } = Astro.props;
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const now = Date.now();
 
+    // ---- Scheduled items: appear at their start, go at their end ----
+    root.querySelectorAll('[data-starts]').forEach((el) => { el.hidden = Date.parse(el.dataset.starts) > now; });
+    root.querySelectorAll('[data-ends]').forEach((el) => { if (Date.parse(el.dataset.ends) <= now) el.remove(); });
+
     // ---- Expired items ----
     root.querySelectorAll('[data-expiring]').forEach((box) => {
       const items = Array.from(box.querySelectorAll('[data-expires]'));
@@ -92,11 +96,18 @@ const { labels } = Astro.props;
       const step = (t) => { const p = Math.min(1, (t - t0) / 1200); el.textContent = String(Math.round(target * (1 - Math.pow(1 - p, 3)))); if (p < 1) requestAnimationFrame(step); };
       requestAnimationFrame(step);
     };
+    const show = (el) => {
+      el.classList.add('is-in');
+      el.querySelectorAll('[data-count]').forEach(count);
+      io.unobserve(el);
+    };
     const io = new IntersectionObserver((entries) => entries.forEach((en) => {
       if (!en.isIntersecting) return;
-      en.target.classList.add('is-in');
-      en.target.querySelectorAll('[data-count]').forEach(count);
-      io.unobserve(en.target);
+      // In a sideways swipe row (phones), bring in the whole row at once so
+      // cards further along aren't still hidden when swiped to.
+      const row = en.target.parentElement;
+      if (row && row.scrollWidth > row.clientWidth + 1) row.querySelectorAll(':scope > [data-reveal]').forEach(show);
+      else show(en.target);
     }), { rootMargin: '0px 0px -8% 0px', threshold: 0.05 });
     root.querySelectorAll('[data-reveal]').forEach((el) => io.observe(el));
   })();

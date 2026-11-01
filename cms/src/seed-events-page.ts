@@ -1,0 +1,118 @@
+import type { Core } from '@strapi/strapi';
+
+/** News & Notices – Events Page: created once with the wording the page would otherwise hold in its code. */
+export const EVENTS_PAGE_HERO = {
+  hero_eyebrow: 'News & Notices',
+  hero_heading: 'Events',
+  hero_intro: 'Talks, festivals, matches and everything else happening on campus — with times, venues and how to join.',
+};
+
+export const EVENTS_PAGE_LABELS: Record<string, string> = {
+  next_label: 'Next up',
+  now_label: 'Happening now',
+  ends_in: 'Ends in',
+  starts_in: 'Starts in',
+  unit_days: 'Days',
+  unit_hours: 'Hours',
+  unit_minutes: 'Minutes',
+  unit_seconds: 'Seconds',
+  none_upcoming: 'No upcoming events are scheduled right now. Check back soon.',
+  see_details: 'Details',
+  register: 'Register',
+  add_calendar: 'Add to calendar',
+  add_google: 'Google Calendar',
+  add_ics: 'Apple / Outlook (.ics)',
+  see_photos: 'See the photos',
+  stat_upcoming: 'Upcoming',
+  stat_month: 'This month',
+  stat_past: 'Past events',
+  stat_venues: 'Venues',
+  view_label: 'View',
+  view_agenda: 'Agenda',
+  view_calendar: 'Calendar',
+  view_cards: 'Cards',
+  when_upcoming: 'Upcoming',
+  when_past: 'Past',
+  when_all: 'All',
+  search_label: 'Search events',
+  search_placeholder: 'Search by event, venue or department',
+  type_all: 'All types',
+  audience_label: 'Open to',
+  audience_all: 'Everyone',
+  count_one: '{count} event',
+  count_many: '{count} events',
+  empty_message: 'No event matches these filters.',
+  clear_label: 'Clear filters',
+  today: 'Today',
+  tomorrow: 'Tomorrow',
+  in_days: 'In {n} days',
+  ongoing: 'Happening now',
+  ended: 'Ended',
+  cal_prev: 'Previous month',
+  cal_next: 'Next month',
+  cal_today: 'Today',
+  cal_more: '+{n} more',
+  cal_empty_day: 'No events on this day.',
+  cal_pick: 'Pick a day to see its events.',
+  export_all: 'Download all upcoming events (.ics)',
+  cat_academic: 'Academic',
+  cat_conference: 'Conference',
+  cat_workshop: 'Workshop',
+  cat_seminar: 'Seminar',
+  cat_student_activity: 'Student activity',
+  cat_sports: 'Sports',
+  cat_cultural: 'Cultural',
+  cat_public_lecture: 'Public lecture',
+  cat_career: 'Career',
+  cat_meeting: 'Meeting',
+  cat_other: 'Event',
+  d_nav: 'On this page',
+  d_about: 'About this event',
+  d_programme: 'Programme',
+  d_guests: 'Guests',
+  d_photos: 'Photos',
+  d_video: 'Watch',
+  d_details: 'At a glance',
+  d_contact: 'Contact',
+  d_when: 'When',
+  d_where: 'Where',
+  d_open: 'Open to',
+  d_organiser: 'Organised by',
+  d_type: 'Type',
+  d_tba: 'To be announced',
+  d_register: 'Register for this event',
+  d_registered_closed: 'This event has taken place.',
+  d_maps: 'Open in Maps',
+  d_share: 'Share',
+  d_copy: 'Copy link',
+  d_copied: 'Link copied',
+  d_see_photos: 'See the photos from this event',
+  d_more_heading: 'More events',
+  d_all_events: 'All events',
+  d_earlier: 'Earlier event',
+  d_later: 'Later event',
+  d_show_all_photos: 'Show all {n} photos',
+  d_email: 'Email',
+  d_phone: 'Call',
+  d_happening: 'This event is happening now',
+  d_started: 'Started',
+  d_past_note: 'This event has taken place. Thank you to everyone who joined.',
+  open_public: 'Open to the public',
+  open_students: 'Students only',
+  open_staff: 'Staff only',
+  open_invited: 'By invitation',
+};
+
+export async function ensureEventsPage(strapi: Core.Strapi) {
+  const key = { type: 'core', name: 'seeds', key: 'events_page_version' } as const;
+  if ((Number(await strapi.store.get(key)) || 0) >= 2) return;
+  const docs = strapi.documents('api::events-page.events-page' as any) as any;
+  const existing = await docs.findFirst();
+  if (!existing) {
+    await docs.create({ data: { ...EVENTS_PAGE_HERO, labels: EVENTS_PAGE_LABELS } });
+  } else {
+    const current = existing.labels && typeof existing.labels === 'object' ? existing.labels : {};
+    await docs.update({ documentId: existing.documentId, data: { labels: { ...EVENTS_PAGE_LABELS, ...current } } });
+  }
+  await strapi.store.set({ ...key, value: 2 });
+}

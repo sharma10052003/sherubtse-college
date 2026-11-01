@@ -1,0 +1,92 @@
+{
+  "kind": "singleType",
+  "collectionName": "home_celebration",
+  "info": {
+    "singularName": "home-celebration",
+    "pluralName": "home-celebrations",
+    "displayName": "Home – King’s Birthday & Celebrations",
+    "description": "A homepage section for His Majesty the King’s Birthday wishes and other celebrations. Switch it on or off, choose where it sits, and schedule when it shows."
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "attributes": {
+    "is_visible": {
+      "type": "boolean",
+      "default": true
+    },
+    "placement": {
+      "type": "enumeration",
+      "enum": [
+        "after_highlights",
+        "before_message",
+        "after_message",
+        "top",
+        "bottom"
+      ],
+      "default": "before_message"
+    },
+    "show_from": {
+      "type": "datetime"
+    },
+    "show_until": {
+      "type": "datetime"
+    },
+    "theme": {
+      "type": "enumeration",
+      "enum": [
+        "royal",
+        "gold",
+        "light"
+      ],
+      "default": "royal"
+    },
+    "eyebrow": {
+      "type": "string"
+    },
+    "heading": {
+      "type": "string"
+    },
+    "greeting": {
+      "type": "text"
+    },
+    "date_label": {
+      "type": "string"
+    },
+    "message": {
+      "type": "richtext"
+    },
+    "portrait": {
+      "type": "media",
+      "multiple": false,
+      "allowedTypes": [
+        "images"
+      ]
+    },
+    "portrait_alt": {
+      "type": "string"
+    },
+    "gallery": {
+      "type": "media",
+      "multiple": true,
+      "allowedTypes": [
+        "images"
+      ]
+    },
+    "wishes": {
+      "type": "component",
+      "repeatable": true,
+      "component": "home.wish"
+    },
+    "button_label": {
+      "type": "string"
+    },
+    "button_url": {
+      "type": "string"
+    },
+    "anchor": {
+      "type": "string",
+      "regex": "^[a-z0-9-]*$"
+    }
+  }
+}

@@ -1,0 +1,49 @@
+---
+// Top of every Alumni sub-page: a compact navy banner (breadcrumb, title, one
+// line about the page) and, under it, a rounded navigation bar that stays at the
+// top while scrolling and links across all the Alumni pages. Wording comes from
+// Alumni – Page → Labels.
+import { getAlumniCopy } from '../../lib/content/alumni';
+import { makeAlumniLabels } from '../../lib/content/alumni-labels';
+import { getAlumniSections, icon } from '../../lib/content/alumni-ui';
+
+interface Props {
+  /** Which page this is: stories, share, events, give_back, network, highlights or register. */
+  page: 'stories' | 'share' | 'events' | 'give_back' | 'network' | 'highlights' | 'register';
+}
+const { page } = Astro.props;
+const [copy, sections] = await Promise.all([getAlumniCopy(), getAlumniSections()]);
+const t = makeAlumniLabels(copy.page_labels);
+const nav = sections.filter((s) => s.inNav);
+// The share page lives under Stories, so Stories stays highlighted there.
+const current = page === 'share' ? 'stories' : page;
+const sectionIcon = sections.find((s) => s.key === page)?.icon ?? 'cap';
+---
+
+<header class="al-subhero">
+  <span class="al-subhero-glow" aria-hidden="true"></span>
+  <span class="al-subhero-ring" aria-hidden="true"></span>
+  <div class="wrap al-wide al-subhero-inner">
+    <nav class="al-breadcrumb" aria-label="Breadcrumb">
+      <a href="/">Home</a><span aria-hidden="true"> › </span><a href="/about">About</a><span aria-hidden="true"> › </span><a href="/about/alumni">Alumni</a><span aria-hidden="true"> › </span><span aria-current="page">{t(`${page}_title`)}</span>
+    </nav>
+    <div class="al-subhero-head">
+      <span class="al-subhero-icon" aria-hidden="true" set:html={icon(sectionIcon, 34)} />
+      <div>
+        <p class="al-eyebrow al-eyebrow--light">{t('eyebrow')}</p>
+        <h1 class="al-subhero-title">{t(`${page}_title`)}</h1>
+        <p class="al-subhero-text">{t(`${page}_text`)}</p>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap al-wide al-subnav-wrap">
+  <nav class="al-subnav" aria-label={t('nav_label')}>
+    {nav.map((s) => (
+      <a href={s.href} class:list={['al-subnav-link', { 'is-current': s.key === current }]} aria-current={s.key === current && page !== 'share' ? 'page' : undefined}>
+        <span set:html={icon(s.icon, 18)} />{t(`nav_${s.key}`)}
+      </a>
+    ))}
+  </nav>
+</div>

@@ -1,14 +1,15 @@
 ---
-// One event: a full-bleed hero (photo, or the same navy dot-pattern the
-// mosaic tiles use when there's no photo), then facts + description in a
-// two-column body so the page fills the full content width instead of a
-// lone narrow text column, plus a prev/next pager through every event in
-// date order and a sidebar of what's coming up next.
+// One event — the template for planned and celebrated occasions. Everything comes from Strapi →
+// News & Notices – Events (story, summary, picture, dates, venue, audience, programme, guests,
+// gallery, video, contacts, photo story); wording from News & Notices – Events Page → Labels.
+// A section only appears when the event has something for it. The countdown and "happening now"
+// are worked out in the browser, so an event page stays right between builds. Styles:
+// events-detail.css (.evd).
 import Layout from '../../../layouts/Layout.astro';
-import '../../../styles/section-landing.css';
-import '../../../styles/listing.css';
-import '../../../styles/events.css';
-import { getAllEvents, getAllEventIds, getEventById } from '../../../lib/content/events';
+import '../../../styles/events-detail.css';
+import { getAllEvents, getAllEventIds, getEventDetail, getEventsPage } from '../../../lib/content/events';
+import { renderArticle, excerpt } from '../../../lib/article-text';
+import { makeEventsPageLabels } from '../../../lib/content/events-page-labels';
 
 export async function getStaticPaths() {
   const ids = await getAllEventIds();
@@ -16,131 +17,371 @@ export async function getStaticPaths() {
 }
 
 const { id } = Astro.params;
-const event = await getEventById(Number(id));
-if (!event) return Astro.redirect('/news-notices/events', 404);
+const e = await getEventDetail(Number(id));
+if (!e) return Astro.redirect('/news-notices/events', 404);
 
-const allEvents = await getAllEvents();
-const idx = allEvents.findIndex((e) => e.id === event.id);
-const prev = idx > 0 ? allEvents[idx - 1] : null;
-const next = idx >= 0 && idx < allEvents.length - 1 ? allEvents[idx + 1] : null;
-const upNext = allEvents.filter((e) => e.id !== event.id && !e.is_past).slice(0, 4);
+const [all, page] = await Promise.all([getAllEvents(), getEventsPage()]);
+const t = makeEventsPageLabels(page.labels);
+const fill = (s: string, n: number) => s.replace('{n}', String(n));
 
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
-}
-function formatTime(iso: string) {
-  return new Date(iso).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
-}
-function formatShort(iso: string) {
-  return new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
-}
+const chrono = [...all].sort((a, b) => a.starts_at.localeCompare(b.starts_at));
+const at = chrono.findIndex((x) => x.id === e.id);
+const earlier = at > 0 ? chrono[at - 1] : null;
+const later = at >= 0 && at < chrono.length - 1 ? chrono[at + 1] : null;
+const more = chrono.filter((x) => x.id !== e.id && !x.is_past).slice(0, 3);
 
-const breadcrumb = [
-  { label: 'Home', url: '/' },
-  { label: 'News & Notices', url: '/news-notices' },
-  { label: 'Events', url: '/news-notices/events' },
-  { label: event.title, url: `/news-notices/events/${event.id}` },
-];
+const TZ = 'Asia/Thimphu';
+const fmt = (iso: string, o: Intl.DateTimeFormatOptions) => new Date(iso).toLocaleDateString('en-GB', { timeZone: TZ, ...o });
+const time = (iso: string) => new Date(iso).toLocaleTimeString('en-GB', { timeZone: TZ, hour: '2-digit', minute: '2-digit' });
+const dayKey = (iso: string) => new Date(new Date(iso).getTime() + 6 * 3600e3).toISOString().slice(0, 10);
+const multiDay = !!e.ends_at && dayKey(e.ends_at) !== dayKey(e.starts_at);
+const dateLong = multiDay
+  ? `${fmt(e.starts_at, { day: 'numeric', month: 'long' })} – ${fmt(e.ends_at!, { day: 'numeric', month: 'long', year: 'numeric' })}`
+  : fmt(e.starts_at, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+const timeText = e.ends_at ? (multiDay ? `${time(e.starts_at)} (${fmt(e.starts_at, { day: 'numeric', month: 'short' })}) – ${time(e.ends_at)} (${fmt(e.ends_at, { day: 'numeric', month: 'short' })})` : `${time(e.starts_at)} – ${time(e.ends_at)}`) : time(e.starts_at);
+const catLabel = t(`cat_${e.category}`) || t('cat_other');
+const openLabel = e.open_to ? t(`open_${e.open_to}`) : '';
 
-const dateRange = event.ends_at
-  ? `${formatDate(event.starts_at)}, ${formatTime(event.starts_at)} – ${formatTime(event.ends_at)}`
-  : `${formatDate(event.starts_at)}, ${formatTime(event.starts_at)}`;
+const article = renderArticle(e.description);
+const lede = e.summary || article.firstParagraph;
+const bodyHtml = e.summary ? article.html : article.htmlWithoutFirst;
+
+// Embeddable video (YouTube / Vimeo); anything else is offered as a link.
+const video = (() => {
+  const u = e.video_url;
+  if (!u) return null;
+  const y = u.match(/(?:youtu\.be\/|v=|embed\/|shorts\/)([\w-]{11})/);
+  if (y) return { embed: `https://www.youtube-nocookie.com/embed/${y[1]}`, href: u };
+  const v = u.match(/vimeo\.com\/(?:video\/)?(\d+)/);
+  if (v) return { embed: `https://player.vimeo.com/video/${v[1]}`, href: u };
+  return { embed: null, href: u };
+})();
+
+const mapsHref = e.venue ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${e.venue}, Sherubtse College, Kanglung`)}` : null;
+const PHOTO_PREVIEW = 12;
+const sections = [
+  { id: 'about', label: t('d_about'), show: !!(lede || bodyHtml) },
+  { id: 'programme', label: t('d_programme'), show: e.programme.length > 0 },
+  { id: 'guests', label: t('d_guests'), show: e.guests.length > 0 },
+  { id: 'photos', label: t('d_photos'), show: e.gallery.length > 0 },
+  { id: 'video', label: t('d_video'), show: !!video },
+  { id: 'contact', label: t('d_contact'), show: !!(e.contact_email || e.contact_phone) },
+].filter((s) => s.show);
+const initials = (n: string) => n.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
+const hrefOf = (x: { id: number }) => `/news-notices/events/${x.id}`;
+const ICON = {
+  cal: '<rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+  clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  pin: '<path d="M12 21s7-6.2 7-11.5A7 7 0 0 0 5 9.5C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>',
+  people: '<circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6M16 5a3 3 0 0 1 0 6M18 14.4c1.8.8 3 2.6 3 4.6"/>',
+  building: '<path d="M4 21V8l8-5 8 5v13M9 21v-6h6v6M9 11h.01M15 11h.01"/>',
+  arrow: '<path d="M5 12h14M13 6l6 6-6 6"/>',
+  back: '<path d="M19 12H5M11 6l-6 6 6 6"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  link: '<path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/>',
+  mail: '<rect x="3" y="5" width="18" height="14" rx="3"/><path d="m3.5 7 8.5 6 8.5-6"/>',
+  phone: '<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/>',
+  photo: '<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>',
+  close: '<path d="M6 6l12 12M18 6 6 18"/>',
+  star: '<path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/>',
+};
+const svg = (n: keyof typeof ICON) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON[n]}</svg>`;
+const shotAlt = (g: { alt: string }, i: number) => g.alt || `${e.title} — photo ${i + 1} of ${e.gallery.length}`;
+const meta = JSON.stringify({ id: e.id, title: e.title, start: e.starts_at, end: e.ends_at ?? e.starts_at, venue: e.venue ?? '', desc: excerpt(e.summary || e.description || '', 300), href: hrefOf(e) }).replace(/</g, '\\u003c');
+const labelsJson = JSON.stringify({ starts: t('starts_in'), endsIn: t('ends_in'), now: t('d_happening'), past: t('d_past_note'), copied: t('d_copied'), copy: t('d_copy') }).replace(/</g, '\\u003c');
 ---
-<Layout title={event.title} description={event.description ?? undefined}>
-  <div class="wrap" style="padding-top:var(--s4)">
-    <nav class="breadcrumb" aria-label="Breadcrumb">
-      {breadcrumb.map((b, i) => (
-        <>
-          {i > 0 && ' › '}
-          {i === breadcrumb.length - 1 ? <span class="current">{b.label}</span> : <a href={b.url}>{b.label}</a>}
-        </>
-      ))}
-    </nav>
-  </div>
-
-  <div class="ev-bleed" style="margin-top:var(--s3)">
-    <div class="ev-hero">
-      {event.image_url && <img src={event.image_url} alt="" class="ev-hero-img" />}
-      <div class="ev-hero-body">
-        <span class="ev-tile-kicker">{event.is_past ? 'Past Event' : (event.open_to_label ?? 'Event')}</span>
-        <h1 class="ev-hero-title">{event.title}</h1>
-      </div>
-    </div>
-  </div>
-
-  <div class="wrap" style="padding-top:var(--s6);padding-bottom:var(--s8)">
-    <div class="ev-body-grid">
-      <div class="ev-main">
-        <dl class="ev-facts">
-          <div>
-            <dt>When</dt>
-            <dd>{dateRange}</dd>
-          </div>
-          <div>
-            <dt>Where</dt>
-            <dd>{event.venue ?? 'To be announced'}</dd>
-          </div>
-          {event.open_to_label && (
-            <div>
-              <dt>Who Can Attend</dt>
-              <dd>{event.open_to_label}</dd>
+<Layout title={e.title} description={e.summary ?? excerpt(e.description ?? '', 160)} ogImage={e.image_url ?? undefined}>
+  <article class="evd" data-evd>
+    <!-- =========================== HERO =========================== -->
+    <header class:list={['evd-hero', { 'evd-hero--img': e.image_url }]}>
+      {e.image_url
+        ? <img class="evd-hero-img" src={e.image_url} alt="" />
+        : <span class="evd-hero-art" aria-hidden="true"><span class="evd-ring evd-ring--a"></span><span class="evd-ring evd-ring--b"></span><span class="evd-big">{fmt(e.starts_at, { day: 'numeric' })}</span></span>}
+      <span class="evd-scrim" aria-hidden="true"></span>
+      <span class="evd-spark evd-spark--1" aria-hidden="true" set:html={svg('star')} />
+      <span class="evd-spark evd-spark--2" aria-hidden="true" set:html={svg('star')} />
+      <span class="evd-spark evd-spark--3" aria-hidden="true" set:html={svg('star')} />
+      <div class="wrap evd-hero-inner">
+        <nav class="evd-crumbs" aria-label="Breadcrumb">
+          <a href="/">Home</a><span aria-hidden="true">›</span><a href="/news-notices">News &amp; Notices</a><span aria-hidden="true">›</span><a href="/news-notices/events">Events</a><span aria-hidden="true">›</span><span aria-current="page">{e.title}</span>
+        </nav>
+        <div class="evd-hero-grid">
+          <div class="evd-hero-text">
+            <p class="evd-tags evd-rise" style="--d:0">
+              <span class="evd-tag evd-tag--gold">{catLabel}</span>
+              {openLabel && <span class="evd-tag">{openLabel}</span>}
+              <span class="evd-tag evd-tag--status" data-evd-status hidden></span>
+            </p>
+            <h1 class="evd-title evd-rise" style="--d:1">{e.title}</h1>
+            {lede && <p class="evd-lede evd-rise" style="--d:2">{lede}</p>}
+            <ul class="evd-facts evd-rise" style="--d:3">
+              <li><span set:html={svg('cal')} /><span><b>{dateLong}</b>{time(e.starts_at) && <small>{timeText}</small>}</span></li>
+              {e.venue && <li><span set:html={svg('pin')} /><span><b>{e.venue}</b>{e.unit_name && <small>{e.unit_name}</small>}</span></li>}
+            </ul>
+            <div class="evd-actions evd-rise" style="--d:4">
+              {e.registration_link && !e.is_past && <a class="evd-btn evd-btn--gold" href={e.registration_link} target="_blank" rel="noopener" data-evd-register>{t('d_register')}<span set:html={svg('arrow')} /><span class="evd-sr"> (opens in a new tab)</span></a>}
+              <details class="evd-menu" data-evd-menu>
+                <summary><span set:html={svg('plus')} />{t('add_calendar')}</summary>
+                <div class="evd-menu-panel">
+                  <a href="#" target="_blank" rel="noopener" data-evd-google>{t('add_google')}</a>
+                  <button type="button" data-evd-ics>{t('add_ics')}</button>
+                </div>
+              </details>
+              {e.photo_story && <a class="evd-btn evd-btn--ghost" href={e.photo_story.href}><span set:html={svg('photo')} />{t('d_see_photos')}</a>}
             </div>
-          )}
-          {event.registration_link && (
-            <div>
-              <dt>Registration</dt>
-              <dd>Required</dd>
-            </div>
-          )}
-        </dl>
-
-        {event.description && (
-          <div class="article-body" set:html={event.description.replace(/\n/g, '<br>')} />
-        )}
-
-        {event.registration_link && !event.is_past && (
-          <a href={event.registration_link} class="btn btn-primary ev-cta" target="_blank" rel="noopener">Register for This Event</a>
-        )}
-
-        {event.photo_story && (
-          <p class="ev-photos"><a href={event.photo_story.href} class="btn btn-secondary">Photos from this event: {event.photo_story.title}</a></p>
-        )}
-
-        {(prev || next) && (
-          <div class="ev-pager">
-            {prev ? (
-              <a href={`/news-notices/events/${prev.id}`}>
-                <span>← {formatShort(prev.starts_at)}</span>
-                <strong>{prev.title}</strong>
-              </a>
-            ) : <span></span>}
-            {next ? (
-              <a href={`/news-notices/events/${next.id}`}>
-                <span>{formatShort(next.starts_at)} →</span>
-                <strong>{next.title}</strong>
-              </a>
-            ) : <span></span>}
           </div>
-        )}
-      </div>
 
-      {upNext.length > 0 && (
-        <aside class="ev-sidebar">
-          <div class="ev-side-card">
-            <h2 class="ev-side-heading">Coming Up Next</h2>
-            <ol class="ev-side-list">
-              {upNext.map((e) => (
-                <li>
-                  <a href={`/news-notices/events/${e.id}`}>
-                    <span class="ev-side-date">{formatShort(e.starts_at)}{e.venue ? ` · ${e.venue}` : ''}</span>
-                    <span class="ev-side-title">{e.title}</span>
-                  </a>
+          <aside class="evd-count-card evd-rise" style="--d:3" data-evd-count-card aria-live="off" hidden>
+            <p class="evd-count-label" data-evd-count-label></p>
+            <div class="evd-count" data-evd-count role="timer">
+              <div><b data-u="d">00</b><span>{t('unit_days')}</span></div>
+              <div><b data-u="h">00</b><span>{t('unit_hours')}</span></div>
+              <div><b data-u="m">00</b><span>{t('unit_minutes')}</span></div>
+              <div><b data-u="s">00</b><span>{t('unit_seconds')}</span></div>
+            </div>
+          </aside>
+          {e.is_past && (
+            <aside class="evd-count-card evd-count-card--past evd-rise" style="--d:3" data-evd-past>
+              <span class="evd-past-icon" set:html={svg('star')} />
+              <p>{t('d_past_note')}</p>
+            </aside>
+          )}
+        </div>
+      </div>
+    </header>
+
+    {sections.length > 1 && (
+      <nav class="evd-nav" aria-label={t('d_nav')} data-evd-nav>
+        <div class="wrap evd-nav-row">{sections.map((s) => <a href={`#${s.id}`} data-evd-link={s.id}>{s.label}</a>)}</div>
+      </nav>
+    )}
+
+    <!-- =========================== BODY =========================== -->
+    <div class="wrap evd-layout">
+      <div class="evd-main">
+        {(lede || bodyHtml) && (
+          <section class="evd-section" id="about" data-evd-section>
+            <h2 class="evd-h" data-evd-reveal>{t('d_about')}</h2>
+            {bodyHtml
+              ? <div class="evd-body" data-evd-reveal set:html={bodyHtml} />
+              : lede && <p class="evd-body-lede" data-evd-reveal>{lede}</p>}
+          </section>
+        )}
+
+        {e.programme.length > 0 && (
+          <section class="evd-section" id="programme" data-evd-section>
+            <h2 class="evd-h" data-evd-reveal>{t('d_programme')}</h2>
+            <ol class="evd-timeline">
+              {e.programme.map((p, i) => (
+                <li data-evd-reveal style={`--d:${i % 3}`}>
+                  <span class="evd-time">{p.time ?? ''}</span>
+                  <div class="evd-session">
+                    <h3>{p.title}</h3>
+                    {p.description && <p>{p.description}</p>}
+                    {p.venue && <p class="evd-session-venue"><span set:html={svg('pin')} />{p.venue}</p>}
+                  </div>
                 </li>
               ))}
             </ol>
+          </section>
+        )}
+
+        {e.guests.length > 0 && (
+          <section class="evd-section" id="guests" data-evd-section>
+            <h2 class="evd-h" data-evd-reveal>{t('d_guests')}</h2>
+            <ul class="evd-guests">
+              {e.guests.map((g, i) => (
+                <li data-evd-reveal style={`--d:${i % 3}`}>
+                  <span class="evd-portrait">{g.photo_url ? <img src={g.photo_url} alt={`Portrait of ${g.name}`} loading="lazy" /> : <b aria-hidden="true">{initials(g.name)}</b>}</span>
+                  <h3>{g.name}</h3>
+                  {g.role && <p class="evd-role">{g.role}</p>}
+                  {g.note && <p class="evd-note">{g.note}</p>}
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
+        {e.gallery.length > 0 && (
+          <section class="evd-section" id="photos" data-evd-section data-evd-gallery>
+            <h2 class="evd-h" data-evd-reveal>{t('d_photos')} <span class="evd-count-pill">{e.gallery.length}</span></h2>
+            <ul class="evd-photos">
+              {e.gallery.map((g, i) => (
+                <li class="evd-photo" hidden={i >= PHOTO_PREVIEW} data-extra={i >= PHOTO_PREVIEW ? '1' : undefined}>
+                  <button type="button" data-evd-shot={g.url} data-alt={shotAlt(g, i)} aria-label={`Open photo ${i + 1} of ${e.gallery.length}: ${shotAlt(g, i)}`}>
+                    <img src={g.url} alt={shotAlt(g, i)} loading="lazy" decoding="async" />
+                  </button>
+                </li>
+              ))}
+            </ul>
+            {e.gallery.length > PHOTO_PREVIEW && <p class="evd-more-photos"><button type="button" class="evd-btn evd-btn--line" data-evd-showall>{fill(t('d_show_all_photos'), e.gallery.length)}</button></p>}
+          </section>
+        )}
+
+        {video && (
+          <section class="evd-section" id="video" data-evd-section>
+            <h2 class="evd-h" data-evd-reveal>{t('d_video')}</h2>
+            {video.embed
+              ? <div class="evd-video" data-evd-reveal><iframe src={video.embed} title={`${e.title} — video`} loading="lazy" allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></div>
+              : <p data-evd-reveal><a class="evd-btn evd-btn--navy" href={video.href} target="_blank" rel="noopener">{t('d_video')}<span set:html={svg('arrow')} /></a></p>}
+          </section>
+        )}
+
+        {(earlier || later) && (
+          <nav class="evd-pager" aria-label="Events" data-evd-reveal>
+            {earlier ? <a href={hrefOf(earlier)} rel="prev"><small><span set:html={svg('back')} />{t('d_earlier')} · {fmt(earlier.starts_at, { day: 'numeric', month: 'short' })}</small><strong>{earlier.title}</strong></a> : <span></span>}
+            {later && <a href={hrefOf(later)} rel="next"><small>{t('d_later')} · {fmt(later.starts_at, { day: 'numeric', month: 'short' })}<span set:html={svg('arrow')} /></small><strong>{later.title}</strong></a>}
+          </nav>
+        )}
+      </div>
+
+      <aside class="evd-side" aria-label={t('d_details')}>
+        <section class="evd-card" data-evd-reveal>
+          <h2>{t('d_details')}</h2>
+          <dl>
+            <div><dt><span set:html={svg('cal')} />{t('d_when')}</dt><dd>{dateLong}<br /><span>{timeText}</span></dd></div>
+            <div><dt><span set:html={svg('pin')} />{t('d_where')}</dt><dd>{e.venue ?? t('d_tba')}{mapsHref && <><br /><a href={mapsHref} target="_blank" rel="noopener">{t('d_maps')}</a></>}</dd></div>
+            {openLabel && <div><dt><span set:html={svg('people')} />{t('d_open')}</dt><dd>{openLabel}</dd></div>}
+            {e.unit_name && <div><dt><span set:html={svg('building')} />{t('d_organiser')}</dt><dd>{e.unit_name}</dd></div>}
+            <div><dt><span set:html={svg('star')} />{t('d_type')}</dt><dd>{catLabel}</dd></div>
+          </dl>
+          {e.registration_link && !e.is_past && <a class="evd-btn evd-btn--navy evd-block" href={e.registration_link} target="_blank" rel="noopener">{t('register')}<span set:html={svg('arrow')} /></a>}
+          {(e.contact_email || e.contact_phone) && (
+            <div class="evd-contact" id="contact" data-evd-section>
+              <h3>{t('d_contact')}</h3>
+              {e.contact_email && <a href={`mailto:${e.contact_email}`}><span set:html={svg('mail')} />{e.contact_email}</a>}
+              {e.contact_phone && <a href={`tel:${e.contact_phone.replace(/[^+\d]/g, '')}`}><span set:html={svg('phone')} />{e.contact_phone}</a>}
+            </div>
+          )}
+          <div class="evd-share">
+            <span>{t('d_share')}</span>
+            <button type="button" data-evd-copy aria-label={t('d_copy')}><span set:html={svg('link')} /><b data-evd-copy-label>{t('d_copy')}</b></button>
+            <a href="#" data-evd-share="whatsapp" target="_blank" rel="noopener">WhatsApp</a>
+            <a href="#" data-evd-share="facebook" target="_blank" rel="noopener">Facebook</a>
           </div>
-        </aside>
-      )}
+        </section>
+      </aside>
     </div>
-  </div>
+
+    {more.length > 0 && (
+      <section class="evd-more">
+        <div class="wrap">
+          <div class="evd-more-head"><h2>{t('d_more_heading')}</h2><a href="/news-notices/events">{t('d_all_events')} <span set:html={svg('arrow')} /></a></div>
+          <ul>
+            {more.map((x) => (
+              <li data-evd-reveal>
+                <a href={hrefOf(x)}>
+                  <span class="evd-more-date"><b>{fmt(x.starts_at, { day: '2-digit' })}</b><i>{fmt(x.starts_at, { month: 'short' })}</i></span>
+                  <span><strong>{x.title}</strong>{x.venue && <small>{x.venue}</small>}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+    )}
+
+    <!-- photo viewer -->
+    <div class="evd-lb" data-evd-lb hidden role="dialog" aria-modal="true" aria-label="Photo viewer">
+      <div class="evd-lb-bar"><span data-evd-lb-count></span><button type="button" data-evd-lb-close aria-label="Close photo viewer"><span set:html={svg('close')} /></button></div>
+      <button type="button" class="evd-lb-nav evd-lb-nav--prev" data-evd-lb-prev aria-label="Previous photo"><span set:html={svg('back')} /></button>
+      <figure><img src="" alt="" data-evd-lb-img /><figcaption data-evd-lb-cap></figcaption></figure>
+      <button type="button" class="evd-lb-nav evd-lb-nav--next" data-evd-lb-next aria-label="Next photo"><span set:html={svg('arrow')} /></button>
+    </div>
+  </article>
+  <script is:inline type="application/json" id="evd-meta" set:html={meta}></script>
+  <script is:inline type="application/json" id="evd-labels" set:html={labelsJson}></script>
 </Layout>
+
+<script is:inline>
+  (() => {
+    const root = document.querySelector('[data-evd]');
+    if (!root) return;
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const M = JSON.parse(document.getElementById('evd-meta').textContent);
+    const L = JSON.parse(document.getElementById('evd-labels').textContent);
+    const $ = (s, r = root) => r.querySelector(s);
+    const $$ = (s, r = root) => [...r.querySelectorAll(s)];
+    const s = Date.parse(M.start), e = Date.parse(M.end);
+    const masthead = document.querySelector('.masthead');
+    const setTop = () => root.style.setProperty('--evd-top', (masthead ? masthead.getBoundingClientRect().height : 0) + 'px');
+    setTop(); addEventListener('resize', setTop, { passive: true });
+
+    // Reveal (content is visible without it)
+    if (!reduce && 'IntersectionObserver' in window) {
+      root.classList.add('evd-anim');
+      const io = new IntersectionObserver((es) => es.forEach((x) => { if (x.isIntersecting) { x.target.classList.add('is-in'); io.unobserve(x.target); } }), { rootMargin: '0px 0px -6% 0px', threshold: 0.05 });
+      $$('[data-evd-reveal]').forEach((n) => io.observe(n));
+    }
+
+    // Countdown / happening now / past
+    const card = $('[data-evd-count-card]'), status = $('[data-evd-status]'), label = $('[data-evd-count-label]');
+    const past = $('[data-evd-past]');
+    const pad = (n) => String(Math.max(0, n)).padStart(2, '0');
+    const tick = () => {
+      const now = Date.now();
+      if (e < now) { card.hidden = true; if (past) past.hidden = false; status.hidden = true; return; }
+      const live = s <= now;
+      if (past) past.hidden = true;
+      card.hidden = false; card.classList.toggle('is-live', live);
+      label.textContent = live ? L.now + ' — ' + L.endsIn : L.starts;
+      status.hidden = !live; if (live) status.textContent = L.now;
+      const left = Math.max(0, Math.floor(((live ? e : s) - now) / 1000));
+      const set = (u, v) => { const b = $('[data-u="' + u + '"]', card); if (b && b.textContent !== v) b.textContent = v; };
+      set('d', pad(Math.floor(left / 86400))); set('h', pad(Math.floor((left % 86400) / 3600))); set('m', pad(Math.floor((left % 3600) / 60))); set('s', pad(left % 60));
+    };
+    tick(); setInterval(tick, 1000);
+
+    // Section bar
+    const links = $$('[data-evd-link]'), secs = links.map((l) => document.getElementById(l.dataset.evdLink)).filter(Boolean);
+    const bar = $('.evd-nav-row');
+    const mark = () => {
+      const y = innerHeight * 0.32; let cur = null;
+      secs.forEach((n) => { if (n.getBoundingClientRect().top <= y) cur = n.id; });
+      links.forEach((l) => { const on = l.dataset.evdLink === cur; l.classList.toggle('is-on', on); if (on) l.setAttribute('aria-current', 'true'); else l.removeAttribute('aria-current'); if (on && bar && bar.scrollWidth > bar.clientWidth) bar.scrollTo({ left: l.offsetLeft - 24, behavior: reduce ? 'auto' : 'smooth' }); });
+    };
+    addEventListener('scroll', mark, { passive: true }); mark();
+
+    // Add to calendar
+    const stamp = (ms) => new Date(ms).toISOString().replace(/[-:]|\.\d{3}/g, '');
+    const end = e > s ? e : s + 3600e3;
+    const g = $('[data-evd-google]');
+    g.href = 'https://calendar.google.com/calendar/render?action=TEMPLATE&text=' + encodeURIComponent(M.title) + '&dates=' + stamp(s) + '/' + stamp(end) + '&location=' + encodeURIComponent(M.venue) + '&details=' + encodeURIComponent(M.desc + '\n' + location.href);
+    const esc = (v) => String(v || '').replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\n/g, '\\n');
+    $('[data-evd-ics]').addEventListener('click', () => {
+      const body = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Sherubtse College//Events//EN', 'BEGIN:VEVENT', 'UID:event-' + M.id + '@sherubtse.edu.bt', 'DTSTAMP:' + stamp(Date.now()), 'DTSTART:' + stamp(s), 'DTEND:' + stamp(end), 'SUMMARY:' + esc(M.title), 'LOCATION:' + esc(M.venue), 'DESCRIPTION:' + esc(M.desc), 'URL:' + location.href, 'END:VEVENT', 'END:VCALENDAR'].join('\r\n');
+      const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([body], { type: 'text/calendar;charset=utf-8' })); a.download = 'event-' + M.id + '.ics'; document.body.appendChild(a); a.click(); a.remove();
+      $('[data-evd-menu]').open = false;
+    });
+    document.addEventListener('click', (ev) => { const m = $('[data-evd-menu]'); if (m && m.open && !m.contains(ev.target)) m.open = false; });
+
+    // Share
+    const url = location.origin + location.pathname;
+    const targets = { whatsapp: 'https://wa.me/?text=' + encodeURIComponent(M.title + ' — ' + url), facebook: 'https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(url) };
+    $$('[data-evd-share]').forEach((a) => { a.href = targets[a.dataset.evdShare]; });
+    const copy = $('[data-evd-copy]');
+    copy.addEventListener('click', async () => {
+      const lab = $('[data-evd-copy-label]');
+      try { await navigator.clipboard.writeText(url); lab.textContent = L.copied; setTimeout(() => { lab.textContent = L.copy; }, 1800); } catch (x) { window.prompt('Copy this link:', url); }
+    });
+
+    // Photos: show all, and the viewer
+    const gal = $('[data-evd-gallery]');
+    if (gal) {
+      $('[data-evd-showall]')?.addEventListener('click', (ev) => { $$('[data-extra]', gal).forEach((li) => { li.hidden = false; }); ev.currentTarget.parentElement.remove(); });
+      const lb = $('[data-evd-lb]'), img = $('[data-evd-lb-img]', lb), cap = $('[data-evd-lb-cap]', lb), count = $('[data-evd-lb-count]', lb);
+      const shots = $$('[data-evd-shot]', gal);
+      let at = 0, last = null;
+      const go = (n) => { at = (n + shots.length) % shots.length; const b = shots[at]; img.src = b.dataset.evdShot; img.alt = b.dataset.alt; cap.textContent = b.dataset.alt; count.textContent = (at + 1) + ' / ' + shots.length; [at + 1, at - 1].forEach((k) => { const o = shots[(k + shots.length) % shots.length]; if (o) new Image().src = o.dataset.evdShot; }); };
+      const onKey = (ev) => { if (ev.key === 'Escape') hide(); else if (ev.key === 'ArrowRight') go(at + 1); else if (ev.key === 'ArrowLeft') go(at - 1); };
+      const hide = () => { lb.hidden = true; document.documentElement.classList.remove('evd-lock'); document.removeEventListener('keydown', onKey); last && last.focus(); };
+      shots.forEach((b, i) => b.addEventListener('click', () => { last = b; lb.hidden = false; document.documentElement.classList.add('evd-lock'); go(i); $('[data-evd-lb-close]', lb).focus(); document.addEventListener('keydown', onKey); }));
+      $('[data-evd-lb-close]', lb).addEventListener('click', hide);
+      $('[data-evd-lb-prev]', lb).addEventListener('click', () => go(at - 1));
+      $('[data-evd-lb-next]', lb).addEventListener('click', () => go(at + 1));
+      lb.addEventListener('click', (ev) => { if (ev.target === lb) hide(); });
+      let sx = 0; lb.addEventListener('touchstart', (ev) => { sx = ev.touches[0].clientX; }, { passive: true });
+      lb.addEventListener('touchend', (ev) => { const dx = ev.changedTouches[0].clientX - sx; if (Math.abs(dx) > 50) go(at + (dx < 0 ? 1 : -1)); }, { passive: true });
+    }
+  })();
+</script>

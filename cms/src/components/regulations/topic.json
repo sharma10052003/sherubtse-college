@@ -1,0 +1,12 @@
+{
+  "collectionName": "components_regulations_topics",
+  "info": { "displayName": "Regulation topic", "icon": "book" },
+  "options": {},
+  "attributes": {
+    "key": { "type": "string", "required": true },
+    "title": { "type": "string", "required": true },
+    "icon": { "type": "string" },
+    "intro": { "type": "text" },
+    "items": { "type": "component", "repeatable": true, "component": "regulations.item" }
+  }
+}

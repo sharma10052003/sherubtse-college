@@ -1,0 +1,10 @@
+{
+  "collectionName": "components_home_wishes",
+  "info": { "displayName": "Wish", "icon": "heart", "description": "A short greeting from a person, office or group." },
+  "options": {},
+  "attributes": {
+    "from": { "type": "string", "required": true },
+    "role": { "type": "string" },
+    "text": { "type": "text", "required": true }
+  }
+}

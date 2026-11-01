@@ -3,7 +3,7 @@ import Layout from '../../../layouts/Layout.astro';
 import { getContactPageContent, getContactOffices } from '../../../lib/content/contact';
 import type { ContactOffice } from '../../../lib/content/contact';
 import { getSiteSettings } from '../../../lib/content/site-settings';
-import '../../../styles/contact-page.css';
+import '../../../styles/contact-hub.css';
 
 const [content, offices, siteSettings] = await Promise.all([
   getContactPageContent(),
@@ -33,29 +33,30 @@ function telHref(phone: string) {
 }
 
 const ICONS: Record<string, string> = {
-  president: '<path d="M4 15 2 7l5.5 3.5L12 4l4.5 6.5L22 7l-2 8z"/><path d="M4 15h16v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"/>',
-  academic: '<path d="M12 2 2 7l10 5 10-5-10-5z"/><path d="M6 10v6c0 1.5 3 3 6 3s6-1.5 6-3v-6"/><path d="M22 7v7"/>',
-  student: '<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/>',
-  research: '<path d="M9 3h6"/><path d="M10 3v6l-5.5 9.5A1.7 1.7 0 0 0 6 21h12a1.7 1.7 0 0 0 1.5-2.5L14 9V3"/><path d="M7.5 15h9"/>',
-  admin: '<rect x="3" y="7" width="18" height="13"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M3 12h18"/>',
-  ict: '<rect x="3" y="4" width="18" height="12"/><path d="M8 20h8M12 16v4"/><path d="M7 9a5 5 0 0 1 10 0"/>',
-  exam: '<rect x="5" y="3" width="14" height="18"/><path d="M9 3v3h6V3"/><path d="m9 12 2 2 4-4"/>',
+  president: '<path d="M3 8l4.5 4L12 5l4.5 7L21 8l-2 10H5z"/><path d="M5 21h14"/><circle cx="12" cy="3.2" r=".6"/>',
+  academic: '<path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11.2V16c0 1.4 2.7 3 6 3s6-1.6 6-3v-4.8"/><path d="M22 9v6"/>',
+  student: '<circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5"/><circle cx="17" cy="9" r="2.5"/><path d="M17 14.5c2.4 0 4 1.8 4 4.5"/>',
+  research: '<path d="M9 3h6"/><path d="M10 3v5.5L5 18a2 2 0 0 0 1.8 3h10.4A2 2 0 0 0 19 18l-5-9.5V3"/><path d="M7.8 14h8.4"/><circle cx="11" cy="17.5" r=".7"/><circle cx="14" cy="16.5" r=".7"/>',
+  admin: '<rect x="3" y="7" width="18" height="13" rx="2.5"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/><path d="M3 13h18"/><path d="M11 13v2h2v-2"/>',
+  ict: '<rect x="2.5" y="4" width="19" height="12" rx="2.5"/><path d="M8 20h8M12 16v4"/><path d="M8.5 10.5a5 5 0 0 1 7 0"/><path d="M10.3 12.3a2.5 2.5 0 0 1 3.4 0"/>',
+  exam: '<rect x="5" y="4" width="14" height="17" rx="2.5"/><path d="M9 4V3h6v1"/><path d="m9 12 2 2 4-4"/><path d="M9 17.5h6"/>',
   location: '<path d="M12 21s-7-6.1-7-11a7 7 0 0 1 14 0c0 4.9-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/>',
-  mail: '<rect x="3" y="5" width="18" height="14"/><path d="M3 6l9 7 9-7"/>',
-  phone: '<path d="M4 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L14 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 2 6a2 2 0 0 1 2-2z"/>',
+  mail: '<rect x="3" y="5" width="18" height="14" rx="3"/><path d="m3.5 7 8.5 6 8.5-6"/>',
+  phone: '<path d="M5 4h3.5l1.8 4.5-2.2 1.4a11 11 0 0 0 5 5l1.4-2.2L19 14.5V18a2 2 0 0 1-2.2 2A15 15 0 0 1 3 6.2 2 2 0 0 1 5 4z"/>',
   clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/>',
-  directions: '<path d="M3 11l18-8-8 18-2-8-8-2z"/>',
+  directions: '<path d="M3 11l18-8-8 18-2-8z"/>',
   map: '<path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2z"/><path d="M9 4v14M15 6v14"/>',
-  support: '<path d="M4 14v-2a8 8 0 0 1 16 0v2"/><rect x="2" y="14" width="5" height="6"/><rect x="17" y="14" width="5" height="6"/><path d="M20 20a4 4 0 0 1-4 3h-3"/>',
+  support: '<path d="M4 14v-2a8 8 0 0 1 16 0v2"/><rect x="2" y="14" width="5" height="6" rx="2"/><rect x="17" y="14" width="5" height="6" rx="2"/><path d="M20 20a4 4 0 0 1-4 3h-3"/>',
   search: '<circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/>',
   close: '<path d="M6 6l12 12M18 6 6 18"/>',
   arrow: '<path d="M5 12h14M13 6l6 6-6 6"/>',
   down: '<path d="M12 5v14M6 13l6 6 6-6"/>',
-  send: '<path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4z"/>',
-  copy: '<rect x="9" y="9" width="12" height="12"/><path d="M5 15H3V3h12v2"/>',
+  send: '<path d="M21 3 10 14"/><path d="M21 3l-7 18-4-8-8-4z"/>',
+  copy: '<rect x="9" y="9" width="12" height="12" rx="3"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/>',
   check: '<path d="m5 12 5 5L20 7"/>',
-  external: '<path d="M14 4h6v6M20 4l-9 9"/><path d="M18 14v6H4V6h6"/>',
+  external: '<path d="M14 4h6v6M20 4l-9 9"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>',
   person: '<circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-3.9 3.1-6 7-6s7 2.1 7 6"/>',
+  chat: '<path d="M4 5h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H9l-5 4v-4H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"/><path d="M8 10h8M8 13h5"/>',
 };
 
 function icon(name: string, className = '') {
@@ -69,11 +70,8 @@ function icon(name: string, className = '') {
 const officeKey = (title: string) => title.trim().toLowerCase();
 const officeByKey = new Map(offices.map((o) => [officeKey(o.group_title), o]));
 const helpTopics = content.help_topics.filter((t) => officeByKey.has(officeKey(t.office)));
-const defaultOffice: ContactOffice | undefined =
-  (helpTopics[0] && officeByKey.get(officeKey(helpTopics[0].office))) || offices[0];
 
 const isIct = (o: ContactOffice) => o.group_icon === 'ict';
-const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 
 // Search matches office name, person, designation, description, and the
 // "How Can We Help?" topics that point at the office (e.g. "admissions").
@@ -93,7 +91,6 @@ const L = content.labels;
 const fill = (template: string, vars: Record<string, string | number>) =>
   template.replace(/\{(\w+)\}/g, (m, k) => (k in vars ? String(vars[k]) : m));
 
-const personLine = (o: ContactOffice) => [o.full_name, o.role_title].filter(Boolean).join(' — ');
 ---
 
 <Layout title={content.page_title} description={content.seo_description}>
@@ -101,14 +98,15 @@ const personLine = (o: ContactOffice) => [o.full_name, o.role_title].filter(Bool
     <!-- ====================== HERO + SEARCH ====================== -->
     <section class="ct-hero" aria-labelledby="ct-title">
       <div class="ct-hero-bg" aria-hidden="true">
-        {content.hero_image_url && <img class="ct-hero-photo" src={content.hero_image_url} alt="" data-parallax="0.12" />}
-        <svg class="ct-hero-range ct-hero-range--back" data-parallax="0.06" viewBox="0 0 1600 320" preserveAspectRatio="xMidYMax slice">
-          <path d="M0 320V190l120-50 110 30 160-120 130 80 140-60 170 110 150-90 160 100 130-60 130 70 100-30v240z" />
-        </svg>
-        <svg class="ct-hero-range ct-hero-range--front" data-parallax="0.12" viewBox="0 0 1600 320" preserveAspectRatio="xMidYMax slice">
-          <path d="M0 320V240l150-50 130 30 170-80 150 60 120-30 200 70 150-50 170 60 140-30 120 40 100-20v100z" />
-        </svg>
-        <div class="ct-kira"></div>
+        {content.hero_image_url && <img class="ct-hero-photo" src={content.hero_image_url} alt="" />}
+        <span class="ct-hero-glow ct-hero-glow--a"></span>
+        <span class="ct-hero-glow ct-hero-glow--b"></span>
+        <span class="ct-hero-ring ct-hero-ring--a"></span>
+        <span class="ct-hero-ring ct-hero-ring--b"></span>
+        <span class="ct-bubble ct-bubble--1" set:html={icon('mail')} />
+        <span class="ct-bubble ct-bubble--2" set:html={icon('phone')} />
+        <span class="ct-bubble ct-bubble--3" set:html={icon('chat')} />
+        <span class="ct-bubble ct-bubble--4" set:html={icon('location')} />
       </div>
 
       <div class="wrap ct-wide ct-hero-grid">
@@ -174,6 +172,73 @@ const personLine = (o: ContactOffice) => [o.full_name, o.role_title].filter(Bool
             <Fragment set:html={icon('arrow', 'ct-quick-arrow')} />
           </a>
         </nav>
+      </div>
+    </section>
+
+    <!-- ====================== THE COLLEGE'S OWN CONTACT DETAILS ====================== -->
+    <section class="ct-reach" aria-labelledby="ct-reach-h">
+      <div class="wrap ct-wide">
+        <header class="ct-reach-head">
+          <p class="ct-eyebrow ct-eyebrow--light">{L.info_eyebrow}</p>
+          <h2 id="ct-reach-h" class="ct-sr">{content.info_heading}</h2>
+          {content.info_subtitle && <p class="ct-reach-sub">{content.info_subtitle}</p>}
+        </header>
+        <ul class="ct-reach-list">
+          <li class="ct-reach-item" data-ct-reveal style="--i:0">
+            <span class="ct-reach-icon" set:html={icon('mail')} />
+            <div class="ct-reach-body">
+              <h3>{L.email_label}</h3>
+              <p class="ct-reach-value">
+                {content.general_email ? <a href={`mailto:${content.general_email}`}>{content.general_email}</a> : L.not_confirmed_text}
+              </p>
+              {content.general_email && (
+                <div class="ct-reach-actions">
+                  <button type="button" class="ct-copy" data-ct-copy={content.general_email}>
+                    <Fragment set:html={icon('copy')} /><span data-ct-copy-label>{L.copy_address_label.replace(/address/i, L.email_label.toLowerCase())}</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          </li>
+          <li class="ct-reach-item" data-ct-reveal style="--i:1">
+            <span class="ct-reach-icon" set:html={icon('phone')} />
+            <div class="ct-reach-body">
+              <h3>{L.phone_label}</h3>
+              <p class="ct-reach-value">
+                {content.general_phone ? <a href={telHref(content.general_phone)}>{content.general_phone}</a> : L.not_confirmed_text}
+              </p>
+              {content.general_phone && (
+                <div class="ct-reach-actions">
+                  <button type="button" class="ct-copy" data-ct-copy={content.general_phone}>
+                    <Fragment set:html={icon('copy')} /><span data-ct-copy-label>{L.copy_address_label.replace(/address/i, L.phone_label.toLowerCase())}</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          </li>
+          <li class="ct-reach-item" data-ct-reveal style="--i:2">
+            <span class="ct-reach-icon" set:html={icon('clock')} />
+            <div class="ct-reach-body">
+              <h3>{L.hours_label}</h3>
+              <p class="ct-reach-value">{content.office_hours ?? L.not_confirmed_text}</p>
+            </div>
+          </li>
+          <li class="ct-reach-item" data-ct-reveal style="--i:3">
+            <span class="ct-reach-icon" set:html={icon('location')} />
+            <div class="ct-reach-body">
+              <h3>{L.address_label}</h3>
+              <p class="ct-reach-value" data-ct-address>{address}</p>
+              <div class="ct-reach-actions">
+                <button type="button" class="ct-copy" data-ct-copy={address} data-ct-copy-address>
+                  <Fragment set:html={icon('copy')} /><span data-ct-copy-label>{L.copy_address_label}</span>
+                </button>
+                <a class="ct-copy" href={directionsUrl} target="_blank" rel="noopener">
+                  <Fragment set:html={icon('directions')} />{content.directions_label}<span class="ct-sr">(opens Google Maps in a new tab)</span>
+                </a>
+              </div>
+            </div>
+          </li>
+        </ul>
       </div>
     </section>
 
@@ -262,117 +327,25 @@ const personLine = (o: ContactOffice) => [o.full_name, o.role_title].filter(Bool
       </div>
     </section>
 
-    <!-- ====================== FINDER + ENQUIRY ====================== -->
-    <section id="help" class="ct-help" aria-labelledby="ct-help-h">
+    <!-- ====================== ENQUIRY ====================== -->
+    <section id="help" class="ct-help" aria-labelledby="ct-enquiry-h">
       <div class="wrap ct-wide ct-help-grid">
-        <div class="ct-finder" data-ct-reveal>
-          <p class="ct-eyebrow">{L.finder_eyebrow}</p>
-          <h2 id="ct-help-h" class="ct-h2" tabindex="-1">{content.help_heading}</h2>
-          {content.help_intro && <p class="ct-lede">{content.help_intro}</p>}
-
-          {
-            helpTopics.length > 0 && (
-              <div class="ct-topics" role="group" aria-label={content.help_heading} data-ct-topics>
-                {helpTopics.map((t, i) => (
-                  <button type="button" class="ct-topic" data-office={t.office} aria-pressed={i === 0 ? 'true' : 'false'}>
-                    {t.emoji && (
-                      <span class="ct-topic-emoji" aria-hidden="true">
-                        {t.emoji}
-                      </span>
-                    )}
-                    <span class="ct-topic-label">{t.label}</span>
-                    <Fragment set:html={icon('check', 'ct-topic-check')} />
-                  </button>
-                ))}
-              </div>
-            )
-          }
-
-          <div class="ct-spotlights" aria-live="polite">
-            {
-              offices.map((o) => (
-                <article
-                  class:list={['ct-spotlight', { 'ct-spotlight--ict': isIct(o) }]}
-                  data-spotlight={o.group_title}
-                  hidden={o !== defaultOffice}
-                  aria-labelledby={`ct-spot-${slug(o.group_title)}`}
-                >
-                  <div class="ct-spotlight-head">
-                    <span class="ct-spotlight-icon" set:html={icon(o.group_icon || 'admin')} />
-                    <div>
-                      <p class="ct-spotlight-kicker">{L.spotlight_kicker}</p>
-                      <h3 id={`ct-spot-${slug(o.group_title)}`} class="ct-spotlight-name">
-                        {o.group_title}
-                      </h3>
-                    </div>
-                  </div>
-                  {o.group_description && <p class="ct-spotlight-desc">“{o.group_description}”</p>}
-                  {personLine(o) && <p class="ct-spotlight-person">{personLine(o)}</p>}
-                  <dl class="ct-spotlight-list">
-                    {o.email && (
-                      <div>
-                        <dt>
-                          <Fragment set:html={icon('mail')} />
-                          {L.email_label}
-                        </dt>
-                        <dd>
-                          <a href={`mailto:${o.email}`}>{o.email}</a>
-                        </dd>
-                      </div>
-                    )}
-                    {o.phone && (
-                      <div>
-                        <dt>
-                          <Fragment set:html={icon('phone')} />
-                          {L.telephone_label}
-                        </dt>
-                        <dd>
-                          <a href={telHref(o.phone)}>{o.phone}</a>
-                        </dd>
-                      </div>
-                    )}
-                  </dl>
-                  <div class="ct-spotlight-actions">
-                    {o.email && (
-                      <a class="ct-btn ct-btn--navy" href={`mailto:${o.email}`}>
-                        <Fragment set:html={icon('mail')} />
-                        {content.email_button_label}
-                      </a>
-                    )}
-                    <button type="button" class="ct-btn ct-btn--gold" data-enquire={o.group_title}>
-                      <Fragment set:html={icon('send')} />
-                      {content.spotlight_enquiry_label}
-                    </button>
-                  </div>
-                </article>
-              ))
-            }
-          </div>
-
-          {
-            content.spotlight_other_office_label && (
-              <div class="ct-direct">
-                <label for="ct-office-select">{content.spotlight_other_office_label}</label>
-                <select id="ct-office-select" data-ct-office-select>
-                  {offices.map((o) => (
-                    <option value={o.group_title} selected={o === defaultOffice}>
-                      {o.group_title}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )
-          }
-        </div>
+        <aside class="ct-enquiry-intro" data-ct-reveal>
+          <span class="ct-enquiry-badge" set:html={icon('send')} />
+          <h2 id="ct-enquiry-h" class="ct-h2 ct-h2--light" tabindex="-1">{content.enquiry_heading}</h2>
+          {content.enquiry_intro && <p class="ct-enquiry-lede">{content.enquiry_intro}</p>}
+          <svg class="ct-enquiry-art" viewBox="0 0 340 220" aria-hidden="true">
+            <path class="ct-art-path" d="M14 196C86 180 92 92 176 108S276 70 314 30" />
+            <circle class="ct-art-ring" cx="300" cy="44" r="40" />
+            <g class="ct-art-plane" transform="translate(278 22) scale(1.8)">
+              <circle cx="12" cy="12" r="13" />
+              <path d="M21 3 10 14" transform="translate(-4 -1) scale(.75)" />
+              <path d="M21 3l-7 18-4-8-8-4z" transform="translate(-4 -1) scale(.75)" />
+            </g>
+          </svg>
+        </aside>
 
         <div id="enquiry" class="ct-enquiry" data-ct-reveal>
-          <div class="ct-enquiry-head">
-            <span class="ct-enquiry-badge" set:html={icon('send')} />
-            <div>
-              <h2 id="ct-enquiry-h" class="ct-h2 ct-h2--sm" tabindex="-1">{content.enquiry_heading}</h2>
-              {content.enquiry_intro && <p class="ct-lede">{content.enquiry_intro}</p>}
-            </div>
-          </div>
 
           <form class="ct-form" id="enquiryForm" novalidate aria-labelledby="ct-enquiry-h">
             <p class="ct-form-note"><span aria-hidden="true">*</span> {L.form_required_note}</p>
@@ -430,56 +403,6 @@ const personLine = (o: ContactOffice) => [o.full_name, o.role_title].filter(Bool
             </div>
           </form>
         </div>
-      </div>
-    </section>
-
-    <!-- ====================== COLLEGE CONTACT INFORMATION ====================== -->
-    <section class="ct-info" aria-labelledby="ct-info-h">
-      <div class="wrap ct-wide ct-info-grid">
-        <div class="ct-info-intro" data-ct-reveal>
-          <p class="ct-eyebrow ct-eyebrow--light">{L.info_eyebrow}</p>
-          <h2 id="ct-info-h" class="ct-h2 ct-h2--light">{content.info_heading}</h2>
-          {content.info_subtitle && <p class="ct-info-sub">{content.info_subtitle}</p>}
-          <div class="ct-kira ct-kira--inline" aria-hidden="true"></div>
-        </div>
-        <ul class="ct-info-list" data-ct-reveal>
-          <li class="ct-info-item ct-info-item--wide">
-            <span class="ct-info-icon" set:html={icon('location')} />
-            <div>
-              <h3>{L.address_label}</h3>
-              <p class="ct-info-value" data-ct-address>{address}</p>
-              <button type="button" class="ct-copy" data-ct-copy>
-                <Fragment set:html={icon('copy')} />
-                <span data-ct-copy-label>{L.copy_address_label}</span>
-              </button>
-            </div>
-          </li>
-          <li class="ct-info-item">
-            <span class="ct-info-icon" set:html={icon('mail')} />
-            <div>
-              <h3>{L.email_label}</h3>
-              <p class="ct-info-value">
-                {content.general_email ? <a href={`mailto:${content.general_email}`}>{content.general_email}</a> : L.not_confirmed_text}
-              </p>
-            </div>
-          </li>
-          <li class="ct-info-item">
-            <span class="ct-info-icon" set:html={icon('phone')} />
-            <div>
-              <h3>{L.phone_label}</h3>
-              <p class="ct-info-value">
-                {content.general_phone ? <a href={telHref(content.general_phone)}>{content.general_phone}</a> : L.not_confirmed_text}
-              </p>
-            </div>
-          </li>
-          <li class="ct-info-item ct-info-item--wide">
-            <span class="ct-info-icon" set:html={icon('clock')} />
-            <div>
-              <h3>{L.hours_label}</h3>
-              <p class="ct-info-value">{content.office_hours ?? L.not_confirmed_text}</p>
-            </div>
-          </li>
-        </ul>
       </div>
     </section>
 
@@ -727,73 +650,41 @@ const personLine = (o: ContactOffice) => [o.full_name, o.role_title].filter(Bool
       root.querySelector('[data-ct-search-reset]')?.addEventListener('click', () => resetSearch(true));
     }
 
-    // ---- Office finder: topics, spotlight panels, direct office picker, form ----
-    const topics = Array.from(root.querySelectorAll('.ct-topic'));
-    const spotlights = Array.from(root.querySelectorAll('[data-spotlight]'));
-    const officeSelect = root.querySelector('[data-ct-office-select]');
+    // ---- Enquiry form: "Start an enquiry" on an office card sets the department ----
     const form = document.getElementById('enquiryForm');
     const deptSelect = form?.querySelector('#enq-department');
-
-    function selectOffice(title, { topic = null, setForm = true } = {}) {
-      const panel = spotlights.find((p) => key(p.dataset.spotlight) === key(title));
-      if (!panel) return false;
-      spotlights.forEach((p) => { p.hidden = p !== panel; });
-      if (!reduceMotion) { panel.classList.remove('is-switching'); void panel.offsetWidth; panel.classList.add('is-switching'); }
-      const activeTopic = topic || topics.find((t) => key(t.dataset.office) === key(title)) || null;
-      topics.forEach((t) => t.setAttribute('aria-pressed', String(t === activeTopic)));
-      if (officeSelect) officeSelect.value = panel.dataset.spotlight;
-      if (setForm && deptSelect) {
-        const opt = Array.from(deptSelect.options).find((o) => key(o.value) === key(title));
-        if (opt && deptSelect.value !== opt.value) {
-          deptSelect.value = opt.value;
-          clearError(deptSelect);
-        }
-      }
+    function selectOffice(title) {
+      if (!deptSelect) return false;
+      const opt = Array.from(deptSelect.options).find((o) => key(o.value) === key(title));
+      if (!opt) return false;
+      if (deptSelect.value !== opt.value) { deptSelect.value = opt.value; clearError(deptSelect); }
       return true;
     }
-
-    topics.forEach((t) =>
-      t.addEventListener('click', () => {
-        selectOffice(t.dataset.office, { topic: t });
-        announce(`${t.dataset.office} selected. The enquiry form department is set to ${t.dataset.office}.`);
-      }),
-    );
-    officeSelect?.addEventListener('change', () => {
-      selectOffice(officeSelect.value);
-      announce(`${officeSelect.value} selected.`);
-    });
-    deptSelect?.addEventListener('change', () => { if (deptSelect.value) selectOffice(deptSelect.value, { setForm: false }); });
-
-    // "Start an enquiry" from a spotlight or directory card: preselect the
-    // department (other typed details are kept) and move to the form.
     root.addEventListener('click', (e) => {
       const btn = e.target.closest('[data-enquire]');
-      if (!btn) return;
+      if (!btn || !form) return;
       selectOffice(btn.dataset.enquire);
       const firstEmpty = Array.from(form.querySelectorAll('input[required], textarea[required]')).find((el) => !el.value.trim());
       jumpTo('enquiry', firstEmpty || form.querySelector('#enq-subject'));
-      announce(`Enquiry form: department set to ${btn.dataset.enquire}.`);
+      announce('Enquiry form: department set to ' + btn.dataset.enquire + '.');
     });
 
-    // ---- Copy address ----
-    const copyBtn = root.querySelector('[data-ct-copy]');
-    copyBtn?.addEventListener('click', async () => {
-      const text = root.querySelector('[data-ct-address]').textContent.trim();
-      const label = copyBtn.querySelector('[data-ct-copy-label]');
-      try {
-        await navigator.clipboard.writeText(text);
-        label.textContent = labels.copied_label;
-        copyBtn.classList.add('is-done');
-        announce('Address copied to the clipboard.');
-      } catch {
-        const range = document.createRange();
-        range.selectNodeContents(root.querySelector('[data-ct-address]'));
-        const sel = getSelection();
-        sel.removeAllRanges();
-        sel.addRange(range);
-        label.textContent = 'Press Ctrl+C to copy';
-      }
-      setTimeout(() => { label.textContent = labels.copy_address_label; copyBtn.classList.remove('is-done'); }, 2600);
+    // ---- Copy buttons (email, phone, address) ----
+    root.querySelectorAll('[data-ct-copy]').forEach((btn) => {
+      const label = btn.querySelector('[data-ct-copy-label]');
+      const original = label ? label.textContent : '';
+      btn.addEventListener('click', async () => {
+        const text = btn.dataset.ctCopy;
+        try {
+          await navigator.clipboard.writeText(text);
+          if (label) label.textContent = btn.hasAttribute('data-ct-copy-address') ? labels.copied_label : 'Copied';
+          btn.classList.add('is-done');
+          announce('Copied: ' + text);
+        } catch {
+          if (label) label.textContent = 'Press Ctrl+C to copy';
+        }
+        setTimeout(() => { if (label) label.textContent = original; btn.classList.remove('is-done'); }, 2600);
+      });
     });
 
     // ---- Enquiry form: inline validation + honest submission states ----

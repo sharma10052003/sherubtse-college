@@ -1,84 +1,292 @@
 ---
-// Events: a full-bleed mosaic — no side padding, no gaps between tiles —
-// instead of a bordered-card list. Upcoming events lead (soonest first,
-// the very next one as the big hero tile); past events follow, dimmed but
-// still linkable, never dropped. Colours and type stay the site's own
-// navy/gold and serif/sans, not the mosaic reference's palette.
+// Events — everything happening on campus. Events come from Strapi → News & Notices – Events
+// (title, dates, venue, type, audience, picture, registration link, photo story); the hero text
+// and all wording from News & Notices – Events Page. A navy hero with a live countdown to the
+// next event, a sticky filter bar (search, type, audience, upcoming / past, agenda / calendar /
+// cards) and a month calendar. Statuses ("Today", "In 3 days", "Happening now") are worked out
+// in the browser, so the page stays right between builds. Styles: events-hub.css (.evx).
 import Layout from '../../../layouts/Layout.astro';
-import '../../../styles/events.css';
-import { getAllEvents } from '../../../lib/content/events';
+import '../../../styles/events-hub.css';
+import { getAllEvents, getEventsPage } from '../../../lib/content/events';
+import { excerpt } from '../../../lib/article-text';
+import { EVENTS_PAGE_HERO_DEFAULTS, makeEventsPageLabels } from '../../../lib/content/events-page-labels';
 
-const events = await getAllEvents();
-const upcomingCount = events.filter((e) => !e.is_past).length;
+const [raw, page] = await Promise.all([getAllEvents(), getEventsPage()]);
+const t = makeEventsPageLabels(page.labels);
+const eyebrow = page.hero_eyebrow || EVENTS_PAGE_HERO_DEFAULTS.hero_eyebrow;
+const heading = page.hero_heading || EVENTS_PAGE_HERO_DEFAULTS.hero_heading;
+const intro = page.hero_intro || EVENTS_PAGE_HERO_DEFAULTS.hero_intro;
 
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
-}
-function formatTime(iso: string) {
-  return new Date(iso).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
-}
+const TZ = 'Asia/Thimphu';
+const events = [...raw].sort((a, b) => a.starts_at.localeCompare(b.starts_at));
+const nowMs = Date.now();
+const endOf = (e: { starts_at: string; ends_at?: string | null }) => new Date(e.ends_at ?? e.starts_at).getTime();
+const upcoming = events.filter((e) => endOf(e) >= nowMs);
+const past = events.filter((e) => endOf(e) < nowMs);
+const next = upcoming[0] ?? null;
 
-const breadcrumb = [
-  { label: 'Home', url: '/' },
-  { label: 'News & Notices', url: '/news-notices' },
-  { label: 'Events', url: '/news-notices/events' },
-];
+const fmt = (iso: string, o: Intl.DateTimeFormatOptions) => new Date(iso).toLocaleDateString('en-GB', { timeZone: TZ, ...o });
+const time = (iso: string) => new Date(iso).toLocaleTimeString('en-GB', { timeZone: TZ, hour: '2-digit', minute: '2-digit' });
+const dayKey = (iso: string) => new Date(new Date(iso).getTime() + 6 * 3600e3).toISOString().slice(0, 10);
+const whenText = (e: (typeof events)[number]) => {
+  if (!e.ends_at) return `${fmt(e.starts_at, { day: 'numeric', month: 'long', year: 'numeric' })}, ${time(e.starts_at)}`;
+  if (dayKey(e.ends_at) === dayKey(e.starts_at)) return `${fmt(e.starts_at, { day: 'numeric', month: 'long', year: 'numeric' })}, ${time(e.starts_at)} – ${time(e.ends_at)}`;
+  return `${fmt(e.starts_at, { day: 'numeric', month: 'short' })}, ${time(e.starts_at)} – ${fmt(e.ends_at, { day: 'numeric', month: 'short', year: 'numeric' })}, ${time(e.ends_at)}`;
+};
+const catLabel = (c: string) => t(`cat_${c}`) || t('cat_other');
+const openLabel = (o: string | null | undefined) => (o ? t(`open_${o}`) : '');
+const hrefOf = (e: { id: number }) => `/news-notices/events/${e.id}`;
+
+const venues = new Set(events.map((e) => e.venue).filter(Boolean));
+const data = events.map((e) => ({
+  id: e.id, title: e.title, start: e.starts_at, end: e.ends_at ?? e.starts_at, venue: e.venue ?? '', cat: e.category, catLabel: catLabel(e.category),
+  open: e.open_to ?? '', openLabel: openLabel(e.open_to), link: e.registration_link ?? '', href: hrefOf(e),
+  desc: excerpt(e.summary || e.description || '', 300),
+}));
+const dataJson = JSON.stringify(data).replace(/</g, '\\u003c');
+const labelsJson = JSON.stringify({
+  now: t('now_label'), next: t('next_label'), endsIn: t('ends_in'), startsIn: t('starts_in'), today: t('today'), tomorrow: t('tomorrow'), inDays: t('in_days'),
+  ongoing: t('ongoing'), ended: t('ended'), one: t('count_one'), many: t('count_many'), more: t('cal_more'), emptyDay: t('cal_empty_day'), pick: t('cal_pick'),
+  details: t('see_details'), register: t('register'), none: t('none_upcoming'),
+}).replace(/</g, '\\u003c');
+const ICON = {
+  pin: '<path d="M12 21s7-6.2 7-11.5A7 7 0 0 0 5 9.5C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>',
+  clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  people: '<circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6M16 5a3 3 0 0 1 0 6M18 14.4c1.8.8 3 2.6 3 4.6"/>',
+  cal: '<rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+  search: '<circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/>',
+  arrow: '<path d="M5 12h14M13 6l6 6-6 6"/>',
+  prev: '<path d="M15 5l-7 7 7 7"/>',
+  next: '<path d="M9 5l7 7-7 7"/>',
+  photo: '<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
+};
+const svg = (n: keyof typeof ICON) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON[n]}</svg>`;
 ---
-<Layout title="Events" description="What's on at Sherubtse College — upcoming events and the full event archive.">
-  <div class="wrap" style="padding-top:var(--s4)">
-    <nav class="breadcrumb" aria-label="Breadcrumb">
-      {breadcrumb.map((b, i) => (
-        <>
-          {i > 0 && ' › '}
-          {i === breadcrumb.length - 1 ? <span class="current">{b.label}</span> : <a href={b.url}>{b.label}</a>}
-        </>
-      ))}
-    </nav>
-  </div>
-
-  <div class="ev-bleed" style="margin-top:var(--s3)">
-    {events.length === 0 ? (
-      <div class="ev-mosaic ev-mosaic--empty">
-        <div class="ev-intro ev-intro--empty">
-          <div>
-            <h1 class="ev-intro-title">Events</h1>
-            <p class="ev-intro-copy">Nothing on the calendar right now. Talks, festivals and matches will show up here as soon as they're scheduled — in the meantime, catch up on what's happening around campus.</p>
-            <a href="/news-notices/news" class="btn btn-primary" style="margin-top:var(--s5)">Visit the Newsroom</a>
-          </div>
-        </div>
-      </div>
-    ) : (
-      <div class="ev-mosaic">
-        <div class="ev-intro">
-          <div>
-            <h1 class="ev-intro-title">Events</h1>
-            <p class="ev-intro-copy">Talks, festivals, matches and everything else happening on campus. Pick one to see times, venue and how to join.</p>
-          </div>
-          <div class="ev-intro-stat">
-            <span class="ev-intro-stat-num">{upcomingCount}</span>
-            <span class="ev-intro-stat-label">Upcoming</span>
-          </div>
+<Layout title={heading} description={intro}>
+  <div class="evx" data-evx>
+    <!-- =========================== HERO =========================== -->
+    <header class="evx-hero">
+      <span class="evx-glow evx-glow--a" aria-hidden="true"></span>
+      <span class="evx-glow evx-glow--b" aria-hidden="true"></span>
+      <div class="wrap evx-hero-grid">
+        <div class="evx-hero-text">
+          <nav class="evx-crumbs evx-rise" style="--d:0" aria-label="Breadcrumb">
+            <a href="/">Home</a><span aria-hidden="true">›</span><a href="/news-notices">News &amp; Notices</a><span aria-hidden="true">›</span><span aria-current="page">{heading}</span>
+          </nav>
+          <p class="evx-eyebrow evx-rise" style="--d:1">{eyebrow}</p>
+          <h1 class="evx-title evx-rise" style="--d:2">{heading}</h1>
+          <p class="evx-intro evx-rise" style="--d:3">{intro}</p>
+          <ul class="evx-stats evx-rise" style="--d:4">
+            <li><strong data-evx-stat="upcoming">{upcoming.length}</strong><span>{t('stat_upcoming')}</span></li>
+            <li><strong data-evx-stat="month">–</strong><span>{t('stat_month')}</span></li>
+            <li><strong data-evx-stat="past">{past.length}</strong><span>{t('stat_past')}</span></li>
+            <li><strong>{venues.size}</strong><span>{t('stat_venues')}</span></li>
+          </ul>
         </div>
 
-        {events.map((e, i) => {
-          const isHero = i === 0 && !e.is_past;
-          const isWide = !isHero && (i - 1) % 5 === 2;
-          const cls = `ev-tile${isHero ? ' ev-tile--hero' : isWide ? ' ev-tile--wide' : ''}${e.is_past ? ' ev-tile--past' : ''}`;
-          return (
-            <a href={`/news-notices/events/${e.id}`} class={cls}>
-              {e.image_url && <img src={e.image_url} alt="" class="ev-tile-img" loading="lazy" />}
-              <span class="ev-open-mark" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14" /></svg>
-              </span>
-              <div class="ev-tile-body">
-                <span class="ev-tile-kicker">{e.is_past ? 'Past Event' : (e.open_to_label ?? 'Event')}</span>
-                <h2 class="ev-tile-title">{e.title}</h2>
-                <p class="ev-tile-meta">{formatDate(e.starts_at)}, {formatTime(e.starts_at)}{e.venue ? ` · ${e.venue}` : ''}</p>
+        <aside class="evx-next evx-rise" style="--d:3" data-evx-next aria-live="off">
+          <p class="evx-next-label"><span class="evx-pulse" aria-hidden="true"></span><span data-evx-next-label>{next ? t('next_label') : ''}</span></p>
+          {next ? (
+            <>
+              <h2 class="evx-next-title"><a href={hrefOf(next)} data-evx-next-title>{next.title}</a></h2>
+              <p class="evx-next-meta"><span set:html={svg('cal')} /><span data-evx-next-when>{whenText(next)}</span></p>
+              {next.venue && <p class="evx-next-meta"><span set:html={svg('pin')} /><span data-evx-next-venue>{next.venue}</span></p>}
+              <p class="evx-count-label" data-evx-count-label>{t('starts_in')}</p>
+              <div class="evx-count" data-evx-count role="timer">
+                <div><b data-u="d">00</b><span>{t('unit_days')}</span></div>
+                <div><b data-u="h">00</b><span>{t('unit_hours')}</span></div>
+                <div><b data-u="m">00</b><span>{t('unit_minutes')}</span></div>
+                <div><b data-u="s">00</b><span>{t('unit_seconds')}</span></div>
               </div>
-            </a>
-          );
-        })}
+              <div class="evx-next-actions">
+                <a class="evx-btn evx-btn--gold" href={hrefOf(next)} data-evx-next-details>{t('see_details')}<span set:html={svg('arrow')} /></a>
+                <a class="evx-btn evx-btn--ghost" href={next.registration_link ?? '#'} data-evx-next-register target="_blank" rel="noopener" hidden={!next.registration_link}>{t('register')}</a>
+              </div>
+            </>
+          ) : (
+            <p class="evx-next-none" data-evx-none-text>{t('none_upcoming')}</p>
+          )}
+        </aside>
       </div>
-    )}
+    </header>
+
+    <!-- =========================== EVENTS =========================== -->
+    <section class="evx-main" id="events" aria-label={heading}>
+      <div class="wrap">
+        <div class="evx-top">
+          <p class="evx-count-line" role="status" aria-live="polite" data-evx-total></p>
+          {upcoming.length > 0 && <button type="button" class="evx-link" data-evx-export-all><span set:html={svg('cal')} />{t('export_all')}</button>}
+        </div>
+
+        {events.length === 0 ? (
+          <p class="evx-empty">{t('none_upcoming')}</p>
+        ) : (
+          <>
+            <ul class="evx-list" data-evx-list data-view="agenda">
+              {events.map((e, i) => (
+                <li class="evx-item" data-evx-item data-id={e.id} data-start={e.starts_at} data-end={e.ends_at ?? e.starts_at} data-cat={e.category} data-open={e.open_to ?? ''} data-month={fmt(e.starts_at, { month: 'long', year: 'numeric' })} data-text={`${e.title} ${e.venue ?? ''} ${e.unit_name ?? ''} ${catLabel(e.category)} ${e.summary ?? ''} ${e.description ?? ''}`.toLowerCase()} style={`--d:${i % 4}`}>
+                  <article class:list={['evx-card', { 'evx-card--img': e.image_url }]}>
+                    <div class="evx-date" aria-hidden="true">
+                      <b>{fmt(e.starts_at, { day: '2-digit' })}</b>
+                      <span>{fmt(e.starts_at, { month: 'short' })}</span>
+                      <i>{fmt(e.starts_at, { weekday: 'short' })}</i>
+                    </div>
+                    {e.image_url && <a class="evx-thumb" href={hrefOf(e)} tabindex="-1" aria-hidden="true"><img src={e.image_url} alt="" loading="lazy" /></a>}
+                    <div class="evx-body">
+                      <p class="evx-tags">
+                        <span class="evx-cat">{catLabel(e.category)}</span>
+                        {e.open_to_label && <span class="evx-open">{openLabel(e.open_to)}</span>}
+                        <span class="evx-status" data-evx-status></span>
+                      </p>
+                      <h3><a href={hrefOf(e)}>{e.title}</a></h3>
+                      <p class="evx-line"><span set:html={svg('clock')} />{whenText(e)}</p>
+                      {(e.venue || e.unit_name) && <p class="evx-line"><span set:html={svg('pin')} />{[e.venue, e.unit_name].filter(Boolean).join(' · ')}</p>}
+                      {(e.summary || e.description) && <p class="evx-sum">{excerpt(e.summary || e.description || '', 160)}</p>}
+                      <div class="evx-actions">
+                        <a class="evx-btn evx-btn--navy" href={hrefOf(e)}>{t('see_details')}<span set:html={svg('arrow')} /></a>
+                        {e.registration_link && <a class="evx-btn evx-btn--line" href={e.registration_link} target="_blank" rel="noopener" data-evx-register>{t('register')}<span class="evx-sr"> (opens in a new tab)</span></a>}
+                        <details class="evx-menu" data-evx-menu>
+                          <summary><span set:html={svg('plus')} />{t('add_calendar')}</summary>
+                          <div class="evx-menu-panel">
+                            <a href="#" target="_blank" rel="noopener" data-evx-google>{t('add_google')}</a>
+                            <button type="button" data-evx-ics>{t('add_ics')}</button>
+                          </div>
+                        </details>
+                        {e.photo_story && <a class="evx-btn evx-btn--text" href={e.photo_story.href}><span set:html={svg('photo')} />{t('see_photos')}</a>}
+                      </div>
+                    </div>
+                  </article>
+                </li>
+              ))}
+            </ul>
+
+          </>
+        )}
+      </div>
+    </section>
   </div>
+  <script is:inline type="application/json" id="evx-data" set:html={dataJson}></script>
+  <script is:inline type="application/json" id="evx-labels" set:html={labelsJson}></script>
 </Layout>
+
+<script is:inline>
+  (() => {
+    const root = document.querySelector('[data-evx]');
+    if (!root) return;
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const EV = JSON.parse(document.getElementById('evx-data').textContent);
+    const L = JSON.parse(document.getElementById('evx-labels').textContent);
+    const TZ = 'Asia/Thimphu';
+    const $ = (s, r = root) => r.querySelector(s);
+    const $$ = (s, r = root) => [...r.querySelectorAll(s)];
+
+    // ---------- time helpers (Bhutan time) ----------
+    const btKey = (ms) => new Date(ms + 6 * 3600e3).toISOString().slice(0, 10);
+    const dayNo = (key) => Math.floor(Date.parse(key + 'T00:00:00Z') / 86400000);
+    const byId = new Map(EV.map((e) => [String(e.id), { ...e, s: Date.parse(e.start), e: Date.parse(e.end) }]));
+    const status = (e, now) => {
+      if (e.e < now) return { k: 'ended', text: L.ended };
+      if (e.s <= now) return { k: 'now', text: L.ongoing };
+      const d = dayNo(btKey(e.s)) - dayNo(btKey(now));
+      if (d <= 0) return { k: 'soon', text: L.today };
+      if (d === 1) return { k: 'soon', text: L.tomorrow };
+      if (d <= 30) return { k: 'later', text: L.inDays.replace('{n}', d) };
+      return { k: 'later', text: '' };
+    };
+    const fmtTime = (ms) => new Date(ms).toLocaleTimeString('en-GB', { timeZone: TZ, hour: '2-digit', minute: '2-digit' });
+    const fmtDate = (ms, o) => new Date(ms).toLocaleDateString('en-GB', { timeZone: TZ, ...o });
+
+    // ---------- the countdown ----------
+    const panel = $('[data-evx-next]');
+    const pad = (n) => String(Math.max(0, n)).padStart(2, '0');
+    let current = null;
+    const pickNext = (now) => [...byId.values()].sort((a, b) => a.s - b.s).find((e) => e.e >= now) || null;
+    const paintPanel = (e, now) => {
+      if (!panel || !$('[data-evx-count]', panel)) return;
+      const live = e.s <= now;
+      $('[data-evx-next-label]', panel).textContent = live ? L.now : L.next;
+      panel.classList.toggle('is-live', live);
+      $('[data-evx-count-label]', panel).textContent = live ? L.endsIn : L.startsIn;
+      const a = $('[data-evx-next-title]', panel); a.textContent = e.title; a.href = e.href;
+      $('[data-evx-next-when]', panel).textContent = fmtDate(e.s, { day: 'numeric', month: 'long', year: 'numeric' }) + ', ' + fmtTime(e.s) + (e.e > e.s ? ' – ' + fmtTime(e.e) : '');
+      const v = $('[data-evx-next-venue]', panel); if (v) v.textContent = e.venue;
+      $('[data-evx-next-details]', panel).href = e.href;
+      const r = $('[data-evx-next-register]', panel); r.hidden = !e.link; if (e.link) r.href = e.link;
+    };
+    const tick = () => {
+      const now = Date.now();
+      const e = pickNext(now);
+      if (!panel || !$('[data-evx-count]', panel)) return;
+      if (!e) { panel.classList.add('is-empty'); return; }
+      if (!current || current.id !== e.id || (current.s <= now) !== (e.s <= now)) { current = e; paintPanel(e, now); }
+      const left = Math.max(0, Math.floor(((e.s <= now ? e.e : e.s) - now) / 1000));
+      const set = (u, v) => { const b = $('[data-u="' + u + '"]', panel); if (b && b.textContent !== v) b.textContent = v; };
+      set('d', pad(Math.floor(left / 86400))); set('h', pad(Math.floor((left % 86400) / 3600))); set('m', pad(Math.floor((left % 3600) / 60))); set('s', pad(left % 60));
+    };
+
+    // ---------- statuses, stats, "this month" ----------
+    const refresh = () => {
+      const now = Date.now();
+      $$('[data-evx-item]').forEach((li) => {
+        const s = status(byId.get(li.dataset.id), now), el = $('[data-evx-status]', li);
+        el.textContent = s.text; el.dataset.k = s.k; el.hidden = !s.text;
+        li.dataset.state = s.k === 'ended' ? 'past' : 'upcoming';
+      });
+      const up = [...byId.values()].filter((e) => e.e >= now).length;
+      const monthKey = btKey(now).slice(0, 7);
+      const month = [...byId.values()].filter((e) => btKey(e.s).slice(0, 7) === monthKey).length;
+      $('[data-evx-stat="upcoming"]').textContent = up;
+      $('[data-evx-stat="past"]').textContent = byId.size - up;
+      $('[data-evx-stat="month"]').textContent = month;
+    };
+
+    // ---------- order: coming up first (soonest first), then past events (latest first), grouped by month ----------
+    const list = $('[data-evx-list]');
+    const items = list ? $$('[data-evx-item]', list) : [];
+    const totalEl = $('[data-evx-total]');
+    const apply = () => {
+      if (!list) return;
+      const now = Date.now();
+      list.querySelectorAll('.evx-month').forEach((m) => m.remove());
+      const rank = (li) => { const e = byId.get(li.dataset.id); return e.e >= now ? [0, e.s] : [1, -e.s]; };
+      items.sort((a, b) => { const x = rank(a), y = rank(b); return x[0] - y[0] || x[1] - y[1]; });
+      let last = '';
+      items.forEach((li) => {
+        list.appendChild(li); li.classList.add('is-in');
+        const key = rank(li)[0] + li.dataset.month;
+        if (key !== last) { last = key; const h = document.createElement('li'); h.className = 'evx-month'; h.setAttribute('role', 'presentation'); h.innerHTML = '<span></span>'; h.firstChild.textContent = li.dataset.month; list.insertBefore(h, li); }
+      });
+      totalEl.textContent = (items.length === 1 ? L.one : L.many).replace('{count}', items.length);
+    };
+
+
+    // ---------- add to calendar ----------
+    const stamp = (ms) => new Date(ms).toISOString().replace(/[-:]|\.\d{3}/g, '');
+    const esc = (s) => String(s || '').replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\n/g, '\\n');
+    const vevent = (e) => ['BEGIN:VEVENT', 'UID:event-' + e.id + '@sherubtse.edu.bt', 'DTSTAMP:' + stamp(Date.now()), 'DTSTART:' + stamp(e.s), 'DTEND:' + stamp(e.e > e.s ? e.e : e.s + 3600e3),
+      'SUMMARY:' + esc(e.title), 'LOCATION:' + esc(e.venue), 'DESCRIPTION:' + esc(e.desc), 'URL:' + location.origin + e.href, 'END:VEVENT'].join('\r\n');
+    const download = (name, list) => {
+      const body = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Sherubtse College//Events//EN', 'CALSCALE:GREGORIAN', ...list.map(vevent), 'END:VCALENDAR'].join('\r\n');
+      const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([body], { type: 'text/calendar;charset=utf-8' })); a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+    };
+    $$('[data-evx-item]').forEach((li) => {
+      const e = byId.get(li.dataset.id), g = $('[data-evx-google]', li);
+      g.href = 'https://calendar.google.com/calendar/render?action=TEMPLATE&text=' + encodeURIComponent(e.title) + '&dates=' + stamp(e.s) + '/' + stamp(e.e > e.s ? e.e : e.s + 3600e3) + '&location=' + encodeURIComponent(e.venue) + '&details=' + encodeURIComponent(e.desc + '\n' + location.origin + e.href);
+      $('[data-evx-ics]', li).addEventListener('click', () => { download('event-' + e.id + '.ics', [e]); $('[data-evx-menu]', li).open = false; });
+    });
+    document.addEventListener('click', (ev) => { $$('[data-evx-menu][open]').forEach((m) => { if (!m.contains(ev.target)) m.open = false; }); });
+    $('[data-evx-export-all]')?.addEventListener('click', () => download('sherubtse-events.ics', [...byId.values()].filter((e) => e.e >= Date.now()).sort((a, b) => a.s - b.s)));
+
+    // ---------- reveal ----------
+    if (!reduce && 'IntersectionObserver' in window && list) {
+      root.classList.add('evx-anim');
+      const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('is-seen'); io.unobserve(e.target); } }), { rootMargin: '0px 0px -6% 0px', threshold: 0.05 });
+      const watch = () => list.querySelectorAll('.evx-item:not(.is-seen),.evx-month:not(.is-seen)').forEach((n) => io.observe(n));
+      watch(); new MutationObserver(watch).observe(list, { childList: true });
+    }
+
+    refresh(); apply(); tick();
+    setInterval(tick, 1000); setInterval(() => { refresh(); }, 60000);
+  })();
+</script>

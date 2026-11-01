@@ -183,6 +183,9 @@ export interface Facility {
   categories: Category[];
   summary: string | null;
   content_html: string | null;
+  /** The editor's own Markdown, for pages that lay it out as cards instead of prose. */
+  content_md: string | null;
+  uses_md: string | null;
   main_image: Image | null;
   images: Image[];
   features: Feature[];
@@ -248,6 +251,8 @@ function mapFacility(f: any): Facility {
     categories: (f.categories ?? []).map(mapCategory),
     summary: f.summary ?? null,
     content_html: html(f.content),
+    content_md: f.content ?? null,
+    uses_md: f.uses ?? null,
     main_image: img(f.main_image, f.image_alt ?? ''),
     images: (f.images ?? []).map((m: any) => img(m)).filter(Boolean),
     features: features(f.features),
@@ -353,6 +358,8 @@ export async function getFacilitiesData() {
     ok: !!p,
     page,
     categories,
+    /** Every active category, including ones with no facility record yet (e.g. Laboratories). */
+    allCategories: activeCategories,
     facilities,
     gallery,
     quickLinks: linkRows.map((l) => ({ label: l.label, description: l.description ?? null, url: l.url, icon: l.icon ?? 'link', external: l.link_type === 'external' || /^https?:\/\//i.test(l.url) })) as QuickLink[],

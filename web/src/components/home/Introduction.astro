@@ -9,14 +9,14 @@ const arrow = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" strok
 ---
 <div class:list={['hm-intro', { 'hm-intro--noimg': !s.image }]}>
   {s.image && (
-    <figure class="hm-intro-media" data-reveal>
+    <figure class="hm-intro-media" data-reveal="zoom">
       <span class="hm-intro-frame" aria-hidden="true"></span>
       <span class="hm-intro-parallax" data-parallax>
         <Img image={s.image} class="hm-intro-img" sizes="(min-width: 900px) 45vw, 100vw" />
       </span>
     </figure>
   )}
-  <div class="hm-intro-text" data-reveal>
+  <div class="hm-intro-text" data-reveal="right">
     {s.eyebrow && <p class="hm-eyebrow">{s.eyebrow}</p>}
     {s.heading && <h2 class="hm-h2" id={headingId}>{s.heading}</h2>}
     {s.intro && <p class="hm-lede">{s.intro}</p>}

@@ -1,0 +1,346 @@
+/**
+ * Homepage — Latest News & Announcements (components/home/Updates.astro). Scoped under .hm-up.
+ * Loaded after home-refresh.css. Tabs with live counts, search, rounded cards for news,
+ * announcements, vacancies and events, "New"/"Urgent" markers, and "Show more".
+ */
+
+.hm-up-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 20px;
+  margin-bottom: clamp(18px, 2.4vw, 30px);
+}
+.hm-up-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 5px;
+  border-radius: 999px;
+  background: var(--hm-soft);
+}
+.hm-band--soft .hm-up-tabs {
+  background: #fff;
+}
+.hm-up-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 18px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--navy);
+  font: inherit;
+  font-weight: 700;
+  font-size: 0.92rem;
+  cursor: pointer;
+  transition: background 0.25s, color 0.25s, transform 0.25s var(--hm-ease);
+}
+.hm-up-tab svg {
+  color: var(--gold-ink);
+}
+.hm-up-tab em {
+  font-style: normal;
+  min-width: 24px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: rgb(212 168 67 / 0.25);
+  font-size: 0.78rem;
+  text-align: center;
+}
+.hm-up-tab:hover {
+  background: rgb(212 168 67 / 0.2);
+}
+.hm-up-tab.is-on {
+  background: var(--navy);
+  color: #fff;
+}
+.hm-up-tab.is-on svg {
+  color: var(--gold);
+}
+.hm-up-tab.is-on em {
+  background: var(--gold);
+  color: var(--navy-deep);
+}
+.hm-up-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 0 1 340px;
+  min-width: 220px;
+}
+.hm-up-search svg {
+  position: absolute;
+  left: 16px;
+  color: var(--gold-ink);
+  pointer-events: none;
+}
+.hm-up-search input {
+  width: 100%;
+  padding: 11px 18px 11px 44px;
+  border: 2px solid var(--line);
+  border-radius: 999px;
+  background: #fff;
+  font: inherit;
+  color: var(--ink);
+  transition: border-color 0.25s;
+}
+.hm-up-search input:focus {
+  border-color: var(--navy);
+  outline: none;
+}
+.hm-up-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--hm-gap);
+}
+.hm-up-item {
+  flex: 0 1 calc((100% - 2 * var(--hm-gap)) / 3);
+  min-width: 0;
+}
+.hm-up-card {
+  position: relative;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  border: 2px solid var(--line);
+  border-radius: var(--hm-radius);
+  background: #fff;
+  overflow: hidden;
+  transition: transform 0.4s var(--hm-ease), border-color 0.3s;
+}
+.hm-up-card:hover {
+  transform: translateY(-5px);
+  border-color: var(--gold);
+}
+.hm-up-card--urgent {
+  border-color: var(--urgent);
+}
+.hm-up-media {
+  display: block;
+  flex: none;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: var(--navy-deep);
+}
+.hm-up-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.7s var(--hm-ease);
+}
+.hm-up-card:hover .hm-up-img {
+  transform: scale(1.05);
+}
+.hm-up-tile {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  height: 100%;
+  padding: 0 clamp(20px, 3vw, 36px);
+  color: #fff;
+  background: url('/patterns/knot-gold.svg') center / 200px, linear-gradient(150deg, var(--navy-mid), var(--navy-deep));
+  background-blend-mode: soft-light, normal;
+}
+.hm-up-item--announcement .hm-up-tile {
+  background: url('/patterns/knot-gold.svg') center / 200px, linear-gradient(150deg, #8a6410, #5c420a);
+  background-blend-mode: soft-light, normal;
+}
+.hm-up-item--vacancy .hm-up-tile {
+  background: url('/patterns/knot-gold.svg') center / 200px, linear-gradient(150deg, #1e6b4f, #0f3d2e);
+  background-blend-mode: soft-light, normal;
+}
+.hm-up-tile-icon {
+  display: grid;
+  place-items: center;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 0.14);
+  border: 1px solid rgb(255 255 255 / 0.35);
+  color: var(--gold-light);
+}
+.hm-up-tile-date {
+  display: grid;
+  justify-items: center;
+  line-height: 1;
+}
+.hm-up-tile-date b {
+  font-family: var(--font-serif);
+  font-size: 3rem;
+}
+.hm-up-tile-date i {
+  margin-top: 4px;
+  font-style: normal;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--gold-light);
+}
+.hm-up-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 18px 22px 20px;
+}
+.hm-up-tags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+}
+.hm-up-type,
+.hm-up-flag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 11px;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.hm-up-type {
+  background: rgb(26 47 122 / 0.1);
+  color: var(--navy);
+}
+.hm-up-type--announcement {
+  background: rgb(212 168 67 / 0.25);
+}
+.hm-up-type--vacancy {
+  background: rgb(30 107 79 / 0.14);
+  color: #14523b;
+}
+.hm-up-type--event {
+  background: var(--navy);
+  color: #fff;
+}
+.hm-up-flag--new {
+  background: var(--gold);
+  color: var(--navy-deep);
+}
+.hm-up-flag--urgent {
+  background: var(--urgent);
+  color: #fff;
+}
+.hm-up-flag--pin {
+  background: var(--gold-light);
+  color: var(--ink);
+}
+.hm-up-title {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: 1.2rem;
+  line-height: 1.25;
+}
+.hm-up-title a {
+  color: var(--navy);
+  text-decoration: none;
+}
+.hm-up-title a::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+.hm-up-title a:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.hm-up-clip {
+  margin-left: 8px;
+  color: var(--gold-ink);
+  vertical-align: -1px;
+}
+.hm-up-sum {
+  margin: 0;
+  line-height: 1.55;
+  color: var(--ink-2);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.hm-up-foot-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 14px;
+  margin: auto 0 0;
+  padding-top: 6px;
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+.hm-up-foot-line svg {
+  margin-right: 5px;
+  color: var(--gold-ink);
+  vertical-align: -2px;
+}
+.hm-up-none {
+  margin: 0;
+  padding: 28px;
+  border: 2px dashed var(--line);
+  border-radius: var(--hm-radius);
+  text-align: center;
+  color: var(--ink-2);
+}
+.hm-up-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin-top: clamp(22px, 3vw, 36px);
+}
+.hm-up-more {
+  padding: 11px 28px;
+  border: 2px solid var(--navy);
+  border-radius: 999px;
+  background: var(--navy);
+  color: #fff;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.25s, color 0.25s, transform 0.25s var(--hm-ease);
+}
+.hm-up-more:hover {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: var(--navy-deep);
+  transform: translateY(-2px);
+}
+@media (max-width: 1100px) {
+  .hm-up-item {
+    flex-basis: calc((100% - var(--hm-gap)) / 2);
+  }
+}
+@media (max-width: 700px) {
+  .hm-up-item {
+    flex-basis: 100%;
+  }
+  .hm-up-search {
+    flex: 1 1 100%;
+  }
+  .hm-up-tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    max-width: 100%;
+    scrollbar-width: none;
+  }
+  .hm-up-tab {
+    flex: none;
+  }
+}

@@ -63,6 +63,72 @@
     },
     "swipe_hint": {
       "type": "string"
+    },
+    "slider_prev": {
+      "type": "string"
+    },
+    "slider_next": {
+      "type": "string"
+    },
+    "slider_pause": {
+      "type": "string"
+    },
+    "slider_play": {
+      "type": "string"
+    },
+    "slide_of": {
+      "type": "string"
+    },
+    "wishes_heading": {
+      "type": "string"
+    },
+    "learn_more": {
+      "type": "string"
+    },
+    "tab_all": {
+      "type": "string"
+    },
+    "tab_news": {
+      "type": "string"
+    },
+    "tab_announcements": {
+      "type": "string"
+    },
+    "tab_events": {
+      "type": "string"
+    },
+    "tab_vacancies": {
+      "type": "string"
+    },
+    "search_placeholder": {
+      "type": "string"
+    },
+    "show_more": {
+      "type": "string"
+    },
+    "new_badge": {
+      "type": "string"
+    },
+    "no_match": {
+      "type": "string"
+    },
+    "view_all": {
+      "type": "string"
+    },
+    "ago_today": {
+      "type": "string"
+    },
+    "ago_yesterday": {
+      "type": "string"
+    },
+    "ago_days": {
+      "type": "string"
+    },
+    "on_date": {
+      "type": "string"
+    },
+    "urgent_badge": {
+      "type": "string"
     }
   }
 }

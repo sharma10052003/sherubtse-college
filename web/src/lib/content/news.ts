@@ -53,6 +53,8 @@ export interface NewsItem {
   image_url: string | null;
   images: string[];
   gallery: string[];
+  /** Alt text / caption entered in the media library, keyed by image address. */
+  captions: Record<string, string>;
   tags: string[];
   featured: boolean;
   pinned: boolean;
@@ -77,6 +79,12 @@ function mapNews(row: any): NewsItem {
   const images = (row.images ?? []).map((m: any) => mediaUrl(m)).filter((u: string | null): u is string => !!u);
   const gallery = (row.gallery ?? []).map((m: any) => mediaUrl(m)).filter((u: string | null): u is string => !!u);
   const category: NewsCategory = row.category ?? 'general';
+  const captions: Record<string, string> = {};
+  for (const m of [...(row.images ?? []), ...(row.gallery ?? [])]) {
+    const u = mediaUrl(m);
+    const c = (m?.alternativeText || m?.caption || '').trim();
+    if (u && c) captions[u] = c;
+  }
   return {
     id: row.id,
     title: row.title,
@@ -91,6 +99,7 @@ function mapNews(row: any): NewsItem {
     image_url: images[0] ?? mediaUrl(row.video_poster) ?? null,
     images,
     gallery,
+    captions,
     tags: (row.tags ?? '').split(',').map((t: string) => t.trim()).filter(Boolean),
     featured: !!row.featured,
     pinned: !!row.pinned,
@@ -147,4 +156,23 @@ export async function getNewsById(id: number): Promise<NewsItem | null> {
   });
   const row = res?.data?.[0];
   return row ? mapNews(row) : null;
+}
+
+export interface NewsPage {
+  hero_eyebrow: string | null;
+  hero_heading: string | null;
+  hero_intro: string | null;
+  labels: Record<string, string>;
+}
+
+/** Hero text and wording of the News page (Strapi → News & Notices – News Page). */
+export async function getNewsPage(): Promise<NewsPage> {
+  const res = await strapiGet<{ data: any }>('news-page', {});
+  const p = res?.data ?? null;
+  return {
+    hero_eyebrow: p?.hero_eyebrow ?? null,
+    hero_heading: p?.hero_heading ?? null,
+    hero_intro: p?.hero_intro ?? null,
+    labels: p?.labels && typeof p.labels === 'object' ? p.labels : {},
+  };
 }

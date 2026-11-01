@@ -1,0 +1,21 @@
+{
+  "kind": "singleType",
+  "collectionName": "home_showcase",
+  "info": {
+    "singularName": "home-showcase",
+    "pluralName": "home-showcases",
+    "displayName": "Home – Special Content",
+    "description": "A flexible homepage space for pictures, special greetings, announcements and celebrations. Add, change, schedule or switch off items whenever you need to."
+  },
+  "options": { "draftAndPublish": false },
+  "attributes": {
+    "is_visible": { "type": "boolean", "default": true },
+    "placement": { "type": "enumeration", "enum": ["top", "after_highlights", "before_message", "after_message", "bottom"], "default": "after_highlights" },
+    "background": { "type": "enumeration", "enum": ["white", "soft", "navy"], "default": "soft" },
+    "eyebrow": { "type": "string" },
+    "heading": { "type": "string" },
+    "intro": { "type": "text" },
+    "items": { "type": "component", "repeatable": true, "component": "home.showcase-item" },
+    "anchor": { "type": "string", "regex": "^[a-z0-9-]*$" }
+  }
+}

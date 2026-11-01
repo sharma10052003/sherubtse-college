@@ -1,22 +1,37 @@
 ---
-// Leadership message — only rendered once a message has been entered.
+// The President's Message — only rendered once a message has been entered (Home – Page →
+// Sections → Leadership Message). A portrait in an arch, the words set large in serif, a signature
+// block. The name, role and photo come from Leadership (President) unless typed in the section.
 import Img from './Img.astro';
 import type { Section } from '../../lib/content/homepage';
 type S = Extract<Section, { kind: 'message' }>;
 interface Props { s: S; headingId: string }
 const { s, headingId } = Astro.props;
+const arrow = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
 ---
-<div class:list={['hm-message', { 'hm-message--nophoto': !s.photo }]} data-reveal>
-  {s.photo && <Img image={s.photo} class="hm-message-photo" sizes="240px" />}
-  <div>
+<div class:list={['hm-message', { 'hm-message--nophoto': !s.photo }]} data-reveal="zoom">
+  {s.photo && (
+    <figure class="hm-message-fig">
+      <span class="hm-message-ring" aria-hidden="true"></span>
+      <Img image={s.photo} class="hm-message-photo" sizes="(min-width: 900px) 360px, 70vw" />
+      {(s.name || s.role) && (
+        <figcaption class="hm-message-cap">
+          {s.name && <strong>{s.name}</strong>}
+          {s.role && <span>{s.role}</span>}
+        </figcaption>
+      )}
+    </figure>
+  )}
+  <div class="hm-message-body">
+    <span class="hm-message-mark" aria-hidden="true">“</span>
     {s.heading && <h2 class="hm-h2" id={headingId}>{s.heading}</h2>}
     <blockquote class="hm-message-quote hm-prose" set:html={s.message_html} />
-    {(s.name || s.role) && (
-      <p class="hm-message-sign">
-        {s.name && <strong>{s.name}</strong>}
-        {s.role && <span>{s.role}</span>}
-      </p>
+    {(s.name || s.role) && !s.photo && (
+      <p class="hm-message-sign"><strong>{s.name}</strong>{s.role && <span>{s.role}</span>}</p>
     )}
-    {s.button && <a class="hm-more" href={s.button.url}>{s.button.label}</a>}
+    {(s.name || s.role) && s.photo && (
+      <p class="hm-message-sign hm-message-sign--line"><strong>{s.name}</strong>{s.role && <span>{s.role}</span>}</p>
+    )}
+    {s.button && <a class="hm-more" href={s.button.url}>{s.button.label} <Fragment set:html={arrow} /></a>}
   </div>
 </div>

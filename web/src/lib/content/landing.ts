@@ -1,4 +1,4 @@
-import { strapiGet, mediaUrl } from '../strapi';
+import { strapiGet, mediaUrl, responsiveImage, type ResponsiveImage } from '../strapi';
 import type { StrapiSingleResponse } from '../strapi';
 
 export interface LandingCard {
@@ -23,6 +23,13 @@ export interface LandingPage {
   seo_description: string | null;
   /** Optional hero photo — currently only used by the About page's feature hero. */
   hero_image_url: string | null;
+  /** Small wording set in Strapi (About – Overview → Labels); empty elsewhere. */
+  labels: Record<string, string>;
+  /** Student Life only: the hero photo stack and buttons. */
+  hero_photos: ResponsiveImage[];
+  hero_buttons: { label: string; url: string }[];
+  /** Student Life only: seconds each hero photo stays before the next swings in. */
+  hero_slide_seconds: number;
 }
 
 /** Overview pages are single types named `<section>-overview`. Returns null when
@@ -79,6 +86,7 @@ export async function getLandingPage(type: OverviewType): Promise<LandingPage | 
   // for a populate key that isn't a real attribute on the other 5 types.
   const populate: Record<string, unknown> = { cards: true, seo: true, sections: BLOCKS_POPULATE };
   if (type === 'about-overview') populate.hero_image = true;
+  if (type === 'student-life-overview') Object.assign(populate, { hero_photos: true, hero_buttons: true });
 
   const res = await strapiGet<StrapiSingleResponse<any>>(type, { populate });
   const row = res?.data;
@@ -98,5 +106,9 @@ export async function getLandingPage(type: OverviewType): Promise<LandingPage | 
     blocks: toBlocks(row.sections),
     seo_description: row.seo?.description ?? null,
     hero_image_url: mediaUrl(row.hero_image),
+    labels: row.labels && typeof row.labels === 'object' ? row.labels : {},
+    hero_photos: ((row.hero_photos ?? []) as any[]).map((m) => responsiveImage(m)).filter((m): m is ResponsiveImage => !!m),
+    hero_buttons: ((row.hero_buttons ?? []) as any[]).filter((b) => b?.label && b?.url).map((b) => ({ label: b.label, url: b.url })),
+    hero_slide_seconds: Math.min(15, Math.max(1, Number(row.hero_slide_seconds) || 3)),
   };
 }

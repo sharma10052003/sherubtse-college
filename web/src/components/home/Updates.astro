@@ -1,0 +1,147 @@
+---
+// Latest News & Announcements — one filterable feed of everything current: news stories,
+// announcements and notices, vacancies and upcoming events (merged from News, Notices, Recruitment
+// and Events in Strapi). Tabs with live counts, search-as-you-type, "New" and "Urgent" markers,
+// relative dates ("2 days ago"), deadlines, and "Show more". Counts, filters, markers and dates are
+// worked out in the browser so the feed stays right between site builds. Without JavaScript the
+// first nine items are listed. Styles: home-refresh.css (.hm-up).
+import Img from './Img.astro';
+import type { Section, HomeLabels, UpdateType } from '../../lib/content/homepage';
+import { fmtDate } from '../../lib/content/homepage';
+type S = Extract<Section, { kind: 'updates' }>;
+interface Props { s: S; labels: HomeLabels }
+const { s, labels } = Astro.props;
+const PAGE = 9;
+const order: UpdateType[] = ['news', 'announcement', 'event', 'vacancy'];
+const tabLabel: Record<UpdateType, string> = { news: labels.tab_news, announcement: labels.tab_announcements, event: labels.tab_events, vacancy: labels.tab_vacancies };
+const present = order.filter((t) => s.items.some((i) => i.type === t));
+const ICON: Record<UpdateType, string> = {
+  news: '<path d="M4 5h13v14H6a2 2 0 0 1-2-2zM17 9h3v8a2 2 0 0 1-2 2M8 9h5M8 13h5"/>',
+  announcement: '<path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4z"/><path d="M10 21h4"/>',
+  event: '<rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+  vacancy: '<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V4h8v3M3 13h18"/>',
+};
+const svg = (t: UpdateType, size = 20) => `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON[t]}</svg>`;
+const arrow = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
+const searchIcon = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>';
+const clip = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="m20 11-8.5 8.5a5 5 0 0 1-7-7L13 4a3.5 3.5 0 0 1 5 5l-8.5 8.5a2 2 0 0 1-3-3L14 7"/></svg>';
+const pin = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M9 3h6l-1 6 4 4H6l4-4zM12 13v8"/></svg>';
+const pinIcon = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="9" r="2.5"/></svg>';
+const cfg = JSON.stringify({ links: s.links, labels: { all: labels.view_all, today: labels.ago_today, yesterday: labels.ago_yesterday, days: labels.ago_days, noMatch: labels.no_match, on: labels.on_date } }).replace(/</g, '\\u003c');
+---
+<div class="hm-up" data-up data-expiring>
+  <div class="hm-up-bar">
+    <div class="hm-up-tabs" role="group" aria-label="Filter the latest updates">
+      <button type="button" class="hm-up-tab is-on" data-up-tab="all" aria-pressed="true">{labels.tab_all} <em data-up-count="all">{s.items.length}</em></button>
+      {present.map((t) => (
+        <button type="button" class="hm-up-tab" data-up-tab={t} aria-pressed="false"><Fragment set:html={svg(t, 16)} />{tabLabel[t]} <em data-up-count={t}>{s.items.filter((i) => i.type === t).length}</em></button>
+      ))}
+    </div>
+    <label class="hm-up-search">
+      <span class="hm-sr">{labels.search_placeholder}</span>
+      <Fragment set:html={searchIcon} />
+      <input type="search" placeholder={labels.search_placeholder} autocomplete="off" data-up-search />
+    </label>
+  </div>
+
+  <ul class="hm-up-grid" data-up-grid>
+    {s.items.map((u, i) => (
+      <li class:list={['hm-up-item', `hm-up-item--${u.type}`]} data-up-item data-type={u.type} data-date={u.date} data-sort={u.sort} data-pinned={u.pinned ? '1' : '0'} data-expires={u.expires ?? undefined} data-text={`${u.title} ${u.summary} ${u.label} ${u.meta ?? ''}`.toLowerCase()} hidden={i >= PAGE}>
+        <article class:list={['hm-up-card', { 'hm-up-card--urgent': u.urgent, 'hm-up-card--img': u.image }]}>
+          <a class="hm-up-media" href={u.href} tabindex="-1" aria-hidden="true">
+            {u.image
+              ? <Img image={u.image} class="hm-up-img" sizes="(min-width: 1100px) 28vw, (min-width: 700px) 45vw, 100vw" />
+              : (
+                <span class="hm-up-tile">
+                  <span class="hm-up-tile-icon" set:html={svg(u.type, 30)} />
+                  <span class="hm-up-tile-date"><b>{fmtDate(u.date, { day: 'numeric' })}</b><i>{fmtDate(u.date, { month: 'short' })}</i></span>
+                </span>
+              )}
+          </a>
+          <div class="hm-up-body">
+            <p class="hm-up-tags">
+              <span class={`hm-up-type hm-up-type--${u.type}`}>{u.label}</span>
+              {u.urgent && <span class="hm-up-flag hm-up-flag--urgent">{labels.urgent_badge}</span>}
+              {u.pinned && <span class="hm-up-flag hm-up-flag--pin"><Fragment set:html={pin} />{labels.pinned}</span>}
+              <span class="hm-up-flag hm-up-flag--new" data-up-new hidden>{labels.new_badge}</span>
+            </p>
+            <h3 class="hm-up-title"><a href={u.href}>{u.title}</a>{u.attachment && <span class="hm-up-clip" title="Attachment"><Fragment set:html={clip} /></span>}</h3>
+            {u.summary && <p class="hm-up-sum">{u.summary}</p>}
+            <p class="hm-up-foot-line">
+              <time datetime={u.date.slice(0, 10)} data-up-time data-kind={u.type === 'event' ? 'event' : 'past'}>{u.type === 'event' ? `${labels.on_date} ${fmtDate(u.date, { day: 'numeric', month: 'short', year: 'numeric' })}` : fmtDate(u.date)}</time>
+              {u.meta && u.type === 'event' && <span><Fragment set:html={pinIcon} />{u.meta}</span>}
+              {u.meta && u.type === 'vacancy' && <span>{u.meta}</span>}
+              {u.deadline && <span class="hm-tag hm-tag--deadline" data-deadline={u.deadline}>{labels.deadline}: {fmtDate(u.deadline, { day: 'numeric', month: 'short' })}</span>}
+            </p>
+          </div>
+        </article>
+      </li>
+    ))}
+  </ul>
+  <p class="hm-up-none" data-up-none hidden>{labels.no_match}</p>
+  {s.empty_text && <p class="hm-empty" data-empty hidden={s.items.length > 0}>{s.empty_text}</p>}
+
+  <div class="hm-up-actions">
+    <button type="button" class="hm-up-more" data-up-more hidden>{labels.show_more}</button>
+    <a class="hm-more" href={s.links.announcement} data-up-all>{labels.view_all} <Fragment set:html={arrow} /></a>
+  </div>
+  <script is:inline type="application/json" data-up-cfg set:html={cfg}></script>
+</div>
+
+<script is:inline>
+  (() => {
+    if (window.__hmUp) return;
+    window.__hmUp = true;
+    const init = () => {
+      document.querySelectorAll('[data-up]').forEach((root) => {
+        const cfg = JSON.parse(root.querySelector('[data-up-cfg]').textContent);
+        const PAGE = 9, STEP = 6;
+        const items = [...root.querySelectorAll('[data-up-item]')];
+        const tabs = [...root.querySelectorAll('[data-up-tab]')];
+        const grid = root.querySelector('[data-up-grid]');
+        const none = root.querySelector('[data-up-none]');
+        const more = root.querySelector('[data-up-more]');
+        const all = root.querySelector('[data-up-all]');
+        const search = root.querySelector('[data-up-search]');
+        let type = 'all', q = '', shown = PAGE;
+        const now = Date.now();
+        const dayOf = (ms) => Math.floor((ms + 6 * 3600e3) / 86400000);
+
+        // Relative dates, "New" markers
+        items.forEach((li) => {
+          const t = Date.parse(li.dataset.date);
+          const time = li.querySelector('[data-up-time]');
+          if (!isNaN(t) && time && time.dataset.kind !== 'event') {
+            const d = dayOf(now) - dayOf(t);
+            if (d === 0) time.textContent = cfg.labels.today;
+            else if (d === 1) time.textContent = cfg.labels.yesterday;
+            else if (d > 1 && d <= 14) time.textContent = cfg.labels.days.replace('{n}', d);
+            if (d >= 0 && d <= 7 && li.dataset.type !== 'event') li.querySelector('[data-up-new]').hidden = false;
+          }
+        });
+
+        const matches = (li) => (type === 'all' || li.dataset.type === type) && (!q || li.dataset.text.includes(q));
+        const apply = () => {
+          const live = items.filter((li) => li.isConnected);
+          const pool = live.filter(matches);
+          live.forEach((li) => { li.hidden = true; });
+          pool.slice(0, shown).forEach((li) => { li.hidden = false; });
+          none.hidden = pool.length > 0;
+          more.hidden = pool.length <= shown;
+          tabs.forEach((b) => {
+            const on = b.dataset.upTab === type; b.classList.toggle('is-on', on); b.setAttribute('aria-pressed', String(on));
+            const n = live.filter((li) => (b.dataset.upTab === 'all' || li.dataset.type === b.dataset.upTab) && (!q || li.dataset.text.includes(q))).length;
+            const c = b.querySelector('[data-up-count]'); if (c) c.textContent = n;
+          });
+          const href = type === 'all' ? cfg.links.news : cfg.links[type];
+          all.setAttribute('href', href);
+        };
+        tabs.forEach((b) => b.addEventListener('click', () => { type = b.dataset.upTab; shown = PAGE; apply(); }));
+        search.addEventListener('input', () => { q = search.value.trim().toLowerCase(); shown = PAGE; apply(); });
+        more.addEventListener('click', () => { shown += STEP; apply(); });
+        apply();
+      });
+    };
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+  })();
+</script>

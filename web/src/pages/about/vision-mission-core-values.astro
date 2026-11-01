@@ -46,7 +46,6 @@ const values = page.core_values.map((v, i) => {
   };
 });
 
-const pad = (n: number) => String(n).padStart(2, '0');
 ---
 <Layout title="Vision, Mission & Core Values" description={page.seo_description ?? page.vision_statement}>
   <div class="vm">
@@ -97,7 +96,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
       </svg>
       <div class="wrap vm-wide vm-vision-inner">
         <div class="vm-step" data-vm-reveal>
-          <span class="vm-step-num">01</span>
+          <span class="vm-step-mark" aria-hidden="true"></span>
           <span class="vm-step-line" aria-hidden="true"></span>
           <h2 id="vm-vision-h" class="vm-step-label">Our Vision <span>What we aspire to become</span></h2>
         </div>
@@ -122,7 +121,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
     <section id="mission" class="vm-mission" aria-labelledby="vm-mission-h">
       <div class="wrap vm-wide">
         <div class="vm-step" data-vm-reveal>
-          <span class="vm-step-num">02</span>
+          <span class="vm-step-mark" aria-hidden="true"></span>
           <span class="vm-step-line" aria-hidden="true"></span>
           <h2 id="vm-mission-h" class="vm-step-label">Our Mission <span>What we do</span></h2>
         </div>
@@ -132,7 +131,6 @@ const pad = (n: number) => String(n).padStart(2, '0');
             <article class={`vm-mpanel vm-mpanel--${m.theme}`} data-vm-reveal style={`--d:${i * 140}ms`}>
               <div class="vm-mpanel-top">
                 <span class="vm-mpanel-icon"><VmIcon name={`mission-${m.theme}`} size={44} /></span>
-                <span class="vm-mpanel-num">Mission {pad(i + 1)}</span>
               </div>
               {m.title && <h3 class="vm-mpanel-title">{m.title}</h3>}
               <p class="vm-mpanel-statement">{m.statement}</p>
@@ -147,7 +145,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
     <section id="values" class="vm-values" aria-labelledby="vm-values-h">
       <div class="wrap vm-wide">
         <div class="vm-step vm-step--light" data-vm-reveal>
-          <span class="vm-step-num">03</span>
+          <span class="vm-step-mark" aria-hidden="true"></span>
           <span class="vm-step-line" aria-hidden="true"></span>
           <h2 id="vm-values-h" class="vm-step-label">Core Values <span>The heart of Sherubtse</span></h2>
         </div>
@@ -181,7 +179,6 @@ const pad = (n: number) => String(n).padStart(2, '0');
           </div>
 
           <div id="vm-value-detail" class={`vm-value-detail vm-value-detail--${values[0]?.accent}`} aria-live="polite" data-vm-reveal>
-            <span class="vm-value-detail-num" data-detail-num>{pad(1)} / {pad(values.length)}</span>
             <span class="vm-value-detail-icon" data-detail-icon><VmIcon name={values[0]?.icon} size={56} /></span>
             <h3 class="vm-value-detail-name" data-detail-name>{values[0]?.name}</h3>
             <p class="vm-value-detail-text" data-detail-text>{values[0]?.description}</p>
@@ -305,9 +302,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
     const values: { name: string; description: string; accent: string }[] = JSON.parse(dataEl.textContent || '[]');
     const nameEl = detail.querySelector('[data-detail-name]');
     const textEl = detail.querySelector('[data-detail-text]');
-    const numEl = detail.querySelector('[data-detail-num]');
     const iconEl = detail.querySelector('[data-detail-icon]');
-    const pad = (n: number) => String(n).padStart(2, '0');
 
     const select = (index: number, focus = false) => {
       const v = values[index];
@@ -316,7 +311,6 @@ const pad = (n: number) => String(n).padStart(2, '0');
       detail.className = `vm-value-detail vm-value-detail--${v.accent} is-in is-swapping`;
       if (nameEl) nameEl.textContent = v.name;
       if (textEl) textEl.textContent = v.description;
-      if (numEl) numEl.textContent = `${pad(index + 1)} / ${pad(values.length)}`;
       if (iconEl && templates[index]) iconEl.replaceChildren(templates[index].content.cloneNode(true));
       requestAnimationFrame(() => requestAnimationFrame(() => detail.classList.remove('is-swapping')));
       if (focus) buttons[index].focus();

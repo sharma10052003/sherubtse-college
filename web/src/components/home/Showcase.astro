@@ -1,0 +1,37 @@
+---
+// Special Content — a flexible space for pictures, special greetings, announcements and
+// celebrations (Strapi → Home – Special Content). Each item chooses its own size and colour;
+// items can be switched off or scheduled, and the schedule is re-checked in the browser
+// (HomeRuntime) so an item appears and disappears on time between site builds.
+import Img from './Img.astro';
+import type { Section, HomeLabels } from '../../lib/content/homepage';
+type S = Extract<Section, { kind: 'showcase' }>;
+interface Props { s: S; labels: HomeLabels }
+const { s, labels } = Astro.props;
+const arrow = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
+const star = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2 2.9 6.2 6.8.9-5 4.7 1.3 6.7L12 17.1 6 20.5l1.3-6.7-5-4.7 6.8-.9z" fill="currentColor"/></svg>';
+const KIND: Record<string, string> = { image: '', greeting: 'Greeting', announcement: 'Announcement', celebration: 'Celebration', quote: 'Quote', update: 'Update' };
+---
+<div data-expiring>
+  <ul class="hm-show">
+    {s.items.map((x, i) => (
+      <li class:list={['hm-sc', `hm-sc--${x.size}`, `hm-sc--${x.accent}`, `hm-sc--${x.kind}`, { 'hm-sc--img': x.image, 'hm-sc--noimg': !x.image }]} data-reveal style={`--i:${i % 4}`} data-starts={x.from ?? undefined} data-ends={x.until ?? undefined} hidden={x.from ? Date.parse(x.from) > Date.now() : undefined}>
+        <article class="hm-sc-card">
+          {x.image && (
+            <div class="hm-sc-media">
+              <Img image={x.image} class="hm-sc-img" sizes={x.size === 'wide' ? '(min-width: 1000px) 90vw, 100vw' : x.size === 'large' ? '(min-width: 1000px) 45vw, 100vw' : '(min-width: 1000px) 30vw, 100vw'} />
+            </div>
+          )}
+          <div class="hm-sc-body">
+            {(KIND[x.kind] || x.kind === 'celebration' || x.kind === 'greeting') && (
+              <p class="hm-sc-kind">{(x.kind === 'celebration' || x.kind === 'greeting') && <span class="hm-sc-star" aria-hidden="true" set:html={star} />}{KIND[x.kind]}</p>
+            )}
+            {x.title && <h3 class="hm-sc-title">{x.link ? <a href={x.link.url} target={/^https?:/i.test(x.link.url) ? '_blank' : undefined} rel="noopener">{x.title}</a> : x.title}</h3>}
+            {x.text && <p class="hm-sc-text">{x.text}</p>}
+            {x.link && <span class="hm-sc-go">{x.link.label || labels.learn_more} <Fragment set:html={arrow} /></span>}
+          </div>
+        </article>
+      </li>
+    ))}
+  </ul>
+</div>

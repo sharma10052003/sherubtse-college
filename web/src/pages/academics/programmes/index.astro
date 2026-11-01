@@ -1,45 +1,278 @@
 ---
-// Programmes: a card grid with a quick-view drawer (department, degree
-// type, duration, annual fee, admissions status and an overview) — all
-// driven by the `programme` content type, so every fact an admin edits
-// in Strapi shows up here with no code change.
+// Programmes — every degree the College offers. Everything comes from Strapi:
+// the programmes (Academics – Programmes: name, award, duration, short text,
+// overview, seats, fee, intake), the departments they belong to (Academics –
+// Departments: name, accent colour, order), and the hero text and all wording
+// (Academics – Programmes Page → Labels). A navy hero whose department tiles
+// filter the list, a sticky search and filter bar, rounded cards (or a list),
+// a quick-view panel and a link to Admissions. Styles: programmes-landing.css (.pl).
 import Layout from '../../../layouts/Layout.astro';
-import ProgrammesBoard from '../../../components/programmes/ProgrammesBoard';
-import '../../../styles/programmes.css';
-import { getProgrammes } from '../../../lib/content/programmes';
+import '../../../styles/programmes-landing.css';
+import { getProgrammes, getProgrammesPage } from '../../../lib/content/programmes';
+import { getDepartments } from '../../../lib/content/departments';
+import { PROGRAMMES_HERO_DEFAULTS, makeProgrammesLabels } from '../../../lib/content/programmes-labels';
 
-const programmes = await getProgrammes();
+const [programmes, page, departments] = await Promise.all([getProgrammes(), getProgrammesPage(), getDepartments().catch(() => [])]);
+const t = makeProgrammesLabels(page.labels);
+const fill = (s: string, n: number) => s.replace('{count}', String(n));
+const eyebrow = page.hero_eyebrow || PROGRAMMES_HERO_DEFAULTS.hero_eyebrow;
+const heading = page.hero_heading || PROGRAMMES_HERO_DEFAULTS.hero_heading;
+const intro = page.hero_intro || PROGRAMMES_HERO_DEFAULTS.hero_intro;
 
-const boardItems = programmes.map((p) => ({
-  id: p.id,
+const shortName = (n: string) => n.replace(/^Department of\s+/i, '');
+const levelLabel = (l: string) => (l === 'postgraduate' ? t('level_postgraduate') : t('level_undergraduate'));
+const intakeLabel = (s: string | null | undefined) => (s ? t(`intake_${s}`) : '');
+const deptOrder = new Map(departments.map((d, i) => [d.slug, i]));
+const deptBy = new Map(departments.map((d) => [d.slug, d]));
+
+const items = [...programmes].sort(
+  (a, b) => (deptOrder.get(a.department_slug ?? '') ?? 99) - (deptOrder.get(b.department_slug ?? '') ?? 99),
+);
+const groups = departments
+  .map((d) => ({ d, n: items.filter((p) => p.department_slug === d.slug).length }))
+  .filter((g) => g.n > 0);
+const accentOf = (slug: string | null | undefined) => deptBy.get(slug ?? '')?.theme_color ?? 'var(--gold)';
+
+// What the quick-view panel needs, passed as data (never built from user input in the browser).
+const quick = items.map((p) => ({
   slug: p.slug,
-  programme_name: p.programme_name,
-  level: p.level,
-  degree_type: p.degree_type ?? null,
-  duration: p.duration ?? null,
-  short_description: p.short_description ?? null,
-  overview: p.overview ?? null,
-  department_name: p.department_name ?? null,
-  department_slug: p.department_slug ?? null,
-  annual_fee: p.annual_fee ?? null,
-  intake_status: p.intake_status ?? null,
+  name: p.programme_name,
+  dept: p.department_name ? shortName(p.department_name) : '',
+  text: p.overview || p.short_description || '',
+  facts: [
+    [t('fact_award'), p.degree_type ?? ''],
+    [t('fact_duration'), p.duration ?? ''],
+    [t('fact_level'), levelLabel(p.level)],
+    [t('fact_department'), p.department_name ? shortName(p.department_name) : ''],
+    [t('fact_seats'), p.seats ?? ''],
+    [t('fact_fee'), p.annual_fee ? `Nu. ${p.annual_fee.toLocaleString('en-GB')}` : ''],
+    [t('fact_intake'), intakeLabel(p.intake_status)],
+  ].filter(([, v]) => v),
 }));
+const quickJson = JSON.stringify(quick).replace(/</g, '\\u003c');
+
+const P: Record<string, string> = {
+  arrow: '<path d="M5 12h14M13 6l6 6-6 6"/>',
+  search: '<circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/>',
+  close: '<path d="M6 6l12 12M18 6 6 18"/>',
+  grid: '<rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/>',
+  list: '<rect x="3" y="4" width="18" height="4" rx="2"/><rect x="3" y="10" width="18" height="4" rx="2"/><rect x="3" y="16" width="18" height="4" rx="2"/>',
+  eye: '<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+  mail: '<rect x="3" y="5" width="18" height="14" rx="3"/><path d="m3.5 7 8.5 6 8.5-6"/>',
+  cap: '<path d="M12 3 2 8l10 5 10-5-10-5z"/><path d="M6 10.5v5.5c0 1.5 3 3 6 3s6-1.5 6-3v-5.5"/><path d="M22 8v6"/>',
+};
+const svg = (n: string, s = 20) =>
+  `<svg viewBox="0 0 24 24" width="${s}" height="${s}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${P[n] ?? P.arrow}</svg>`;
 ---
-<Layout title="Programmes" description="Undergraduate and postgraduate degree programmes at Sherubtse College.">
-  <div class="wrap prog-wrap" style="padding-top:var(--s5);padding-bottom:var(--s8)">
-    <nav class="breadcrumb" aria-label="Breadcrumb"><a href="/">Home</a> › <a href="/academics">Academics</a> › <span class="current">Programmes</span></nav>
+<Layout title="Programmes" description={intro}>
+  <div class="pl" data-pl>
+    <!-- =========================== HERO =========================== -->
+    <header class="pl-hero">
+      <span class="pl-glow pl-glow--a" aria-hidden="true"></span>
+      <span class="pl-glow pl-glow--b" aria-hidden="true"></span>
+      <div class="wrap pl-wide pl-hero-grid">
+        <div class="pl-hero-text">
+          <nav class="pl-breadcrumb pl-rise" style="--d:0" aria-label="Breadcrumb">
+            <a href="/">Home</a><span aria-hidden="true">›</span><a href="/academics">Academics</a><span aria-hidden="true">›</span><span aria-current="page">Programmes</span>
+          </nav>
+          <p class="pl-eyebrow pl-rise" style="--d:1">{eyebrow}</p>
+          <h1 class="pl-title pl-rise" style="--d:2">{heading}</h1>
+          <p class="pl-intro pl-rise" style="--d:3">{intro}</p>
+          <ul class="pl-stats pl-rise" style="--d:4">
+            <li class="pl-stat"><span class="pl-stat-ring" aria-hidden="true"></span><p class="pl-stat-value"><span data-pl-count={items.length}>{items.length}</span></p><p class="pl-stat-label">{t('stat_programmes')}</p></li>
+            {groups.length > 0 && <li class="pl-stat"><span class="pl-stat-ring" aria-hidden="true"></span><p class="pl-stat-value"><span data-pl-count={groups.length}>{groups.length}</span></p><p class="pl-stat-label">{t('stat_departments')}</p></li>}
+          </ul>
+        </div>
 
-    <div class="prog-header" style="margin-top:var(--s4)">
-      <div class="prog-header-copy">
-        <h1 class="h1">Programmes</h1>
-        <p class="lede" style="margin-top:var(--s3)">Undergraduate degrees across the sciences, data and the social sciences.</p>
+        {groups.length > 0 && (
+          <ul class="pl-tiles pl-rise" style="--d:3" role="list" aria-label={t('tiles_label')}>
+            {groups.map(({ d, n }) => (
+              <li>
+                <button type="button" class="pl-tile" data-pl-tile={d.slug} aria-pressed="false" style={`--accent:${d.theme_color ?? 'var(--gold)'}`}>
+                  <span class="pl-tile-dot" aria-hidden="true"></span>
+                  <span class="pl-tile-text">
+                    <strong>{shortName(d.name)}</strong>
+                    <span>{fill(n === 1 ? t('count_one') : t('count_many'), n)}</span>
+                  </span>
+                  <span class="pl-tile-go" aria-hidden="true" set:html={svg('arrow', 20)} />
+                  <span class="pl-sr">{t('tile_open')}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
-    </div>
+    </header>
 
-    {programmes.length > 0 ? (
-      <ProgrammesBoard client:load items={boardItems} />
+    {items.length === 0 ? (
+      <div class="wrap pl-wide pl-empty-static"><p>Programmes will appear here once added in Strapi.</p></div>
     ) : (
-      <p class="small" style="margin-top:var(--s6)">Programmes will appear here once added in Strapi.</p>
+      <section class="pl-main" id="programmes" aria-label={heading}>
+        <div class="wrap pl-wide">
+          <!-- Appears only while a department tile is selected -->
+          <div class="pl-showing" data-pl-showing hidden>
+            <span data-pl-total data-one={t('count_one')} data-many={t('count_many')} role="status" aria-live="polite"></span>
+            <button type="button" data-pl-clear>{t('clear_label')}<span aria-hidden="true" set:html={svg('close', 14)} /></button>
+          </div>
+
+          <!-- =========================== PROGRAMMES =========================== -->
+          <ul class="pl-grid" data-pl-grid role="list">
+            {items.map((p, i) => (
+              <li class="pl-item" data-pl-item data-i={i} data-dept={p.department_slug ?? ''} data-level={p.level} data-text={`${p.programme_name} ${p.degree_type ?? ''} ${p.department_name ?? ''} ${p.short_description ?? ''}`.toLowerCase()} data-pl-reveal style={`--d:${(i % 4) * 70}ms`}>
+                <article class="pl-card" style={`--accent:${accentOf(p.department_slug)}`} aria-labelledby={`pl-n-${p.slug}`}>
+                  <span class="pl-fill" aria-hidden="true"></span>
+                  <div class="pl-pills">
+                    <span class="pl-pill">{levelLabel(p.level)}</span>
+                    {p.duration && <span class="pl-pill pl-pill--gold">{p.duration}</span>}
+                    {p.intake_status && <span class={`pl-pill pl-pill--${p.intake_status}`}>{intakeLabel(p.intake_status)}</span>}
+                  </div>
+                  <h2 class="pl-name" id={`pl-n-${p.slug}`}>{p.programme_name}</h2>
+                  {p.degree_type && <p class="pl-award">{p.degree_type}</p>}
+                  {p.short_description && <p class="pl-text">{p.short_description}</p>}
+                  <p class="pl-dept">{p.department_name ? shortName(p.department_name) : ''}</p>
+                  {p.seats && <p class="pl-seats">{t('fact_seats')}: {p.seats}</p>}
+                  <div class="pl-actions">
+                    <a class="pl-btn pl-btn--primary" href={`/academics/programmes/${p.slug}`}>{t('open_label')}<Fragment set:html={svg('arrow', 18)} /></a>
+                    <button type="button" class="pl-btn pl-btn--line" data-pl-open={i}><Fragment set:html={svg('eye', 18)} />{t('quick_label')}</button>
+                  </div>
+                </article>
+              </li>
+            ))}
+          </ul>
+
+        </div>
+      </section>
+
+      <!-- =========================== APPLY =========================== -->
+      <section class="pl-end" aria-labelledby="pl-cta-h">
+        <div class="wrap pl-wide">
+          <div class="pl-cta" data-pl-reveal>
+            <div>
+              <h2 id="pl-cta-h">{t('cta_heading')}</h2>
+              <p>{t('cta_text')}</p>
+            </div>
+            <div class="pl-cta-actions">
+              <a class="pl-btn pl-btn--gold" href="/admissions">{t('cta_button')}<Fragment set:html={svg('arrow', 18)} /></a>
+              <a class="pl-btn pl-btn--ghost" href="/about/contact"><Fragment set:html={svg('mail', 18)} />{t('cta_second')}</a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- =========================== QUICK VIEW =========================== -->
+      <div class="pl-dialog" data-pl-dialog hidden role="dialog" aria-modal="true" aria-labelledby="pl-q-title">
+        <div class="pl-dialog-card">
+          <button type="button" class="pl-dialog-close" data-pl-close aria-label={t('quick_close')} set:html={svg('close', 22)} />
+          <p class="pl-dialog-dept" data-pl-q-dept></p>
+          <h2 id="pl-q-title" data-pl-q-title tabindex="-1"></h2>
+          <div class="pl-dialog-text" data-pl-q-text></div>
+          <dl class="pl-dialog-facts" data-pl-q-facts></dl>
+          <a class="pl-btn pl-btn--primary" data-pl-q-link href="#">{t('quick_page')}<Fragment set:html={svg('arrow', 18)} /></a>
+          <div class="pl-dialog-nav">
+            <button type="button" data-pl-prev><span aria-hidden="true">‹</span> {t('quick_prev')}</button>
+            <span data-pl-q-pos></span>
+            <button type="button" data-pl-next>{t('quick_next')} <span aria-hidden="true">›</span></button>
+          </div>
+        </div>
+      </div>
+      <script type="application/json" id="pl-data" set:html={quickJson} />
     )}
   </div>
 </Layout>
+
+<script is:inline>
+  (() => {
+    const root = document.querySelector('[data-pl]');
+    if (!root) return;
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // The filter bar sticks just under the site header.
+    const masthead = document.querySelector('.masthead');
+    const setTop = () => root.style.setProperty('--pl-top', `${masthead ? masthead.getBoundingClientRect().height : 0}px`);
+    setTop();
+    addEventListener('resize', setTop, { passive: true });
+
+    // ---- Reveals, and the hero figures count up once ----
+    if (!reduce && 'IntersectionObserver' in window) {
+      root.classList.add('pl-anim');
+      const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('is-in'); io.unobserve(e.target); } }), { rootMargin: '0px 0px -8% 0px', threshold: 0.05 });
+      root.querySelectorAll('[data-pl-reveal]').forEach((el) => io.observe(el));
+      const run = (el) => {
+        const end = Number(el.getAttribute('data-pl-count')) || 0;
+        const t0 = performance.now();
+        const tick = (now) => {
+          const p = Math.min(1, (now - t0) / 1200);
+          el.textContent = String(Math.round(end * (1 - Math.pow(1 - p, 3))));
+          if (p < 1) requestAnimationFrame(tick);
+        };
+        el.textContent = '0';
+        requestAnimationFrame(tick);
+      };
+      const cio = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { run(e.target); cio.unobserve(e.target); } }), { threshold: 0.5 });
+      root.querySelectorAll('[data-pl-count]').forEach((n) => cio.observe(n));
+    }
+
+    const items = Array.from(root.querySelectorAll('[data-pl-item]'));
+    if (!items.length) return;
+    const total = root.querySelector('[data-pl-total]');
+    const showing = root.querySelector('[data-pl-showing]');
+    const tiles = Array.from(root.querySelectorAll('[data-pl-tile]'));
+    let dept = '';
+
+    // ---- Department tiles filter the list (click again, or "show all", to clear); kept in the address bar ----
+    const apply = () => {
+      let n = 0;
+      items.forEach((li) => {
+        const ok = !dept || li.dataset.dept === dept;
+        li.hidden = !ok;
+        if (ok) { n++; li.classList.add('is-in'); }
+      });
+      tiles.forEach((b) => { const on = b.dataset.plTile === dept; b.classList.toggle('is-on', on); b.setAttribute('aria-pressed', String(on)); });
+      total.textContent = (n === 1 ? total.dataset.one : total.dataset.many).replace('{count}', String(n));
+      showing.hidden = !dept;
+      history.replaceState(null, '', location.pathname + (dept ? '?dept=' + encodeURIComponent(dept) : '') + location.hash);
+    };
+    tiles.forEach((b) => b.addEventListener('click', () => {
+      dept = dept === b.dataset.plTile ? '' : b.dataset.plTile;
+      apply();
+      if (dept) root.querySelector('#programmes').scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+    }));
+    root.querySelector('[data-pl-clear]').addEventListener('click', () => { dept = ''; apply(); });
+    const want = new URLSearchParams(location.search).get('dept');
+    if (want && tiles.some((b) => b.dataset.plTile === want)) { dept = want; apply(); }
+
+    // ---- Quick view: previous / next walk through the programmes currently shown ----
+    const data = JSON.parse(document.getElementById('pl-data').textContent);
+    const dlg = root.querySelector('[data-pl-dialog]');
+    const el = (k) => dlg.querySelector(`[data-pl-q-${k}]`);
+    let current = -1, opener = null;
+    const shown = () => items.filter((li) => !li.hidden).map((li) => Number(li.dataset.i));
+    const render = (i) => {
+      const d = data[i];
+      current = i;
+      el('dept').textContent = d.dept;
+      el('title').textContent = d.name;
+      const text = el('text'); text.replaceChildren();
+      d.text.split(/\n+/).filter(Boolean).forEach((para) => { const p = document.createElement('p'); p.textContent = para; text.appendChild(p); });
+      const facts = el('facts'); facts.replaceChildren();
+      d.facts.forEach(([k, v]) => { const row = document.createElement('div'); const dt = document.createElement('dt'); const dd = document.createElement('dd'); dt.textContent = k; dd.textContent = v; row.append(dt, dd); facts.appendChild(row); });
+      el('link').setAttribute('href', `/academics/programmes/${d.slug}`);
+      const list = shown(); const pos = list.indexOf(i);
+      el('pos').textContent = `${pos + 1} / ${list.length}`;
+      dlg.querySelector('.pl-dialog-nav').hidden = list.length < 2;
+    };
+    const onKey = (e) => {
+      if (e.key === 'Escape') close();
+      if (e.key === 'ArrowRight') step(1);
+      if (e.key === 'ArrowLeft') step(-1);
+    };
+    const open = (i, from) => { opener = from; render(i); dlg.hidden = false; document.documentElement.classList.add('pl-lock'); dlg.querySelector('[data-pl-close]').focus(); document.addEventListener('keydown', onKey); };
+    const close = () => { dlg.hidden = true; document.documentElement.classList.remove('pl-lock'); document.removeEventListener('keydown', onKey); opener?.focus(); };
+    const step = (d) => { const list = shown(); if (list.length < 2) return; render(list[(list.indexOf(current) + d + list.length) % list.length]); };
+    root.querySelectorAll('[data-pl-open]').forEach((b) => b.addEventListener('click', () => open(Number(b.dataset.plOpen), b)));
+    dlg.querySelector('[data-pl-close]').addEventListener('click', close);
+    dlg.querySelector('[data-pl-prev]').addEventListener('click', () => step(-1));
+    dlg.querySelector('[data-pl-next]').addEventListener('click', () => step(1));
+    dlg.addEventListener('click', (e) => { if (e.target === dlg) close(); });
+  })();
+</script>

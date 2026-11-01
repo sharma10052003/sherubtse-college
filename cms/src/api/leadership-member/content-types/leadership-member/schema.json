@@ -6,14 +6,51 @@
     "pluralName": "leadership-members",
     "displayName": "About – Leadership"
   },
-  "options": { "draftAndPublish": false },
+  "options": {
+    "draftAndPublish": false
+  },
   "attributes": {
-    "full_name": { "type": "string", "required": true },
-    "honorific": { "type": "string" },
-    "role_title": { "type": "string", "required": true },
-    "category": { "type": "enumeration", "enum": ["president", "dean"], "default": "dean", "required": true },
-    "display_order": { "type": "integer", "default": 0 },
-    "photo": { "type": "media", "multiple": false, "allowedTypes": ["images"] },
-    "active": { "type": "boolean", "default": true }
+    "full_name": {
+      "type": "string",
+      "required": true
+    },
+    "honorific": {
+      "type": "string"
+    },
+    "role_title": {
+      "type": "string",
+      "required": true
+    },
+    "category": {
+      "type": "enumeration",
+      "enum": [
+        "president",
+        "dean",
+        "director"
+      ],
+      "default": "dean",
+      "required": true
+    },
+    "display_order": {
+      "type": "integer",
+      "default": 0
+    },
+    "photo": {
+      "type": "media",
+      "multiple": false,
+      "allowedTypes": [
+        "images"
+      ]
+    },
+    "active": {
+      "type": "boolean",
+      "default": true
+    },
+    "bio": {
+      "type": "text"
+    },
+    "office_url": {
+      "type": "string"
+    }
   }
 }

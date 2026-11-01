@@ -1,0 +1,97 @@
+---
+// Story submission form. Stories always arrive as unpublished drafts for the
+// Alumni Office to review (cms/src/policies/public-form-guard.ts).
+import AlumniShell from '../../../components/alumni/AlumniShell.astro';
+import AlumniSubHero from '../../../components/alumni/AlumniSubHero.astro';
+import AlumniFoot from '../../../components/alumni/AlumniFoot.astro';
+import { getAlumniCopy, ALUMNI_CATEGORY_LABELS } from '../../../lib/content/alumni';
+import { icon } from '../../../lib/content/alumni-ui';
+const copy = await getAlumniCopy();
+---
+
+<AlumniShell title="Share your story" description={copy.seo_description ?? undefined} texts={copy.texts}>
+<AlumniSubHero page="share" />
+    <!-- ====================== 7. SUBMIT YOUR STORY ====================== -->
+    <section id="share" class="al-section al-share" aria-labelledby="al-share-h">
+      <div class="wrap al-wide al-form-layout">
+        <div class="al-form-aside" data-al-reveal>
+          {copy.story_form.eyebrow && <p class="al-eyebrow">{copy.story_form.eyebrow}</p>}
+          <h2 id="al-share-h" class="al-h2" tabindex="-1">{copy.story_form.heading}</h2>
+          {copy.story_form.intro && <p class="al-note"><span set:html={icon('shield', 20)} />{copy.story_form.intro}</p>}
+        </div>
+
+        <form class="al-form" id="storyForm" novalidate data-al-reveal style="--d:120ms">
+          <fieldset class="al-fieldset">
+            <legend>About you</legend>
+            <div class="al-grid">
+              <div class="al-field">
+                <label for="story-name">Full Name <span class="al-req" aria-hidden="true">*</span></label>
+                <input type="text" id="story-name" name="full_name" required autocomplete="name" />
+              </div>
+              <div class="al-field">
+                <label for="story-email">Email <span class="al-req" aria-hidden="true">*</span></label>
+                <input type="email" id="story-email" name="email" required autocomplete="email" />
+              </div>
+              <div class="al-field">
+                <label for="story-year">Graduation Year</label>
+                <input type="number" id="story-year" name="graduation_year" min="1968" max="2100" inputmode="numeric" />
+              </div>
+              <div class="al-field">
+                <label for="story-programme">Programme</label>
+                <input type="text" id="story-programme" name="programme" />
+              </div>
+              <div class="al-field">
+                <label for="story-role">Current Designation</label>
+                <input type="text" id="story-role" name="current_role" autocomplete="organization-title" />
+              </div>
+              <div class="al-field">
+                <label for="story-org">Organization</label>
+                <input type="text" id="story-org" name="organization" autocomplete="organization" />
+              </div>
+            </div>
+          </fieldset>
+
+          <fieldset class="al-fieldset">
+            <legend>Your story</legend>
+            <div class="al-grid">
+              <div class="al-field al-span-2">
+                <label for="story-title">Article Title <span class="al-req" aria-hidden="true">*</span></label>
+                <input type="text" id="story-title" name="article_title" required maxlength="200" />
+              </div>
+              <div class="al-field al-span-2">
+                <label for="story-category">Category</label>
+                <select id="story-category" name="category">
+                  <option value="">Choose a category</option>
+                  {Object.entries(ALUMNI_CATEGORY_LABELS).map(([value, label]) => <option value={value}>{label}</option>)}
+                </select>
+              </div>
+              <div class="al-field al-span-2">
+                <label for="story-content">Article Content <span class="al-req" aria-hidden="true">*</span></label>
+                <textarea id="story-content" name="story" required rows="9" aria-describedby="story-content-hint"></textarea>
+                <p class="al-hint" id="story-content-hint">Write as much as you like — separate paragraphs with a blank line.</p>
+              </div>
+            </div>
+          </fieldset>
+
+          <div class="al-hp" aria-hidden="true">
+            <label for="story-hp">Leave this field empty</label>
+            <input type="text" id="story-hp" name="hp_field" tabindex="-1" autocomplete="off" />
+          </div>
+
+          <div class="al-consent-wrap">
+            <label class="al-consent">
+              <input type="checkbox" name="consent" required />
+              <span>{copy.texts.story_consent} <span class="al-req" aria-hidden="true">*</span></span>
+            </label>
+          </div>
+
+          <div class="al-form-foot">
+            <p class="al-req-note"><span class="al-req" aria-hidden="true">*</span> Required</p>
+            <button type="submit" class="al-btn al-btn--navy">{copy.story_form.button_label || 'Submit Your Story'}</button>
+          </div>
+          <div class="al-status" role="status" aria-live="polite" data-form-status></div>
+        </form>
+      </div>
+    </section>
+<AlumniFoot />
+</AlumniShell>

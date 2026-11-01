@@ -1,0 +1,405 @@
+---
+// Examinations & Records — everything about exams in one place. Nothing is typed here:
+//  - hero text and all wording: Strapi → Academics – Examinations Page;
+//  - timetables, results, notices, circulars, guidelines: Strapi → Examinations – Documents & Notices;
+//  - exam-related announcements and news: picked up by the keywords in that page's labels;
+//  - dates: the academic calendar (examination and results entries);
+//  - records & certificates services and the office's contact details: the Examination &
+//    Records unit under Administrative Units.
+// Sections with nothing to show say so (or hide). Styles: examinations.css (.ex).
+import Layout from '../../layouts/Layout.astro';
+import '../../styles/examinations.css';
+import { icon } from '../../lib/facility-icons';
+import {
+  getExaminationsPage, getExamDocs, getExamCalendar, getExamFeed, getExamUnit, unitDocs, EXAM_KINDS,
+} from '../../lib/content/examinations';
+import { EXAMINATIONS_HERO_DEFAULTS, makeExaminationsLabels } from '../../lib/content/examinations-labels';
+
+const [page, examDocs, calendar, unit] = await Promise.all([getExaminationsPage(), getExamDocs(), getExamCalendar(), getExamUnit()]);
+const t = makeExaminationsLabels(page.labels);
+const fill = (s: string, vars: Record<string, string | number>) => s.replace(/\{(\w+)\}/g, (_m, k) => String(vars[k] ?? ''));
+const eyebrow = page.hero_eyebrow || EXAMINATIONS_HERO_DEFAULTS.hero_eyebrow;
+const heading = page.hero_heading || EXAMINATIONS_HERO_DEFAULTS.hero_heading;
+const intro = page.hero_intro || EXAMINATIONS_HERO_DEFAULTS.hero_intro;
+
+const docs = [...examDocs, ...unitDocs(unit)];
+const latest = (await getExamFeed(t('feed_keywords'), examDocs)).slice(0, 6);
+const next = calendar.upcoming[0] ?? null;
+
+const fmt = (d: string) =>
+  new Date(d.length <= 10 ? `${d}T00:00:00+06:00` : d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Thimphu' });
+const parts = (d: string) => {
+  const x = new Date(`${d.slice(0, 10)}T00:00:00+06:00`);
+  return { day: x.toLocaleDateString('en-GB', { day: 'numeric', timeZone: 'Asia/Thimphu' }), mon: x.toLocaleDateString('en-GB', { month: 'short', timeZone: 'Asia/Thimphu' }) };
+};
+const range = (s: string, e: string | null | undefined) => (e && e !== s ? `${fmt(s)} – ${fmt(e)}` : fmt(s));
+const calLabel = (c: string) => t(`cal_${c}`) || t('cal_more');
+const kindLabel = (k: string) => t(`kind_${k}`) || k;
+
+const kinds = EXAM_KINDS.filter((k) => docs.some((d) => d.kind === k));
+const sessions = [...new Set(docs.map((d) => d.session).filter(Boolean))] as string[];
+const feedLabel = (l: string) => (EXAM_KINDS as string[]).includes(l) ? kindLabel(l) : l;
+
+const services = unit?.services ?? [];
+const duties = unit?.responsibilities ?? [];
+const hasContact = !!(unit && (unit.email || unit.phone || unit.location || unit.links.length));
+const sections = [
+  { id: 'latest', label: t('nav_latest'), show: true },
+  { id: 'dates', label: t('nav_dates'), show: true },
+  { id: 'library', label: t('nav_library'), show: true },
+  { id: 'records', label: t('nav_records'), show: services.length + duties.length > 0 },
+  { id: 'contact', label: t('nav_contact'), show: hasContact },
+].filter((s) => s.show);
+
+const telHref = (p: string) => `tel:${p.replace(/[^+\d]/g, '')}`;
+const daysData = JSON.stringify({ many: t('days_many'), one: t('days_one'), today: t('days_today'), ongoing: t('days_ongoing'), past: t('days_past') }).replace(/</g, '\\u003c');
+const kindIcon: Record<string, string> = { timetable: 'clock', result: 'star', notice: 'journal', circular: 'journal', guideline: 'book', form: 'download', record: 'shield' };
+---
+<Layout title={heading} description={intro}>
+  <div class="ex" data-ex>
+    <!-- =========================== HERO =========================== -->
+    <header class="ex-hero">
+      <span class="ex-glow ex-glow--a" aria-hidden="true"></span>
+      <span class="ex-glow ex-glow--b" aria-hidden="true"></span>
+      <div class="wrap ex-hero-grid">
+        <div class="ex-hero-text">
+          <nav class="ex-crumbs ex-rise" style="--d:0" aria-label="Breadcrumb">
+            <a href="/">Home</a><span aria-hidden="true">›</span><a href="/academics">Academics</a><span aria-hidden="true">›</span><span aria-current="page">{heading}</span>
+          </nav>
+          <p class="ex-eyebrow ex-rise" style="--d:1">{eyebrow}</p>
+          <h1 class="ex-title ex-rise" style="--d:2">{heading}</h1>
+          <p class="ex-intro ex-rise" style="--d:3">{intro}</p>
+          <ul class="ex-stats ex-rise" style="--d:4">
+            <li><a href="#library"><strong data-ex-count={docs.length}>{docs.length}</strong><span>{t('stat_documents')}</span></a></li>
+            <li><a href="#latest"><strong data-ex-count={latest.length}>{latest.length}</strong><span>{t('stat_notices')}</span></a></li>
+            <li><a href="#dates"><strong data-ex-count={calendar.upcoming.length}>{calendar.upcoming.length}</strong><span>{t('stat_dates')}</span></a></li>
+          </ul>
+        </div>
+
+        <aside class="ex-next ex-rise" style="--d:3" data-ex-next data-start={next?.starts_on ?? ''} data-end={next?.ends_on ?? next?.starts_on ?? ''} aria-label={t('next_label')}>
+          <span class="ex-next-ring" aria-hidden="true"></span>
+          <svg class="ex-next-arc" viewBox="0 0 120 120" aria-hidden="true">
+            <circle cx="60" cy="60" r="54" class="ex-arc-track" />
+            <circle cx="60" cy="60" r="54" class="ex-arc-fill" data-ex-arc />
+          </svg>
+          <div class="ex-next-body">
+            <p class="ex-next-label">{t('next_label')}</p>
+            {next ? (
+              <>
+                <p class="ex-next-days" data-ex-days>{next.days_to_start > 1 ? fill(t('days_many'), { n: next.days_to_start }) : next.days_to_start === 1 ? t('days_one') : next.days_to_start === 0 ? t('days_today') : t('days_ongoing')}</p>
+                <h2 class="ex-next-name">{next.title}</h2>
+                <p class="ex-next-date">{range(next.starts_on, next.ends_on)}</p>
+              </>
+            ) : (
+              <p class="ex-next-none">{t('next_none')}</p>
+            )}
+            <a class="ex-next-link" href="/academics/calendar">{t('next_calendar')}<Fragment set:html={icon('arrow')} /></a>
+          </div>
+        </aside>
+      </div>
+    </header>
+
+    <nav class="ex-nav" aria-label="On this page" data-ex-nav>
+      <div class="wrap ex-nav-row">
+        {sections.map((s) => <a href={`#${s.id}`} data-ex-link={s.id}>{s.label}</a>)}
+      </div>
+    </nav>
+
+    <main>
+      <!-- =========================== LATEST =========================== -->
+      <section class="ex-section" id="latest" data-ex-section>
+        <div class="wrap">
+          <header class="ex-head" data-ex-reveal><h2>{t('latest_heading')}</h2><p>{t('latest_intro')}</p></header>
+          {latest.length === 0 ? (
+            <p class="ex-empty" data-ex-reveal>{t('latest_empty')}</p>
+          ) : (
+            <ul class="ex-feed">
+              {latest.map((n, i) => (
+                <li data-ex-reveal style={`--d:${i % 3}`}>
+                  <article class:list={['ex-note', { 'ex-note--lead': i === 0 }]}>
+                    <p class="ex-note-meta"><span class="ex-pill">{feedLabel(n.label)}</span><time datetime={n.date}>{fmt(n.date)}</time></p>
+                    <h3>{n.href ? <a href={n.href} {...(n.external ? { target: '_blank', rel: 'noopener' } : {})}>{n.title}</a> : n.title}</h3>
+                    {n.summary && <p class="ex-note-text">{n.summary}</p>}
+                    {n.href && (
+                      <a class="ex-more" href={n.href} aria-hidden="true" tabindex="-1" {...(n.external ? { target: '_blank', rel: 'noopener' } : {})}>
+                        {t('latest_read')}<Fragment set:html={icon('arrow')} />
+                      </a>
+                    )}
+                  </article>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </section>
+
+      <!-- =========================== DATES =========================== -->
+      <section class="ex-section ex-section--tint" id="dates" data-ex-section>
+        <div class="wrap">
+          <header class="ex-head" data-ex-reveal><h2>{t('dates_heading')}</h2><p>{t('dates_intro')}</p></header>
+          {calendar.upcoming.length + calendar.recent.length === 0 ? (
+            <p class="ex-empty" data-ex-reveal>{t('dates_empty')}</p>
+          ) : (
+            <>
+              <ol class="ex-timeline" data-ex-timeline data-days={daysData}>
+                {calendar.upcoming.map((e, i) => {
+                  const p = parts(e.starts_on);
+                  return (
+                    <li class="ex-date" data-ex-reveal data-start={e.starts_on} data-end={e.ends_on ?? e.starts_on} style={`--d:${i % 2}`}>
+                      <span class="ex-date-badge"><strong>{p.day}</strong><span>{p.mon}</span></span>
+                      <div class="ex-date-body">
+                        <p class="ex-date-meta"><span class={`ex-pill ex-pill--${e.category}`}>{calLabel(e.category)}</span><span class="ex-when" data-ex-when></span></p>
+                        <h3>{e.title}</h3>
+                        <p class="ex-date-range">{range(e.starts_on, e.ends_on)}</p>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ol>
+              {calendar.recent.length > 0 && (
+                <>
+                  <h3 class="ex-sub" data-ex-reveal>{t('dates_recent')}</h3>
+                  <ol class="ex-timeline ex-timeline--past">
+                    {calendar.recent.map((e) => {
+                      const p = parts(e.starts_on);
+                      return (
+                        <li class="ex-date" data-ex-reveal>
+                          <span class="ex-date-badge"><strong>{p.day}</strong><span>{p.mon}</span></span>
+                          <div class="ex-date-body">
+                            <p class="ex-date-meta"><span class={`ex-pill ex-pill--${e.category}`}>{calLabel(e.category)}</span><span class="ex-when">{t('days_past')}</span></p>
+                            <h3>{e.title}</h3>
+                            <p class="ex-date-range">{range(e.starts_on, e.ends_on)}</p>
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ol>
+                </>
+              )}
+            </>
+          )}
+          <p class="ex-all" data-ex-reveal><a class="ex-btn ex-btn--line" href="/academics/calendar">{t('dates_all')}<Fragment set:html={icon('arrow')} /></a></p>
+        </div>
+      </section>
+
+      <!-- =========================== LIBRARY =========================== -->
+      <section class="ex-section" id="library" data-ex-section>
+        <div class="wrap">
+          <header class="ex-head" data-ex-reveal><h2>{t('library_heading')}</h2><p>{t('library_intro')}</p></header>
+          {docs.length === 0 ? (
+            <p class="ex-empty" data-ex-reveal>{t('empty_all')}</p>
+          ) : (
+            <>
+              <div class="ex-tools" data-ex-reveal>
+                <label class="ex-search">
+                  <span class="ex-sr">{t('search_label')}</span>
+                  <Fragment set:html={icon('search')} />
+                  <input type="search" placeholder={t('search_placeholder')} autocomplete="off" data-ex-search />
+                </label>
+                {sessions.length > 1 && (
+                  <label class="ex-select">
+                    <span class="ex-sr">{t('session_label')}</span>
+                    <select data-ex-session>
+                      <option value="">{t('session_all')}</option>
+                      {sessions.map((s) => <option value={s}>{s}</option>)}
+                    </select>
+                  </label>
+                )}
+                <p class="ex-count" role="status" aria-live="polite" data-ex-total data-one={t('count_one')} data-many={t('count_many')}></p>
+              </div>
+              {kinds.length > 1 && (
+                <div class="ex-chips" role="group" aria-label={t('library_heading')} data-ex-reveal>
+                  <button type="button" class="ex-chip is-on" data-ex-kind="" aria-pressed="true">{t('filter_all')}</button>
+                  {kinds.map((k) => <button type="button" class="ex-chip" data-ex-kind={k} aria-pressed="false"><Fragment set:html={icon(kindIcon[k])} />{kindLabel(k)}</button>)}
+                </div>
+              )}
+
+              <ul class="ex-docs" data-ex-docs>
+                {docs.map((d, i) => (
+                  <li class="ex-doc-item" data-ex-item data-ex-reveal data-kind={d.kind} data-session={d.session ?? ''} data-text={`${d.title} ${d.session ?? ''} ${d.applies_to ?? ''} ${d.summary ?? ''} ${kindLabel(d.kind)}`.toLowerCase()} style={`--d:${i % 2}`}>
+                    <article class:list={['ex-doc', { 'ex-doc--featured': d.featured }]}>
+                      <span class="ex-doc-icon" aria-hidden="true">
+                        <Fragment set:html={icon(d.url && !d.external ? 'download' : kindIcon[d.kind])} />
+                        {d.ext && <em>{d.ext}</em>}
+                      </span>
+                      <div class="ex-doc-body">
+                        <p class="ex-doc-meta">
+                          <span class="ex-pill">{kindLabel(d.kind)}</span>
+                          {d.session && <span class="ex-pill ex-pill--soft">{d.session}</span>}
+                          {d.date && <time datetime={d.date}>{fmt(d.date)}</time>}
+                        </p>
+                        <h3>{d.url ? <a href={d.url} target="_blank" rel="noopener">{d.title}<span class="ex-sr"> (opens in a new tab)</span></a> : d.title}</h3>
+                        {d.summary && <p class="ex-doc-text">{d.summary}</p>}
+                        {d.applies_to && <p class="ex-doc-applies"><strong>{t('applies_label')}:</strong> {d.applies_to}</p>}
+                      </div>
+                      {d.url && (
+                        <a class="ex-doc-go" href={d.url} target="_blank" rel="noopener" aria-hidden="true" tabindex="-1">
+                          <span>{d.external ? t('open_label') : t('download_label')}</span><Fragment set:html={icon(d.external ? 'external' : 'download')} />
+                        </a>
+                      )}
+                    </article>
+                  </li>
+                ))}
+              </ul>
+              <div class="ex-none" data-ex-none hidden>
+                <p>{t('empty_filtered')}</p>
+                <button type="button" class="ex-btn ex-btn--line" data-ex-clear>{t('clear_label')}</button>
+              </div>
+            </>
+          )}
+        </div>
+      </section>
+
+      <!-- =========================== RECORDS =========================== -->
+      {(services.length > 0 || duties.length > 0) && (
+        <section class="ex-section ex-section--navy" id="records" data-ex-section>
+          <div class="wrap">
+            <header class="ex-head" data-ex-reveal><h2>{t('records_heading')}</h2><p>{t('records_intro')}</p></header>
+            {services.length > 0 && (
+              <ul class="ex-services">
+                {services.map((s, i) => (
+                  <li class="ex-service" data-ex-reveal style={`--d:${i % 3}`}>
+                    <span class="ex-service-icon" aria-hidden="true"><Fragment set:html={icon('shield')} /></span>
+                    <h3>{s.title}</h3>
+                    {s.description && <p>{s.description}</p>}
+                  </li>
+                ))}
+              </ul>
+            )}
+            {duties.length > 0 && (
+              <div class="ex-duties" data-ex-reveal>
+                <h3>{t('handles_heading')}</h3>
+                <ul>{duties.map((d) => <li title={d.description ?? undefined}>{d.title}</li>)}</ul>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+
+      <!-- =========================== CONTACT =========================== -->
+      {hasContact && unit && (
+        <section class="ex-section ex-section--last" id="contact" data-ex-section>
+          <div class="wrap">
+            <div class="ex-contact" data-ex-reveal>
+              <div class="ex-contact-text">
+                <h2>{t('contact_heading')}</h2>
+                {unit.location && <p class="ex-contact-place"><Fragment set:html={icon('pin')} />{unit.location}</p>}
+                {unit.hours && <p class="ex-contact-place"><Fragment set:html={icon('clock')} />{unit.hours}</p>}
+              </div>
+              <div class="ex-contact-actions">
+                {unit.email && <a class="ex-btn ex-btn--gold" href={`mailto:${unit.email}`}><Fragment set:html={icon('mail')} />{unit.email}</a>}
+                {unit.phone && <a class="ex-btn ex-btn--ghost" href={telHref(unit.phone)}><Fragment set:html={icon('phone')} />{unit.phone}</a>}
+                {unit.links.map((l) => (
+                  <a class="ex-btn ex-btn--ghost" href={l.url} {...(l.external ? { target: '_blank', rel: 'noopener' } : {})}>{l.label}<Fragment set:html={icon(l.external ? 'external' : 'arrow')} /></a>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+    </main>
+  </div>
+</Layout>
+
+<script is:inline>
+  (() => {
+    const root = document.querySelector('[data-ex]');
+    if (!root) return;
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // The section bar sticks just under the site header.
+    const masthead = document.querySelector('.masthead');
+    const setTop = () => root.style.setProperty('--ex-top', `${masthead ? masthead.getBoundingClientRect().height : 0}px`);
+    setTop(); addEventListener('resize', setTop, { passive: true });
+
+    // Reveals and count-up figures (content is visible without them).
+    if (!reduce && 'IntersectionObserver' in window) {
+      root.classList.add('ex-anim');
+      const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('is-in'); io.unobserve(e.target); } }), { rootMargin: '0px 0px -8% 0px', threshold: 0.05 });
+      root.querySelectorAll('[data-ex-reveal]').forEach((el) => io.observe(el));
+      const run = (el) => {
+        const end = Number(el.getAttribute('data-ex-count')) || 0;
+        const t0 = performance.now();
+        const tick = (now) => { const p = Math.min(1, (now - t0) / 1100); el.textContent = String(Math.round(end * (1 - Math.pow(1 - p, 3)))); if (p < 1) requestAnimationFrame(tick); };
+        el.textContent = '0'; requestAnimationFrame(tick);
+      };
+      const cio = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { run(e.target); cio.unobserve(e.target); } }), { threshold: 0.5 });
+      root.querySelectorAll('[data-ex-count]').forEach((n) => cio.observe(n));
+    }
+
+    // ---- Days to go: worked out in the browser, in Bhutan time, so the page never goes stale ----
+    const day = (iso) => Math.floor(Date.parse(iso.slice(0, 10) + 'T00:00:00Z') / 86400000);
+    const today = () => day(new Date(Date.now() + 6 * 3600 * 1000).toISOString());
+    const tl = root.querySelector('[data-ex-timeline]');
+    const words = tl ? JSON.parse(tl.dataset.days) : null;
+    const say = (start, end) => {
+      if (!words) return '';
+      const a = day(start) - today(), b = day(end) - today();
+      if (b < 0) return words.past;
+      if (a < 0) return words.ongoing;
+      if (a === 0) return words.today;
+      return a === 1 ? words.one : words.many.replace('{n}', String(a));
+    };
+    root.querySelectorAll('.ex-date[data-start]').forEach((li) => {
+      const w = li.querySelector('[data-ex-when]');
+      if (w) w.textContent = say(li.dataset.start, li.dataset.end);
+    });
+    const next = root.querySelector('[data-ex-next]');
+    if (next && next.dataset.start) {
+      const label = next.querySelector('[data-ex-days]');
+      if (label) label.textContent = say(next.dataset.start, next.dataset.end);
+      const arc = next.querySelector('[data-ex-arc]');
+      if (arc) {
+        const left = Math.max(0, Math.min(60, day(next.dataset.start) - today()));
+        const C = 2 * Math.PI * 54;
+        arc.style.strokeDasharray = String(C);
+        arc.style.strokeDashoffset = String(C * (left / 60));
+      }
+    }
+
+    // ---- Section bar highlights where you are ----
+    const links = [...root.querySelectorAll('[data-ex-link]')];
+    const secs = links.map((l) => root.querySelector('#' + l.dataset.exLink)).filter(Boolean);
+    const bar = root.querySelector('.ex-nav-row');
+    const mark = () => {
+      const y = innerHeight * 0.32;
+      let cur = null;
+      secs.forEach((s) => { if (s.getBoundingClientRect().top <= y) cur = s.id; });
+      links.forEach((l) => {
+        const on = l.dataset.exLink === cur;
+        l.classList.toggle('is-on', on);
+        if (on) l.setAttribute('aria-current', 'true'); else l.removeAttribute('aria-current');
+        if (on && bar && bar.scrollWidth > bar.clientWidth) bar.scrollTo({ left: l.offsetLeft - 24, behavior: reduce ? 'auto' : 'smooth' });
+      });
+    };
+    addEventListener('scroll', mark, { passive: true }); mark();
+
+    // ---- Documents: search, kind chips and session ----
+    const items = [...root.querySelectorAll('[data-ex-item]')];
+    if (!items.length) return;
+    const search = root.querySelector('[data-ex-search]');
+    const session = root.querySelector('[data-ex-session]');
+    const chips = [...root.querySelectorAll('[data-ex-kind]')];
+    const total = root.querySelector('[data-ex-total]');
+    const none = root.querySelector('[data-ex-none]');
+    let kind = '';
+    const apply = () => {
+      const q = (search?.value || '').trim().toLowerCase();
+      const s = session?.value || '';
+      let n = 0;
+      items.forEach((li) => {
+        const ok = (!kind || li.dataset.kind === kind) && (!s || li.dataset.session === s) && (!q || li.dataset.text.includes(q));
+        li.hidden = !ok;
+        if (ok) { n++; li.classList.add('is-in'); }
+      });
+      chips.forEach((c) => { const on = c.dataset.exKind === kind; c.classList.toggle('is-on', on); c.setAttribute('aria-pressed', String(on)); });
+      total.textContent = (n === 1 ? total.dataset.one : total.dataset.many).replace('{count}', String(n));
+      none.hidden = n > 0;
+    };
+    chips.forEach((c) => c.addEventListener('click', () => { kind = c.dataset.exKind; apply(); }));
+    search?.addEventListener('input', apply);
+    session?.addEventListener('change', apply);
+    root.querySelector('[data-ex-clear]')?.addEventListener('click', () => { kind = ''; if (search) search.value = ''; if (session) session.value = ''; apply(); });
+    apply();
+  })();
+</script>

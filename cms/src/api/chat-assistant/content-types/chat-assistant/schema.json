@@ -1,0 +1,67 @@
+{
+  "kind": "singleType",
+  "collectionName": "chat_assistants",
+  "info": {
+    "singularName": "chat-assistant",
+    "pluralName": "chat-assistants",
+    "displayName": "Global – Chat Assistant",
+    "description": "The “Ask Sherubtse” helper in the corner of every page. It answers only from what the website already shows."
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "attributes": {
+    "enabled": {
+      "type": "boolean",
+      "default": true
+    },
+    "title": {
+      "type": "string",
+      "default": "Ask Sherubtse"
+    },
+    "subtitle": {
+      "type": "string"
+    },
+    "launcher_label": {
+      "type": "string"
+    },
+    "greeting": {
+      "type": "text"
+    },
+    "quick_questions": {
+      "type": "component",
+      "repeatable": true,
+      "component": "chat.quick-question"
+    },
+    "placeholder": {
+      "type": "string"
+    },
+    "results_intro": {
+      "type": "string"
+    },
+    "see_all_label": {
+      "type": "string"
+    },
+    "no_results_message": {
+      "type": "text"
+    },
+    "blocked_message": {
+      "type": "text"
+    },
+    "extra_blocked_words": {
+      "type": "text"
+    },
+    "thanks_message": {
+      "type": "string"
+    },
+    "contact_label": {
+      "type": "string"
+    },
+    "contact_url": {
+      "type": "string"
+    },
+    "labels": {
+      "type": "json"
+    }
+  }
+}

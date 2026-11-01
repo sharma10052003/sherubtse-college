@@ -1,4 +1,197 @@
 ---
-import SectionOverview from '../../components/templates/SectionOverview.astro';
+// About landing page. Content is edited in Strapi → About – Overview
+// (eyebrow, heading, intro, cards, extra sections, labels, optional hero
+// photo). The live figures and card notes are counted from the same Strapi
+// content the other pages use — faculty profiles, programmes, campus
+// facilities and offices — so they never go stale, and the photos are the
+// College's own campus photos (Campus Facilities). Rounded, moving design by
+// the project owner's request; the cards sit in an even grid. Styles: about.css (.ab).
+import Layout from '../../layouts/Layout.astro';
+import SectionBlocks from '../../components/SectionBlocks.astro';
+import LandingCards from '../../components/LandingCards.astro';
+import '../../styles/about.css';
+import { getLandingPage } from '../../lib/content/landing';
+import { getFacultyDirectory } from '../../lib/content/faculty';
+import { getProgrammes } from '../../lib/content/programmes';
+import { getFacilities } from '../../lib/content/facilities';
+import { getAdminUnits } from '../../lib/content/units';
+
+const settle = <T,>(p: Promise<T>, fallback: T) => p.catch(() => fallback);
+const [page, faculty, programmes, facilities, units] = await Promise.all([
+  getLandingPage('about-overview'),
+  settle(getFacultyDirectory(), []),
+  settle(getProgrammes(), []),
+  settle(getFacilities(), []),
+  settle(getAdminUnits(), []),
+]);
+
+// Wording from About – Overview → Labels (defaults match the Strapi seed).
+const DEFAULTS: Record<string, string> = {
+  founded_label: 'Founded', founded_value: '1968',
+  campus_label: 'Campus', campus_value: 'Kanglung, Trashigang',
+  affiliation_label: 'Affiliation', affiliation_value: 'Royal University of Bhutan',
+  years_label: 'Years of academic legacy',
+  stat_faculty: 'Faculty members', stat_programmes: 'Programmes', stat_facilities: 'Campus facilities', stat_units: 'Offices',
+  meta_faculty: '{count} faculty profiles', meta_facilities: '{count} facilities', meta_units: '{count} offices', meta_history: 'Since 1968',
+  explore_label: 'Explore',
+};
+const raw = page?.labels ?? {};
+const t = (k: string) => (typeof raw[k] === 'string' && raw[k].trim() ? raw[k].trim() : DEFAULTS[k] ?? '');
+const fill = (k: string, n: number) => t(k).replace('{count}', String(n));
+
+const foundedYear = Number(t('founded_value').match(/\d{4}/)?.[0] ?? 0);
+const years = foundedYear ? new Date().getFullYear() - foundedYear : 0;
+
+const facts = [
+  { label: t('founded_label'), value: t('founded_value') },
+  { label: t('campus_label'), value: t('campus_value') },
+  { label: t('affiliation_label'), value: t('affiliation_value') },
+].filter((f) => f.label && f.value);
+
+// The College's own photos: the About hero photo if one is set, then campus facility photos.
+const facilityPhotos = facilities.filter((f) => f.main_image?.url).map((f) => ({ src: f.main_image!.url, alt: f.main_image!.alt || f.name }));
+const photos = [...(page?.hero_image_url ? [{ src: page.hero_image_url, alt: page.heading }] : []), ...facilityPhotos].slice(0, 3);
+
+// Live figures — only the ones that have something to count. The years
+// figure sits on the photo badge when there are photos, so it isn't repeated.
+const stats = [
+  { n: photos.length ? 0 : years, label: t('years_label'), plus: true },
+  { n: faculty.length, label: t('stat_faculty') },
+  { n: programmes.length, label: t('stat_programmes') },
+  { n: facilities.length, label: t('stat_facilities') },
+  { n: units.length, label: t('stat_units') },
+].filter((s) => s.n > 0 && s.label);
+
+// A small live note on cards that have something to count.
+const pathOf = (url: string) => url.replace(/[?#].*$/, '').replace(/\/$/, '');
+const META: Record<string, string> = {
+  '/about/faculty': faculty.length ? fill('meta_faculty', faculty.length) : '',
+  '/about/campus-facilities': facilities.length ? fill('meta_facilities', facilities.length) : '',
+  '/about/units': units.length ? fill('meta_units', units.length) : '',
+  '/about/history': t('meta_history'),
+};
+
+const cards = (page?.cards ?? []).map((c) => ({ ...c, meta: META[pathOf(c.url)] ?? '' }));
+const heading = page?.heading ?? 'About';
 ---
-<SectionOverview type="about-overview" title="About" heroVariant="feature" />
+<Layout title="About" description={page?.seo_description ?? page?.intro ?? undefined}>
+  <div class="ab" data-ab>
+    <!-- ============ HERO ============ -->
+    <header class:list={['ab-hero', { 'ab-hero--photos': photos.length > 0 }]}>
+      <span class="ab-hero-pattern" aria-hidden="true"></span>
+      <span class="ab-orb ab-orb--gold" aria-hidden="true"></span>
+      <span class="ab-orb ab-orb--sky" aria-hidden="true"></span>
+      <div class="wrap ab-hero-grid">
+        <div class="ab-hero-text">
+          <nav class="ab-breadcrumb ab-rise" style="--d:0" aria-label="Breadcrumb">
+            <a href="/">Home</a><span aria-hidden="true">›</span><span aria-current="page">About</span>
+          </nav>
+          {page?.eyebrow && <p class="ab-eyebrow ab-rise" style="--d:1">{page.eyebrow}</p>}
+          <h1 class="ab-title ab-rise" style="--d:2">{heading}</h1>
+          {page?.intro && <p class="ab-intro ab-rise" style="--d:3">{page.intro}</p>}
+          {facts.length > 0 && (
+            <ul class="ab-facts ab-rise" style="--d:4">
+              {facts.map((f) => <li><span>{f.label}</span>{f.value}</li>)}
+            </ul>
+          )}
+        </div>
+
+        {photos.length > 0 && (
+          <div class:list={['ab-collage', `ab-collage--n${photos.length}`]} data-ab-collage>
+            {photos.map((p, i) => (
+              <figure class:list={['ab-photo', `ab-photo--${i + 1}`]}>
+                <img src={p.src} alt={p.alt} loading={i === 0 ? 'eager' : 'lazy'} decoding="async" />
+              </figure>
+            ))}
+            {years > 0 && (
+              <div class="ab-badge">
+                <p class="ab-badge-num"><span data-count={years}>{years}</span>+</p>
+                <p class="ab-badge-label">{t('years_label')}</p>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </header>
+
+    <!-- ============ LIVE FIGURES ============ -->
+    {stats.length > 1 && (
+      <section class="ab-stats-wrap" aria-label={heading}>
+        <div class="wrap">
+          <ul class="ab-stats" data-reveal>
+            {stats.map((s, i) => (
+              <li class="ab-stat" style={`--i:${i}`}>
+                <p class="ab-stat-num"><span data-count={s.n}>{s.n}</span>{s.plus && '+'}</p>
+                <p class="ab-stat-label">{s.label}</p>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+    )}
+
+    <!-- ============ CARDS ============ -->
+    <section class="ab-band" aria-label={heading}>
+      <div class="wrap">
+        {cards.length > 0 ? (
+          <LandingCards cards={cards} exploreLabel={t('explore_label')} label={heading} />
+        ) : (
+          <p class="ab-empty">This page is temporarily unavailable. Please check back shortly.</p>
+        )}
+        {page && page.blocks.length > 0 && (
+          <div class="ab-blocks">
+            <SectionBlocks blocks={page.blocks} />
+          </div>
+        )}
+      </div>
+    </section>
+  </div>
+</Layout>
+
+<script is:inline>
+  (() => {
+    const root = document.querySelector('[data-ab]');
+    if (!root) return;
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const fine = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+
+    // Photos drift slightly with the pointer.
+    if (!reduce && fine) {
+      const collage = root.querySelector('[data-ab-collage]');
+      const hero = root.querySelector('.ab-hero');
+      if (collage && hero) {
+        hero.addEventListener('pointermove', (e) => {
+          const r = hero.getBoundingClientRect();
+          collage.style.setProperty('--px', ((e.clientX - r.left) / r.width - 0.5).toFixed(3));
+          collage.style.setProperty('--py', ((e.clientY - r.top) / r.height - 0.5).toFixed(3));
+        });
+      }
+    }
+
+    // Numbers count up when they come into view.
+    const count = (el) => {
+      const target = Number(el.dataset.count);
+      if (!target || reduce) return;
+      const t0 = performance.now();
+      const step = (now) => {
+        const p = Math.min(1, (now - t0) / 1400);
+        el.textContent = String(Math.round(target * (1 - Math.pow(1 - p, 3))));
+        if (p < 1) requestAnimationFrame(step);
+      };
+      el.textContent = '0';
+      requestAnimationFrame(step);
+    };
+
+    if (reduce || !('IntersectionObserver' in window)) return;
+    root.classList.add('ab-anim');
+    const io = new IntersectionObserver((entries) => entries.forEach((en) => {
+      if (!en.isIntersecting) return;
+      en.target.classList.add('is-in');
+      en.target.querySelectorAll('[data-count]').forEach(count);
+      io.unobserve(en.target);
+    }), { rootMargin: '0px 0px -6% 0px', threshold: 0.05 });
+    root.querySelectorAll('[data-reveal]').forEach((el) => io.observe(el));
+    // The hero badge counts as soon as the page opens.
+    root.querySelectorAll('.ab-badge [data-count]').forEach(count);
+  })();
+</script>

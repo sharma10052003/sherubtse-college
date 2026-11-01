@@ -1,115 +1,405 @@
 ---
+// One programme. Every word comes from Strapi: the programme record under
+// Academics – Programmes (award, duration, overview, who it is for, highlights,
+// outcomes, curriculum blocks, teaching, facilities, careers, entry requirements,
+// seats, student voices, FAQs, contact), its department, and the wording under
+// Academics – Departments Page → Labels (keys starting pg_). A section appears
+// only when it has content, so a programme that is still being written shows
+// just what exists. Styles: programme-detail.css (.pd).
 import Layout from '../../../layouts/Layout.astro';
+import '../../../styles/programme-detail.css';
 import { getProgrammes, getProgrammeBySlug } from '../../../lib/content/programmes';
+import { getDepartmentBySlug, getDepartmentsPage } from '../../../lib/content/departments';
+import { makeDepartmentsLabels } from '../../../lib/content/departments-labels';
 
 export async function getStaticPaths() {
   const programmes = await getProgrammes();
   return programmes.map((p) => ({ params: { slug: p.slug } }));
 }
 
-const { slug } = Astro.params;
-const programme = await getProgrammeBySlug(slug as string);
+const { slug } = Astro.params as { slug: string };
+const [programme, page, all] = await Promise.all([getProgrammeBySlug(slug), getDepartmentsPage(), getProgrammes()]);
 if (!programme) return Astro.redirect('/academics/programmes', 404);
+
+const t = makeDepartmentsLabels(page.labels);
+const department = programme.department_slug ? await getDepartmentBySlug(programme.department_slug).catch(() => null) : null;
+const related = all.filter((p) => p.department_slug === programme.department_slug && p.slug !== programme.slug);
+const shortName = (n: string) => n.replace(/^Department of\s+/i, '');
+
+/** Plain text from Strapi into paragraphs and "- " bullet lists. */
+type Block = { type: 'p'; text: string } | { type: 'ul'; items: string[] };
+function blocks(text: string | null | undefined): Block[] {
+  const out: Block[] = [];
+  for (const raw of (text ?? '').split('\n')) {
+    const line = raw.trim();
+    if (!line) continue;
+    if (/^[-•]\s+/.test(line)) {
+      const item = line.replace(/^[-•]\s+/, '');
+      const last = out[out.length - 1];
+      if (last && last.type === 'ul') last.items.push(item);
+      else out.push({ type: 'ul', items: [item] });
+    } else out.push({ type: 'p', text: line });
+  }
+  return out;
+}
+const list = (text: string | null | undefined) => blocks(text).flatMap((b) => (b.type === 'ul' ? b.items : []));
+/** "Semester I: courses" lines → a bold label and the courses. */
+const courseLines = (text: string) =>
+  text.split('\n').map((l) => l.trim()).filter(Boolean).map((l) => {
+    const m = l.match(/^(Semester\s+[IVX\d]+)\s*:\s*(.*)$/i);
+    return m ? { label: m[1], text: m[2] } : { label: null as string | null, text: l };
+  });
+
+const levelLabel = programme.level === 'postgraduate' ? t('level_postgraduate') : t('level_undergraduate');
+const intake = programme.intake_status ? programme.intake_status.charAt(0).toUpperCase() + programme.intake_status.slice(1) : null;
+const facts: [string, string][] = [
+  [t('pg_fact_award'), programme.degree_type ?? ''],
+  [t('pg_fact_duration'), programme.duration ?? ''],
+  [t('pg_fact_level'), levelLabel],
+  [t('pg_fact_seats'), programme.seats ?? ''],
+  [t('pg_fact_intake'), intake ?? ''],
+  [t('pg_fact_fee'), programme.annual_fee ? `Nu. ${programme.annual_fee.toLocaleString('en-GB')}` : ''],
+].filter(([, v]) => v) as [string, string][];
+
+const has = {
+  overview: !!programme.overview,
+  about: !!programme.about,
+  highlights: !!programme.highlights,
+  outcomes: !!(programme.learning_outcomes || programme.key_skills),
+  curriculum: programme.curriculum.length > 0,
+  teaching: !!(programme.teaching_assessment || programme.resources),
+  careers: !!(programme.career_opportunities || programme.further_study),
+  entry: !!(programme.admission_requirements || programme.seats),
+  voices: programme.testimonials.length > 0,
+  faqs: programme.faqs.length > 0,
+};
+const nav = (
+  [
+    ['overview', t('pg_overview'), has.overview || has.about],
+    ['highlights', t('pg_highlights'), has.highlights],
+    ['outcomes', t('pg_outcomes'), has.outcomes],
+    ['curriculum', t('pg_curriculum'), has.curriculum],
+    ['teaching', t('pg_teaching'), has.teaching],
+    ['careers', t('pg_careers'), has.careers],
+    ['entry', t('pg_entry'), has.entry],
+    ['voices', t('pg_testimonials'), has.voices],
+    ['faqs', t('pg_faqs'), has.faqs],
+  ] as [string, string, boolean][]
+).filter(([, , on]) => on);
+
+const P: Record<string, string> = {
+  arrow: '<path d="M5 12h14M13 6l6 6-6 6"/>',
+  mail: '<rect x="3" y="5" width="18" height="14" rx="3"/><path d="m3.5 7 8.5 6 8.5-6"/>',
+  cap: '<path d="M12 3 2 8l10 5 10-5-10-5z"/><path d="M6 10.5v5.5c0 1.5 3 3 6 3s6-1.5 6-3v-5.5"/><path d="M22 8v6"/>',
+  check: '<path d="m5 12 5 5L20 7"/>',
+  book: '<path d="M4 4h6a3 3 0 0 1 3 3v13a2 2 0 0 0-2-2H4z"/><path d="M20 4h-6a3 3 0 0 0-3 3v13a2 2 0 0 1 2-2h7z"/>',
+  star: '<path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9z"/>',
+  target: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.2"/>',
+  layers: '<path d="m12 3 9 5-9 5-9-5z"/><path d="m3 13 9 5 9-5"/>',
+  flask: '<path d="M9 3h6M10 3v6l-5.5 9.5A1.7 1.7 0 0 0 6 21h12a1.7 1.7 0 0 0 1.5-2.5L14 9V3"/><path d="M7.5 15h9"/>',
+  briefcase: '<rect x="3" y="7" width="18" height="13" rx="2.5"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2M3 13h18"/>',
+  key: '<circle cx="8" cy="15" r="4"/><path d="m11 12 9-9M16 7l3 3"/>',
+  quote: '<path d="M7 7h4v4c0 3-1.5 5-4 6M15 7h4v4c0 3-1.5 5-4 6"/>',
+  help: '<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.4-1 .9-1 1.7M12 17h.01"/>',
+  people: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14c2 .6 3.5 2.6 3.5 6"/>',
+  clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/>',
+};
+const svg = (name: string, size = 22) =>
+  `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${P[name] ?? P.book}</svg>`;
+const initialsOf = (n: string) => n.replace(/^(Dr\.?|Dasho|Mr\.?|Ms\.?)\s+/i, '').split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]!.toUpperCase()).join('');
+const accent = department?.theme_color ?? 'var(--gold)';
 ---
-<Layout title={programme.programme_name} description={programme.short_description ?? undefined}>
-  <div class="wrap" style="padding-top:var(--s5)">
-    <nav class="breadcrumb" aria-label="Breadcrumb">
-      <a href="/">Home</a> › <a href="/academics">Academics</a> › <a href="/academics/programmes">Programmes</a> ›{' '}
-      <span class="current">{programme.programme_name}</span>
-    </nav>
+<Layout
+  title={programme.seo_title || programme.programme_name}
+  description={programme.seo_description || programme.short_description || undefined}
+>
+  <div class="pd" data-pd style={`--accent:${accent}`}>
+    <!-- =========================== HERO =========================== -->
+    <header class="pd-hero">
+      <span class="pd-glow pd-glow--a" aria-hidden="true"></span>
+      <span class="pd-glow pd-glow--b" aria-hidden="true"></span>
+      <div class="wrap pd-wide pd-hero-grid">
+        <div class="pd-hero-text">
+          <nav class="pd-breadcrumb pd-rise" style="--d:0" aria-label="Breadcrumb">
+            <a href="/">Home</a><span aria-hidden="true">›</span><a href="/academics">Academics</a><span aria-hidden="true">›</span><a href="/academics/programmes">Programmes</a><span aria-hidden="true">›</span><span aria-current="page">{programme.programme_name}</span>
+          </nav>
+          <div class="pd-pills pd-rise" style="--d:1">
+            <span class="pd-pill">{levelLabel}</span>
+            {programme.duration && <span class="pd-pill pd-pill--gold">{programme.duration}</span>}
+          </div>
+          <h1 class="pd-title pd-rise" style="--d:2">{programme.programme_name}</h1>
+          {programme.degree_type && <p class="pd-award pd-rise" style="--d:3">{programme.degree_type}</p>}
+          {programme.short_description && <p class="pd-intro pd-rise" style="--d:3">{programme.short_description}</p>}
+          <div class="pd-actions pd-rise" style="--d:4">
+            <a class="pd-btn pd-btn--gold" href="/admissions">{t('pg_apply')}<Fragment set:html={svg('arrow', 18)} /></a>
+            {programme.contact_email && <a class="pd-btn pd-btn--line" href={`mailto:${programme.contact_email}`}><Fragment set:html={svg('mail', 18)} />{t('pg_email')}</a>}
+          </div>
+        </div>
 
-    <h1 class="h1">{programme.programme_name}</h1>
+        <div class="pd-emblem pd-rise" style="--d:3" aria-hidden="true">
+          <span class="pd-emblem-ring pd-emblem-ring--a"></span>
+          <span class="pd-emblem-ring pd-emblem-ring--b"></span>
+          <span class="pd-emblem-cap" set:html={svg('cap', 96)} />
+          {programme.duration && <p class="pd-emblem-duration">{programme.duration.split(',')[0]}</p>}
+        </div>
+      </div>
+    </header>
 
-    <div class="tbl-wrap fact-bar">
-      <div><span class="fact-label">Award</span><b>{programme.degree_type ?? '—'}</b></div>
-      <div><span class="fact-label">Duration</span><b>{programme.duration ?? '—'}</b></div>
-      <div><span class="fact-label">Department</span><b>{programme.department_name ?? '—'}</b></div>
-      <div><span class="fact-label">Annual Fee</span><b>{programme.annual_fee ? `Nu. ${programme.annual_fee.toLocaleString()}` : '—'}</b></div>
-      <div><span class="fact-label">Intake</span><b>{programme.intake_status ?? '—'}</b></div>
-    </div>
+    <!-- =========================== SECTION BAR =========================== -->
+    {nav.length > 1 && (
+      <div class="wrap pd-wide pd-nav-wrap">
+        <nav class="pd-nav" aria-label={t('pg_nav_label')}>
+          {nav.map(([id, label]) => <a href={`#${id}`} data-pd-nav={id}>{label}</a>)}
+        </nav>
+      </div>
+    )}
 
-    <div class="two-col" style="margin-top:var(--s6);padding-bottom:var(--s7)">
-      <div>
-        {programme.overview && (<><h2 class="h2">Overview</h2><p>{programme.overview}</p></>)}
-        {programme.admission_requirements && (<><h2 class="h2">Entry requirements</h2><p>{programme.admission_requirements}</p></>)}
-        {programme.curriculum.length > 0 && (
-          <>
-            <h2 class="h2">Programme structure</h2>
-            {programme.curriculum.map((block) => (
-              <details class="curriculum-block">
-                <summary>{block.label}</summary>
-                <p style="white-space:pre-line">{block.courses}</p>
-              </details>
-            ))}
-          </>
+    <div class="wrap pd-wide pd-layout">
+      <!-- =========================== MAIN =========================== -->
+      <div class="pd-main">
+        {(has.overview || has.about) && (
+          <section class="pd-card" id="overview" aria-labelledby="pd-overview-h" data-pd-reveal>
+            <header class="pd-card-head"><span class="pd-icon" set:html={svg('book', 26)} /><h2 id="pd-overview-h">{t('pg_overview')}</h2></header>
+            {blocks(programme.overview).map((b) => (b.type === 'p' ? <p class="pd-lead-p">{b.text}</p> : <ul class="pd-bullets">{b.items.map((i) => <li>{i}</li>)}</ul>))}
+            {has.about && (
+              <div class="pd-sub">
+                <h3>{t('pg_about')}</h3>
+                {blocks(programme.about).map((b) => (b.type === 'p' ? <p>{b.text}</p> : <ul class="pd-bullets">{b.items.map((i) => <li>{i}</li>)}</ul>))}
+              </div>
+            )}
+          </section>
         )}
-        {programme.career_opportunities && (<><h2 class="h2">Careers</h2><p>{programme.career_opportunities}</p></>)}
-        {programme.faqs.length > 0 && (
-          <>
-            <h2 class="h2">Frequently asked questions</h2>
+
+        {has.highlights && (
+          <section class="pd-card pd-card--tint" id="highlights" aria-labelledby="pd-hl-h" data-pd-reveal>
+            <header class="pd-card-head"><span class="pd-icon" set:html={svg('star', 26)} /><h2 id="pd-hl-h">{t('pg_highlights')}</h2></header>
+            {blocks(programme.highlights).map((b) =>
+              b.type === 'ul' ? (
+                <ul class="pd-tiles">
+                  {b.items.map((i) => {
+                    const m = i.match(/^([^:]{3,70}):\s+(.+)$/);
+                    return <li class="pd-tile">{m ? <><strong>{m[1]}</strong><span>{m[2]}</span></> : <span>{i}</span>}</li>;
+                  })}
+                </ul>
+              ) : (
+                <p class="pd-lead-p">{b.text}</p>
+              ),
+            )}
+          </section>
+        )}
+
+        {has.outcomes && (
+          <section class="pd-card" id="outcomes" aria-labelledby="pd-out-h" data-pd-reveal>
+            <header class="pd-card-head"><span class="pd-icon" set:html={svg('target', 26)} /><h2 id="pd-out-h">{t('pg_outcomes')}</h2></header>
+            {list(programme.learning_outcomes).length > 0 && (
+              <ul class="pd-checks">
+                {list(programme.learning_outcomes).map((i) => <li><span class="pd-tick" set:html={svg('check', 16)} /><span>{i}</span></li>)}
+              </ul>
+            )}
+            {list(programme.key_skills).length > 0 && (
+              <div class="pd-sub">
+                <h3>{t('pg_skills')}</h3>
+                <ul class="pd-chips">{list(programme.key_skills).map((i) => <li>{i}</li>)}</ul>
+              </div>
+            )}
+          </section>
+        )}
+
+        {has.curriculum && (
+          <section class="pd-card" id="curriculum" aria-labelledby="pd-cur-h" data-pd-reveal>
+            <header class="pd-card-head"><span class="pd-icon" set:html={svg('layers', 26)} /><h2 id="pd-cur-h">{t('pg_curriculum')}</h2></header>
+            {programme.curriculum.length > 1 && (
+              <div class="pd-tabs" role="tablist" aria-label={t('pg_curriculum')} data-pd-tabs>
+                {programme.curriculum.map((b, i) => (
+                  <button type="button" role="tab" class:list={['pd-tab', { 'is-on': i === 0 }]} id={`pd-tab-${i}`} aria-controls={`pd-panel-${i}`} aria-selected={i === 0 ? 'true' : 'false'} tabindex={i === 0 ? 0 : -1}>{b.label}</button>
+                ))}
+              </div>
+            )}
+            <div class="pd-panels">
+              {programme.curriculum.map((b, i) => (
+                <div class="pd-panel" role={programme.curriculum.length > 1 ? 'tabpanel' : undefined} id={`pd-panel-${i}`} aria-labelledby={programme.curriculum.length > 1 ? `pd-tab-${i}` : undefined} data-pd-panel>
+                  <h3 class="pd-panel-h">{b.label}</h3>
+                  {courseLines(b.courses).map((l) => (
+                    <p class="pd-course">{l.label && <strong>{l.label}</strong>}<span>{l.text}</span></p>
+                  ))}
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {has.teaching && (
+          <section class="pd-card pd-card--tint" id="teaching" aria-labelledby="pd-tch-h" data-pd-reveal>
+            <header class="pd-card-head"><span class="pd-icon" set:html={svg('flask', 26)} /><h2 id="pd-tch-h">{t('pg_teaching')}</h2></header>
+            {programme.teaching_assessment && blocks(programme.teaching_assessment).map((b) => (b.type === 'p' ? <p class="pd-lead-p">{b.text}</p> : <ul class="pd-bullets">{b.items.map((i) => <li>{i}</li>)}</ul>))}
+            {programme.resources && (
+              <div class="pd-sub">
+                <h3>{t('pg_resources')}</h3>
+                {blocks(programme.resources).map((b) => (b.type === 'p' ? <p>{b.text}</p> : <ul class="pd-bullets">{b.items.map((i) => <li>{i}</li>)}</ul>))}
+              </div>
+            )}
+          </section>
+        )}
+
+        {has.careers && (
+          <section class="pd-card" id="careers" aria-labelledby="pd-car-h" data-pd-reveal>
+            <header class="pd-card-head"><span class="pd-icon" set:html={svg('briefcase', 26)} /><h2 id="pd-car-h">{t('pg_careers')}</h2></header>
+            {blocks(programme.career_opportunities).map((b) => (b.type === 'p' ? <p class="pd-lead-p">{b.text}</p> : <ul class="pd-chips pd-chips--lg">{b.items.map((i) => <li>{i}</li>)}</ul>))}
+            {programme.further_study && (
+              <div class="pd-sub">
+                <h3>{t('pg_further')}</h3>
+                {blocks(programme.further_study).map((b) => (b.type === 'p' ? <p>{b.text}</p> : <ul class="pd-bullets">{b.items.map((i) => <li>{i}</li>)}</ul>))}
+              </div>
+            )}
+          </section>
+        )}
+
+        {has.entry && (
+          <section class="pd-entry" id="entry" aria-labelledby="pd-ent-h" data-pd-reveal>
+            <header class="pd-card-head pd-card-head--light"><span class="pd-icon pd-icon--gold" set:html={svg('key', 26)} /><h2 id="pd-ent-h">{t('pg_entry')}</h2></header>
+            {blocks(programme.admission_requirements).map((b) => (b.type === 'p' ? <p>{b.text}</p> : <ul class="pd-bullets">{b.items.map((i) => <li>{i}</li>)}</ul>))}
+            {programme.seats && <p class="pd-seats"><span>{t('pg_fact_seats')}</span>{programme.seats}</p>}
+            <a class="pd-btn pd-btn--gold" href="/admissions">{t('pg_admissions_link')}<Fragment set:html={svg('arrow', 18)} /></a>
+          </section>
+        )}
+
+        {has.voices && (
+          <section class="pd-voices" id="voices" aria-labelledby="pd-voi-h" data-pd-reveal>
+            <header class="pd-card-head"><span class="pd-icon" set:html={svg('quote', 26)} /><h2 id="pd-voi-h">{t('pg_testimonials')}</h2></header>
+            <ul class="pd-vgrid" role="list">
+              {programme.testimonials.map((v) => (
+                <li class="pd-voice">
+                  <blockquote><p>{v.quote}</p></blockquote>
+                  <p class="pd-voice-by"><span class="pd-voice-av" aria-hidden="true">{initialsOf(v.name)}</span><span><strong>{v.name}</strong>{v.detail && <em>{v.detail}</em>}</span></p>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
+        {has.faqs && (
+          <section class="pd-card" id="faqs" aria-labelledby="pd-faq-h" data-pd-reveal>
+            <header class="pd-card-head"><span class="pd-icon" set:html={svg('help', 26)} /><h2 id="pd-faq-h">{t('pg_faqs')}</h2></header>
             {programme.faqs.map((f) => (
-              <details class="curriculum-block">
-                <summary>{f.question}</summary>
-                <p>{f.answer}</p>
-              </details>
+              <details class="pd-faq"><summary>{f.question}</summary><p>{f.answer}</p></details>
             ))}
-          </>
+          </section>
         )}
       </div>
-      <div>
-        <a href="/admissions" class="btn btn-primary" style="display:block;text-align:center;margin-bottom:var(--s5)">Apply now</a>
-        {programme.coordinator && (
-          <>
-            <h2 class="h2" style="font-size:1rem">Coordinator</h2>
-            <p class="small"><a href={`/people/${programme.coordinator.slug}`}>{programme.coordinator.full_name}</a></p>
-          </>
-        )}
-      </div>
+
+      <!-- =========================== AT A GLANCE =========================== -->
+      <aside class="pd-aside" aria-label={t('pg_glance')}>
+        <div class="pd-glance">
+          <h2 class="pd-glance-h">{t('pg_glance')}</h2>
+          <dl class="pd-facts">
+            {facts.map(([k, v]) => <div><dt>{k}</dt><dd>{v}</dd></div>)}
+            {department && <div><dt>{t('pg_fact_department')}</dt><dd><a href={`/academics/departments/${department.slug}`}>{shortName(department.name)}</a></dd></div>}
+          </dl>
+          <a class="pd-btn pd-btn--gold pd-btn--block" href="/admissions">{t('pg_apply')}<Fragment set:html={svg('arrow', 18)} /></a>
+          {programme.contact_email && (
+            <div class="pd-contact">
+              <h3>{t('pg_contact')}</h3>
+              <a href={`mailto:${programme.contact_email}`}>{programme.contact_email}</a>
+              {programme.contact_note && <p>{programme.contact_note}</p>}
+            </div>
+          )}
+          {department?.head && (
+            <div class="pd-contact">
+              <h3>{t('pg_head')}</h3>
+              <a href={`/about/faculty/${department.head.slug}`}>{department.head.full_name}</a>
+            </div>
+          )}
+          {programme.coordinator && (
+            <div class="pd-contact">
+              <h3>{t('pg_coordinator')}</h3>
+              <a href={`/people/${programme.coordinator.slug}`}>{programme.coordinator.full_name}</a>
+            </div>
+          )}
+        </div>
+      </aside>
     </div>
+
+    <!-- =========================== MORE IN THIS DEPARTMENT =========================== -->
+    {related.length > 0 && (
+      <section class="pd-more" aria-labelledby="pd-more-h">
+        <div class="wrap pd-wide">
+          <h2 class="pd-h2" id="pd-more-h">{t('pg_related')}</h2>
+          <ul class="pd-rgrid" role="list">
+            {related.map((p) => (
+              <li>
+                <a class="pd-rcard" href={`/academics/programmes/${p.slug}`}>
+                  <span class="pd-rfill" aria-hidden="true"></span>
+                  {p.duration && <span class="pd-pill pd-pill--gold">{p.duration}</span>}
+                  <span class="pd-rname">{p.programme_name}</span>
+                  {p.degree_type && <span class="pd-rtext">{p.degree_type}</span>}
+                  <span class="pd-go">{t('dd_open_label')} <Fragment set:html={svg('arrow', 18)} /></span>
+                </a>
+              </li>
+            ))}
+            <li>
+              <a class="pd-rcard pd-rcard--all" href="/academics/programmes">
+                <span class="pd-rfill" aria-hidden="true"></span>
+                <span class="pd-rname">{t('pg_all_programmes')}</span>
+                <span class="pd-go">{t('dd_open_label')} <Fragment set:html={svg('arrow', 18)} /></span>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </section>
+    )}
   </div>
 </Layout>
 
-<style>
-  .fact-bar {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: var(--s4);
-    background: var(--paper-2);
-    border-top: 2px solid var(--navy);
-    padding: var(--s4);
-    margin-top: var(--s4);
-    font-size: 0.85rem;
-  }
-  @media (min-width: 760px) {
-    .fact-bar {
-      grid-template-columns: repeat(5, 1fr);
+<script is:inline>
+  (() => {
+    const root = document.querySelector('[data-pd]');
+    if (!root) return;
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // The section bar sticks just under the site header.
+    const masthead = document.querySelector('.masthead');
+    const setTop = () => root.style.setProperty('--pd-top', `${masthead ? masthead.getBoundingClientRect().height : 0}px`);
+    setTop();
+    addEventListener('resize', setTop, { passive: true });
+
+    // ---- Reveals ----
+    if (!reduce && 'IntersectionObserver' in window) {
+      root.classList.add('pd-anim');
+      const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('is-in'); io.unobserve(e.target); } }), { rootMargin: '0px 0px -8% 0px', threshold: 0.04 });
+      root.querySelectorAll('[data-pd-reveal]').forEach((el) => io.observe(el));
     }
-  }
-  .fact-label {
-    display: block;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    font-size: 0.62rem;
-    color: var(--ink-2);
-    margin-bottom: 4px;
-  }
-  .two-col {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: var(--s6);
-  }
-  @media (min-width: 1024px) {
-    .two-col {
-      grid-template-columns: 2fr 1fr;
+
+    // ---- Section bar highlights the section on screen ----
+    const links = Array.from(root.querySelectorAll('[data-pd-nav]'));
+    if (links.length && 'IntersectionObserver' in window) {
+      const byId = new Map(links.map((a) => [a.dataset.pdNav, a]));
+      const spy = new IntersectionObserver((es) => es.forEach((e) => {
+        if (!e.isIntersecting) return;
+        links.forEach((a) => a.classList.toggle('is-on', a === byId.get(e.target.id)));
+      }), { rootMargin: '-30% 0px -60% 0px' });
+      byId.forEach((_, id) => { const s = document.getElementById(id); if (s) spy.observe(s); });
     }
-  }
-  .curriculum-block {
-    border: 1px solid var(--line);
-    padding: var(--s3) var(--s4);
-    margin-bottom: var(--s3);
-  }
-  .curriculum-block summary {
-    cursor: pointer;
-    font-weight: 600;
-  }
-</style>
+
+    // ---- Curriculum: one year at a time (all years show without JavaScript) ----
+    const tabs = root.querySelector('[data-pd-tabs]');
+    if (tabs) {
+      const buttons = Array.from(tabs.querySelectorAll('[role="tab"]'));
+      const panels = Array.from(root.querySelectorAll('[data-pd-panel]'));
+      root.classList.add('pd-has-tabs');
+      const show = (n, focus) => {
+        buttons.forEach((b, i) => { const on = i === n; b.classList.toggle('is-on', on); b.setAttribute('aria-selected', String(on)); b.tabIndex = on ? 0 : -1; });
+        panels.forEach((p, i) => { p.hidden = i !== n; });
+        if (focus) buttons[n].focus();
+      };
+      show(0, false);
+      buttons.forEach((b, i) => {
+        b.addEventListener('click', () => show(i, false));
+        b.addEventListener('keydown', (e) => {
+          if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+          e.preventDefault();
+          show((i + (e.key === 'ArrowRight' ? 1 : -1) + buttons.length) % buttons.length, true);
+        });
+      });
+    }
+  })();
+</script>

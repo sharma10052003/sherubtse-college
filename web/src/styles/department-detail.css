@@ -1,0 +1,1041 @@
+/**
+ * Department pages (pages/academics/departments/[slug].astro). Scoped under .dd.
+ * Rounded and moving, by the project owner's request: a navy hero with an
+ * animated emblem for the department's subject and figures that count up; a
+ * section bar that follows the page; programme cards and faculty cards that fill
+ * with navy on hover; the head of department in an arch portrait; and links to
+ * apply and to the other departments. The department's own accent colour
+ * (theme_color) tints the emblem. No drop shadows. Motion stops for visitors
+ * who ask for less motion.
+ */
+
+.dd {
+  --accent: var(--gold);
+  --dd-r: 28px;
+  --dd-line: rgba(13, 27, 75, 0.2);
+  --dd-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  overflow-x: clip;
+}
+.dd .wrap.dd-wide {
+  max-width: 1600px;
+  padding-inline: clamp(var(--s4), 3vw, var(--s7));
+}
+.dd [hidden] {
+  display: none !important;
+}
+.dd :focus-visible {
+  outline: 3px solid var(--gold);
+  outline-offset: 3px;
+}
+.dd section[id] {
+  scroll-margin-top: 130px;
+}
+
+/* ============================================================ HERO */
+.dd-hero {
+  position: relative;
+  overflow: hidden;
+  padding: calc(var(--s7) + 8px) 0 calc(var(--s8) + 20px);
+  border-radius: 0 0 clamp(28px, 4vw, 64px) clamp(28px, 4vw, 64px);
+  background: radial-gradient(130% 120% at 8% 0%, var(--navy-mid) 0%, var(--navy) 46%, var(--navy-deep) 100%);
+  color: #fff;
+}
+.dd-glow {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(60px);
+  pointer-events: none;
+  animation: dd-drift 20s ease-in-out infinite alternate;
+}
+.dd-glow--a {
+  top: -220px;
+  right: 6%;
+  width: 540px;
+  height: 540px;
+  background: radial-gradient(circle, rgba(240, 180, 41, 0.26), transparent 70%);
+}
+.dd-glow--b {
+  bottom: -240px;
+  left: -90px;
+  width: 460px;
+  height: 460px;
+  background: radial-gradient(circle, rgba(88, 118, 230, 0.32), transparent 70%);
+  animation-duration: 26s;
+  animation-direction: alternate-reverse;
+}
+@keyframes dd-drift {
+  to {
+    transform: translate(60px, 40px) scale(1.12);
+  }
+}
+.dd-hero-grid {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+  gap: clamp(var(--s6), 4vw, var(--s8));
+  align-items: center;
+}
+.dd-hero-text {
+  min-width: 0;
+}
+.dd-breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: var(--s5);
+  font-size: 0.9rem;
+  color: #c9d0e4;
+}
+.dd-breadcrumb a {
+  color: #c9d0e4;
+  text-decoration: none;
+}
+.dd-breadcrumb a:hover {
+  color: #fff;
+  text-decoration: underline;
+}
+.dd-breadcrumb [aria-current] {
+  color: #fff;
+}
+.dd-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 var(--s3);
+  color: var(--gold);
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.dd-eyebrow::before {
+  content: '';
+  width: 40px;
+  height: 3px;
+  border-radius: 3px;
+  background: var(--gold);
+}
+.dd-title {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: clamp(2.5rem, 5.4vw, 4.4rem);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  color: #fff;
+  text-wrap: balance;
+}
+.dd-sub {
+  max-width: 50ch;
+  margin: var(--s4) 0 0;
+  font-family: var(--font-serif);
+  font-size: clamp(1.15rem, 1.8vw, 1.45rem);
+  line-height: 1.4;
+  color: var(--gold-light);
+}
+.dd-intro {
+  max-width: 60ch;
+  margin: var(--s3) 0 0;
+  font-size: 1.1rem;
+  line-height: 1.65;
+  color: #d3d9ec;
+}
+.dd-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s3);
+  margin: var(--s6) 0 0;
+  padding: 0;
+  list-style: none;
+}
+.dd-fact {
+  position: relative;
+  min-width: 170px;
+  overflow: hidden;
+  padding: 18px 26px;
+  border: 1.5px solid rgba(240, 180, 41, 0.42);
+  border-radius: var(--dd-r);
+  background: linear-gradient(150deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.03));
+  transition: border-color 0.25s, transform 0.3s var(--dd-ease);
+}
+.dd-fact:hover {
+  border-color: var(--gold);
+  transform: translateY(-4px);
+}
+.dd-fact-ring {
+  position: absolute;
+  top: -28px;
+  right: -28px;
+  width: 84px;
+  height: 84px;
+  border: 2px dashed rgba(240, 180, 41, 0.55);
+  border-radius: 50%;
+  animation: dd-spin 26s linear infinite;
+}
+@keyframes dd-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.dd-fact-value {
+  position: relative;
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: clamp(2.2rem, 3.6vw, 3rem);
+  font-weight: 700;
+  line-height: 1;
+  color: var(--gold-light);
+}
+.dd-fact-label {
+  position: relative;
+  margin: 8px 0 0;
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #c9d0e4;
+}
+.dd-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: var(--s5);
+}
+.dd-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 48px;
+  padding: 0 24px;
+  border: 2px solid transparent;
+  border-radius: 999px;
+  font: 700 0.95rem var(--font-sans);
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.25s, color 0.25s, border-color 0.25s, transform 0.25s var(--dd-ease);
+}
+.dd-btn:hover {
+  transform: translateY(-2px);
+}
+.dd-btn svg {
+  width: 18px;
+  height: 18px;
+  transition: transform 0.25s var(--dd-ease);
+}
+.dd-btn:hover svg {
+  transform: translateX(4px);
+}
+.dd-btn--gold {
+  background: var(--gold);
+  color: var(--navy-deep);
+}
+.dd-btn--gold:hover {
+  background: var(--gold-light);
+}
+.dd-btn--line {
+  border-color: rgba(255, 255, 255, 0.65);
+  background: transparent;
+  color: #fff;
+}
+.dd-btn--line:hover {
+  background: #fff;
+  color: var(--navy);
+}
+.dd-btn--lg {
+  min-height: 56px;
+  padding: 0 32px;
+  font-size: 1.05rem;
+}
+.dd-rise {
+  animation: dd-rise 0.85s var(--dd-ease) both;
+  animation-delay: calc(var(--d, 0) * 90ms);
+}
+@keyframes dd-rise {
+  from {
+    opacity: 0;
+    transform: translateY(22px);
+  }
+}
+
+/* The emblem: an animated drawing for the department's subject */
+.dd-emblem {
+  position: relative;
+  justify-self: center;
+  display: grid;
+  place-items: center;
+  width: min(440px, 100%);
+  aspect-ratio: 1;
+  border: 2px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  border-radius: 56px;
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02));
+}
+.dd-emblem-ring {
+  position: absolute;
+  border: 2px dashed color-mix(in srgb, var(--accent) 50%, transparent);
+  border-radius: 50%;
+  pointer-events: none;
+  animation: dd-spin 50s linear infinite;
+}
+.dd-emblem-ring--a {
+  inset: -34px;
+}
+.dd-emblem-ring--b {
+  inset: -78px;
+  border-style: dotted;
+  border-color: rgba(255, 255, 255, 0.18);
+  animation-direction: reverse;
+  animation-duration: 70s;
+}
+.dd-art {
+  position: relative;
+  width: 84%;
+  height: 84%;
+  overflow: visible;
+}
+.dd-art * {
+  transform-box: fill-box;
+}
+/* growth */
+.dd-bars rect {
+  fill: color-mix(in srgb, var(--accent) 55%, transparent);
+  transform-origin: bottom;
+  animation: dd-bar 4.5s ease-in-out infinite;
+  animation-delay: calc(var(--i) * -0.7s);
+}
+@keyframes dd-bar {
+  50% {
+    transform: scaleY(0.72);
+  }
+}
+.dd-trend {
+  fill: none;
+  stroke: #fff;
+  stroke-width: 5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: dd-draw 3.6s var(--dd-ease) infinite alternate;
+}
+@keyframes dd-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+.dd-dot {
+  fill: var(--gold-light);
+  animation: dd-blink 2.4s ease-in-out infinite;
+  animation-delay: calc(var(--i) * -0.4s);
+}
+@keyframes dd-blink {
+  50% {
+    opacity: 0.35;
+  }
+}
+/* web */
+.dd-lines path {
+  fill: none;
+  stroke: color-mix(in srgb, var(--accent) 70%, transparent);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-dasharray: 4 9;
+  animation: dd-dash 12s linear infinite;
+}
+@keyframes dd-dash {
+  to {
+    stroke-dashoffset: -130;
+  }
+}
+.dd-nodes circle {
+  fill: var(--gold-light);
+  animation: dd-float 5s ease-in-out infinite;
+  animation-delay: calc(var(--i) * -0.7s);
+}
+@keyframes dd-float {
+  50% {
+    transform: translateY(-9px);
+  }
+}
+/* lab */
+.dd-orbits ellipse {
+  fill: none;
+  stroke: color-mix(in srgb, var(--accent) 70%, transparent);
+  stroke-width: 3;
+}
+.dd-orbits,
+.dd-electron {
+  transform-origin: 200px 200px;
+  transform-box: view-box;
+  animation: dd-spin 26s linear infinite;
+}
+.dd-core {
+  fill: var(--gold);
+  animation: dd-blink 3s ease-in-out infinite;
+}
+.dd-electron {
+  fill: #fff;
+}
+.dd-electron--2 {
+  animation-duration: 19s;
+}
+.dd-electron--3 {
+  animation-duration: 33s;
+  animation-direction: reverse;
+}
+@media (max-width: 1000px) {
+  .dd-hero-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .dd-emblem {
+    width: min(340px, 78%);
+    margin-top: var(--s4);
+  }
+}
+
+/* ============================================================ SECTION BAR */
+.dd-nav-wrap {
+  position: sticky;
+  top: calc(var(--dd-top, 0px) + 10px);
+  z-index: 20;
+  margin-top: -32px;
+}
+.dd-nav {
+  display: flex;
+  gap: 6px;
+  padding: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  border: 2px solid var(--navy);
+  border-radius: 999px;
+  background: #fff;
+}
+.dd-nav::-webkit-scrollbar {
+  display: none;
+}
+.dd-nav a {
+  flex: none;
+  padding: 10px 20px;
+  border-radius: 999px;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--navy);
+  text-decoration: none;
+  transition: background-color 0.2s, color 0.2s;
+}
+.dd-nav a:hover {
+  background: #eef1f9;
+}
+.dd-nav a.is-on {
+  background: var(--navy);
+  color: #fff;
+}
+
+/* ============================================================ SECTIONS */
+.dd-section {
+  padding: var(--s8) 0;
+}
+.dd-nav-wrap + .dd-section {
+  padding-top: var(--s7);
+}
+.dd-soft {
+  background: var(--soft, #f4f6fa);
+}
+.dd-head {
+  max-width: 780px;
+  margin-bottom: var(--s6);
+}
+.dd-kicker {
+  margin: 0 0 6px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--gold-ink);
+}
+.dd-kicker--light {
+  color: var(--gold);
+}
+.dd-h2 {
+  position: relative;
+  margin: 0 0 10px;
+  padding-bottom: 16px;
+  font-family: var(--font-serif);
+  font-size: clamp(1.9rem, 3.4vw, 2.8rem);
+  line-height: 1.12;
+  color: var(--navy);
+}
+.dd-h2::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 64px;
+  height: 4px;
+  border-radius: 4px;
+  background: var(--gold);
+}
+.dd-h2--light {
+  color: #fff;
+}
+.dd-lede {
+  margin: 0;
+  font-size: 1.08rem;
+  line-height: 1.6;
+  color: var(--ink-2);
+}
+.dd-go {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 10px;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--navy-mid);
+  transition: color 0.3s;
+}
+.dd-go svg {
+  width: 18px;
+  height: 18px;
+  transition: transform 0.3s var(--dd-ease);
+}
+.dd-fill {
+  position: absolute;
+  inset: auto 0 0 0;
+  z-index: -1;
+  height: 0;
+  background: linear-gradient(160deg, var(--navy-mid), var(--navy) 60%, var(--navy-deep));
+  transition: height 0.5s var(--dd-ease);
+}
+
+/* Vision and mission */
+.dd-vm {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 440px), 1fr));
+  gap: 20px;
+}
+.dd-vm-card {
+  padding: 30px;
+  border: 2px solid var(--dd-line);
+  border-radius: var(--dd-r);
+}
+.dd-vm-icon {
+  display: grid;
+  place-items: center;
+  width: 62px;
+  height: 62px;
+  margin-bottom: 14px;
+  border-radius: 50%;
+  background: var(--gold);
+  color: var(--navy-deep);
+}
+.dd-vm-card h3 {
+  margin: 0 0 8px;
+  font-family: var(--font-serif);
+  font-size: 1.5rem;
+  color: var(--navy);
+}
+.dd-vm-card p {
+  margin: 0;
+  font-size: 1.05rem;
+  line-height: 1.65;
+  color: var(--ink-2);
+}
+
+/* ============================================================ PROGRAMMES */
+.dd-pgrid {
+  --n: 3;
+  --cols: var(--n);
+  --gap: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--gap);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.dd-pitem {
+  display: flex;
+  flex: 0 0 calc((100% - (var(--cols) - 1) * var(--gap)) / var(--cols));
+  min-width: 0;
+}
+@media (max-width: 1000px) {
+  .dd-pgrid {
+    --cols: min(var(--n), 2);
+  }
+}
+@media (max-width: 640px) {
+  .dd-pgrid {
+    --cols: 1;
+  }
+}
+.dd-pcard {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  overflow: hidden;
+  padding: 28px;
+  border: 2px solid var(--dd-line);
+  border-radius: var(--dd-r);
+  background: #fff;
+  color: var(--navy);
+  text-decoration: none;
+  transition: transform 0.4s var(--dd-ease), border-color 0.25s;
+}
+.dd-pcard:hover,
+.dd-pcard:focus-visible {
+  transform: translateY(-6px);
+  border-color: var(--navy);
+}
+.dd-pcard:hover .dd-fill,
+.dd-pcard:focus-visible .dd-fill,
+.dd-fcard:hover .dd-fill,
+.dd-fcard:focus-within .dd-fill {
+  height: 100%;
+}
+.dd-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.dd-pill {
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: #eef1f9;
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: var(--navy);
+  transition: background-color 0.3s, color 0.3s;
+}
+.dd-pill--gold {
+  background: var(--gold-light);
+}
+.dd-pname {
+  margin: 4px 0 0;
+  font-family: var(--font-serif);
+  font-size: clamp(1.4rem, 2vw, 1.75rem);
+  line-height: 1.2;
+  color: var(--navy);
+  transition: color 0.3s;
+}
+.dd-paward {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--gold-ink);
+  transition: color 0.3s;
+}
+.dd-ptext {
+  margin: 0;
+  font-size: 0.98rem;
+  line-height: 1.6;
+  color: var(--ink-2);
+  transition: color 0.3s;
+  display: -webkit-box;
+  -webkit-line-clamp: 5;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.dd-pcard:hover .dd-pname,
+.dd-fcard:hover .dd-fname {
+  color: #fff;
+}
+.dd-pcard:hover .dd-ptext,
+.dd-fcard:hover .dd-fqual {
+  color: #d6dcef;
+}
+.dd-pcard:hover .dd-paward,
+.dd-fcard:hover .dd-fpos,
+.dd-pcard:hover .dd-go,
+.dd-fcard:hover .dd-go {
+  color: var(--gold-light);
+}
+.dd-pcard:hover .dd-pill {
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+}
+.dd-pcard:hover .dd-go svg,
+.dd-fcard:hover .dd-go svg {
+  transform: translateX(5px);
+}
+
+/* ============================================================ HEAD OF DEPARTMENT */
+.dd-headcard {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: clamp(var(--s5), 4vw, var(--s8));
+  padding: clamp(24px, 4vw, 52px);
+  border-radius: 40px;
+  background: linear-gradient(160deg, var(--navy-mid), var(--navy) 55%, var(--navy-deep));
+  color: #fff;
+}
+.dd-arch {
+  width: clamp(170px, 20vw, 250px);
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  border: 3px solid var(--gold);
+  border-radius: 999px 999px 28px 28px;
+  background: linear-gradient(160deg, var(--navy-mid), var(--navy-deep));
+}
+.dd-arch img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+}
+.dd-monogram {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  font-family: var(--font-serif);
+  font-size: 2.6rem;
+  font-weight: 700;
+  color: var(--gold);
+}
+.dd-headbody {
+  min-width: 0;
+}
+.dd-headname {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: clamp(2rem, 3.6vw, 3rem);
+  line-height: 1.1;
+  color: #fff;
+}
+.dd-headrole {
+  margin: 6px 0 0;
+  font-size: 1.05rem;
+  color: var(--gold-light);
+}
+.dd-headfacts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: var(--s4) 0 0;
+  padding: 0;
+  list-style: none;
+}
+.dd-headfacts li span {
+  display: inline-block;
+  padding: 6px 16px;
+  border: 1.5px solid rgba(255, 255, 255, 0.3);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  font-size: 0.92rem;
+  color: #fff;
+}
+@media (max-width: 700px) {
+  .dd-headcard {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    text-align: center;
+  }
+  .dd-headfacts,
+  .dd-headcard .dd-actions {
+    justify-content: center;
+  }
+}
+
+/* ============================================================ FACULTY */
+.dd-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 18px;
+  margin-bottom: var(--s5);
+}
+.dd-search {
+  flex: 0 1 340px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  height: 50px;
+  padding: 0 18px;
+  border: 2px solid var(--navy);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--navy);
+}
+.dd-search:focus-within {
+  border-color: var(--gold);
+}
+.dd-search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  color: var(--ink);
+  outline: none;
+}
+.dd-count {
+  margin: 0;
+  font-weight: 700;
+  color: var(--navy);
+}
+.dd-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+  font-weight: 700;
+  color: var(--navy-mid);
+  text-decoration: none;
+}
+.dd-link:hover {
+  text-decoration: underline;
+}
+.dd-fgrid {
+  --cols: 4;
+  --gap: 18px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--gap);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.dd-fitem {
+  display: flex;
+  flex: 0 0 calc((100% - (var(--cols) - 1) * var(--gap)) / var(--cols));
+  min-width: 0;
+}
+@media (max-width: 1200px) {
+  .dd-fgrid {
+    --cols: 3;
+  }
+}
+@media (max-width: 800px) {
+  .dd-fgrid {
+    --cols: 2;
+    --gap: 12px;
+  }
+}
+@media (max-width: 480px) {
+  .dd-fgrid {
+    --cols: 1;
+  }
+}
+.dd-fcard {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  overflow: hidden;
+  border: 2px solid var(--dd-line);
+  border-radius: var(--dd-r);
+  background: #fff;
+  transition: transform 0.4s var(--dd-ease), border-color 0.25s;
+}
+.dd-fcard:hover,
+.dd-fcard:focus-within {
+  transform: translateY(-6px);
+  border-color: var(--navy);
+}
+.dd-flink {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+.dd-fphoto {
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  background: linear-gradient(160deg, var(--navy-mid), var(--navy-deep));
+}
+.dd-fphoto img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  transition: transform 0.8s var(--dd-ease);
+}
+.dd-fcard:hover .dd-fphoto img {
+  transform: scale(1.06);
+}
+.dd-fbody {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px 18px 18px;
+}
+.dd-fpos {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gold-ink);
+  transition: color 0.3s;
+}
+.dd-fname {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: 1.15rem;
+  line-height: 1.25;
+  color: var(--navy);
+  transition: color 0.3s;
+}
+.dd-fqual {
+  margin: 0;
+  font-size: 0.86rem;
+  line-height: 1.4;
+  color: var(--ink-2);
+  transition: color 0.3s;
+}
+
+/* ============================================================ NOTICES */
+.dd-notices {
+  display: grid;
+  gap: 10px;
+  max-width: 980px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.dd-notice {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 22px;
+  border: 2px solid var(--dd-line);
+  border-radius: 999px;
+  color: var(--navy);
+  text-decoration: none;
+  transition: transform 0.3s var(--dd-ease), border-color 0.25s, background-color 0.3s, color 0.3s;
+}
+.dd-notice:hover {
+  transform: translateX(6px);
+  border-color: var(--navy);
+  background: var(--navy);
+  color: #fff;
+}
+.dd-notice-date {
+  flex: none;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--gold-ink);
+}
+.dd-notice:hover .dd-notice-date {
+  color: var(--gold-light);
+}
+.dd-notice-title {
+  flex: 1;
+  min-width: 0;
+  font-weight: 600;
+}
+.dd-notice svg {
+  width: 18px;
+  height: 18px;
+  flex: none;
+}
+@media (max-width: 600px) {
+  .dd-notice {
+    border-radius: 24px;
+    flex-wrap: wrap;
+  }
+}
+
+/* ============================================================ APPLY + OTHER DEPARTMENTS */
+.dd-end {
+  padding-top: var(--s7);
+}
+.dd-apply {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s5);
+  padding: clamp(28px, 4vw, 56px);
+  border-radius: 40px;
+  background: linear-gradient(160deg, var(--navy-mid), var(--navy) 55%, var(--navy-deep));
+}
+.dd-apply-text {
+  max-width: 52ch;
+  margin: 0;
+  font-size: 1.1rem;
+  line-height: 1.6;
+  color: #d3d9ec;
+}
+.dd-others {
+  margin-top: var(--s7);
+}
+.dd-others-h {
+  margin: 0 0 var(--s3);
+  font-family: var(--font-serif);
+  font-size: 1.4rem;
+  color: var(--navy);
+}
+.dd-others ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.dd-other {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 22px;
+  border: 2px solid var(--dd-line);
+  border-radius: 999px;
+  color: var(--navy);
+  text-decoration: none;
+  transition: transform 0.3s var(--dd-ease), border-color 0.25s, background-color 0.3s, color 0.3s;
+}
+.dd-other:hover {
+  transform: translateY(-3px);
+  border-color: var(--navy);
+  background: var(--navy);
+  color: #fff;
+}
+.dd-other-name {
+  font-family: var(--font-serif);
+  font-weight: 600;
+}
+.dd-other-meta {
+  font-size: 0.82rem;
+  opacity: 0.8;
+}
+.dd-other svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* ============================================================ REVEALS + LESS MOTION */
+.dd [data-dd-reveal] {
+  transition: opacity 0.7s var(--dd-ease), transform 0.7s var(--dd-ease);
+  transition-delay: var(--d, 0ms);
+}
+.dd.dd-anim [data-dd-reveal]:not(.is-in) {
+  opacity: 0;
+  transform: translateY(24px);
+}
+@media (prefers-reduced-motion: reduce) {
+  .dd *,
+  .dd *::before,
+  .dd *::after {
+    animation: none !important;
+    transition-duration: 0.01ms !important;
+  }
+  .dd-trend {
+    stroke-dashoffset: 0;
+  }
+  .dd.dd-anim [data-dd-reveal]:not(.is-in) {
+    opacity: 1;
+    transform: none;
+  }
+}

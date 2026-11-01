@@ -159,10 +159,9 @@
 /* ---------- Header search — plain GET form, works with JS off. The
    dropdown is a progressive-enhancement layer on top (see Header.astro's
    second script) — everything here still degrades to a normal input +
-   submit button with no JS or before Pagefind's module loads. No rounded
-   corners or drop shadows anywhere (house style) — the "modern" feel
-   comes from the transition, the focus state, and the result list, not
-   from softening the site's own visual language. ---------- */
+   submit button with no JS or before the search index loads. The box is
+   a rounded pill (input curved on the left, gold button on the right) by
+   the project owner's request, matching the rounded landing pages. ---------- */
 .header-search {
   display: none;
 }
@@ -189,9 +188,10 @@
     min-height: 40px;
     border: 1px solid rgba(255, 255, 255, 0.4);
     border-right: 0;
+    border-radius: 999px 0 0 999px;
     background: rgba(255, 255, 255, 0.08);
     color: #fff;
-    padding: 0 var(--s3);
+    padding: 0 var(--s3) 0 18px;
     transition: background-color 0.15s ease, border-color 0.15s ease;
   }
   .header-search input::placeholder {
@@ -207,8 +207,10 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 42px;
-    border: 1px solid rgba(255, 255, 255, 0.4);
+    width: 46px;
+    padding-right: 4px;
+    border: 1px solid var(--gold);
+    border-radius: 0 999px 999px 0;
     background: var(--gold);
     color: var(--navy);
     cursor: pointer;
@@ -243,6 +245,7 @@
   background: #fff;
   border: 1px solid var(--line-strong);
   border-top: 3px solid var(--gold);
+  border-radius: 16px;
   box-shadow: 0 18px 40px -20px rgba(8, 18, 52, 0.45);
   z-index: 60;
 }
@@ -386,8 +389,13 @@
   }
 }
 
-/* ---------- Footer ---------- */
+/* ---------- Footer ----------
+   Navy on the gold knot pattern, spread across the full width (1600px,
+   like the landing pages): a brand row with rounded contact cards beside
+   it, then the link columns and the online-services pills, then a darker
+   copyright bar. Rounded by the project owner's request; no shadows. */
 .site-footer {
+  position: relative;
   background-color: var(--navy);
   background-image: url('/patterns/knot-gold.svg');
   background-repeat: repeat;
@@ -395,107 +403,278 @@
   color: #c9d0e4;
   margin-top: var(--s9);
   border-top: 4px solid var(--gold);
+  font-size: 0.92rem;
 }
-/* Flexbox with justify-content: space-between, not a grid of equal-width
-   columns — the five groups have very different content widths (Contact's
-   address is much narrower than E-Services' longest link), so equal-
-   WIDTH columns left uneven-looking gaps between the actual visible text.
-   space-between sizes each group to its own content and spreads the
-   leftover row width into genuinely equal gaps between them instead. */
 .site-footer .wrap {
-  padding-block: var(--s7);
-  display: flex;
-  flex-direction: column;
-  gap: var(--s6);
-  font-size: 0.88rem;
+  max-width: 1600px;
+  padding-inline: clamp(var(--s4), 3vw, var(--s7));
 }
-@media (min-width: 760px) {
-  .site-footer .wrap {
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: space-between;
-  }
-  .site-footer .wrap > div {
-    flex: 0 1 auto;
-    max-width: 220px;
-  }
-  .footer-brand {
-    max-width: 300px !important;
-  }
-}
-.footer-logo {
-  display: inline-block;
-  margin-bottom: var(--s4);
-  transition: transform 0.3s ease;
-}
-.footer-logo:hover {
-  transform: scale(1.04);
-}
-.footer-logo img {
-  display: block;
-  width: 96px;
-  height: auto;
-}
-.footer-tagline {
-  margin: 0 0 var(--s4);
-  line-height: 1.5;
-}
-.footer-motto {
-  font-family: var(--font-serif);
-  font-style: italic;
-  color: #fff;
-  margin: 0;
-}
-.footer-contact li {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--s2);
-}
-.footer-contact svg {
-  flex-shrink: 0;
-  width: 18px;
-  height: 18px;
-  margin-top: 2px;
-  color: var(--gold);
-}
-.site-footer h3 {
-  color: #fff;
-  font-family: var(--font-sans);
-  font-size: 0.78rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  margin: 0 0 var(--s3);
+.site-footer a {
+  color: #dfe4f2;
+  text-decoration: none;
 }
 .site-footer ul {
   list-style: none;
   margin: 0;
   padding: 0;
 }
-.site-footer li {
-  margin-bottom: var(--s2);
-}
-.site-footer a {
-  color: #c9d0e4;
-  text-decoration: none;
-}
-.site-footer a:hover {
+.footer-h {
+  position: relative;
+  margin: 0 0 var(--s4);
+  padding-bottom: 10px;
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
   color: #fff;
-  text-decoration: underline;
+}
+.footer-h::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 32px;
+  height: 3px;
+  border-radius: 3px;
+  background: var(--gold);
+}
+
+/* Brand row */
+.footer-top {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--s6);
+  padding-block: var(--s7) var(--s6);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+.footer-brand {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s5);
+}
+.footer-logo {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 104px;
+  height: 104px;
+  border: 2px solid rgba(240, 180, 41, 0.6);
+  border-radius: 50%;
+  background: rgba(8, 18, 52, 0.6);
+  transition: transform 0.35s ease, border-color 0.3s;
+}
+.footer-logo:hover {
+  transform: rotate(-6deg) scale(1.04);
+  border-color: var(--gold);
+}
+.footer-logo img {
+  display: block;
+  width: 82px;
+  height: auto;
+}
+.footer-name {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: 1.6rem;
+  font-weight: 700;
+  line-height: 1.15;
+  color: #fff;
+}
+.footer-motto {
+  margin: 4px 0 0;
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 1.05rem;
+  color: var(--gold-light);
+}
+.footer-tagline {
+  margin: var(--s3) 0 0;
+  max-width: 54ch;
+  line-height: 1.6;
+}
+
+/* Contact cards */
+.footer-contact-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--s3);
+}
+.footer-card {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s3);
+  height: 100%;
+  padding: var(--s4);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 18px;
+  background: rgba(8, 18, 52, 0.55);
+  transition: border-color 0.3s, background 0.3s, transform 0.35s ease;
+}
+.footer-card:hover {
+  border-color: var(--gold);
+  background: rgba(8, 18, 52, 0.8);
+  transform: translateY(-3px);
+}
+.footer-card-icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: var(--gold);
+  color: var(--navy);
+}
+.footer-card-body {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  line-height: 1.5;
+}
+.footer-card-body a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--gold-light);
+  font-weight: 700;
+  font-size: 0.86rem;
+}
+.footer-card-body a:hover {
+  color: #fff;
+}
+.footer-card-body .footer-card-main {
+  color: #fff;
+  font-size: 1rem;
+  overflow-wrap: anywhere;
+}
+.footer-card-body .footer-card-main:hover {
+  color: var(--gold-light);
+}
+
+/* Link columns */
+.footer-links {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--s6);
+  padding-block: var(--s6) var(--s7);
+}
+.footer-col li + li {
+  margin-top: 4px;
+}
+.footer-col a {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+  transition: color 0.2s, gap 0.3s ease;
+}
+.footer-col a svg {
+  flex: none;
+  color: var(--gold);
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+.footer-col a:hover {
+  gap: 12px;
+  color: #fff;
+}
+.footer-col a:hover svg {
+  opacity: 1;
+}
+/* Online services: pill buttons */
+.footer-services ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.footer-services li + li {
+  margin-top: 0;
+}
+.footer-services a {
+  gap: 6px;
+  padding: 7px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  font-weight: 600;
+}
+.footer-services a svg {
+  opacity: 0.8;
+}
+.footer-services a:hover {
+  gap: 6px;
+  border-color: var(--gold);
+  background: var(--gold);
+  color: var(--navy);
+}
+.footer-services a:hover svg {
+  color: var(--navy);
+}
+
+/* Copyright bar */
+.footer-bar {
+  background: rgba(8, 18, 52, 0.75);
 }
 .site-footer .bottom {
-  border-top: 1px solid rgba(255, 255, 255, 0.15);
-  padding-top: var(--s4);
-  margin-top: var(--s5);
-  font-size: 0.78rem;
-  color: #8e9ac0;
   display: flex;
   flex-direction: column;
   gap: var(--s2);
+  padding-block: var(--s4);
+  font-size: 0.82rem;
+  color: #9aa6c8;
 }
+.site-footer .bottom p {
+  margin: 0;
+}
+.footer-bottom-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2) var(--s4);
+}
+.footer-bottom-links a {
+  color: #c9d0e4;
+}
+.footer-bottom-links a:hover {
+  color: var(--gold-light);
+}
+
 @media (min-width: 760px) {
   .site-footer .bottom {
     flex-direction: row;
+    align-items: center;
     justify-content: space-between;
+  }
+}
+@media (min-width: 1100px) {
+  .footer-top {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr);
+    gap: var(--s8);
+    align-items: center;
+  }
+  .footer-links {
+    grid-template-columns: repeat(var(--footer-cols, 3), minmax(0, 1fr));
+  }
+  /* Wide columns: lay the links out in two columns so the space is used. */
+  .footer-col:not(.footer-services) ul {
+    columns: 2;
+    column-gap: var(--s5);
+  }
+  .footer-col:not(.footer-services) li {
+    break-inside: avoid;
+  }
+}
+@media (max-width: 599px) {
+  .footer-brand {
+    flex-direction: column;
+    gap: var(--s4);
+  }
+  .footer-links {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--s5);
+  }
+  .footer-services {
+    grid-column: 1 / -1;
   }
 }
 

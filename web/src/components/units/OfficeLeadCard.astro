@@ -1,0 +1,44 @@
+---
+// A leadership office on the Administrative Units page: an arch-shaped portrait of
+// its head (or a monogram when there is no verified portrait — never a stand-in
+// face), the office, its head, a line about it and how to reach it.
+import type { AdminUnit } from '../../lib/content/units';
+
+interface Props {
+  unit: AdminUnit;
+  open: string;
+  size?: 'top' | 'row';
+}
+const { unit: u, open, size = 'row' } = Astro.props;
+const tel = (p: string) => `tel:${p.replace(/[^+\d]/g, '').replace(/^975/, '+975')}`;
+const arrow = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
+---
+<article class:list={['ao-lcard', `ao-lcard--${size}`]} aria-labelledby={`ao-l-${u.slug}`}>
+  <a class="ao-lcard-link" href={`/about/units/${u.slug}`} aria-labelledby={`ao-l-${u.slug}`}></a>
+  <span class="ao-lcard-fill" aria-hidden="true"></span>
+  <div class:list={['ao-arch', { 'ao-arch--empty': !u.portrait }]}>
+    {u.portrait ? (
+      <img src={u.portrait.url} alt={u.portrait.alt} width={u.portrait.width ?? 400} height={u.portrait.height ?? 500} loading={size === 'top' ? 'eager' : 'lazy'} decoding="async" />
+    ) : (
+      <span class="ao-monogram" role="img" aria-label={`${u.name}: no portrait yet`}>{u.initials}</span>
+    )}
+  </div>
+  <div class="ao-lcard-body">
+    {u.category && <p class="ao-tag">{u.category.name}</p>}
+    <h3 class="ao-lcard-title" id={`ao-l-${u.slug}`}>{u.name}</h3>
+    {(u.head_name || u.head_designation) && (
+      <p class="ao-person">
+        {u.head_name && <strong>{u.head_name}</strong>}
+        {u.head_designation && <span>{u.head_designation}</span>}
+      </p>
+    )}
+    {u.summary && <p class="ao-lcard-text">{u.summary}</p>}
+    {(u.email || u.phone) && (
+      <p class="ao-lcard-contact">
+        {u.email && <a href={`mailto:${u.email}`}>{u.email}</a>}
+        {u.phone && <a href={tel(u.phone)}>{u.phone}</a>}
+      </p>
+    )}
+    <span class="ao-go" aria-hidden="true">{open} <Fragment set:html={arrow} /></span>
+  </div>
+</article>

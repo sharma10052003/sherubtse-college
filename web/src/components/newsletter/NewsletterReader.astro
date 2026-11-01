@@ -1,0 +1,413 @@
+---
+// The newsletter reader: a full-screen page-turning book for any newsletter PDF. Anything with
+// data-nlr-open (plus data-pdf, data-title, data-sub, data-slug, optional data-doc / data-page)
+// opens it. Pages are drawn in the browser with pdf.js (loaded only when someone starts
+// reading), so any PDF uploaded to Strapi → Newsletter – Editions can be read this way.
+// Features: two-page spreads with a page-turn, single-page mode for phones, zoom, thumbnails,
+// jump to page, light / sepia / night reading, listen aloud, keyboard + swipe, fullscreen,
+// "continue where you left off", and a link to the exact page. Styles: newsletter-reader.css.
+import '../../styles/newsletter-reader.css';
+
+const strapiUrl = import.meta.env.PUBLIC_STRAPI_URL || 'http://localhost:1337';
+const I = {
+  close: '<path d="M6 6l12 12M18 6 6 18"/>',
+  prev: '<path d="M15 5l-7 7 7 7"/>',
+  next: '<path d="M9 5l7 7-7 7"/>',
+  pages: '<rect x="3" y="4" width="7" height="16" rx="1.5"/><rect x="14" y="4" width="7" height="16" rx="1.5"/>',
+  single: '<rect x="6" y="4" width="12" height="16" rx="1.5"/>',
+  spread: '<rect x="3" y="5" width="8" height="14" rx="1.2"/><rect x="13" y="5" width="8" height="14" rx="1.2"/>',
+  plus: '<circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3M11 8v6M8 11h6"/>',
+  minus: '<circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3M8 11h6"/>',
+  theme: '<circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6 7 7M17 17l1.4 1.4M5.6 18.4 7 17M17 7l1.4-1.4"/>',
+  listen: '<path d="M4 10v4h3l5 4V6L7 10H4z"/><path d="M16 9a4 4 0 0 1 0 6M18.5 6.5a8 8 0 0 1 0 11"/>',
+  full: '<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>',
+  link: '<path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/>',
+  download: '<path d="M12 4v12M7 11l5 5 5-5M5 20h14"/>',
+};
+const svg = (n: string) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${I[n as keyof typeof I]}</svg>`;
+---
+<div class="nlr" data-nlr hidden role="dialog" aria-modal="true" aria-label="Newsletter reader" data-theme="light" data-strapi={strapiUrl}>
+  <header class="nlr-bar">
+    <button type="button" class="nlr-btn" data-nlr-pages aria-pressed="false" aria-label="Show page thumbnails" title="Pages (T)"><Fragment set:html={svg('pages')} /><span class="nlr-label">Pages</span></button>
+    <div class="nlr-title">
+      <strong data-nlr-title>Newsletter</strong>
+      <span data-nlr-sub></span>
+    </div>
+    <div class="nlr-tools">
+      <label class="nlr-jump">
+        <span class="nlr-sr">Go to page</span>
+        <input type="number" min="1" inputmode="numeric" data-nlr-jump value="1" />
+        <span>/ <b data-nlr-total>–</b></span>
+      </label>
+      <button type="button" class="nlr-btn nlr-hide-sm" data-nlr-mode aria-label="Switch between one page and two pages" title="One / two pages (M)"><Fragment set:html={svg('spread')} /></button>
+      <button type="button" class="nlr-btn nlr-hide-sm" data-nlr-zoom="-1" aria-label="Zoom out" title="Zoom out (−)"><Fragment set:html={svg('minus')} /></button>
+      <button type="button" class="nlr-btn nlr-hide-sm" data-nlr-zoom="1" aria-label="Zoom in" title="Zoom in (+)"><Fragment set:html={svg('plus')} /></button>
+      <button type="button" class="nlr-btn" data-nlr-theme-btn aria-label="Change reading colours" title="Reading colours (C)"><Fragment set:html={svg('theme')} /></button>
+      <button type="button" class="nlr-btn" data-nlr-listen aria-pressed="false" aria-label="Listen to this page" title="Listen (L)"><Fragment set:html={svg('listen')} /></button>
+      <button type="button" class="nlr-btn nlr-hide-sm" data-nlr-copy aria-label="Copy a link to this page" title="Copy link to this page"><Fragment set:html={svg('link')} /></button>
+      <a class="nlr-btn" data-nlr-dl href="#" download aria-label="Download the PDF" title="Download PDF"><Fragment set:html={svg('download')} /></a>
+      <button type="button" class="nlr-btn nlr-hide-sm" data-nlr-full aria-label="Full screen" title="Full screen (F)"><Fragment set:html={svg('full')} /></button>
+      <button type="button" class="nlr-btn nlr-btn--close" data-nlr-close aria-label="Close the reader" title="Close (Esc)"><Fragment set:html={svg('close')} /></button>
+    </div>
+  </header>
+
+  <div class="nlr-main">
+    <aside class="nlr-side" data-nlr-side hidden aria-label="Page thumbnails"><ol data-nlr-thumbs></ol></aside>
+    <div class="nlr-stage" data-nlr-stage tabindex="-1">
+      <button type="button" class="nlr-nav nlr-nav--prev" data-nlr-prev aria-label="Previous page"><Fragment set:html={svg('prev')} /></button>
+      <div class="nlr-book" data-nlr-book>
+        <div class="nlr-page nlr-page--l" data-nlr-l><canvas></canvas></div>
+        <div class="nlr-page nlr-page--r" data-nlr-r><canvas></canvas></div>
+        <div class="nlr-leaf" data-nlr-leaf aria-hidden="true">
+          <div class="nlr-face nlr-face--front"><canvas></canvas></div>
+          <div class="nlr-face nlr-face--back"><canvas></canvas></div>
+        </div>
+      </div>
+      <button type="button" class="nlr-nav nlr-nav--next" data-nlr-next aria-label="Next page"><Fragment set:html={svg('next')} /></button>
+      <p class="nlr-loading" data-nlr-loading role="status">Opening the newsletter…</p>
+      <div class="nlr-toast" data-nlr-toast hidden><span data-nlr-toast-text></span><button type="button" data-nlr-restart>Start from page 1</button></div>
+    </div>
+  </div>
+
+  <footer class="nlr-foot">
+    <input type="range" min="1" max="1" value="1" data-nlr-range aria-label="Page" />
+    <span class="nlr-pos" data-nlr-pos aria-live="polite"></span>
+  </footer>
+</div>
+
+<script is:inline>
+  (() => {
+    const root = document.querySelector('[data-nlr]');
+    if (!root) return;
+    const $ = (s) => root.querySelector(s);
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const PDFJS = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+    const WORKER = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    const store = {
+      get: (k) => { try { return localStorage.getItem(k); } catch (e) { return null; } },
+      set: (k, v) => { try { localStorage.setItem(k, v); } catch (e) { /* ignore */ } },
+    };
+
+    const el = {
+      title: $('[data-nlr-title]'), sub: $('[data-nlr-sub]'), total: $('[data-nlr-total]'), jump: $('[data-nlr-jump]'),
+      stage: $('[data-nlr-stage]'), book: $('[data-nlr-book]'), l: $('[data-nlr-l]'), r: $('[data-nlr-r]'),
+      leaf: $('[data-nlr-leaf]'), loading: $('[data-nlr-loading]'), range: $('[data-nlr-range]'), pos: $('[data-nlr-pos]'),
+      side: $('[data-nlr-side]'), thumbs: $('[data-nlr-thumbs]'), dl: $('[data-nlr-dl]'), toast: $('[data-nlr-toast]'),
+      toastText: $('[data-nlr-toast-text]'), mode: $('[data-nlr-mode]'), listen: $('[data-nlr-listen]'), pagesBtn: $('[data-nlr-pages]'),
+    };
+    const cv = (host) => host.querySelector('canvas');
+    const front = el.leaf.querySelector('.nlr-face--front canvas');
+    const back = el.leaf.querySelector('.nlr-face--back canvas');
+
+    let lib = null, doc = null, cfg = null, N = 0, cur = 1, layout = 'spread', spreadOk = true, zoom = 1;
+    let aspect = 0.7, pw = 0, ph = 0, busy = false, opener = null, thumbsBuilt = false, listening = false;
+    const cache = new Map();   // page -> Promise<canvas> at current size
+    const themes = ['light', 'sepia', 'night'];
+
+    // ---------- loading ----------
+    const loadLib = () => lib || (lib = new Promise((resolve, reject) => {
+      if (window.pdfjsLib) return resolve(window.pdfjsLib);
+      const s = document.createElement('script');
+      s.src = PDFJS; s.async = true;
+      s.onload = () => { window.pdfjsLib.GlobalWorkerOptions.workerSrc = WORKER; resolve(window.pdfjsLib); };
+      s.onerror = () => reject(new Error('pdf.js'));
+      document.head.appendChild(s);
+    }));
+
+    // ---------- geometry ----------
+    const slots = () => (layout === 'spread' ? 2 : 1);
+    const measure = () => {
+      const sw = el.stage.clientWidth - (innerWidth < 700 ? 24 : 150);
+      const sh = el.stage.clientHeight - (innerWidth < 700 ? 24 : 40);
+      let h = Math.min(sh, sw / (aspect * slots()));
+      h = Math.max(160, h);
+      ph = Math.round(h * zoom);
+      pw = Math.round(h * aspect * zoom);
+      el.book.style.setProperty('--pw', pw + 'px');
+      el.book.style.setProperty('--ph', ph + 'px');
+      el.book.dataset.layout = layout;
+    };
+
+    const view = (p) => {
+      if (layout === 'single') return [null, p];
+      if (p <= 1) return [null, 1];
+      const l = p % 2 === 0 ? p : p - 1;
+      return [l, l + 1 <= N ? l + 1 : null];
+    };
+    const anchor = (v) => v[0] || v[1];
+
+    // ---------- rendering ----------
+    const render = (n) => {
+      if (!n || n < 1 || n > N) return Promise.resolve(null);
+      if (cache.has(n)) return cache.get(n);
+      const job = doc.getPage(n).then(async (page) => {
+        const base = page.getViewport({ scale: 1 });
+        const dpr = Math.min(2, window.devicePixelRatio || 1);
+        const scale = (pw / base.width) * dpr;
+        const vp = page.getViewport({ scale });
+        const c = document.createElement('canvas');
+        c.width = Math.round(vp.width); c.height = Math.round(vp.height);
+        const ctx = c.getContext('2d');
+        ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
+        await page.render({ canvasContext: ctx, viewport: vp }).promise;
+        return c;
+      });
+      cache.set(n, job);
+      return job;
+    };
+    const paint = async (host, n) => {
+      const target = cv(host) || host;
+      const c = n ? await render(n) : null;
+      target.width = Math.max(1, pw); target.height = Math.max(1, ph);
+      const g = target.getContext('2d');
+      g.clearRect(0, 0, target.width, target.height);
+      if (c) g.drawImage(c, 0, 0, target.width, target.height);
+      host.classList.toggle('is-blank', !c);
+    };
+    const paintFace = async (canvas, n) => {
+      const c = n ? await render(n) : null;
+      canvas.width = Math.max(1, pw); canvas.height = Math.max(1, ph);
+      const g = canvas.getContext('2d');
+      g.clearRect(0, 0, canvas.width, canvas.height);
+      if (c) g.drawImage(c, 0, 0, canvas.width, canvas.height); else { g.fillStyle = '#f4f1ea'; g.fillRect(0, 0, canvas.width, canvas.height); }
+    };
+    const warm = (v) => { [v[0] && v[0] - 2, v[1] && v[1] + 2, v[0] && v[0] + 2].forEach((n) => n && n > 0 && n <= N && render(n)); };
+
+    // ---------- showing a page ----------
+    const info = (v) => {
+      const a = anchor(v);
+      const shown = [v[0], v[1]].filter(Boolean);
+      const text = shown.length > 1 ? `${shown[0]}–${shown[1]}` : String(shown[0]);
+      el.pos.textContent = `Page ${text} of ${N}`;
+      el.jump.value = a; el.range.value = a;
+      root.style.setProperty('--p', ((a - 1) / Math.max(1, N - 1)).toFixed(3));
+      $('[data-nlr-prev]').disabled = a <= 1;
+      $('[data-nlr-next]').disabled = (v[1] || v[0]) >= N;
+      root.querySelectorAll('[data-nlr-thumb]').forEach((b) => {
+        const on = Number(b.dataset.nlrThumb) === v[0] || Number(b.dataset.nlrThumb) === v[1];
+        b.classList.toggle('is-on', on);
+        if (on && !el.side.hidden) b.scrollIntoView({ block: 'nearest' });
+      });
+      store.set('nlr:' + cfg.slug, String(a));
+      history.replaceState(null, '', `${location.pathname}${location.search}#read=${encodeURIComponent(cfg.slug)}&p=${a}`);
+      if (listening) speak(v);
+    };
+
+    let shownView = [null, null];
+    const show = async (target, dir) => {
+      if (!doc || busy) return;
+      target = Math.min(N, Math.max(1, target));
+      const v = view(target);
+      const old = shownView;
+      const flipping = !!dir && layout === 'spread' && !reduce && (old[0] !== null || old[1] !== null);
+      cur = anchor(v);
+      if (!flipping || (old[0] === v[0] && old[1] === v[1])) {
+        busy = true;
+        if (layout === 'single' && dir && !reduce) {
+          el.book.classList.remove('slide-next', 'slide-prev'); void el.book.offsetWidth;
+          el.book.classList.add(dir > 0 ? 'slide-next' : 'slide-prev');
+        }
+        await Promise.all([paint(el.l, v[0]), paint(el.r, v[1])]);
+        el.l.hidden = layout === 'single';
+        shownView = v; busy = false; info(v); warm(v);
+        el.loading.hidden = true;
+        return;
+      }
+      busy = true;
+      await Promise.all([render(v[0]), render(v[1]), render(old[0]), render(old[1])]);
+      el.leaf.classList.remove('is-anim'); el.leaf.style.transform = 'none';
+      if (dir > 0) {
+        await Promise.all([paint(el.r, v[1]), paintFace(front, old[1]), paintFace(back, v[0])]);
+        el.leaf.dataset.side = 'right';
+      } else {
+        await Promise.all([paint(el.l, v[0]), paintFace(front, old[0]), paintFace(back, v[1])]);
+        el.leaf.dataset.side = 'left';
+      }
+      el.leaf.hidden = false; void el.leaf.offsetWidth;
+      el.leaf.classList.add('is-anim');
+      el.leaf.style.transform = dir > 0 ? 'rotateY(-180deg)' : 'rotateY(180deg)';
+      await new Promise((res) => { const t = setTimeout(res, 760); el.leaf.addEventListener('transitionend', () => { clearTimeout(t); res(); }, { once: true }); });
+      await Promise.all([paint(el.l, v[0]), paint(el.r, v[1])]);
+      el.leaf.hidden = true; el.leaf.classList.remove('is-anim'); el.leaf.style.transform = 'none';
+      shownView = v; busy = false; info(v); warm(v);
+    };
+    const step = (d) => {
+      const v = view(cur);
+      if (layout === 'single') return show(cur + d, d);
+      if (d > 0) { const n = (v[1] || v[0]) + 1; if (n <= N) show(n, 1); }
+      else { const a = v[0] || v[1]; if (a > 1) show(a - 1, -1); }
+    };
+
+    const redraw = async () => {
+      cache.clear(); measure();
+      busy = false; shownView = [null, null];
+      await show(cur, 0);
+    };
+
+    // ---------- thumbnails ----------
+    const buildThumbs = () => {
+      if (thumbsBuilt) return; thumbsBuilt = true;
+      const io = new IntersectionObserver((es) => es.forEach(async (e) => {
+        if (!e.isIntersecting) return; io.unobserve(e.target);
+        const n = Number(e.target.dataset.nlrThumb);
+        const page = await doc.getPage(n);
+        const base = page.getViewport({ scale: 1 });
+        const vp = page.getViewport({ scale: 150 / base.width });
+        const c = e.target.querySelector('canvas');
+        c.width = vp.width; c.height = vp.height;
+        const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
+        page.render({ canvasContext: ctx, viewport: vp });
+      }), { root: el.side, rootMargin: '200px' });
+      for (let n = 1; n <= N; n++) {
+        const li = document.createElement('li');
+        li.innerHTML = `<button type="button" data-nlr-thumb="${n}" aria-label="Go to page ${n}"><canvas></canvas><span>${n}</span></button>`;
+        el.thumbs.appendChild(li); io.observe(li.firstChild);
+      }
+    };
+
+    // ---------- listen aloud ----------
+    const speak = async (v) => {
+      if (!('speechSynthesis' in window)) return;
+      speechSynthesis.cancel();
+      let text = '';
+      for (const n of [v[0], v[1]].filter(Boolean)) {
+        const t = await (await doc.getPage(n)).getTextContent();
+        text += ' ' + t.items.map((i) => i.str).join(' ');
+      }
+      text = text.replace(/\s+/g, ' ').trim();
+      if (!text) { if (listening) setTimeout(() => step(1), 300); return; }
+      const u = new SpeechSynthesisUtterance(text);
+      u.onend = () => { if (listening) { const nv = view(cur); if ((nv[1] || nv[0]) < N) step(1); else setListen(false); } };
+      speechSynthesis.speak(u);
+    };
+    const setListen = (on) => {
+      listening = on; el.listen.setAttribute('aria-pressed', String(on)); el.listen.classList.toggle('is-on', on);
+      if (!on && 'speechSynthesis' in window) speechSynthesis.cancel();
+      if (on) speak(view(cur));
+    };
+
+    // ---------- open / close ----------
+    const setTheme = (t) => { root.dataset.theme = t; store.set('nlr:theme', t); };
+    const toast = (text, restart) => {
+      el.toastText.textContent = text; el.toast.hidden = !restart && !text;
+      $('[data-nlr-restart]').hidden = !restart;
+      clearTimeout(toast.t); toast.t = setTimeout(() => { el.toast.hidden = true; }, 6000);
+    };
+
+    const open = async (d, page) => {
+      cfg = d; root.hidden = false; document.documentElement.classList.add('nlr-lock');
+      el.title.textContent = d.title; el.sub.textContent = d.sub || '';
+      el.loading.hidden = false; el.loading.textContent = 'Opening the newsletter…';
+      el.dl.href = d.pdf; el.dl.setAttribute('download', (d.slug || 'newsletter') + '.pdf');
+      setTheme(store.get('nlr:theme') || 'light');
+      $('[data-nlr-close]').focus();
+      if (d.doc) fetch(`${root.dataset.strapi}/api/newsletters/${d.doc}/track-view`, { method: 'POST' }).catch(() => {});
+      try {
+        const pdfjs = await loadLib();
+        doc = await pdfjs.getDocument({ url: d.pdf }).promise;
+        N = doc.numPages; el.total.textContent = N; el.range.max = N; el.jump.max = N;
+        const first = await doc.getPage(1); const vp = first.getViewport({ scale: 1 });
+        aspect = vp.width / vp.height; spreadOk = aspect < 0.95 && N > 1;
+        layout = spreadOk && el.stage.clientWidth >= 880 && store.get('nlr:layout') !== 'single' ? 'spread' : 'single';
+        el.mode.hidden = !spreadOk; syncModeIcon();
+        cache.clear(); measure(); thumbsBuilt = false; el.thumbs.innerHTML = '';
+        const saved = Number(store.get('nlr:' + d.slug)) || 1;
+        const start = page || saved;
+        cur = Math.min(N, Math.max(1, start)); shownView = [null, null];
+        await show(cur, 0);
+        if (!page && saved > 1) toast(`Continuing from page ${saved}`, true);
+        if (!el.side.hidden) buildThumbs();
+      } catch (e) {
+        el.loading.hidden = false;
+        el.loading.innerHTML = `The reader could not load. <a href="${d.pdf}" target="_blank" rel="noopener">Open the PDF in a new tab</a>.`;
+      }
+    };
+    const close = () => {
+      setListen(false); root.hidden = true; document.documentElement.classList.remove('nlr-lock');
+      if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+      history.replaceState(null, '', location.pathname + location.search);
+      doc = null; cache.clear(); opener && opener.focus();
+    };
+    const syncModeIcon = () => {
+      const on = layout === 'spread';
+      el.mode.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${on ? '<rect x="3" y="5" width="8" height="14" rx="1.2"/><rect x="13" y="5" width="8" height="14" rx="1.2"/>' : '<rect x="6" y="4" width="12" height="16" rx="1.5"/>'}</svg>`;
+    };
+
+    // ---------- controls ----------
+    $('[data-nlr-close]').addEventListener('click', close);
+    $('[data-nlr-prev]').addEventListener('click', () => step(-1));
+    $('[data-nlr-next]').addEventListener('click', () => step(1));
+    $('[data-nlr-theme-btn]').addEventListener('click', () => setTheme(themes[(themes.indexOf(root.dataset.theme) + 1) % themes.length]));
+    el.listen.addEventListener('click', () => setListen(!listening));
+    el.mode.addEventListener('click', () => { layout = layout === 'spread' ? 'single' : 'spread'; store.set('nlr:layout', layout); syncModeIcon(); redraw(); });
+    root.querySelectorAll('[data-nlr-zoom]').forEach((b) => b.addEventListener('click', () => { zoom = Math.min(3, Math.max(1, +(zoom + Number(b.dataset.nlrZoom) * 0.5).toFixed(1))); redraw(); }));
+    el.pagesBtn.addEventListener('click', () => {
+      el.side.hidden = !el.side.hidden; el.pagesBtn.setAttribute('aria-pressed', String(!el.side.hidden));
+      if (!el.side.hidden) buildThumbs(); redraw();
+    });
+    el.thumbs.addEventListener('click', (e) => { const b = e.target.closest('[data-nlr-thumb]'); if (b) { show(Number(b.dataset.nlrThumb), 0); if (innerWidth < 800) { el.side.hidden = true; el.pagesBtn.setAttribute('aria-pressed', 'false'); } } });
+    el.jump.addEventListener('change', () => show(Number(el.jump.value) || 1, 0));
+    el.range.addEventListener('input', () => { el.pos.textContent = `Page ${el.range.value} of ${N}`; });
+    el.range.addEventListener('change', () => show(Number(el.range.value), 0));
+    $('[data-nlr-full]').addEventListener('click', () => { if (document.fullscreenElement) document.exitFullscreen(); else root.requestFullscreen && root.requestFullscreen().catch(() => {}); });
+    $('[data-nlr-copy]').addEventListener('click', async () => {
+      const url = `${location.origin}${location.pathname}#read=${encodeURIComponent(cfg.slug)}&p=${cur}`;
+      try { await navigator.clipboard.writeText(url); toast('Link to this page copied', false); } catch (e) { window.prompt('Copy this link:', url); }
+    });
+    el.dl.addEventListener('click', () => { if (cfg && cfg.doc) fetch(`${root.dataset.strapi}/api/newsletters/${cfg.doc}/track-download`, { method: 'POST' }).catch(() => {}); });
+    $('[data-nlr-restart]').addEventListener('click', () => { show(1, 0); el.toast.hidden = true; });
+
+    document.addEventListener('keydown', (e) => {
+      if (root.hidden) return;
+      if (e.target instanceof HTMLInputElement) { if (e.key === 'Escape') e.target.blur(); return; }
+      const k = e.key.toLowerCase();
+      if (k === 'escape') close();
+      else if (k === 'arrowright' || k === 'pagedown') { e.preventDefault(); step(1); }
+      else if (k === 'arrowleft' || k === 'pageup') { e.preventDefault(); step(-1); }
+      else if (k === 'home') show(1, 0); else if (k === 'end') show(N, 0);
+      else if (k === 'f') $('[data-nlr-full]').click(); else if (k === 'c') $('[data-nlr-theme-btn]').click();
+      else if (k === 'l') el.listen.click(); else if (k === 't') el.pagesBtn.click(); else if (k === 'm' && !el.mode.hidden) el.mode.click();
+      else if (k === '+' || k === '=') root.querySelector('[data-nlr-zoom="1"]').click(); else if (k === '-') root.querySelector('[data-nlr-zoom="-1"]').click();
+      else if (k === 'tab') {
+        const f = [...root.querySelectorAll('button:not([hidden]):not([disabled]), a[href], input')].filter((n) => n.offsetParent !== null);
+        if (!f.length) return; const first = f[0], last = f[f.length - 1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+      }
+    });
+    // swipe
+    let sx = 0, sy = 0;
+    el.stage.addEventListener('touchstart', (e) => { sx = e.touches[0].clientX; sy = e.touches[0].clientY; }, { passive: true });
+    el.stage.addEventListener('touchend', (e) => {
+      if (zoom > 1) return;
+      const dx = e.changedTouches[0].clientX - sx, dy = e.changedTouches[0].clientY - sy;
+      if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) step(dx < 0 ? 1 : -1);
+    }, { passive: true });
+    // click either page edge to turn
+    el.book.addEventListener('click', (e) => {
+      if (zoom > 1) return;
+      const r = el.book.getBoundingClientRect(); const x = (e.clientX - r.left) / r.width;
+      if (x < 0.22) step(-1); else if (x > 0.78) step(1);
+    });
+    let rt; addEventListener('resize', () => { if (root.hidden || !doc) return; clearTimeout(rt); rt = setTimeout(redraw, 200); });
+    document.addEventListener('fullscreenchange', () => { if (!root.hidden && doc) setTimeout(redraw, 150); });
+
+    // ---------- openers ----------
+    const read = (t) => ({ slug: t.dataset.slug || 'newsletter', title: t.dataset.title || 'Newsletter', sub: t.dataset.sub || '', pdf: t.dataset.pdf, doc: t.dataset.doc || '' });
+    document.addEventListener('click', (e) => {
+      const t = e.target.closest('[data-nlr-open]');
+      if (!t || !t.dataset.pdf) return;
+      e.preventDefault(); opener = t; open(read(t), Number(t.dataset.page) || 0);
+    });
+    // a shared link opens straight to the page
+    const fromHash = () => {
+      const m = location.hash.match(/read=([^&]+)(?:&p=(\d+))?/);
+      if (!m) return;
+      const slug = decodeURIComponent(m[1]);
+      const t = [...document.querySelectorAll('[data-nlr-open]')].find((x) => x.dataset.slug === slug);
+      if (t) { opener = t; open(read(t), Number(m[2]) || 0); }
+    };
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fromHash); else fromHash();
+    window.sherubtseReader = { open: (d, p) => open(d, p) };
+  })();
+</script>

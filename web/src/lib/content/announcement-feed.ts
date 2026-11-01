@@ -12,8 +12,7 @@ import type { NoticeCategory } from './notices';
  *    once and appears in both places, linking to its Recruitment page;
  *  - short announcements from "News & Notices – Announcements" (general,
  *    warning and urgent notices), active and inside their start/end dates;
- *  - notices from "News & Notices – Notices" except tenders, which have
- *    their own page.
+ *  - notices from "News & Notices – Notices".
  */
 
 export type FeedGroup = 'vacancies' | 'important' | 'general';
@@ -51,7 +50,6 @@ const CATEGORY_LABELS: Record<NoticeCategory, string> = {
   registration: 'Registration',
   results: 'Results',
   fees: 'Fees',
-  tender: 'Tender',
   general: 'General Notice',
 };
 
@@ -185,7 +183,6 @@ export async function getAnnouncementFeed(): Promise<FeedItem[]> {
       expires: e.end_date,
     })),
     ...notices
-      .filter((n) => n.category !== 'tender')
       .map((n): FeedItem => ({
         key: `n-${n.id}`,
         href: `/news-notices/announcements/${n.id}`,

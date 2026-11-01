@@ -1,0 +1,16 @@
+[Unit]
+Description=Sherubtse College "Ask Sherubtse" AI chat server
+After=network.target
+
+[Service]
+Type=simple
+User=sherubtse
+WorkingDirectory=/opt/sherubtse/chat-server
+# The Gemini key and limits are in /opt/sherubtse/chat-server/.env
+Environment=SITE_DIR=/var/www/sherubtse
+ExecStart=/usr/bin/node /opt/sherubtse/chat-server/server.mjs
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

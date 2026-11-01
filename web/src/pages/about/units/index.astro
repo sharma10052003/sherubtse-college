@@ -1,136 +1,208 @@
 ---
-// Administrative Units — hero, featured leadership offices, and a directory
-// of every published administrative unit. All content
-// comes from Strapi (About → Administrative Units; heads from each unit's
-// linked office in Contact – Offices) via lib/content/units.ts. Each unit
-// links to its existing page at /about/units/<slug>. Styles: units.css (.au).
+// Administrative Units — an organisation explorer. A navy hero with an animated
+// organogram and figures that count up; the leadership offices as an org chart
+// (the President on top, the Deans' offices below); then one searchable,
+// filterable directory of every office, academic department, research centre,
+// service (library, laboratories, health and well-being) and student body.
+// Content comes from Strapi: About → Administrative Units (offices, page
+// settings, Labels) and the records that already exist elsewhere (departments,
+// faculty heads, research centres, campus facilities, student bodies, clubs),
+// gathered by lib/content/units-directory.ts. Each office keeps its own page at
+// /about/units/<slug>. Styles: units-directory.css (.ao); the unit pages keep units.css.
 import Layout from '../../../layouts/Layout.astro';
-import '../../../styles/units.css';
-import UnitPortrait from '../../../components/units/UnitPortrait.astro';
-import { getAdminUnits, getUnitsPage, getUnitCategories } from '../../../lib/content/units';
+import '../../../styles/units-directory.css';
+import OfficeLeadCard from '../../../components/units/OfficeLeadCard.astro';
+import { getUnitsPage } from '../../../lib/content/units';
+import { getOrganisation, GROUP_ORDER, GROUP_ICON } from '../../../lib/content/units-directory';
+import type { OrgEntry } from '../../../lib/content/units-directory';
+import { makeUnitsLabels } from '../../../lib/content/units-labels';
 
-const [page, units, allCategories] = await Promise.all([getUnitsPage(), getAdminUnits(), getUnitCategories()]);
-const featured = units.filter((u) => u.featured);
-const categories = allCategories.filter((c) => units.some((u) => u.category?.slug === c.slug));
+const [page, { leadership, entries }] = await Promise.all([getUnitsPage(), getOrganisation()]);
+const t = makeUnitsLabels(page.labels);
+
+const leadCount = (leadership.top ? 1 : 0) + leadership.others.length;
+const total = entries.length;
+const groups = GROUP_ORDER.filter((g) => entries.some((e) => e.group === g));
+const areas = groups.length;
+const stats = [
+  { label: t('stat_total'), value: total },
+  { label: t('stat_areas'), value: areas },
+].filter((s) => s.value > 0);
+
 const tel = (p: string) => `tel:${p.replace(/[^+\d]/g, '').replace(/^975/, '+975')}`;
-const arrow = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
+const fill = (s: string, n: number) => s.replace('{count}', String(n));
+const nameOf = (e: OrgEntry) => (e.key === 'student-clubs' ? t('clubs_title') : e.name);
+const summaryOf = (e: OrgEntry) => (e.key === 'student-clubs' ? t('clubs_text') : e.summary);
+const roleOf = (e: OrgEntry) => (e.head_role === 'department_head' ? t('department_head') : e.head_role);
+const statOf = (e: OrgEntry) => (e.stat ? fill(t(e.stat.kind === 'faculty' ? 'members_label' : 'clubs_count'), e.stat.n) : null);
+const textOf = (e: OrgEntry) =>
+  [nameOf(e), summaryOf(e), e.head_name, roleOf(e), e.tag, t(`group_${e.group}`), e.location].filter(Boolean).join(' ').toLowerCase();
+const groupCount = (g: string) => entries.filter((e) => e.group === g).length;
+
+const P: Record<string, string> = {
+  building: '<path d="M3 21h18M5 21V5l7-2 7 2v16"/><path d="M9 9h1M14 9h1M9 13h1M14 13h1M10 21v-4h4v4"/>',
+  cap: '<path d="M12 3 2 8l10 5 10-5-10-5z"/><path d="M6 10.5v5.5c0 1.5 3 3 6 3s6-1.5 6-3v-5.5"/>',
+  flask: '<path d="M9 3h6M10 3v6l-5.5 9.5A1.7 1.7 0 0 0 6 21h12a1.7 1.7 0 0 0 1.5-2.5L14 9V3"/><path d="M7.5 15h9"/>',
+  heart: '<path d="M12 20s-7-4.4-9-9a5 5 0 0 1 9-3 5 5 0 0 1 9 3c-2 4.6-9 9-9 9z"/>',
+  people: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14c2 .6 3.5 2.6 3.5 6"/>',
+  search: '<circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/>',
+  arrow: '<path d="M5 12h14M13 6l6 6-6 6"/>',
+  mail: '<rect x="3" y="5" width="18" height="14" rx="3"/><path d="M3 6l9 7 9-7"/>',
+  phone: '<path d="M4 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L14 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 2 6a2 2 0 0 1 2-2z"/>',
+  pin: '<path d="M12 21s-7-6.1-7-11a7 7 0 0 1 14 0c0 4.9-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/>',
+};
+const svg = (name: string, size = 22) => `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${P[name] ?? P.building}</svg>`;
 ---
 <Layout title={page.seo_title || page.title} description={page.seo_description || page.subtitle || undefined}>
-  <div class="au" data-au>
+  <div class="ao" data-ao>
     <!-- =========================== HERO =========================== -->
-    <header class:list={['au-hero', { 'au-hero--photo': page.hero_image }]}>
-      {page.hero_image && <img class="au-hero-photo" src={page.hero_image.url} alt={page.hero_image.alt} />}
-      <svg class="au-hero-motif" viewBox="0 0 400 400" aria-hidden="true">
-        <g class="au-motif-ring"><circle cx="200" cy="200" r="190" /><circle cx="200" cy="200" r="150" /></g>
-        <path d="M200 30 370 200 200 370 30 200z" />
-        <path d="M200 80 320 200 200 320 80 200z" />
-        <path d="M80 80h240v240H80z" />
-        <path d="M200 30v340M30 200h340" />
-        <circle cx="200" cy="200" r="34" />
-      </svg>
-      <div class="wrap au-wide au-hero-inner">
-        <nav class="au-breadcrumb au-stagger" style="--d:0" aria-label="Breadcrumb">
-          <a href="/">Home</a><span aria-hidden="true">→</span><a href="/about">About</a><span aria-hidden="true">→</span><span aria-current="page">Administrative Units</span>
-        </nav>
-        {page.eyebrow && <p class="au-eyebrow au-stagger" style="--d:1">{page.eyebrow}</p>}
-        <h1 class="au-title au-stagger" style="--d:2">{page.title}</h1>
-        {page.subtitle && <p class="au-subtitle au-stagger" style="--d:3">{page.subtitle}</p>}
-        {page.intro && <p class="au-intro au-stagger" style="--d:4">{page.intro}</p>}
-        {units.length > 0 && (
-          <p class="au-facts au-stagger" style="--d:5">
-            <span><strong>{units.length}</strong> offices</span>
-            {categories.length > 0 && <span><strong>{categories.length}</strong> areas of responsibility</span>}
-          </p>
-        )}
+    <header class="ao-hero">
+      <span class="ao-glow ao-glow--a" aria-hidden="true"></span>
+      <span class="ao-glow ao-glow--b" aria-hidden="true"></span>
+      <div class="wrap ao-wide ao-hero-grid">
+        <div class="ao-hero-text">
+          <nav class="ao-breadcrumb ao-rise" style="--d:0" aria-label="Breadcrumb">
+            <a href="/">Home</a><span aria-hidden="true">›</span><a href="/about">About</a><span aria-hidden="true">›</span><span aria-current="page">Administrative Units</span>
+          </nav>
+          {page.eyebrow && <p class="ao-eyebrow ao-rise" style="--d:1">{page.eyebrow}</p>}
+          <h1 class="ao-title ao-rise" style="--d:2">{page.title}</h1>
+          {page.subtitle && <p class="ao-subtitle ao-rise" style="--d:3">{page.subtitle}</p>}
+          {page.intro && <p class="ao-intro ao-rise" style="--d:4">{page.intro}</p>}
+          {stats.length > 0 && (
+            <ul class="ao-stats ao-rise" style="--d:5">
+              {stats.map((s) => (
+                <li class="ao-stat">
+                  <span class="ao-stat-ring" aria-hidden="true"></span>
+                  <p class="ao-stat-value"><span data-ao-count={s.value}>{s.value}</span></p>
+                  <p class="ao-stat-label">{s.label}</p>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        <svg class="ao-chart ao-rise" style="--d:3" viewBox="0 0 520 440" aria-hidden="true">
+          <g class="ao-chart-lines">
+            <path pathLength="1" d="M260 92V150M260 150H90V196M260 150V196M260 150H430V196" />
+            <path pathLength="1" d="M90 244V292M90 292H40V340M90 292H140V340" />
+            <path pathLength="1" d="M260 244V292M260 292H210V340M260 292H310V340" />
+            <path pathLength="1" d="M430 244V292M430 292H380V340M430 292H480V340" />
+          </g>
+          <g class="ao-chart-nodes">
+            <circle class="ao-node ao-node--hub" cx="260" cy="60" r="32" />
+            <circle class="ao-node" cx="90" cy="220" r="24" />
+            <circle class="ao-node" cx="260" cy="220" r="24" />
+            <circle class="ao-node" cx="430" cy="220" r="24" />
+            <circle class="ao-node ao-node--small" cx="40" cy="364" r="16" />
+            <circle class="ao-node ao-node--small" cx="140" cy="364" r="16" />
+            <circle class="ao-node ao-node--small" cx="210" cy="364" r="16" />
+            <circle class="ao-node ao-node--small" cx="310" cy="364" r="16" />
+            <circle class="ao-node ao-node--small" cx="380" cy="364" r="16" />
+            <circle class="ao-node ao-node--small" cx="480" cy="364" r="16" />
+          </g>
+          <circle class="ao-chart-pulse" cx="260" cy="60" r="32" />
+        </svg>
       </div>
     </header>
 
-    <!-- =========================== FEATURED =========================== -->
-    {featured.length > 0 && (
-      <section class="au-section au-featured" aria-labelledby="au-featured-h">
-        <div class="wrap au-wide">
-          <header class="au-head" data-au-reveal>
-            <h2 class="au-h2" id="au-featured-h">{page.featured_heading}</h2>
-            {page.featured_intro && <p class="au-lede">{page.featured_intro}</p>}
+    <!-- =========================== LEADERSHIP =========================== -->
+    {leadCount > 0 && (
+      <section class="ao-section ao-lead" aria-labelledby="ao-lead-h" id="leadership">
+        <div class="wrap ao-wide">
+          <header class="ao-head" data-ao-reveal>
+            <h2 class="ao-h2" id="ao-lead-h">{page.featured_heading}</h2>
+            {page.featured_intro && <p class="ao-lede">{page.featured_intro}</p>}
           </header>
-          {featured.map((u, i) => (
-            <article class:list={['au-lead', { 'au-lead--flip': i % 2 === 1 }]} aria-labelledby={`au-lead-${u.slug}`} data-au-reveal>
-              <div class="au-lead-media">
-                <span class="au-lead-frame" aria-hidden="true"></span>
-                <UnitPortrait unit={u} size="feature" eager={i === 0} />
+          <div class="ao-tree">
+            {leadership.top && (
+              <div class="ao-top" data-ao-reveal>
+                <OfficeLeadCard unit={leadership.top} open={t('open_label')} size="top" />
               </div>
-              <div class="au-lead-body">
-                {u.category && <p class="au-tag">{u.category.name}</p>}
-                <h3 class="au-lead-title" id={`au-lead-${u.slug}`}>{u.name}</h3>
-                {u.head_name && (
-                  <p class="au-person">
-                    <strong>{u.head_name}</strong>
-                    {u.head_designation && <span>{u.head_designation}</span>}
-                  </p>
-                )}
-                {u.summary && <p class="au-lead-summary">{u.summary}</p>}
-                {u.responsibilities.length > 0 && (
-                  <ul class="au-lead-points">
-                    {u.responsibilities.slice(0, 4).map((r) => <li>{r.title}</li>)}
-                  </ul>
-                )}
-                <div class="au-lead-actions">
-                  <a class="au-btn" href={`/about/units/${u.slug}`}>Explore Unit <Fragment set:html={arrow} /><span class="au-sr">: {u.name}</span></a>
-                  {u.email && <a class="au-quiet" href={`mailto:${u.email}`}>{u.email}</a>}
-                </div>
-              </div>
-            </article>
-          ))}
+            )}
+            {leadership.others.length > 0 && (
+              <ul class:list={['ao-row', { 'ao-row--bus': !!leadership.top && leadership.others.length <= 4 }]} style={`--n:${Math.min(leadership.others.length, 4)}`} role="list">
+                {leadership.others.map((u, i) => (
+                  <li class="ao-row-item" data-ao-reveal style={`--d:${i * 90}ms`}>
+                    <OfficeLeadCard unit={u} open={t('open_label')} />
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </div>
       </section>
     )}
 
     <!-- =========================== DIRECTORY =========================== -->
-    <section class="au-section au-directory" aria-labelledby="au-dir-h" id="directory">
-      <div class="wrap au-wide">
-        <header class="au-head" data-au-reveal>
-          <h2 class="au-h2" id="au-dir-h">{page.directory_heading}</h2>
-          {page.directory_intro && <p class="au-lede">{page.directory_intro}</p>}
+    <section class="ao-section ao-dir" aria-labelledby="ao-dir-h" id="directory">
+      <div class="wrap ao-wide">
+        <header class="ao-head" data-ao-reveal>
+          <h2 class="ao-h2" id="ao-dir-h">{page.directory_heading}</h2>
+          {page.directory_intro && <p class="ao-lede">{page.directory_intro}</p>}
         </header>
 
-        {units.length > 0 ? (
+        {entries.length > 0 ? (
           <>
-            <ul class="au-grid" data-au-grid>
-              {units.map((u, i) => (
-                <li
-                  class:list={['au-card', { 'au-card--side': i % 3 === 1 }]}
-                  data-au-item
-                  data-au-reveal
-                  style={`--i:${i % 6}`}
-                >
-                  <a class="au-card-link" href={`/about/units/${u.slug}`} aria-labelledby={`au-card-${u.slug}`}></a>
-                  <UnitPortrait unit={u} />
-                  <div class="au-card-body">
-                    {u.category && <p class="au-tag"><span class="au-tag-mark" aria-hidden="true"></span>{u.category.name}</p>}
-                    <h3 class="au-card-title" id={`au-card-${u.slug}`}>{u.name}</h3>
-                    {u.head_name || u.head_designation ? (
-                      <p class="au-person">
-                        {u.head_name && <strong>{u.head_name}</strong>}
-                        {u.head_designation && <span>{u.head_designation}</span>}
+            <div class="ao-bar">
+              <label class="ao-search">
+                <span set:html={svg('search', 20)} />
+                <input type="search" data-ao-q placeholder={t('search_placeholder')} aria-label={t('search_label')} autocomplete="off" />
+              </label>
+              <div class="ao-chips" role="group" aria-label={page.directory_heading}>
+                <button type="button" class="ao-chip is-on" data-ao-group="" aria-pressed="true">{t('all_label')}<span>{entries.length}</span></button>
+                {groups.map((g) => (
+                  <button type="button" class="ao-chip" data-ao-group={g} aria-pressed="false">
+                    <span class="ao-chip-icon" set:html={svg(GROUP_ICON[g], 18)} />{t(`group_${g}`)}<span>{groupCount(g)}</span>
+                  </button>
+                ))}
+              </div>
+              <p class="ao-count" role="status" aria-live="polite" data-ao-total data-one={t('count_one')} data-many={t('count_many')}>{fill(entries.length === 1 ? t('count_one') : t('count_many'), entries.length)}</p>
+            </div>
+
+            <ul class="ao-grid" data-ao-grid role="list">
+              {entries.map((e, i) => (
+                <li class="ao-item" data-ao-item data-group={e.group} data-text={textOf(e)} data-ao-reveal style={`--d:${(i % 4) * 70}ms`}>
+                  <article class="ao-card" aria-labelledby={`ao-c-${e.key}`}>
+                    <a class="ao-card-link" href={e.href} aria-labelledby={`ao-c-${e.key}`}></a>
+                    <span class="ao-card-fill" aria-hidden="true"></span>
+                    <div class="ao-card-top">
+                      {e.portrait ? (
+                        <img class="ao-avatar" src={e.portrait.url} alt="" width="60" height="60" loading="lazy" decoding="async" />
+                      ) : (
+                        <span class="ao-card-icon" aria-hidden="true" set:html={svg(GROUP_ICON[e.group], 26)} />
+                      )}
+                      <p class="ao-pill">{e.tag ?? t(`group_${e.group}`)}</p>
+                    </div>
+                    <h3 class="ao-card-title" id={`ao-c-${e.key}`}>{nameOf(e)}</h3>
+                    {(e.head_name || roleOf(e)) && (
+                      <p class="ao-person">
+                        {e.head_name && <strong>{e.head_name}</strong>}
+                        {roleOf(e) && <span>{roleOf(e)}</span>}
                       </p>
-                    ) : null}
-                    {u.summary && <p class="au-card-summary">{u.summary}</p>}
-                    {(u.email || u.phone || u.location) && (
-                      <ul class="au-card-contact">
-                        {u.email && <li><a href={`mailto:${u.email}`}>{u.email}</a></li>}
-                        {u.phone && <li><a href={tel(u.phone)}>{u.phone}</a></li>}
-                        {u.location && <li>{u.location}</li>}
+                    )}
+                    {summaryOf(e) && <p class="ao-card-text">{summaryOf(e)}</p>}
+                    {statOf(e) && <p class="ao-card-stat">{statOf(e)}</p>}
+                    {(e.email || e.phone || e.location) && (
+                      <ul class="ao-card-contact" role="list">
+                        {e.email && <li><span set:html={svg('mail', 16)} /><a href={`mailto:${e.email}`}>{e.email}</a></li>}
+                        {e.phone && <li><span set:html={svg('phone', 16)} /><a href={tel(e.phone)}>{e.phone}</a></li>}
+                        {e.location && <li><span set:html={svg('pin', 16)} />{e.location}</li>}
                       </ul>
                     )}
-                    <span class="au-explore" aria-hidden="true">Explore Unit <Fragment set:html={arrow} /></span>
-                  </div>
+                    <span class="ao-go" aria-hidden="true">{t('open_label')} <Fragment set:html={svg('arrow', 18)} /></span>
+                  </article>
                 </li>
               ))}
             </ul>
 
+            <div class="ao-none" data-ao-none hidden>
+              <span class="ao-none-mark" aria-hidden="true">?</span>
+              <p>{page.empty_message}</p>
+              <button type="button" class="ao-btn" data-ao-clear>{t('clear_label')}</button>
+            </div>
           </>
         ) : (
-          <p class="au-empty-static">{page.empty_message}</p>
+          <p class="ao-note">{page.empty_message}</p>
         )}
       </div>
     </section>
@@ -139,23 +211,68 @@ const arrow = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke
 
 <script is:inline>
   (() => {
-    const root = document.querySelector('[data-au]');
+    const root = document.querySelector('[data-ao]');
     if (!root) return;
-    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    // ---- Portrait loading: shimmer until each photo has decoded ----
-    root.querySelectorAll('[data-au-img]').forEach((img) => {
-      const done = () => img.closest('.au-portrait')?.classList.add('is-loaded');
-      if (img.complete && img.naturalWidth) done(); else img.addEventListener('load', done, { once: true });
-    });
+    // The filter bar sticks just under the site header.
+    const masthead = document.querySelector('.masthead');
+    const setTop = () => root.style.setProperty('--ao-top', `${masthead ? masthead.getBoundingClientRect().height : 0}px`);
+    setTop();
+    addEventListener('resize', setTop, { passive: true });
 
-    // ---- Scroll reveals ----
-    const reveal = Array.from(root.querySelectorAll('[data-au-reveal]'));
-    if (!reduceMotion && 'IntersectionObserver' in window) {
-      root.classList.add('au-anim');
+    // ---- Reveals, and the figures count up once ----
+    if (!reduce && 'IntersectionObserver' in window) {
+      root.classList.add('ao-anim');
       const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('is-in'); io.unobserve(e.target); } }), { rootMargin: '0px 0px -8% 0px', threshold: 0.05 });
-      reveal.forEach((el) => io.observe(el));
+      root.querySelectorAll('[data-ao-reveal]').forEach((el) => io.observe(el));
+
+      const run = (el) => {
+        const end = Number(el.getAttribute('data-ao-count')) || 0;
+        const t0 = performance.now();
+        const tick = (now) => {
+          const p = Math.min(1, (now - t0) / 1300);
+          el.textContent = String(Math.round(end * (1 - Math.pow(1 - p, 3))));
+          if (p < 1) requestAnimationFrame(tick);
+        };
+        el.textContent = '0';
+        requestAnimationFrame(tick);
+      };
+      const cio = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { run(e.target); cio.unobserve(e.target); } }), { threshold: 0.5 });
+      root.querySelectorAll('[data-ao-count]').forEach((n) => cio.observe(n));
     }
 
+    // ---- Directory: filter by area and search; kept in the address bar ----
+    const items = Array.from(root.querySelectorAll('[data-ao-item]'));
+    if (!items.length) return;
+    const input = root.querySelector('[data-ao-q]');
+    const count = root.querySelector('[data-ao-total]');
+    const none = root.querySelector('[data-ao-none]');
+    const chips = Array.from(root.querySelectorAll('[data-ao-group]'));
+    let group = '';
+    const apply = () => {
+      const words = (input.value || '').toLowerCase().split(/\s+/).filter(Boolean);
+      let n = 0;
+      items.forEach((li) => {
+        const ok = (!group || li.dataset.group === group) && words.every((w) => li.dataset.text.includes(w));
+        li.hidden = !ok;
+        if (ok) { n++; li.classList.add('is-in'); }
+      });
+      chips.forEach((c) => { const on = (c.dataset.aoGroup || '') === group; c.classList.toggle('is-on', on); c.setAttribute('aria-pressed', String(on)); });
+      count.textContent = (n === 1 ? count.dataset.one : count.dataset.many).replace('{count}', String(n));
+      none.hidden = n > 0;
+      const sp = new URLSearchParams();
+      if (group) sp.set('group', group);
+      if (input.value.trim()) sp.set('q', input.value.trim());
+      const qs = sp.toString();
+      history.replaceState(null, '', location.pathname + (qs ? `?${qs}` : '') + location.hash);
+    };
+    chips.forEach((c) => c.addEventListener('click', () => { group = c.dataset.aoGroup || ''; apply(); }));
+    input.addEventListener('input', apply);
+    root.querySelector('[data-ao-clear]')?.addEventListener('click', () => { group = ''; input.value = ''; apply(); input.focus(); });
+    const sp = new URLSearchParams(location.search);
+    if (sp.get('group') && chips.some((c) => c.dataset.aoGroup === sp.get('group'))) group = sp.get('group');
+    if (sp.get('q')) input.value = sp.get('q');
+    if (group || input.value) apply();
   })();
 </script>

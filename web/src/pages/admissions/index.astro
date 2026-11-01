@@ -1,12 +1,15 @@
 ---
-// Admissions landing page. Visitors choose who they are first — Bhutanese or
-// international — and each choice opens one page with everything for that
-// applicant (pages/admissions/[audience].astro). Below: the key dates
-// timeline, the latest admission notices and the enquiry form.
+// Admissions landing page, built for finding things fast. The hero shows a
+// live status card (a countdown to the next key date, or the latest notice
+// when no date is coming up). The "Find what you need" panel lets visitors
+// pick who is applying and jump straight to a topic (How to Apply, Fees, …)
+// on that applicant's page (pages/admissions/[audience].astro). Below: the
+// applicant cards, the key dates timeline, notices and the enquiry form.
 // Admin: Admission – Page Settings (this page), the two applicant types (the
 // cards), Notices with Category “Admissions”, and Enquiry Form Settings.
 import Layout from '../../layouts/Layout.astro';
 import '../../styles/admissions.css';
+import '../../styles/admissions-landing.css';
 import EnquiryForm from '../../components/admissions/EnquiryForm.astro';
 import NoticeList from '../../components/admissions/NoticeList.astro';
 import AdmissionsRuntime from '../../components/admissions/AdmissionsRuntime.astro';
@@ -24,6 +27,32 @@ const L = page.labels;
 const audienceNames: Record<string, string> = { bhutanese: bt.card_title, international: intl.card_title };
 const hasAudienceDates = page.key_dates.some((d) => d.audience !== 'all');
 
+// "Find what you need": the topics each applicant page actually has
+// (same rules as the tabs on pages/admissions/[audience].astro).
+const TOPICS = [
+  { id: 'apply', label: L.tab_apply, has: (g: typeof bt) => g.routes.length > 0 || !!g.apply_intro_html || g.documents.length > 0 },
+  { id: 'requirements', label: L.tab_requirements, has: (g: typeof bt) => g.requirements.length > 0 || !!g.requirements_intro_html },
+  { id: 'fees', label: L.tab_fees, has: (g: typeof bt) => g.fees.length > 0 || !!g.fees_intro_html },
+  { id: 'scholarships', label: L.tab_scholarships, has: (g: typeof bt) => g.scholarships.length > 0 },
+  { id: 'faqs', label: L.tab_faqs, has: (g: typeof bt) => g.faqs.length > 0 },
+  { id: 'contact', label: L.tab_contact, has: () => true },
+].map((t) => ({ ...t, for: AUDIENCES.filter((a) => t.has(guides[a])) })).filter((t) => t.for.length > 0);
+const TOPIC_ICONS: Record<string, string> = {
+  apply: '<path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5"/><path d="m10 14 2 2 4-4"/>',
+  requirements: '<path d="M9 5h10M9 12h10M9 19h10"/><path d="m3.5 5 1.2 1.2L7 4M3.5 12l1.2 1.2L7 11M3.5 19l1.2 1.2L7 18"/>',
+  fees: '<circle cx="12" cy="12" r="9"/><path d="M15 8.5h-4a2 2 0 0 0 0 4h2a2 2 0 0 1 0 4H9M12 6.5v2M12 16.5v1.5"/>',
+  scholarships: '<circle cx="12" cy="9" r="5.5"/><path d="m8.5 13.5-1.5 7 5-2.5 5 2.5-1.5-7"/>',
+  faqs: '<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.3-1 .9-1 1.7M12 17h.01"/>',
+  contact: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/>',
+};
+
+// Status card: the next key date if one is coming up, otherwise the latest notice.
+const todayIso = new Date().toISOString().slice(0, 10);
+const nextDate = page.key_dates.filter((d) => d.date >= todayIso).sort((a, b) => a.date.localeCompare(b.date))[0] ?? null;
+const daysTo = nextDate ? Math.round((Date.parse(`${nextDate.date}T00:00:00Z`) - Date.parse(`${todayIso}T00:00:00Z`)) / 86400000) : 0;
+const latestNotice = [...notices].filter((n) => !n.archived).sort((a, b) => (b.published ?? '').localeCompare(a.published ?? ''))[0] ?? null;
+const daysText = (n: number) => (n === 1 ? L.day_to_go : L.days_to_go).replace(/\{count\}\s*/, '');
+
 const ICONS = {
   bhutanese: '<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><path d="M4 40h40"/><path d="M8 40V22l16-10 16 10v18"/><path d="M14 40V27h20v13"/><path d="M20 40v-7h8v7"/><path d="M4 22 24 8l20 14"/><path d="M24 4v4"/></svg>',
   international: '<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="24" cy="24" r="18"/><path d="M6 24h36M24 6c5 5 7.5 11 7.5 18S29 37 24 42c-5-5-7.5-11-7.5-18S19 11 24 6z"/></svg>',
@@ -31,25 +60,101 @@ const ICONS = {
 const arrow = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
 ---
 <Layout title={page.seo_title || page.heading} description={page.seo_description || page.subtitle || undefined}>
-  <div class="adm" data-adm>
+  <div class="adm adm-landing" data-adm>
     <!-- ============ HERO ============ -->
-    <header class:list={['adm-hero', { 'adm-hero--photo': page.hero_image }]}>
+    <header class:list={['adm-hero', 'adml-hero', { 'adm-hero--photo': page.hero_image }]}>
       {page.hero_image && <img class="adm-hero-photo" src={page.hero_image.url} alt={page.hero_image.alt} />}
       <svg class="adm-hero-motif" viewBox="0 0 400 400" aria-hidden="true">
         <circle cx="200" cy="200" r="190" /><circle cx="200" cy="200" r="140" />
         <path d="M200 10 390 200 200 390 10 200z" /><path d="M200 70 330 200 200 330 70 200z" />
         <path d="M10 200h380M200 10v380" />
       </svg>
-      <div class="wrap adm-hero-inner">
-        <nav class="adm-breadcrumb adm-rise" style="--d:0" aria-label="Breadcrumb">
-          <a href="/">Home</a><span aria-hidden="true">›</span><span aria-current="page">{page.heading}</span>
-        </nav>
-        {page.eyebrow && <p class="adm-eyebrow adm-eyebrow--light adm-rise" style="--d:1">{page.eyebrow}</p>}
-        <h1 class="adm-title adm-rise" style="--d:2">{page.heading}</h1>
-        {page.subtitle && <p class="adm-subtitle adm-rise" style="--d:3">{page.subtitle}</p>}
-        {page.intro && <p class="adm-hero-intro adm-rise" style="--d:4">{page.intro}</p>}
+      <div class="wrap adml-hero-grid">
+        <div class="adm-hero-inner">
+          <nav class="adm-breadcrumb adm-rise" style="--d:0" aria-label="Breadcrumb">
+            <a href="/">Home</a><span aria-hidden="true">›</span><span aria-current="page">{page.heading}</span>
+          </nav>
+          {page.eyebrow && page.eyebrow !== page.heading && <p class="adml-eyebrow adm-rise" style="--d:1">{page.eyebrow}</p>}
+          <h1 class="adm-title adm-rise" style="--d:2">{page.heading}</h1>
+          {page.subtitle && <p class="adm-subtitle adm-rise" style="--d:3">{page.subtitle}</p>}
+          {page.intro && <p class="adm-hero-intro adm-rise" style="--d:4">{page.intro}</p>}
+        </div>
+
+        {(nextDate || latestNotice) && (
+          <aside class="adml-status adm-rise" style="--d:4" aria-labelledby="adml-status-h">
+            {nextDate ? (
+              <>
+                <p class="adml-status-kicker" id="adml-status-h"><span class="adml-pulse" aria-hidden="true"></span>{L.next_date_heading}</p>
+                <p class="adml-count">
+                  {daysTo === 0 ? <strong>{L.today_label}</strong> : (
+                    <>
+                      <strong data-adml-count={daysTo}>{daysTo}</strong>
+                      <span>{daysText(daysTo)}</span>
+                    </>
+                  )}
+                </p>
+                <p class="adml-status-date"><time datetime={nextDate.date}>{fmtDate(nextDate.date, { day: 'numeric', month: 'long', year: 'numeric' })}</time>{nextDate.audience !== 'all' && <span>{audienceNames[nextDate.audience]}</span>}</p>
+                <p class="adml-status-text">{nextDate.label}</p>
+                <a class="adml-status-link" href="#key-dates">{L.jump_dates} <Fragment set:html={arrow} /></a>
+              </>
+            ) : (
+              <>
+                <p class="adml-status-kicker" id="adml-status-h"><span class="adml-pulse" aria-hidden="true"></span>{L.latest_notice_heading}</p>
+                <p class="adml-status-date"><time datetime={latestNotice!.published?.slice(0, 10)}>{fmtDate(latestNotice!.published, { day: 'numeric', month: 'long', year: 'numeric' })}</time>{latestNotice!.audience !== 'all' && <span>{audienceNames[latestNotice!.audience]}</span>}</p>
+                <p class="adml-status-title"><a href={`/news-notices/announcements/${latestNotice!.id}`}>{latestNotice!.title}</a></p>
+                {page.dates_intro && <p class="adml-status-text">{page.dates_intro}</p>}
+                <a class="adml-status-link" href="#notices">{page.notices_heading} <Fragment set:html={arrow} /></a>
+              </>
+            )}
+          </aside>
+        )}
       </div>
     </header>
+
+    <!-- ============ FIND WHAT YOU NEED ============ -->
+    {TOPICS.length > 0 && (
+      <section class="adml-finder-wrap" aria-labelledby="adml-finder-h">
+        <div class="wrap">
+          <div class="adml-finder" data-adml-finder>
+            <div class="adml-finder-head">
+              <div>
+                <h2 class="adml-finder-title" id="adml-finder-h">{L.finder_heading}</h2>
+                {L.finder_intro && <p class="adml-finder-intro">{L.finder_intro}</p>}
+              </div>
+              <div class="adml-toggle" role="group" aria-label={L.finder_applicant}>
+                <span class="adml-toggle-label">{L.finder_applicant}</span>
+                <div class="adml-toggle-track">
+                  <span class="adml-toggle-thumb" aria-hidden="true"></span>
+                  {AUDIENCES.map((a, i) => (
+                    <button type="button" class="adml-toggle-btn" data-adml-aud={a} aria-pressed={i === 0 ? 'true' : 'false'}>
+                      <Fragment set:html={ICONS[a]} />{audienceNames[a]}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <ul class="adml-topics">
+              {TOPICS.map((t, i) => (
+                <li class="adml-topic" data-for={t.for.join(' ')} hidden={!t.for.includes(AUDIENCES[0])} style={`--i:${i}`}>
+                  <a href={`/admissions/${AUDIENCES[0]}#${t.id}`} data-topic={t.id}>
+                    <span class="adml-topic-icon" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" set:html={TOPIC_ICONS[t.id]} />
+                    </span>
+                    <span class="adml-topic-label">{t.label}</span>
+                    <span class="adml-topic-go" aria-hidden="true"><Fragment set:html={arrow} /></span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+            <ul class="adml-jumps">
+              {page.key_dates.length > 0 && <li><a href="#key-dates">{L.jump_dates}</a></li>}
+              <li><a href="#notices">{page.notices_heading}</a></li>
+              <li><a href="#enquiry">{L.ask_button}</a></li>
+            </ul>
+          </div>
+        </div>
+      </section>
+    )}
 
     <!-- ============ WHO'S APPLYING ============ -->
     <section class="adm-choose" aria-labelledby="adm-choose-h">
@@ -143,3 +248,40 @@ const arrow = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" strok
 </Layout>
 
 <AdmissionsRuntime labels={L} />
+
+<script is:inline>
+  (() => {
+    const finder = document.querySelector('[data-adml-finder]');
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (finder) {
+      const buttons = Array.from(finder.querySelectorAll('[data-adml-aud]'));
+      const pick = (aud, remember) => {
+        buttons.forEach((b, i) => {
+          const on = b.dataset.admlAud === aud;
+          b.setAttribute('aria-pressed', String(on));
+          if (on) finder.style.setProperty('--adml-pos', String(i));
+        });
+        finder.querySelectorAll('.adml-topic').forEach((li) => {
+          const ok = (li.dataset.for || '').split(' ').includes(aud);
+          li.hidden = !ok;
+          const a = li.querySelector('a');
+          if (a) a.href = '/admissions/' + aud + '#' + a.dataset.topic;
+          if (ok && !reduce) { li.classList.remove('is-pop'); void li.offsetWidth; li.classList.add('is-pop'); }
+        });
+        if (remember) { try { localStorage.setItem('adm-audience', aud); } catch (e) {} }
+      };
+      buttons.forEach((b) => b.addEventListener('click', () => pick(b.dataset.admlAud, true)));
+      let saved = null;
+      try { saved = localStorage.getItem('adm-audience'); } catch (e) {}
+      if (saved && buttons.some((b) => b.dataset.admlAud === saved)) pick(saved, false);
+    }
+    // The countdown number counts up once.
+    const n = document.querySelector('[data-adml-count]');
+    if (n && !reduce) {
+      const target = Number(n.dataset.admlCount);
+      const t0 = performance.now();
+      const step = (now) => { const p = Math.min(1, (now - t0) / 1200); n.textContent = String(Math.round(target * (1 - Math.pow(1 - p, 3)))); if (p < 1) requestAnimationFrame(step); };
+      requestAnimationFrame(step);
+    }
+  })();
+</script>

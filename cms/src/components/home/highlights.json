@@ -3,7 +3,7 @@
   "info": {
     "displayName": "Latest Highlights",
     "icon": "picture",
-    "description": "Photo stories from News. Newest first; pinned stories always stay at the front."
+    "description": "Photo stories from News, as an automatic slider (or a grid). Newest first; pinned stories always stay at the front."
   },
   "options": {},
   "attributes": {
@@ -61,10 +61,11 @@
     "layout": {
       "type": "enumeration",
       "enum": [
+        "carousel",
         "feature",
         "grid"
       ],
-      "default": "feature"
+      "default": "carousel"
     },
     "empty_text": {
       "type": "string"
@@ -74,6 +75,12 @@
     },
     "button_url": {
       "type": "string"
+    },
+    "slide_seconds": {
+      "type": "integer",
+      "default": 6,
+      "min": 3,
+      "max": 20
     }
   }
 }

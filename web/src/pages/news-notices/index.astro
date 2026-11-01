@@ -1,4 +1,263 @@
 ---
-import SectionOverview from '../../components/templates/SectionOverview.astro';
+// News & Notices landing page — a newsroom front page. Everything comes from
+// Strapi:
+//  - News & Notices – Overview: eyebrow, heading, intro, boxes, extra
+//    sections and the small wording (Labels);
+//  - News: the rotating "Top stories" (pinned and featured first);
+//  - Notices, Announcements and Vacancies: the notice board and live chips;
+//  - Documents: the downloads count.
+// The boxes are the shared landing-page boxes (components/LandingCards.astro).
+// Rounded, moving design by the project owner's request. Styles: news-landing.css (.nl).
+import Layout from '../../layouts/Layout.astro';
+import LandingCards from '../../components/LandingCards.astro';
+import SectionBlocks from '../../components/SectionBlocks.astro';
+import '../../styles/news-landing.css';
+import { getLandingPage } from '../../lib/content/landing';
+import { getAllNews } from '../../lib/content/news';
+import { getAnnouncementFeed } from '../../lib/content/announcement-feed';
+import { getAllCurrentNotices } from '../../lib/content/notices';
+import { getCurrentDocuments } from '../../lib/content/documents';
+
+const settle = <T,>(p: Promise<T>, fallback: T) => p.catch(() => fallback);
+const [page, news, feed, notices, documents] = await Promise.all([
+  getLandingPage('news-notices-overview'),
+  settle(getAllNews(), []),
+  settle(getAnnouncementFeed(), []),
+  settle(getAllCurrentNotices(), []),
+  settle(getCurrentDocuments(), []),
+]);
+
+// Wording from News & Notices – Overview → Labels (defaults match the Strapi seed).
+const DEFAULTS: Record<string, string> = {
+  top_stories: 'Top stories', read_story: 'Read the story', all_news: 'All news',
+  pause_stories: 'Pause stories', play_stories: 'Play stories',
+  board_heading: 'Notice board', board_intro: 'The latest announcements, vacancies and results.',
+  board_all: 'All announcements', board_empty: 'There are no current notices.',
+  pinned_label: 'Pinned', closes_label: 'Closes',
+  live_notices: '{count} current notices', live_vacancies: '{count} open vacancies',
+  live_downloads: '{count} forms & documents',
+  meta_announcements: '{count} current', meta_news: '{count} stories', meta_recruitment: '{count} open',
+  meta_downloads: '{count} documents',
+  explore_label: 'Explore',
+  live_notices_one: '1 current notice',
+  live_vacancies_one: '1 open vacancy',
+  live_downloads_one: '1 form or document',
+  meta_news_one: '1 story',
+  meta_downloads_one: '1 document',
+};
+const raw = page?.labels ?? {};
+const t = (k: string) => (typeof raw[k] === 'string' && raw[k].trim() ? raw[k].trim() : DEFAULTS[k] ?? '');
+// “1 open vacancy”, not “1 open vacancies”: a label ending in _one is used when the count is 1.
+const fill = (k: string, n: number) => (n === 1 && t(`${k}_one`) ? t(`${k}_one`) : t(k)).replace('{count}', String(n));
+const fmt = (iso: string | null | undefined, o: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short', year: 'numeric' }) =>
+  iso ? new Date(iso.length === 10 ? `${iso}T00:00:00` : iso).toLocaleDateString('en-GB', o) : '';
+
+// Top stories: live news, pinned and featured first, photos preferred.
+const live = news.filter((n) => !n.archived);
+const ranked = [...live].sort((a, b) => Number(b.pinned) - Number(a.pinned) || Number(b.featured) - Number(a.featured) || b.date.localeCompare(a.date));
+const stories = [...ranked.filter((n) => n.image_url), ...ranked.filter((n) => !n.image_url)].slice(0, 3);
+
+// Notice board and live counts.
+const board = [...feed].sort((a, b) => Number(b.pinned) - Number(a.pinned) || b.date.localeCompare(a.date)).slice(0, 6);
+const vacanciesOpen = feed.filter((f) => f.group === 'vacancies' && f.status === 'open').length;
+const chips = [
+  { n: feed.length, label: fill('live_notices', feed.length), url: '/news-notices/announcements', icon: 'bell' },
+  { n: vacanciesOpen, label: fill('live_vacancies', vacanciesOpen), url: '/news-notices/recruitment', icon: 'briefcase' },
+  { n: documents.length, label: fill('live_downloads', documents.length), url: '/news-notices/downloads', icon: 'doc' },
+].filter((c) => c.n > 0);
+const ICONS: Record<string, string> = {
+  bell: '<path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4z"/><path d="M10 21h4"/>',
+  briefcase: '<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V4h8v3M3 13h18"/>',
+  doc: '<path d="M6 2h9l5 5v15H6z"/><path d="M14 2v6h6M9 13h8M9 17h8"/>',
+};
+
+// Boxes, with a live note where there is something to count.
+const pathOf = (url: string) => url.replace(/[?#].*$/, '').replace(/\/$/, '');
+const META: Record<string, string> = {
+  '/news-notices/announcements': feed.length ? fill('meta_announcements', feed.length) : '',
+  '/news-notices/news': live.length ? fill('meta_news', live.length) : '',
+  '/news-notices/recruitment': vacanciesOpen ? fill('meta_recruitment', vacanciesOpen) : '',
+  '/news-notices/downloads': documents.length ? fill('meta_downloads', documents.length) : '',
+};
+const cards = (page?.cards ?? []).map((c) => ({ ...c, meta: META[pathOf(c.url)] ?? '' }));
+const heading = page?.heading?.trim() || 'News & Notices';
+const arrow = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
+const clip = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21 11-8.5 8.5a5 5 0 0 1-7-7L14 4a3.5 3.5 0 0 1 5 5l-8.5 8.5a2 2 0 0 1-3-3L15 7"/></svg>';
 ---
-<SectionOverview type="news-notices-overview" title="News & Notices" />
+<Layout title={heading} description={page?.seo_description ?? page?.intro ?? undefined}>
+  <div class="nl" data-nl>
+    <!-- ============ HERO ============ -->
+    <header class:list={['nl-hero', { 'nl-hero--stories': stories.length > 0 }]}>
+      <span class="nl-lines" aria-hidden="true"></span>
+      <div class="wrap nl-hero-grid">
+        <div class="nl-hero-text">
+          <nav class="nl-breadcrumb nl-rise" style="--d:0" aria-label="Breadcrumb">
+            <a href="/">Home</a><span aria-hidden="true">›</span><span aria-current="page">{heading}</span>
+          </nav>
+          {page?.eyebrow && page.eyebrow !== heading && <p class="nl-eyebrow nl-rise" style="--d:1">{page.eyebrow}</p>}
+          <h1 class="nl-title nl-rise" style="--d:2">{heading}</h1>
+          {page?.intro && <p class="nl-intro nl-rise" style="--d:3">{page.intro}</p>}
+          {chips.length > 0 && (
+            <ul class="nl-chips nl-rise" style="--d:4">
+              {chips.map((c) => (
+                <li>
+                  <a href={c.url}>
+                    <span class="nl-chip-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" set:html={ICONS[c.icon]} /></span>
+                    {c.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        {stories.length > 0 && (
+          <section class="nl-stories nl-rise" style="--d:3" aria-labelledby="nl-stories-h" data-nl-stories>
+            <div class="nl-stories-head">
+              <h2 class="nl-stories-title" id="nl-stories-h"><span class="nl-live-dot" aria-hidden="true"></span>{t('top_stories')}</h2>
+              <a class="nl-stories-all" href="/news-notices/news">{t('all_news')} <Fragment set:html={arrow} /></a>
+            </div>
+            <div class="nl-stage">
+              {stories.map((s, i) => (
+                <article class:list={['nl-story', { 'is-on': i === 0 }]} data-nl-story aria-hidden={i === 0 ? undefined : 'true'}>
+                  {s.image_url ? <img class="nl-story-img" src={s.image_url} alt="" loading={i === 0 ? 'eager' : 'lazy'} decoding="async" /> : <span class="nl-story-img nl-story-img--none" aria-hidden="true"></span>}
+                  <div class="nl-story-body">
+                    <p class="nl-story-meta">
+                      {s.category_label && <span class="nl-tag">{s.category_label}</span>}
+                      <time datetime={s.date}>{fmt(s.date, { day: 'numeric', month: 'long', year: 'numeric' })}</time>
+                    </p>
+                    <h3 class="nl-story-title"><a href={`/news-notices/news/${s.id}`} tabindex={i === 0 ? undefined : '-1'}>{s.title}</a></h3>
+                    <span class="nl-story-go" aria-hidden="true">{t('read_story')} <Fragment set:html={arrow} /></span>
+                  </div>
+                </article>
+              ))}
+            </div>
+            {stories.length > 1 && (
+              <div class="nl-thumbs" role="group" aria-label={t('top_stories')}>
+                {stories.map((s, i) => (
+                  <button type="button" class:list={['nl-thumb', { 'is-on': i === 0 }]} data-nl-thumb={i} aria-pressed={i === 0 ? 'true' : 'false'}>
+                    {s.image_url && <img src={s.image_url} alt="" loading="lazy" decoding="async" />}
+                    <span class="nl-thumb-title">{s.title}</span>
+                    <span class="nl-thumb-bar" aria-hidden="true"><span></span></span>
+                  </button>
+                ))}
+                <button type="button" class="nl-pause" data-nl-pause aria-label={t('pause_stories')} title={t('pause_stories')} data-pause={t('pause_stories')} data-play={t('play_stories')}>
+                  <svg class="nl-ico-pause" viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1" /><rect x="14" y="5" width="4" height="14" rx="1" /></svg>
+                  <svg class="nl-ico-play" viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg>
+                </button>
+              </div>
+            )}
+          </section>
+        )}
+      </div>
+    </header>
+
+    <!-- ============ NOTICE BOARD ============ -->
+    <section class="nl-board-wrap" aria-labelledby="nl-board-h">
+      <div class="wrap">
+        <div class="nl-board">
+          <header class="nl-board-head">
+            <div>
+              <h2 class="nl-h2" id="nl-board-h">{t('board_heading')}</h2>
+              {t('board_intro') && <p class="nl-lede">{t('board_intro')}</p>}
+            </div>
+            <a class="nl-pill-link" href="/news-notices/announcements">{t('board_all')} <Fragment set:html={arrow} /></a>
+          </header>
+          {board.length > 0 ? (
+            <ol class="nl-board-list">
+              {board.map((n, i) => (
+                <li class:list={['nl-notice', `nl-notice--${n.tone}`]} data-nl-reveal style={`--i:${i}`}>
+                  <time class="nl-notice-date" datetime={n.date?.slice(0, 10)}>
+                    <strong>{fmt(n.date, { day: 'numeric' })}</strong>{fmt(n.date, { month: 'short' })}
+                  </time>
+                  <div class="nl-notice-body">
+                    <p class="nl-notice-tags">
+                      {n.pinned && <span class="nl-tag nl-tag--gold">{t('pinned_label')}</span>}
+                      {n.label && <span class="nl-tag">{n.label}</span>}
+                      {n.has_attachment && <span class="nl-clip" aria-hidden="true"><Fragment set:html={clip} /></span>}
+                    </p>
+                    <h3 class="nl-notice-title"><a href={n.href}>{n.title}</a></h3>
+                    {n.deadline && <p class="nl-notice-deadline">{n.deadline_label || t('closes_label')}: {fmt(n.deadline, { day: 'numeric', month: 'long', year: 'numeric' })}</p>}
+                  </div>
+                  <span class="nl-notice-go" aria-hidden="true"><Fragment set:html={arrow} /></span>
+                </li>
+              ))}
+            </ol>
+          ) : (
+            <p class="nl-empty">{t('board_empty')}</p>
+          )}
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ BOXES ============ -->
+    <section class="nl-band" aria-label={heading}>
+      <div class="wrap">
+        {cards.length > 0 && <LandingCards cards={cards} exploreLabel={t('explore_label')} label={heading} />}
+        {page && page.blocks.length > 0 && (
+          <div class="nl-blocks">
+            <SectionBlocks blocks={page.blocks} />
+          </div>
+        )}
+      </div>
+    </section>
+  </div>
+</Layout>
+
+<script is:inline>
+  (() => {
+    const root = document.querySelector('[data-nl]');
+    if (!root) return;
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // ---- Top stories: one at a time, moving on every 7 seconds ----
+    const box = root.querySelector('[data-nl-stories]');
+    if (box) {
+      const slides = Array.from(box.querySelectorAll('[data-nl-story]'));
+      const thumbs = Array.from(box.querySelectorAll('[data-nl-thumb]'));
+      const pause = box.querySelector('[data-nl-pause]');
+      let current = 0;
+      let playing = !reduce && slides.length > 1;
+      let timer = null;
+      const show = (i) => {
+        current = (i + slides.length) % slides.length;
+        slides.forEach((s, k) => {
+          const on = k === current;
+          s.classList.toggle('is-on', on);
+          s.setAttribute('aria-hidden', on ? 'false' : 'true');
+          const a = s.querySelector('a');
+          if (a) { if (on) a.removeAttribute('tabindex'); else a.setAttribute('tabindex', '-1'); }
+        });
+        thumbs.forEach((b, k) => {
+          b.classList.toggle('is-on', k === current);
+          b.setAttribute('aria-pressed', String(k === current));
+          const bar = b.querySelector('.nl-thumb-bar span');
+          if (bar) { bar.style.animation = 'none'; void bar.offsetWidth; bar.style.animation = ''; }
+        });
+      };
+      const schedule = () => { clearInterval(timer); if (playing) timer = setInterval(() => show(current + 1), 7000); };
+      const setPlaying = (on) => {
+        playing = on;
+        box.classList.toggle('is-paused', !on);
+        if (pause) { pause.setAttribute('aria-label', on ? pause.dataset.pause : pause.dataset.play); pause.title = pause.getAttribute('aria-label'); }
+        schedule();
+      };
+      thumbs.forEach((b) => b.addEventListener('click', () => { show(Number(b.dataset.nlThumb)); schedule(); }));
+      pause?.addEventListener('click', () => setPlaying(!playing));
+      box.addEventListener('pointerenter', () => { clearInterval(timer); box.classList.add('is-hold'); });
+      box.addEventListener('pointerleave', () => { box.classList.remove('is-hold'); show(current); schedule(); });
+      show(0);
+      setPlaying(playing);
+    }
+
+    // ---- Gentle reveal ----
+    if (reduce || !('IntersectionObserver' in window)) return;
+    root.classList.add('nl-anim');
+    const io = new IntersectionObserver((entries) => entries.forEach((en) => {
+      if (!en.isIntersecting) return;
+      en.target.classList.add('is-in');
+      io.unobserve(en.target);
+    }), { rootMargin: '0px 0px -6% 0px', threshold: 0.05 });
+    root.querySelectorAll('[data-nl-reveal]').forEach((el) => io.observe(el));
+  })();
+</script>

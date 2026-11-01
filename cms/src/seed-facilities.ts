@@ -12,7 +12,7 @@ import { applyAdminHelp, type HelpMap } from './admin-help';
  * uploaded by staff. Runs once per SEED_VERSION; only fills empty content.
  */
 
-const SEED_VERSION = 2;
+const SEED_VERSION = 3;
 const STORE = { type: 'core', name: 'seeds', key: 'facilities_version' } as const;
 
 const UID = {
@@ -44,6 +44,7 @@ export async function ensureFacilitiesContent({ strapi }: { strapi: Core.Strapi 
   const done = Number(await strapi.store.get(STORE)) || 0;
   if (done < 1) await seed(strapi);
   if (done < 2) await editorialUpgrade(strapi);
+  if (done < 3) await laboratoryPhotos(strapi);
   if (done < SEED_VERSION) await strapi.store.set({ ...STORE, value: SEED_VERSION });
   await applyAdminHelp({ strapi, help: HELP, prefixes: ['content_types::api::facilit', 'components::facilities.'], storeKey: 'facilities_main_fields_set' });
 }
@@ -342,6 +343,54 @@ async function editorialUpgrade(strapi: Core.Strapi) {
     await docs(UID.page).update({ documentId: page.documentId, data: changes });
     await docs(UID.page).publish({ documentId: page.documentId });
   }
+}
+
+// ---------------------------------------------------------------- laboratory photos
+
+/**
+ * The Laboratories feature had no photograph. These real laboratory photographs
+ * are already in the media library (uploaded for the research pages, with their
+ * own alt text); attach them once, found by file name, and only if the block has
+ * no picture of its own, so a photo chosen by staff is never replaced.
+ */
+const LAB_PHOTO = 'cser-microscopes.jpg';
+const LAB_GALLERY = ['sherubtse-gis-computer-laboratory.jpg', 'cser-water-chemistry-laboratory.jpg', 'cser-ion-chromatography.jpg', 'cser-laminar-airflow-cabinet.jpg', 'cser-centrifuge-and-autoclave.jpg'];
+
+async function laboratoryPhotos(strapi: Core.Strapi) {
+  const docs = (uid: string) => strapi.documents(uid as any) as any;
+  const page = await docs(UID.page).findFirst({
+    status: 'draft',
+    populate: { laboratories: { populate: { image: true, gallery: true, features: true, links: true, documents: { populate: ['file'] }, facility: true } } },
+  });
+  const lab = page?.laboratories;
+  if (!lab || lab.image || (lab.gallery ?? []).length > 0) return;
+  const files: any[] = await strapi.db.query('plugin::upload.file').findMany({ where: { name: { $in: [LAB_PHOTO, ...LAB_GALLERY] } } });
+  const byName = (n: string) => files.find((f) => f.name === n);
+  const main = byName(LAB_PHOTO);
+  if (!main) return;
+  const strip = ({ id, ...rest }: any) => ({ id, ...rest });
+  await docs(UID.page).update({
+    documentId: page.documentId,
+    data: {
+      laboratories: {
+        id: lab.id,
+        label: lab.label ?? null,
+        heading: lab.heading,
+        intro: lab.intro,
+        image: main.id,
+        image_alt: lab.image_alt || main.alternativeText || null,
+        image_position: lab.image_position,
+        features: (lab.features ?? []).map(strip),
+        more_heading: lab.more_heading,
+        more_content: lab.more_content,
+        gallery: LAB_GALLERY.map(byName).filter(Boolean).map((f: any) => f.id),
+        links: (lab.links ?? []).map(strip),
+        documents: (lab.documents ?? []).map((d: any) => ({ id: d.id, label: d.label, file: d.file?.id ?? null })),
+        facility: lab.facility?.documentId ?? null,
+      },
+    },
+  });
+  await docs(UID.page).publish({ documentId: page.documentId });
 }
 
 // ---------------------------------------------------------------- admin help

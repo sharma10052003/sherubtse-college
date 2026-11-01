@@ -53,6 +53,9 @@ const isVideo = item.template === 'video' && !!item.video_url;
 const heroImage = item.image_url;
 const galleryShots = [...new Set([...(item.gallery.length > 0 ? item.gallery : item.images.slice(1))])].filter((src) => src !== heroImage || isVideo);
 const cardExcerpt = (n: typeof item) => excerpt(n.summary || n.body, 130);
+// Alt text and captions come from the media library; a plain description stands in when none was entered.
+const shotAlt = (src: string, i: number) => item.captions[src] || `${item.title} — photo ${i + 1} of ${galleryShots.length}`;
+const PHOTO_PREVIEW = 12;
 
 const pageUrl = new URL(`/news-notices/news/${item.id}`, Astro.site ?? 'https://www.sherubtse.edu.bt').href;
 const mailHref = `mailto:?subject=${encodeURIComponent(item.title)}&body=${encodeURIComponent(`${item.title}\n${pageUrl}`)}`;
@@ -67,6 +70,13 @@ const ICON = {
   arrowL: '<path d="M19 12H5M11 6l-6 6 6 6"/>',
   arrowR: '<path d="M5 12h14M13 6l6 6-6 6"/>',
   close: '<path d="M6 6l12 12M18 6 6 18"/>',
+  camera: '<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>',
+  play: '<path d="M8 5v14l11-7z"/>',
+  pause: '<path d="M7 5h3v14H7zM14 5h3v14h-3z"/>',
+  stop: '<rect x="6" y="6" width="12" height="12"/>',
+  listen: '<path d="M4 10v4h3l5 4V6L7 10H4z"/><path d="M16 9a4 4 0 0 1 0 6M18.5 6.5a8 8 0 0 1 0 11"/>',
+  zoom: '<circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3M11 8v6M8 11h6"/>',
+  download: '<path d="M12 4v12M7 11l5 5 5-5M5 20h14"/>',
 };
 const svg = (path: string) =>
   `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${path}</svg>`;
@@ -124,6 +134,12 @@ const svg = (path: string) =>
               {item.unit_name && <><span aria-hidden="true">·</span><span>{item.unit_name}</span></>}
               <span aria-hidden="true">·</span>
               <span class="na-meta-read"><Fragment set:html={svg(ICON.clock)} />{minutes} min read</span>
+              {galleryShots.length > 0 && (
+                <>
+                  <span aria-hidden="true">·</span>
+                  <a class="na-meta-read na-meta-photos" href="#photos"><Fragment set:html={svg(ICON.camera)} />{galleryShots.length} {galleryShots.length === 1 ? 'photo' : 'photos'}</a>
+                </>
+              )}
             </p>
           </div>
 
@@ -179,6 +195,43 @@ const svg = (path: string) =>
               <button type="button" class="na-size-btn" data-na-size="1" aria-label="Larger text">A+</button>
             </div>
           </div>
+          <div class="na-rail-block">
+            <span class="na-rail-label" id="na-theme-label">Page colour</span>
+            <div class="na-seg" role="group" aria-labelledby="na-theme-label">
+              <button type="button" data-na-theme="light" aria-pressed="true">Light</button>
+              <button type="button" data-na-theme="sepia" aria-pressed="false">Sepia</button>
+              <button type="button" data-na-theme="dark" aria-pressed="false">Dark</button>
+            </div>
+          </div>
+          <div class="na-rail-block">
+            <span class="na-rail-label" id="na-font-label">Typeface</span>
+            <div class="na-seg" role="group" aria-labelledby="na-font-label">
+              <button type="button" data-na-font="serif" aria-pressed="true">Serif</button>
+              <button type="button" data-na-font="sans" aria-pressed="false">Sans</button>
+              <button type="button" data-na-font="easy" aria-pressed="false" title="Wide letter spacing, designed for easier reading">Easy-read</button>
+            </div>
+          </div>
+          <div class="na-rail-block">
+            <span class="na-rail-label" id="na-lead-label">Line spacing</span>
+            <div class="na-seg" role="group" aria-labelledby="na-lead-label">
+              <button type="button" data-na-lead="snug" aria-pressed="false">Snug</button>
+              <button type="button" data-na-lead="normal" aria-pressed="true">Normal</button>
+              <button type="button" data-na-lead="roomy" aria-pressed="false">Roomy</button>
+            </div>
+          </div>
+          <div class="na-rail-block" data-na-listen-block hidden>
+            <span class="na-rail-label" id="na-listen-label">Listen to this story</span>
+            <div class="na-listen" role="group" aria-labelledby="na-listen-label">
+              <button type="button" class="na-listen-btn" data-na-listen aria-pressed="false" aria-label="Listen"><Fragment set:html={svg(ICON.play)} /><span data-na-listen-label>Listen</span></button>
+              <button type="button" class="na-listen-stop" data-na-listen-stop hidden aria-label="Stop listening"><Fragment set:html={svg(ICON.stop)} /></button>
+              <select data-na-speed aria-label="Reading speed">
+                <option value="0.8">Slow</option>
+                <option value="1" selected>Normal</option>
+                <option value="1.25">Fast</option>
+              </select>
+            </div>
+          </div>
+          <button type="button" class="na-reset" data-na-reset>Reset reading settings</button>
           <button type="button" class="na-fullscreen" data-na-fullscreen hidden aria-pressed="false">
             <Fragment set:html={svg(ICON.expand)} />
             <span data-na-fullscreen-label>Read in full screen</span>
@@ -191,15 +244,29 @@ const svg = (path: string) =>
         <div class="na-body" set:html={bodyHtml} />
 
         {galleryShots.length > 0 && (
-          <section class="na-gallery" aria-labelledby="na-gallery-h">
-            <h2 id="na-gallery-h" class="na-section-h">Photos</h2>
-            <div class="na-gallery-grid">
-              {galleryShots.map((src, i) => (
-                <button type="button" class="na-shot" data-na-lightbox={src} aria-label={`Open photo ${i + 1} of ${galleryShots.length}`}>
-                  <img src={src} alt="" loading="lazy" />
-                </button>
-              ))}
+          <section class="na-gallery" id="photos" aria-labelledby="na-gallery-h" data-na-gallery data-layout="mosaic">
+            <div class="na-gallery-head">
+              <h2 id="na-gallery-h" class="na-section-h">Photos <span class="na-count">{galleryShots.length}</span></h2>
+              <div class="na-seg na-seg--sm" role="group" aria-label="Photo layout">
+                <button type="button" data-na-layout="mosaic" aria-pressed="true">Mosaic</button>
+                <button type="button" data-na-layout="grid" aria-pressed="false">Grid</button>
+                <button type="button" data-na-layout="strip" aria-pressed="false">Strip</button>
+              </div>
+              <button type="button" class="na-tool na-slideshow" data-na-slideshow><Fragment set:html={svg(ICON.play)} /><span>Slideshow</span></button>
             </div>
+            <ul class="na-photos" data-na-photos>
+              {galleryShots.map((src, i) => (
+                <li class:list={['na-photo', { 'is-extra': i >= PHOTO_PREVIEW }]} hidden={i >= PHOTO_PREVIEW}>
+                  <button type="button" class="na-shot" data-na-lightbox={src} data-na-caption={item.captions[src] ?? ''} aria-label={`Open photo ${i + 1} of ${galleryShots.length}: ${shotAlt(src, i)}`}>
+                    <img src={src} alt={shotAlt(src, i)} loading="lazy" decoding="async" />
+                    {item.captions[src] && <span class="na-shot-cap">{item.captions[src]}</span>}
+                  </button>
+                </li>
+              ))}
+            </ul>
+            {galleryShots.length > PHOTO_PREVIEW && (
+              <p class="na-more-photos"><button type="button" class="na-tool" data-na-showall data-total={galleryShots.length}>Show all {galleryShots.length} photos</button></p>
+            )}
           </section>
         )}
 
@@ -300,12 +367,24 @@ const svg = (path: string) =>
       </nav>
     )}
 
-    {galleryShots.length > 0 && (
-      <div class="na-lightbox" data-na-box hidden role="dialog" aria-modal="true" aria-label="Photo viewer">
-        <button type="button" class="na-lightbox-close" data-na-box-close aria-label="Close photo"><Fragment set:html={svg(ICON.close)} /></button>
-        <img src="" alt="" />
+    <div class="na-lightbox" data-na-box hidden role="dialog" aria-modal="true" aria-label="Photo viewer">
+      <div class="na-lb-bar">
+        <span class="na-lb-count" data-na-lb-count aria-live="polite"></span>
+        <div class="na-lb-tools">
+          <button type="button" class="na-lb-btn" data-na-lb-play aria-pressed="false" aria-label="Start slideshow" title="Slideshow (Space)"><Fragment set:html={svg(ICON.play)} /></button>
+          <button type="button" class="na-lb-btn" data-na-lb-zoom aria-pressed="false" aria-label="Zoom in" title="Zoom (Z)"><Fragment set:html={svg(ICON.zoom)} /></button>
+          <a class="na-lb-btn" data-na-lb-dl href="#" download aria-label="Download this photo" title="Download"><Fragment set:html={svg(ICON.download)} /></a>
+          <button type="button" class="na-lb-btn na-lb-btn--close" data-na-box-close aria-label="Close photo viewer" title="Close (Esc)"><Fragment set:html={svg(ICON.close)} /></button>
+        </div>
       </div>
-    )}
+      <button type="button" class="na-lb-nav na-lb-nav--prev" data-na-lb-prev aria-label="Previous photo"><Fragment set:html={svg(ICON.arrowL)} /></button>
+      <figure class="na-lb-fig" data-na-lb-fig>
+        <img src="" alt="" data-na-lb-img />
+        <figcaption data-na-lb-cap></figcaption>
+      </figure>
+      <button type="button" class="na-lb-nav na-lb-nav--next" data-na-lb-next aria-label="Next photo"><Fragment set:html={svg(ICON.arrowR)} /></button>
+      <div class="na-lb-thumbs" data-na-lb-thumbs role="tablist" aria-label="All photos"></div>
+    </div>
 
     <p class="na-sr" aria-live="polite" data-na-announce></p>
   </article>
@@ -414,20 +493,142 @@ const svg = (path: string) =>
       document.addEventListener('fullscreenchange', sync);
     }
 
-    // ---- Photo lightbox ----
+    // ---- Reading comfort: colour, typeface and spacing (remembered on this device) ----
+    const prefs = { theme: 'light', font: 'serif', lead: 'normal', speed: '1' };
+    try { Object.assign(prefs, JSON.parse(localStorage.getItem('na-prefs') || '{}')); } catch {}
+    const applyPrefs = () => {
+      root.dataset.naTheme = prefs.theme; root.dataset.naFont = prefs.font; root.dataset.naLead = prefs.lead;
+      [['theme', 'naTheme'], ['font', 'naFont'], ['lead', 'naLead']].forEach(([k, d]) => {
+        root.querySelectorAll('[data-na-' + k + ']').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset[d] === prefs[k])));
+      });
+      const sp = root.querySelector('[data-na-speed]'); if (sp) sp.value = prefs.speed;
+    };
+    const savePrefs = () => { try { localStorage.setItem('na-prefs', JSON.stringify(prefs)); } catch {} };
+    applyPrefs();
+    [['theme', 'naTheme'], ['font', 'naFont'], ['lead', 'naLead']].forEach(([k, d]) => {
+      root.querySelectorAll('[data-na-' + k + ']').forEach((b) => b.addEventListener('click', () => { prefs[k] = b.dataset[d]; applyPrefs(); savePrefs(); announce(k + ' set to ' + b.textContent.trim() + '.'); }));
+    });
+    root.querySelector('[data-na-reset]')?.addEventListener('click', () => {
+      Object.assign(prefs, { theme: 'light', font: 'serif', lead: 'normal', speed: '1' }); sizeIndex = 1; applySize();
+      try { localStorage.removeItem('na-text-size'); } catch {}
+      applyPrefs(); savePrefs(); announce('Reading settings reset.');
+    });
+
+    // ---- Listen to the story (the browser's own voice; paragraph by paragraph) ----
+    const listenBlock = root.querySelector('[data-na-listen-block]');
+    if (listenBlock && 'speechSynthesis' in window) {
+      listenBlock.hidden = false;
+      const btn = root.querySelector('[data-na-listen]'), stop = root.querySelector('[data-na-listen-stop]');
+      const label = btn.querySelector('[data-na-listen-label]'), speed = root.querySelector('[data-na-speed]');
+      const parts = () => [...root.querySelectorAll('.na-lede, .na-body > p, .na-body > h2, .na-body > h3, .na-body > li, .na-body > ul > li, .na-body > blockquote')].filter((p) => p.textContent.trim());
+      let list = [], i = 0, state = 'idle';
+      const mark = () => { root.querySelectorAll('.is-speaking').forEach((n) => n.classList.remove('is-speaking')); if (list[i]) { list[i].classList.add('is-speaking'); list[i].scrollIntoView({ block: 'center', behavior: reduceMotion ? 'auto' : 'smooth' }); } };
+      const ui = () => { btn.setAttribute('aria-pressed', String(state === 'playing')); label.textContent = state === 'playing' ? 'Pause' : state === 'paused' ? 'Resume' : 'Listen'; stop.hidden = state === 'idle'; };
+      const say = () => {
+        if (i >= list.length) return end();
+        const u = new SpeechSynthesisUtterance(list[i].textContent.trim());
+        u.rate = Number(prefs.speed) || 1; u.lang = document.documentElement.lang || 'en';
+        u.onend = () => { if (state === 'playing') { i++; say(); } };
+        mark(); speechSynthesis.speak(u);
+      };
+      const end = () => { speechSynthesis.cancel(); state = 'idle'; i = 0; root.querySelectorAll('.is-speaking').forEach((n) => n.classList.remove('is-speaking')); ui(); };
+      btn.addEventListener('click', () => {
+        if (state === 'idle') { list = parts(); i = 0; state = 'playing'; ui(); say(); }
+        else if (state === 'playing') { speechSynthesis.pause(); state = 'paused'; ui(); }
+        else { speechSynthesis.resume(); state = 'playing'; ui(); }
+      });
+      stop.addEventListener('click', end);
+      speed?.addEventListener('change', () => { prefs.speed = speed.value; savePrefs(); if (state === 'playing') { speechSynthesis.cancel(); say(); } });
+      addEventListener('pagehide', () => speechSynthesis.cancel());
+    }
+
+    // ---- Photos: layout, "show all", and the viewer (every picture in the story, however many) ----
+    const gallery = root.querySelector('[data-na-gallery]');
+    if (gallery) {
+      gallery.querySelectorAll('[data-na-layout]').forEach((b) => b.addEventListener('click', () => {
+        gallery.dataset.layout = b.dataset.naLayout;
+        gallery.querySelectorAll('[data-na-layout]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+      }));
+      const more = gallery.querySelector('[data-na-showall]');
+      const reveal = () => { gallery.querySelectorAll('.is-extra').forEach((li) => (li.hidden = false)); more?.parentElement.remove(); };
+      more?.addEventListener('click', reveal);
+    }
+
     const box = root.querySelector('[data-na-box]');
     if (box) {
-      const img = box.querySelector('img');
-      const close = box.querySelector('[data-na-box-close]');
-      let last = null;
-      const onKey = (e) => { if (e.key === 'Escape') hide(); };
-      const hide = () => { box.hidden = true; document.removeEventListener('keydown', onKey); last?.focus(); };
-      root.querySelectorAll('[data-na-lightbox]').forEach((btn) => btn.addEventListener('click', () => {
-        last = btn; img.src = btn.dataset.naLightbox; box.hidden = false; close.focus();
+      const img = box.querySelector('[data-na-lb-img]'), cap = box.querySelector('[data-na-lb-cap]'), count = box.querySelector('[data-na-lb-count]');
+      const fig = box.querySelector('[data-na-lb-fig]'), thumbs = box.querySelector('[data-na-lb-thumbs]');
+      const playBtn = box.querySelector('[data-na-lb-play]'), zoomBtn = box.querySelector('[data-na-lb-zoom]'), dl = box.querySelector('[data-na-lb-dl]');
+      // Everything clickable in the story: pictures inside the text first, then the gallery.
+      const bodyImgs = [...root.querySelectorAll('.na-body img')];
+      bodyImgs.forEach((im) => { im.style.cursor = 'zoom-in'; im.tabIndex = 0; im.setAttribute('role', 'button'); });
+      const shots = () => [
+        ...bodyImgs.map((im) => ({ src: im.currentSrc || im.src, alt: im.alt || '', cap: im.alt || '', el: im })),
+        ...[...root.querySelectorAll('[data-na-lightbox]')].map((b) => ({ src: b.dataset.naLightbox, alt: b.querySelector('img')?.alt || '', cap: b.dataset.naCaption || '', el: b })),
+      ];
+      let set = [], at = 0, last = null, timer = null, zoomed = false;
+      const buildThumbs = () => {
+        thumbs.innerHTML = '';
+        set.forEach((s, n) => {
+          const t = document.createElement('button');
+          t.type = 'button'; t.className = 'na-lb-thumb'; t.setAttribute('role', 'tab'); t.setAttribute('aria-label', 'Photo ' + (n + 1));
+          t.innerHTML = '<img alt="" loading="lazy" src="' + s.src.replace(/"/g, '&quot;') + '">';
+          t.addEventListener('click', () => go(n));
+          thumbs.appendChild(t);
+        });
+
+      };
+      const setZoom = (on) => { zoomed = on; fig.classList.toggle('is-zoomed', on); zoomBtn.setAttribute('aria-pressed', String(on)); zoomBtn.setAttribute('aria-label', on ? 'Zoom out' : 'Zoom in'); };
+      const go = (n) => {
+        at = (n + set.length) % set.length; const s = set[at];
+        setZoom(false); fig.classList.remove('is-in'); void fig.offsetWidth;
+        img.src = s.src; img.alt = s.alt || ('Photo ' + (at + 1) + ' of ' + set.length);
+        cap.textContent = s.cap; cap.hidden = !s.cap;
+        count.textContent = (at + 1) + ' / ' + set.length;
+        dl.href = s.src;
+        thumbs.querySelectorAll('.na-lb-thumb').forEach((t, k) => { t.setAttribute('aria-selected', String(k === at)); t.classList.toggle('is-on', k === at); if (k === at) t.scrollIntoView({ inline: 'center', block: 'nearest', behavior: reduceMotion ? 'auto' : 'smooth' }); });
+        fig.classList.add('is-in');
+        [at + 1, at - 1].forEach((k) => { const o = set[(k + set.length) % set.length]; if (o) { const p = new Image(); p.src = o.src; } });
+      };
+      const play = (on) => {
+        clearInterval(timer); playBtn.setAttribute('aria-pressed', String(on));
+        playBtn.setAttribute('aria-label', on ? 'Pause slideshow' : 'Start slideshow');
+        playBtn.innerHTML = on ? "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M7 5h3v14H7zM14 5h3v14h-3z\"/></svg>" : "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M8 5v14l11-7z\"/></svg>";
+        if (on) timer = setInterval(() => go(at + 1), 4000);
+      };
+      const onKey = (e) => {
+        if (e.key === 'Escape') hide();
+        else if (e.key === 'ArrowRight') go(at + 1);
+        else if (e.key === 'ArrowLeft') go(at - 1);
+        else if (e.key === ' ') { e.preventDefault(); play(playBtn.getAttribute('aria-pressed') !== 'true'); }
+        else if (e.key.toLowerCase() === 'z') setZoom(!zoomed);
+      };
+      const hide = () => { play(false); box.hidden = true; document.documentElement.classList.remove('na-lb-lock'); document.removeEventListener('keydown', onKey); last?.focus?.(); };
+      const show = (from, autoplay) => {
+        set = shots(); if (!set.length) return;
+        const idx = set.findIndex((s) => s.el === from);
+        last = from; box.hidden = false; document.documentElement.classList.add('na-lb-lock');
+        buildThumbs(); go(idx >= 0 ? idx : 0);
+        box.querySelector('[data-na-box-close]').focus();
         document.addEventListener('keydown', onKey);
-      }));
-      close.addEventListener('click', hide);
-      box.addEventListener('click', (e) => { if (e.target === box) hide(); });
+        if (autoplay) play(true);
+      };
+      root.addEventListener('click', (e) => {
+        const b = e.target.closest('[data-na-lightbox]'); if (b) return show(b, false);
+        const im = e.target.closest('.na-body img'); if (im) show(im, false);
+      });
+      root.addEventListener('keydown', (e) => { if ((e.key === 'Enter' || e.key === ' ') && e.target.matches?.('.na-body img')) { e.preventDefault(); show(e.target, false); } });
+      root.querySelector('[data-na-slideshow]')?.addEventListener('click', () => show(root.querySelector('[data-na-lightbox]'), true));
+      box.querySelector('[data-na-box-close]').addEventListener('click', hide);
+      box.querySelector('[data-na-lb-prev]').addEventListener('click', () => go(at - 1));
+      box.querySelector('[data-na-lb-next]').addEventListener('click', () => go(at + 1));
+      playBtn.addEventListener('click', () => play(playBtn.getAttribute('aria-pressed') !== 'true'));
+      zoomBtn.addEventListener('click', () => setZoom(!zoomed));
+      img.addEventListener('click', () => setZoom(!zoomed));
+      box.addEventListener('click', (e) => { if (e.target === box || e.target === fig) hide(); });
+      let sx = 0;
+      box.addEventListener('touchstart', (e) => { sx = e.touches[0].clientX; }, { passive: true });
+      box.addEventListener('touchend', (e) => { const dx = e.changedTouches[0].clientX - sx; if (!zoomed && Math.abs(dx) > 50) go(at + (dx < 0 ? 1 : -1)); }, { passive: true });
     }
   })();
 </script>

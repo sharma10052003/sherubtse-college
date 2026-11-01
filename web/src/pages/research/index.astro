@@ -3,9 +3,12 @@
 // top to bottom), Research – Centres, Research – Projects, Contact – Offices
 // (the collaboration contact) and News (research stories). A section with
 // nothing published is left out. Data: lib/content/research.ts.
-// Styles: research.css (.rs).
+// Styles: research.css (.rs) + research-landing.css (.rs-landing: the
+// rounded, moving design with the research-network hero and the live
+// "at a glance" panel, matching About, Academics and Admissions).
 import Layout from '../../layouts/Layout.astro';
 import '../../styles/research.css';
+import '../../styles/research-landing.css';
 import Icon from '../../components/research/Icon.astro';
 import ProjectCard from '../../components/research/ProjectCard.astro';
 import Img from '../../components/home/Img.astro';
@@ -34,7 +37,32 @@ const facilityIcon = (name: string) => {
   return 'facilities';
 };
 const ext = (url: string) => (/^https?:\/\//i.test(url) ? { target: '_blank', rel: 'noopener' } : {});
-const TYPE = { pdf: 'PDF', docx: 'DOCX', page: 'Web page', other: 'Link' } as const;
+const TYPE = { pdf: L.type_pdf, docx: L.type_docx, page: L.type_page, other: L.type_link } as const;
+
+// "At a glance": live counts from Research – Centres, Research – Projects
+// and Research – Overview (grants, facilities). Zero counts are left out.
+const glance = [
+  { n: centres.length, label: L.stat_centres, icon: 'centres' },
+  { n: projects.length, label: L.stat_projects, icon: 'projects', note: projects.filter((p) => p.status === 'ongoing').length },
+  { n: page.grants.items.length, label: L.stat_grants, icon: 'grants' },
+  { n: page.facilities.items.length, label: L.stat_facilities, icon: 'facilities' },
+].filter((g) => g.n > 0 && g.label);
+
+// The research network behind the hero: fixed points (so every build looks
+// the same) joined to their nearest neighbours.
+const NODES = [
+  [40, 60], [130, 30], [210, 95], [300, 40], [390, 110], [480, 50], [560, 130],
+  [80, 170], [180, 210], [270, 160], [360, 230], [460, 190], [540, 260],
+  [60, 300], [150, 340], [250, 290], [340, 350], [430, 310], [520, 370],
+] as const;
+const EDGES: [number, number][] = [];
+NODES.forEach(([x, y], i) => {
+  NODES.map(([x2, y2], j) => ({ j, d: Math.hypot(x - x2, y - y2) }))
+    .filter((o) => o.j > i)
+    .sort((a, b) => a.d - b.d)
+    .slice(0, 2)
+    .forEach((o) => EDGES.push([i, o.j]));
+});
 const tel = (p: string) => `tel:${p.replace(/[^+\d]/g, '')}`;
 
 // In-page navigation: only sections that are shown.
@@ -53,9 +81,17 @@ const navItems = page.cards.filter((c) => !c.url.startsWith('#') || shown.has(c.
 const buttons = page.buttons.filter((b) => !b.url.startsWith('#') || shown.has(b.url));
 ---
 <Layout title={page.seo_title || page.heading} description={page.seo_description || page.intro || undefined}>
-  <div class="rs" data-rs>
+  <div class="rs rs-landing" data-rs>
     <!-- ============ HERO ============ -->
-    <header class:list={['rs-hero', { 'rs-hero--img': page.hero_image }]}>
+    <header class:list={['rs-hero', { 'rs-hero--img': page.hero_image || glance.length > 0 }]}>
+      <svg class="rsl-network" viewBox="0 0 600 400" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+        {EDGES.map(([a, b], i) => (
+          <line class="rsl-edge" x1={NODES[a][0]} y1={NODES[a][1]} x2={NODES[b][0]} y2={NODES[b][1]} style={`--k:${i % 9}`} />
+        ))}
+        {NODES.map(([x, y], i) => (
+          <circle class:list={['rsl-node', { 'rsl-node--gold': i % 4 === 0 }]} cx={x} cy={y} r={i % 4 === 0 ? 4 : 2.6} style={`--k:${i % 7}`} />
+        ))}
+      </svg>
       <svg class="rs-hero-motif" viewBox="0 0 200 200" aria-hidden="true">
         <defs>
           <pattern id="rs-lattice" width="40" height="40" patternUnits="userSpaceOnUse">
@@ -78,11 +114,29 @@ const buttons = page.buttons.filter((b) => !b.url.startsWith('#') || shown.has(b
             </div>
           )}
         </div>
-        {page.hero_image && (
-          <figure class="rs-hero-media rs-rise" style="--d:3">
-            <span class="rs-hero-frame" aria-hidden="true"></span>
-            <Img image={page.hero_image} class="rs-hero-img" eager sizes="(min-width: 1000px) 45vw, 100vw" />
-          </figure>
+        {(page.hero_image || glance.length > 0) && (
+          <div class:list={['rsl-side', { 'rsl-side--photo': page.hero_image }]}>
+            {page.hero_image && (
+              <figure class="rs-hero-media rs-rise" style="--d:3">
+                <span class="rs-hero-frame" aria-hidden="true"></span>
+                <Img image={page.hero_image} class="rs-hero-img" eager sizes="(min-width: 1000px) 45vw, 100vw" />
+              </figure>
+            )}
+            {glance.length > 0 && (
+              <aside class="rsl-glance rs-rise" style="--d:5" aria-labelledby="rsl-glance-h">
+                <p class="rsl-glance-title" id="rsl-glance-h">{L.glance_heading}</p>
+                <ul class="rsl-glance-list">
+                  {glance.map((g) => (
+                    <li>
+                      <span class="rsl-glance-icon" aria-hidden="true"><Icon name={g.icon} size={20} /></span>
+                      <span class="rsl-glance-num" data-rsl-count={g.n}>{g.n}</span>
+                      <span class="rsl-glance-label">{g.label}{g.note ? <em>{g.note} {L.stat_ongoing.toLowerCase()}</em> : null}</span>
+                    </li>
+                  ))}
+                </ul>
+              </aside>
+            )}
+          </div>
         )}
       </div>
     </header>
@@ -94,12 +148,9 @@ const buttons = page.buttons.filter((b) => !b.url.startsWith('#') || shown.has(b
           <ul class="rs-nav-list" style={`--n:${navItems.length}`}>
             {navItems.map((n) => (
               <li>
-                <a class="rs-nav-link" href={n.url} {...ext(n.url)} data-nav-link>
+                <a class="rs-nav-link" href={n.url} {...ext(n.url)} title={n.description ?? undefined} data-nav-link>
                   <span class="rs-nav-icon"><Icon name={n.icon} size={22} /></span>
-                  <span class="rs-nav-text">
-                    <span class="rs-nav-label">{n.label}</span>
-                    {n.description && <span class="rs-nav-desc">{n.description}</span>}
-                  </span>
+                  <span class="rs-nav-label">{n.label}</span>
                 </a>
               </li>
             ))}
@@ -127,7 +178,7 @@ const buttons = page.buttons.filter((b) => !b.url.startsWith('#') || shown.has(b
                 {c.themes.length > 0 && (
                   <div class="rs-centre-themes">
                     <p class="rs-mini">{L.themes}</p>
-                    <ul class="rs-chips">{c.themes.map((t) => <li>{t}</li>)}</ul>
+                    <ul class="rs-themes">{c.themes.map((t) => <li>{t}</li>)}</ul>
                   </div>
                 )}
                 <p class="rs-centre-foot">
@@ -438,7 +489,8 @@ const buttons = page.buttons.filter((b) => !b.url.startsWith('#') || shown.has(b
       const sentinel = document.createElement('div');
       bar.before(sentinel);
       new IntersectionObserver(([en]) => {
-        const stuck = !en.isIntersecting && en.boundingClientRect.top < 0;
+        // Pinned once the marker has scrolled up past the bottom of the site header.
+        const stuck = !en.isIntersecting && en.boundingClientRect.top < (en.rootBounds ? en.rootBounds.top : 0) + 1;
         bar.classList.toggle('is-stuck', stuck);
         if (!stuck) bar.querySelectorAll('[aria-current]').forEach((x) => x.removeAttribute('aria-current'));
       }, { rootMargin: `-${(masthead?.getBoundingClientRect().height || 0) + 1}px 0px 0px 0px` }).observe(sentinel);
@@ -457,10 +509,22 @@ const buttons = page.buttons.filter((b) => !b.url.startsWith('#') || shown.has(b
       byId.forEach((_, id) => { const s = document.getElementById(id); if (s) io.observe(s); });
     }
 
+    // ---- "At a glance" numbers count up once ----
+    if (!reduce) {
+      root.querySelectorAll('[data-rsl-count]').forEach((el) => {
+        const target = Number(el.dataset.rslCount);
+        const t0 = performance.now();
+        const step = (now) => { const p = Math.min(1, (now - t0) / 1300); el.textContent = String(Math.round(target * (1 - Math.pow(1 - p, 3)))); if (p < 1) requestAnimationFrame(step); };
+        el.textContent = '0';
+        requestAnimationFrame(step);
+      });
+    }
+
     // ---- Gentle reveal ----
     if (reduce || !('IntersectionObserver' in window)) return;
     root.classList.add('rs-anim');
     const io = new IntersectionObserver((es) => es.forEach((en) => { if (en.isIntersecting) { en.target.classList.add('is-in'); io.unobserve(en.target); } }), { rootMargin: '0px 0px -6% 0px', threshold: 0.05 });
     root.querySelectorAll('[data-reveal]').forEach((el) => io.observe(el));
   })();
-</script>
+
+</script></script>

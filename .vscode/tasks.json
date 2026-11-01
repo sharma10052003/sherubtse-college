@@ -1,0 +1,39 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Strapi (admin panel, port 1337)",
+      "type": "shell",
+      "command": "node dev-tools/idle-run.mjs --name Strapi --port 1337 --minutes 15 --keep-while-port 4321 --cwd cms --env PORT={inner} --env HOST=127.0.0.1 --run \"npm run develop\"",
+      "options": { "cwd": "${workspaceFolder}" },
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": { "panel": "dedicated", "group": "sherubtse" }
+    },
+    {
+      "label": "Website (Astro, port 4321)",
+      "type": "shell",
+      "command": "node dev-tools/idle-run.mjs --name Website --port 4321 --minutes 15 --cwd web --run \"npm run dev -- --port {inner} --host 127.0.0.1\"",
+      "options": { "cwd": "${workspaceFolder}" },
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": { "panel": "dedicated", "group": "sherubtse" }
+    },
+    {
+      "label": "Chat assistant (port 4600)",
+      "type": "shell",
+      "command": "node dev-tools/idle-run.mjs --name Chat --port 4600 --minutes 15 --keep-while-port 4321 --cwd chat-server --env CHAT_PORT={inner} --run \"node server.mjs\"",
+      "options": { "cwd": "${workspaceFolder}" },
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": { "panel": "dedicated", "group": "sherubtse" }
+    },
+    {
+      "label": "Start Sherubtse",
+      "dependsOn": ["Strapi (admin panel, port 1337)", "Website (Astro, port 4321)", "Chat assistant (port 4600)"],
+      "dependsOrder": "parallel",
+      "group": { "kind": "build", "isDefault": true },
+      "problemMatcher": []
+    }
+  ]
+}

@@ -16,6 +16,7 @@ import { getDepartments } from './content/departments';
 import { getCurrentDocuments } from './content/documents';
 import { getFeaturedCentres, getProjects } from './content/research';
 import { getAllPageSlugs, getPageBySlug } from './content/pages';
+import { getSiteSettings } from './content/site-settings';
 import { strapiGet, type StrapiListResponse } from './strapi';
 
 export type SearchKind =
@@ -44,6 +45,12 @@ const PAGES: SearchEntry[] = [
   { t: 'Administrative Units', u: '/about/units', k: 'Page', d: 'The College offices and who leads them.', x: 'offices units administration' },
   { t: 'Faculty', u: '/about/faculty', k: 'Page', d: 'Search faculty by name, department, specialisation or research area.', x: 'faculty staff lecturers teachers expertise directory' },
   { t: 'Alumni', u: '/about/alumni', k: 'Page', d: 'Distinguished alumni, stories and how to stay connected.', x: 'alumni graduates' },
+  { t: 'Alumni stories', u: '/about/alumni/stories', k: 'Page', d: 'Distinguished alumni and stories from graduates of Sherubtse.', x: 'alumni stories graduates distinguished' },
+  { t: 'Share your alumni story', u: '/about/alumni/share-your-story', k: 'Page', d: 'Submit your Sherubtse story to the Alumni Office.', x: 'alumni story submit share' },
+  { t: 'Alumni events', u: '/about/alumni/events', k: 'Page', d: 'Alumni reunions, talks and gatherings.', x: 'alumni events reunion' },
+  { t: 'Give back to Sherubtse', u: '/about/alumni/give-back', k: 'Page', d: 'Mentor students, give a guest lecture or support the College.', x: 'alumni give back mentor mentorship volunteer support' },
+  { t: 'Alumni around the world', u: '/about/alumni/network', k: 'Page', d: 'Where Sherubtse graduates live and work, and the alumni chapters.', x: 'alumni network chapters world abroad' },
+  { t: 'Join the alumni community', u: '/about/alumni/register', k: 'Page', d: 'Register with the Alumni Office.', x: 'alumni register join membership' },
   { t: 'Contact Us', u: '/about/contact', k: 'Page', d: 'Phone numbers, emails and offices to contact.', x: 'contact phone email address location map' },
   { t: 'Academics', u: '/academics', k: 'Page', d: 'Departments, programmes and the academic calendar.', x: 'academics study' },
   { t: 'Programmes', u: '/academics/programmes', k: 'Page', d: 'Every undergraduate programme the College offers.', x: 'programmes courses degrees bachelor bsc' },
@@ -61,13 +68,15 @@ const PAGES: SearchEntry[] = [
   { t: 'Announcements', u: '/news-notices/announcements', k: 'Page', d: 'Current notices, vacancies and announcements.', x: 'announcements notices' },
   { t: 'Events', u: '/news-notices/events', k: 'Page', d: 'Upcoming and past College events.', x: 'events calendar' },
   { t: 'Recruitment', u: '/news-notices/recruitment', k: 'Page', d: 'Vacancies, shortlists and selection results.', x: 'recruitment vacancy jobs careers employment' },
-  { t: 'Tenders', u: '/news-notices/tenders', k: 'Page', d: 'Tender and procurement notices.', x: 'tender procurement' },
   { t: 'Downloads & Forms', u: '/news-notices/downloads', k: 'Page', d: 'Official forms, guides and policies.', x: 'downloads forms documents policies handbook' },
 ];
 
+const settings_ = () => getSiteSettings().catch(() => null);
+const hostOf = (u: string) => { try { return new URL(u).hostname; } catch { return u; } };
+
 export async function buildSearchIndex(): Promise<SearchEntry[]> {
   const settle = <T,>(p: Promise<T>, fallback: T) => p.catch(() => fallback);
-  const [news, events, feed, programmes, facilities, units, faculty, departments, documents, centres, projects, pageSlugs, clubsRes] = await Promise.all([
+  const [news, events, feed, programmes, facilities, units, faculty, departments, documents, centres, projects, pageSlugs, clubsRes, settings] = await Promise.all([
     settle(getAllNews(), []),
     settle(getAllEvents(), []),
     settle(getAnnouncementFeed(), []),
@@ -81,6 +90,7 @@ export async function buildSearchIndex(): Promise<SearchEntry[]> {
     settle(getProjects(), []),
     settle(getAllPageSlugs(), []),
     strapiGet<StrapiListResponse<any>>('clubs', { fields: ['name', 'slug', 'category', 'description'], pagination: { pageSize: 200 } }),
+    settings_(),
   ]);
   const cmsPages = await Promise.all(
     pageSlugs
@@ -102,6 +112,8 @@ export async function buildSearchIndex(): Promise<SearchEntry[]> {
     ...((clubsRes?.data ?? []) as any[]).map((c) => ({ t: c.name, u: `/student-life/clubs/${c.slug}`, k: 'Club' as const, d: clip(c.description), x: c.category ?? '' })),
     ...centres.map((c) => ({ t: c.name, u: c.href, k: 'Research' as const, d: clip(c.summary), x: [c.acronym, ...c.themes].filter(Boolean).join(' ') })),
     ...projects.map((p) => ({ t: p.title, u: '/research/projects', k: 'Research' as const, d: [p.pi, p.period, p.funding_source].filter(Boolean).join(' · '), x: [p.co_investigators, p.centre?.acronym, p.centre_label].filter(Boolean).join(' '), y: p.start ?? undefined })),
+    // The college's online systems linked in the site header (VLE, library…).
+    ...(settings?.subdomain_links ?? []).map((l) => ({ t: l.label, u: l.url, k: 'Page' as const, d: hostOf(l.url), x: 'login log in sign in online system portal website' })),
     ...documents.filter((d) => d.file_url).map((d) => ({ t: d.title, u: d.file_url!, k: 'Download' as const, d: [d.category, d.file_format?.toUpperCase(), d.owning_unit_name].filter(Boolean).join(' · '), x: 'form download document' })),
   ];
 

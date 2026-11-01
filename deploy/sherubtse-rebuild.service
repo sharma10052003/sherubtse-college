@@ -1,0 +1,14 @@
+[Unit]
+Description=Sherubtse College website rebuilder (called by Strapi when content changes)
+After=network.target sherubtse-cms.service
+
+[Service]
+Type=simple
+User=sherubtse
+WorkingDirectory=/opt/sherubtse/web
+ExecStart=/usr/bin/node /opt/sherubtse/deploy/rebuild-server.mjs
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

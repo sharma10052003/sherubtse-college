@@ -1,0 +1,69 @@
+---
+// Sherubtseans around the world, and the alumni chapters.
+import AlumniShell from '../../../components/alumni/AlumniShell.astro';
+import AlumniSubHero from '../../../components/alumni/AlumniSubHero.astro';
+import AlumniFoot from '../../../components/alumni/AlumniFoot.astro';
+import { getAlumniCopy, getAlumniSetting, getAlumniCount, getAlumniChapters, getAlumniChapterCount } from '../../../lib/content/alumni';
+const [copy, settings, alumniCount, chapters, chapterCount] = await Promise.all([
+  getAlumniCopy(),
+  getAlumniSetting(),
+  getAlumniCount(),
+  getAlumniChapters(),
+  getAlumniChapterCount(),
+]);
+const L = copy.labels;
+const totalAlumni = settings.total_alumni_override ?? alumniCount;
+---
+
+<AlumniShell title="Around the world" description={copy.seo_description ?? undefined} texts={copy.texts}>
+<AlumniSubHero page="network" />
+    <!-- ====================== 10. AROUND THE WORLD ====================== -->
+    <section id="world" class="al-section al-world" aria-labelledby="al-world-h">
+      <div class="wrap al-wide al-world-grid">
+        <div class="al-world-copy" data-al-reveal>
+          {copy.global_reach.eyebrow && <p class="al-eyebrow al-eyebrow--light">{copy.global_reach.eyebrow}</p>}
+          <h2 id="al-world-h" class="al-h2 al-h2--light">{copy.global_reach.heading}</h2>
+          {copy.global_reach.intro && <p class="al-lede al-lede--light">{copy.global_reach.intro}</p>}
+          <dl class="al-world-stats">
+            <div><dt>{L.alumni}</dt><dd>{totalAlumni.toLocaleString('en-GB')}</dd></div>
+            {settings.countries_represented && <div><dt>{L.countries}</dt><dd>{settings.countries_represented}</dd></div>}
+            {settings.show_chapters && chapterCount > 0 && <div><dt>{L.chapters}</dt><dd>{chapterCount}</dd></div>}
+          </dl>
+          <a href="/about/alumni/register" class="al-btn al-btn--gold">{copy.register.button_label || 'Register as Alumni'}</a>
+        </div>
+        <figure class="al-globe" data-al-reveal style="--d:150ms">
+          <svg viewBox="0 0 400 400" aria-hidden="true">
+            <circle class="al-globe-sphere" cx="200" cy="200" r="170" />
+            <g class="al-globe-grid">
+              <ellipse cx="200" cy="200" rx="170" ry="60" /><ellipse cx="200" cy="200" rx="170" ry="120" />
+              <path d="M30 200h340" />
+              <ellipse cx="200" cy="200" rx="60" ry="170" /><ellipse cx="200" cy="200" rx="120" ry="170" />
+              <path d="M200 30v340" />
+            </g>
+            <g class="al-globe-arcs">
+              <path class="al-draw" pathLength="1" d="M262 168C300 110 340 100 360 120" />
+              <path class="al-draw" pathLength="1" d="M262 168C220 120 150 110 100 140" />
+              <path class="al-draw" pathLength="1" d="M262 168C250 230 200 280 140 290" />
+              <path class="al-draw" pathLength="1" d="M262 168C320 200 330 250 310 300" />
+            </g>
+            <circle class="al-globe-home" cx="262" cy="168" r="6" />
+            <circle class="al-globe-home-ring" cx="262" cy="168" r="14" />
+          </svg>
+          <figcaption>Kanglung, Bhutan — where every Sherubtsean's journey begins.</figcaption>
+        </figure>
+        {settings.show_chapters && chapters.length > 0 && (
+          <ul class="al-chapters" role="list">
+            {chapters.map((c) => (
+              <li class="al-chapter">
+                <p class="al-tag al-tag--gold">{c.country}</p>
+                <h3>{c.name}</h3>
+                {c.description && <p>{c.description}</p>}
+                {c.contact_email && <a href={`mailto:${c.contact_email}`}>{c.contact_email}</a>}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </section>
+<AlumniFoot />
+</AlumniShell>

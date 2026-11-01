@@ -1,0 +1,19 @@
+---
+// End of every Alumni sub-page: a way back and a way to reach the Alumni Office.
+import { getAlumniCopy } from '../../lib/content/alumni';
+import { makeAlumniLabels } from '../../lib/content/alumni-labels';
+import { icon } from '../../lib/content/alumni-ui';
+
+const copy = await getAlumniCopy();
+const t = makeAlumniLabels(copy.page_labels);
+---
+
+<section class="al-foot" aria-label={t('foot_text')}>
+  <div class="wrap al-wide al-foot-inner">
+    <p class="al-foot-text">{t('foot_text')}</p>
+    <div class="al-foot-actions">
+      <a href="/about/alumni#contact" class="al-btn al-btn--navy">{t('foot_button')} <span set:html={icon('arrow', 18)} /></a>
+      <a href="/about/alumni" class="al-btn al-btn--outline">{t('foot_back')}</a>
+    </div>
+  </div>
+</section>

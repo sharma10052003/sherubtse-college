@@ -1,0 +1,324 @@
+---
+// Wrapper for the Alumni overview and every Alumni sub-page: the site layout,
+// the .al scope the styles hang from, and the shared script (scroll reveals,
+// count-up, story/gallery filters, event tabs, lightbox and the three forms,
+// which post to Strapi's create-only public endpoints, guarded server-side by
+// cms/src/policies/public-form-guard.ts). Each part of the script only acts if
+// the matching elements are on the page, so it is safe to load everywhere.
+import Layout from '../../layouts/Layout.astro';
+import '../../styles/alumni-page.css';
+import '../../styles/alumni-sub.css';
+
+interface Props {
+  title: string;
+  description?: string;
+  texts: Record<string, string>;
+}
+const { title, description, texts } = Astro.props;
+const strapiUrl = import.meta.env.PUBLIC_STRAPI_URL || 'http://localhost:1337';
+---
+
+<Layout title={title} description={description}>
+  <div class="al">
+    <slot />
+    <p class="al-sr" aria-live="polite" data-al-announce></p>
+  </div>
+</Layout>
+
+<script is:inline define:vars={{ strapiUrl, texts }}>
+  (() => {
+    const root = document.querySelector('.al');
+    if (!root) return;
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const announcer = root.querySelector('[data-al-announce]');
+    const announce = (msg) => { if (announcer) { announcer.textContent = ''; requestAnimationFrame(() => (announcer.textContent = msg)); } };
+
+    // ---- Scroll reveals (content is only hidden once JS has opted in) ----
+    const revealEls = Array.from(root.querySelectorAll('[data-al-reveal]'));
+    if (reduceMotion || !('IntersectionObserver' in window)) {
+      revealEls.forEach((el) => el.classList.add('is-in'));
+    } else {
+      root.classList.add('al-anim');
+      const io = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          entry.target.classList.add('is-in');
+          io.unobserve(entry.target);
+        });
+      }, { threshold: 0.12, rootMargin: '0px 0px -50px 0px' });
+      revealEls.forEach((el) => io.observe(el));
+    }
+
+    // ---- Count-up for real, nonzero statistics only ----
+    const counters = Array.from(root.querySelectorAll('[data-count]')).filter((el) => Number(el.dataset.count) > 0);
+    if (!reduceMotion && counters.length && 'IntersectionObserver' in window) {
+      const run = (el) => {
+        const target = Number(el.dataset.count);
+        const start = performance.now();
+        const tick = (now) => {
+          const p = Math.min(1, (now - start) / 1200);
+          el.textContent = Math.round(target * (1 - Math.pow(1 - p, 3))).toLocaleString('en-GB');
+          if (p < 1) requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+      };
+      const cio = new IntersectionObserver((entries) => {
+        entries.forEach((e) => { if (e.isIntersecting) { run(e.target); cio.unobserve(e.target); } });
+      }, { threshold: 0.6 });
+      counters.forEach((el) => cio.observe(el));
+    }
+
+    // ---- Gentle parallax on decorative layers ----
+    const layers = Array.from(root.querySelectorAll('[data-parallax]'));
+    if (!reduceMotion && layers.length) {
+      let ticking = false;
+      const update = () => {
+        ticking = false;
+        layers.forEach((el) => {
+          const section = el.closest('section');
+          const rect = section.getBoundingClientRect();
+          if (rect.bottom < 0 || rect.top > innerHeight) return;
+          el.style.transform = `translate3d(0, ${(Math.max(0, -rect.top) * Number(el.dataset.parallax)).toFixed(1)}px, 0)`;
+        });
+      };
+      addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } }, { passive: true });
+    }
+
+    // ---- Sticky Alumni navigation sits just under the site header ----
+    const masthead = document.querySelector('.masthead');
+    const setTop = () => root.style.setProperty('--al-top', `${masthead ? masthead.getBoundingClientRect().height : 0}px`);
+    setTop();
+    addEventListener('resize', setTop, { passive: true });
+
+    // ---- Registration form: ?interest=Mentorship ticks the matching box ----
+    const registerForm = document.getElementById('registerForm');
+    const wanted = new URLSearchParams(location.search).get('interest');
+    if (wanted && registerForm) {
+      const box = registerForm.querySelector(`input[name="interests"][value="${CSS.escape(wanted)}"]`);
+      if (box) { box.checked = true; announce(`${wanted} selected in the registration form.`); }
+    }
+
+    // ---- Story filters + load more ----
+    const storyFilters = root.querySelector('[data-story-filters]');
+    const storyCards = Array.from(root.querySelectorAll('#stories .al-story'));
+    const moreBtn = root.querySelector('[data-story-more]');
+    const storyEmpty = root.querySelector('[data-story-empty]');
+    let storyFilter = 'all';
+    let showAll = false;
+    const applyStories = () => {
+      let visible = 0;
+      storyCards.forEach((card) => {
+        const match = storyFilter === 'all' || card.dataset.category === storyFilter;
+        const hiddenByMore = !showAll && storyFilter === 'all' && card.classList.contains('is-hidden-more');
+        card.hidden = !match || hiddenByMore;
+        if (!card.hidden) { visible++; card.classList.add('is-in'); }
+      });
+      if (storyEmpty) storyEmpty.hidden = visible > 0;
+      if (moreBtn) moreBtn.hidden = showAll || storyFilter !== 'all';
+    };
+    if (storyCards.length) applyStories();
+    storyFilters?.addEventListener('click', (e) => {
+      const btn = e.target.closest('button[data-filter]');
+      if (!btn) return;
+      storyFilter = btn.dataset.filter;
+      storyFilters.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
+      applyStories();
+    });
+    moreBtn?.addEventListener('click', () => { showAll = true; applyStories(); announce('All stories shown.'); });
+
+    // ---- Event tabs (arrow keys move between tabs) ----
+    const tabs = Array.from(root.querySelectorAll('[role="tab"]'));
+    const selectTab = (tab, focus) => {
+      tabs.forEach((t) => {
+        const on = t === tab;
+        t.setAttribute('aria-selected', String(on));
+        t.tabIndex = on ? 0 : -1;
+        const panel = document.getElementById(t.getAttribute('aria-controls'));
+        if (panel) { panel.hidden = !on; if (on) panel.classList.add('is-switching'); }
+      });
+      if (focus) tab.focus();
+      requestAnimationFrame(() => requestAnimationFrame(() => root.querySelectorAll('.al-tabpanel').forEach((p) => p.classList.remove('is-switching'))));
+    };
+    tabs.forEach((tab, i) => {
+      tab.addEventListener('click', () => selectTab(tab, false));
+      tab.addEventListener('keydown', (e) => {
+        if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+        e.preventDefault();
+        selectTab(tabs[(i + (e.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length], true);
+      });
+    });
+
+    // ---- Gallery filter + lightbox ----
+    const galleryFilters = root.querySelector('[data-gallery-filters]');
+    galleryFilters?.addEventListener('click', (e) => {
+      const btn = e.target.closest('button[data-filter]');
+      if (!btn) return;
+      galleryFilters.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
+      root.querySelectorAll('.al-gallery-item').forEach((item) => {
+        item.hidden = !(btn.dataset.filter === 'all' || item.dataset.category === btn.dataset.filter);
+      });
+    });
+    const lightbox = document.getElementById('alLightbox');
+    if (lightbox) {
+      const img = lightbox.querySelector('img');
+      const close = lightbox.querySelector('.al-lightbox-close');
+      let last = null;
+      const onKey = (e) => { if (e.key === 'Escape') hide(); };
+      const hide = () => { lightbox.hidden = true; document.removeEventListener('keydown', onKey); last?.focus(); };
+      root.querySelectorAll('[data-lightbox]').forEach((btn) => btn.addEventListener('click', () => {
+        last = btn; img.src = btn.dataset.lightbox; img.alt = btn.querySelector('img')?.alt || '';
+        lightbox.hidden = false; close.focus(); document.addEventListener('keydown', onKey);
+      }));
+      close.addEventListener('click', hide);
+      lightbox.addEventListener('click', (e) => { if (e.target === lightbox) hide(); });
+    }
+
+    // ---- Forms ----
+    const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+    const fieldLabel = (input) => (input.labels?.[0]?.textContent || input.name).replace('*', '').trim();
+
+    function setError(input, message) {
+      const field = input.closest('.al-field, .al-consent-wrap, .al-news-row');
+      let err = field?.querySelector('.al-error');
+      if (message) {
+        if (!err && field) {
+          err = document.createElement('p');
+          err.className = 'al-error';
+          err.id = `${input.id || input.name}-error`;
+          field.appendChild(err);
+        }
+        if (err) err.textContent = message;
+        input.setAttribute('aria-invalid', 'true');
+        const ids = new Set((input.getAttribute('aria-describedby') || '').split(' ').filter(Boolean));
+        if (err) ids.add(err.id);
+        input.setAttribute('aria-describedby', [...ids].join(' '));
+      } else {
+        input.removeAttribute('aria-invalid');
+        if (err) {
+          const ids = (input.getAttribute('aria-describedby') || '').split(' ').filter((id) => id && id !== err.id);
+          ids.length ? input.setAttribute('aria-describedby', ids.join(' ')) : input.removeAttribute('aria-describedby');
+          err.remove();
+        }
+      }
+    }
+
+    function check(input) {
+      if (input.name === 'hp_field') return true;
+      const value = input.type === 'checkbox' ? input.checked : input.value.trim();
+      let message = '';
+      if (input.required && !value) {
+        message = input.type === 'checkbox' ? 'Please tick this box to continue.' : `Please enter your ${fieldLabel(input).toLowerCase()}.`;
+      } else if (input.type === 'email' && value && !EMAIL.test(value)) {
+        message = 'Please enter a valid email address, e.g. name@example.com.';
+      } else if (input.type === 'number' && value) {
+        const n = Number(value);
+        if (!Number.isInteger(n) || n < Number(input.min) || n > Number(input.max)) message = `Please enter a year between ${input.min} and ${input.max}.`;
+      }
+      setError(input, message);
+      return !message;
+    }
+
+    function validate(form) {
+      const inputs = Array.from(form.querySelectorAll('input, textarea, select')).filter((el) => el.name !== 'interests');
+      const invalid = inputs.filter((el) => !check(el));
+      if (invalid.length) invalid[0].focus();
+      return invalid.length === 0;
+    }
+
+    function setStatus(form, kind, message) {
+      const el = form.querySelector('[data-form-status]');
+      el.className = `al-status is-${kind}${form.id === 'newsletterForm' ? ' al-status--light' : ''}`;
+      el.textContent = message;
+    }
+
+    async function post(path, data) {
+      const res = await fetch(`${strapiUrl}/api/${path}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ data }),
+      });
+      const body = await res.json().catch(() => null);
+      if (!res.ok) {
+        const err = new Error(body?.error?.message || `Request failed (${res.status})`);
+        err.status = res.status;
+        throw err;
+      }
+      return body;
+    }
+
+    function wire(form, { path, build, success, onError }) {
+      if (!form) return;
+      form.querySelectorAll('input, textarea, select').forEach((el) => {
+        el.addEventListener('blur', () => { if (el.getAttribute('aria-invalid') === 'true' || el.value) check(el); });
+        el.addEventListener('change', () => { if (el.getAttribute('aria-invalid') === 'true') check(el); });
+      });
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (form.dataset.busy === 'true') return;
+        if (!validate(form)) { setStatus(form, 'error', 'Please fix the highlighted fields and try again.'); return; }
+        const button = form.querySelector('button[type="submit"]');
+        form.dataset.busy = 'true';
+        form.setAttribute('aria-busy', 'true');
+        button.disabled = true;
+        button.classList.add('is-loading');
+        setStatus(form, 'loading', 'Sending…');
+        try {
+          await post(path, build(new FormData(form)));
+          setStatus(form, 'success', success);
+          form.reset();
+        } catch (err) {
+          const out = onError ? onError(err) : `${texts.error} (${err.message})`;
+          if (typeof out === 'string') setStatus(form, 'error', out);
+          else setStatus(form, out.kind, out.message);
+        } finally {
+          form.dataset.busy = 'false';
+          form.removeAttribute('aria-busy');
+          button.disabled = false;
+          button.classList.remove('is-loading');
+        }
+      });
+    }
+
+    const val = (fd, k) => { const v = (fd.get(k) || '').toString().trim(); return v || null; };
+    const num = (fd, k) => (fd.get(k) ? Number(fd.get(k)) : null);
+    const rateMessage = (err) => (err.status === 429 ? err.message : null);
+
+    wire(document.getElementById('storyForm'), {
+      path: 'alumnis?status=draft',
+      success: texts.story_success,
+      build: (fd) => ({
+        full_name: val(fd, 'full_name'), email: val(fd, 'email'), graduation_year: num(fd, 'graduation_year'),
+        programme: val(fd, 'programme'), current_role: val(fd, 'current_role'), organization: val(fd, 'organization'),
+        article_title: val(fd, 'article_title'), story: val(fd, 'story'), category: val(fd, 'category'),
+        consent: fd.get('consent') === 'on', hp_field: fd.get('hp_field') || '',
+      }),
+      onError: (err) => rateMessage(err) || `${texts.error} (${err.message})`,
+    });
+
+    wire(registerForm, {
+      path: 'alumni-registrations',
+      success: texts.register_success,
+      build: (fd) => ({
+        full_name: val(fd, 'full_name'), email: val(fd, 'email'), phone: val(fd, 'phone'),
+        programme: val(fd, 'programme'), graduation_year: num(fd, 'graduation_year'), academic_period: val(fd, 'academic_period'),
+        organization: val(fd, 'organization'), designation: val(fd, 'designation'), industry: val(fd, 'industry'),
+        country: val(fd, 'country'), city: val(fd, 'city'), interests: fd.getAll('interests').join(', ') || null,
+        consent_directory: fd.get('consent_directory') === 'on', hp_field: fd.get('hp_field') || '',
+      }),
+      onError: (err) =>
+        /already_registered/.test(err.message)
+          ? 'This email address is already registered with the Alumni Office. If your details have changed, please contact the office directly.'
+          : rateMessage(err) || `${texts.error} (${err.message})`,
+    });
+
+    wire(document.getElementById('newsletterForm'), {
+      path: 'newsletter-subscribers',
+      success: texts.newsletter_success,
+      build: (fd) => ({ email: val(fd, 'email'), consent: true, hp_field: fd.get('hp_field') || '' }),
+      onError: (err) =>
+        /unique/i.test(err.message)
+          ? { kind: 'success', message: texts.newsletter_already }
+          : rateMessage(err) || `${texts.error} (${err.message})`,
+    });
+  })();
+</script>

@@ -1,0 +1,127 @@
+---
+// Alumni registration form (a record for the Alumni Office; contact details are never published).
+import AlumniShell from '../../../components/alumni/AlumniShell.astro';
+import AlumniSubHero from '../../../components/alumni/AlumniSubHero.astro';
+import AlumniFoot from '../../../components/alumni/AlumniFoot.astro';
+import { getAlumniCopy } from '../../../lib/content/alumni';
+import { icon, INTERESTS, COUNTRIES, INDUSTRIES } from '../../../lib/content/alumni-ui';
+const copy = await getAlumniCopy();
+---
+
+<AlumniShell title="Join the alumni community" description={copy.seo_description ?? undefined} texts={copy.texts}>
+<AlumniSubHero page="register" />
+    <!-- ====================== 12. REGISTRATION ====================== -->
+    <section id="register" class="al-section al-register" aria-labelledby="al-register-h">
+      <div class="wrap al-wide al-form-layout">
+        <div class="al-form-aside" data-al-reveal>
+          {copy.register.eyebrow && <p class="al-eyebrow">{copy.register.eyebrow}</p>}
+          <h2 id="al-register-h" class="al-h2" tabindex="-1">{copy.register.heading}</h2>
+          {copy.register.intro && <p class="al-lede">{copy.register.intro}</p>}
+          <ul class="al-reasons" role="list">
+            <li><span set:html={icon('mail', 20)} />Alumni news, events and reunion invitations</li>
+            <li><span set:html={icon('people', 20)} />Reconnect with classmates and mentors</li>
+            <li><span set:html={icon('heart', 20)} />Ways to support today's Sherubtseans</li>
+          </ul>
+          <p class="al-note"><span set:html={icon('shield', 20)} />Your details go only to the Alumni Office. Contact details are never published.</p>
+        </div>
+
+        <form class="al-form" id="registerForm" novalidate data-al-reveal style="--d:120ms">
+          <fieldset class="al-fieldset">
+            <legend><span class="al-step">1</span> Personal information</legend>
+            <div class="al-grid">
+              <div class="al-field">
+                <label for="reg-name">Full Name <span class="al-req" aria-hidden="true">*</span></label>
+                <input type="text" id="reg-name" name="full_name" required autocomplete="name" />
+              </div>
+              <div class="al-field">
+                <label for="reg-email">Email <span class="al-req" aria-hidden="true">*</span></label>
+                <input type="email" id="reg-email" name="email" required autocomplete="email" />
+              </div>
+              <div class="al-field">
+                <label for="reg-phone">Phone Number</label>
+                <input type="tel" id="reg-phone" name="phone" autocomplete="tel" />
+              </div>
+            </div>
+          </fieldset>
+
+          <fieldset class="al-fieldset">
+            <legend><span class="al-step">2</span> Academic information</legend>
+            <div class="al-grid">
+              <div class="al-field">
+                <label for="reg-programme">Programme</label>
+                <input type="text" id="reg-programme" name="programme" />
+              </div>
+              <div class="al-field">
+                <label for="reg-year">Graduation Year</label>
+                <input type="number" id="reg-year" name="graduation_year" min="1968" max="2100" inputmode="numeric" />
+              </div>
+              <div class="al-field al-span-2">
+                <label for="reg-period">Academic Period</label>
+                <input type="text" id="reg-period" name="academic_period" placeholder="e.g. 2005–2011" aria-describedby="reg-period-hint" />
+                <p class="al-hint" id="reg-period-hint">The years you studied at Sherubtse.</p>
+              </div>
+            </div>
+          </fieldset>
+
+          <fieldset class="al-fieldset">
+            <legend><span class="al-step">3</span> Professional information</legend>
+            <div class="al-grid">
+              <div class="al-field">
+                <label for="reg-org">Current Organization</label>
+                <input type="text" id="reg-org" name="organization" autocomplete="organization" />
+              </div>
+              <div class="al-field">
+                <label for="reg-designation">Current Designation</label>
+                <input type="text" id="reg-designation" name="designation" autocomplete="organization-title" />
+              </div>
+              <div class="al-field">
+                <label for="reg-industry">Industry</label>
+                <input type="text" id="reg-industry" name="industry" list="al-industries" />
+                <datalist id="al-industries">{INDUSTRIES.map((i) => <option value={i} />)}</datalist>
+              </div>
+              <div class="al-field">
+                <label for="reg-country">Country</label>
+                <input type="text" id="reg-country" name="country" list="al-countries" autocomplete="country-name" />
+                <datalist id="al-countries">{COUNTRIES.map((c) => <option value={c} />)}</datalist>
+              </div>
+              <div class="al-field">
+                <label for="reg-city">City</label>
+                <input type="text" id="reg-city" name="city" autocomplete="address-level2" />
+              </div>
+            </div>
+          </fieldset>
+
+          <fieldset class="al-fieldset">
+            <legend><span class="al-step">4</span> Engagement interests <span class="al-optional">(choose any)</span></legend>
+            <div class="al-interests">
+              {INTERESTS.map((interest) => (
+                <label class="al-interest">
+                  <input type="checkbox" name="interests" value={interest} />
+                  <span>{interest}</span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
+
+          <div class="al-hp" aria-hidden="true">
+            <label for="reg-hp">Leave this field empty</label>
+            <input type="text" id="reg-hp" name="hp_field" tabindex="-1" autocomplete="off" />
+          </div>
+
+          <div class="al-consent-wrap">
+            <label class="al-consent">
+              <input type="checkbox" name="consent_directory" />
+              <span>{copy.texts.register_consent} <span class="al-optional">(optional)</span></span>
+            </label>
+          </div>
+
+          <div class="al-form-foot">
+            <p class="al-req-note"><span class="al-req" aria-hidden="true">*</span> Required</p>
+            <button type="submit" class="al-btn al-btn--gold">{copy.register.button_label || 'Register as Alumni'}</button>
+          </div>
+          <div class="al-status" role="status" aria-live="polite" data-form-status></div>
+        </form>
+      </div>
+    </section>
+<AlumniFoot />
+</AlumniShell>

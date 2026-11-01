@@ -50,6 +50,9 @@
     "empty_message": {
       "type": "text"
     },
+    "labels": {
+      "type": "json"
+    },
     "seo": {
       "type": "component",
       "repeatable": false,

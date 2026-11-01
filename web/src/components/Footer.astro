@@ -1,22 +1,45 @@
 ---
+// Site footer. Everything is edited in Strapi:
+//  - Global – Footer: tagline, motto, link columns, headings, copyright and
+//    bottom links;
+//  - Global – Site Settings: name, address, phones, emails and the online
+//    services (the same links as the header);
+//  - Global – Header & Navigation: the crest.
+// Layout: a brand row (crest, name, tagline, motto) beside rounded contact
+// cards, then the link columns and the online-services pills, then the
+// copyright bar — spread across the full width, on the gold knot pattern.
 import { Image } from 'astro:assets';
 import logo from '../assets/sherubtse-logo.png';
 import { getSiteSettings, getFooter } from '../lib/content/site-settings';
 import { getNavigation } from '../lib/content/navigation';
 
-// The crest is the same one the header uses (Global – Header & Navigation → Logo).
 const [settings, footer, nav] = await Promise.all([getSiteSettings(), getFooter(), getNavigation()]);
 const year = new Date().getFullYear();
 const mapsUrl = settings.address
   ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(settings.address)}`
   : null;
+// Online services, minus any already listed in a link column (no duplicates).
+const trimSlash = (u: string) => u.replace(/\/$/, '');
+const listed = new Set(footer.link_groups.flatMap((g) => g.links.flatMap((l) => [trimSlash(l.url), l.label.toLowerCase()])));
+const services = (settings.subdomain_links ?? []).filter((l) => !listed.has(trimSlash(l.url)) && !listed.has(l.label.toLowerCase()));
+const phones = settings.phones ?? [];
+const emails = settings.official_emails ?? [];
 
 function isExternal(url: string) {
   return url.startsWith('http://') || url.startsWith('https://');
 }
+const ext = (url: string) => (isExternal(url) ? { target: '_blank', rel: 'noopener' } : {});
+const ICON = {
+  pin: '<path d="M12 21s-7-6.1-7-11a7 7 0 0 1 14 0c0 4.9-7 11-7 11z" /><circle cx="12" cy="10" r="2.5" />',
+  phone: '<path d="M4 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L14 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 2 6a2 2 0 0 1 2-2z" />',
+  mail: '<rect x="3" y="5" width="18" height="14" rx="2" /><path d="M3 6l9 7 9-7" />',
+  arrow: '<path d="M5 12h14M13 6l6 6-6 6" />',
+  out: '<path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5" />',
+};
+const svg = (d: string, size = 20) => `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
 ---
 <footer class="site-footer">
-  <div class="wrap footer-grid">
+  <div class="wrap footer-top">
     <div class="footer-brand">
       <a href="/" class="footer-logo" aria-label={`${nav.logo_alt} — home`}>
         {nav.logo_url ? (
@@ -25,73 +48,81 @@ function isExternal(url: string) {
           <Image src={logo} alt={nav.logo_alt} width={96} height={96} />
         )}
       </a>
-      {footer.tagline && <p class="footer-tagline">{footer.tagline}</p>}
-      {footer.motto && <p class="footer-motto">{footer.motto}</p>}
-      <!-- No social icons here: the live site has none to source (checked
-           its real homepage HTML directly — no Facebook/Instagram/X
-           account links exist anywhere on it, only generic share-button
-           strings and two unrelated embedded YouTube videos). Adding
-           icons linking to guessed accounts would be fabricating an
-           official presence that may not exist; real accounts can be
-           added here once someone confirms them. -->
+      <div class="footer-brand-text">
+        <p class="footer-name">{settings.site_name}</p>
+        {footer.motto && <p class="footer-motto">{footer.motto}</p>}
+        {footer.tagline && <p class="footer-tagline">{footer.tagline}</p>}
+      </div>
+      <!-- No social icons: the College has no confirmed official accounts to
+           link to. Real ones can be added here once someone confirms them. -->
     </div>
 
-    {footer.link_groups.map((group) => (
-      <div>
-        <h3>{group.label}</h3>
-        <ul>
-          {group.links.map((l) => (
-            <li>
-              {isExternal(l.url) ? (
-                <a href={l.url} target="_blank" rel="noopener">{l.label}</a>
-              ) : (
-                <a href={l.url}>{l.label}</a>
-              )}
+    {(settings.address || phones.length > 0 || emails.length > 0) && (
+      <div class="footer-contact" aria-label={footer.contact_heading}>
+        <h2 class="footer-h">{footer.contact_heading}</h2>
+        <ul class="footer-contact-cards">
+          {settings.address && (
+            <li class="footer-card">
+              <span class="footer-card-icon"><Fragment set:html={svg(ICON.pin)} /></span>
+              <span class="footer-card-body">
+                <span>{settings.address}</span>
+                {mapsUrl && <a href={mapsUrl} target="_blank" rel="noopener">{footer.directions_label} <Fragment set:html={svg(ICON.arrow, 15)} /></a>}
+              </span>
             </li>
-          ))}
+          )}
+          {phones.length > 0 && (
+            <li class="footer-card">
+              <span class="footer-card-icon"><Fragment set:html={svg(ICON.phone)} /></span>
+              <span class="footer-card-body">
+                {phones.map((p) => <a class="footer-card-main" href={`tel:${p.replace(/[^+\d]/g, '')}`}>{p}</a>)}
+              </span>
+            </li>
+          )}
+          {emails.length > 0 && (
+            <li class="footer-card">
+              <span class="footer-card-icon"><Fragment set:html={svg(ICON.mail)} /></span>
+              <span class="footer-card-body">
+                {emails.map((e) => <a class="footer-card-main" href={`mailto:${e}`}>{e}</a>)}
+              </span>
+            </li>
+          )}
         </ul>
       </div>
-    ))}
-
-    <div>
-      <h3>{footer.contact_heading}</h3>
-      <ul class="footer-contact">
-        {settings.address && (
-          <li>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.1-7-11a7 7 0 0 1 14 0c0 4.9-7 11-7 11z" /><circle cx="12" cy="10" r="2.5" /></svg>
-            <span>{settings.address}</span>
-          </li>
-        )}
-        {(settings.phones ?? []).map((p) => (
-          <li>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L14 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 2 6a2 2 0 0 1 2-2z" /></svg>
-            <a href={`tel:${p}`}>{p}</a>
-          </li>
-        ))}
-        {(settings.official_emails ?? []).map((e) => (
-          <li>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="0" /><path d="M3 6l9 7 9-7" /></svg>
-            <a href={`mailto:${e}`}>{e}</a>
-          </li>
-        ))}
-        {mapsUrl && (
-          <li>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2z" /><path d="M9 4v14M15 6v14" /></svg>
-            <a href={mapsUrl} target="_blank" rel="noopener">View on Google Maps</a>
-          </li>
-        )}
-      </ul>
-    </div>
-  </div>
-  <div class="wrap bottom">
-    <p>&copy; {year} {footer.copyright_text}</p>
-    {footer.bottom_links.length > 0 && (
-      <p>
-        {footer.bottom_links.map((l, i) => (
-          <>{i > 0 && ' · '}<a href={l.url}>{l.label}</a></>
-        ))}
-      </p>
     )}
+  </div>
+
+  <div class="wrap footer-links" style={`--footer-cols:${footer.link_groups.length + (services.length > 0 ? 1 : 0)}`}>
+    {footer.link_groups.map((group) => (
+      <nav class="footer-col" aria-label={group.label}>
+        <h2 class="footer-h">{group.label}</h2>
+        <ul>
+          {group.links.map((l) => (
+            <li><a href={l.url} {...ext(l.url)}><Fragment set:html={svg(ICON.arrow, 14)} />{l.label}</a></li>
+          ))}
+        </ul>
+      </nav>
+    ))}
+    {services.length > 0 && (
+      <nav class="footer-col footer-services" aria-label={footer.services_heading}>
+        <h2 class="footer-h">{footer.services_heading}</h2>
+        <ul>
+          {services.map((l) => (
+            <li><a href={l.url} {...ext(l.url)}>{l.label}{isExternal(l.url) && <Fragment set:html={svg(ICON.out, 14)} />}</a></li>
+          ))}
+        </ul>
+      </nav>
+    )}
+  </div>
+
+  <div class="footer-bar">
+    <div class="wrap bottom">
+      <p>&copy; {year} {footer.copyright_text}</p>
+      {footer.bottom_links.length > 0 && (
+        <ul class="footer-bottom-links">
+          {footer.bottom_links.map((l) => <li><a href={l.url} {...ext(l.url)}>{l.label}</a></li>)}
+        </ul>
+      )}
+    </div>
   </div>
 </footer>
 
@@ -103,11 +134,7 @@ function isExternal(url: string) {
 </button>
 
 <script>
-  // Shows once the visitor has scrolled a bit, not from the very top of
-  // the page — matches the "no dropdowns/no clutter" spirit by staying
-  // out of the way until it's actually useful. Square, not circular
-  // (house style: no rounded corners), same gold/navy treatment as every
-  // other button on the site.
+  // Back to top: appears once the visitor has scrolled a bit.
   const btn = document.getElementById('backToTop') as HTMLButtonElement | null;
   if (btn) {
     const SHOW_AFTER_PX = 400;

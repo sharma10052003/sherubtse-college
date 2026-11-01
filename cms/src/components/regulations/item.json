@@ -1,0 +1,10 @@
+{
+  "collectionName": "components_regulations_items",
+  "info": { "displayName": "Rule", "icon": "file" },
+  "options": {},
+  "attributes": {
+    "title": { "type": "string", "required": true },
+    "text": { "type": "text" },
+    "highlight": { "type": "string" }
+  }
+}

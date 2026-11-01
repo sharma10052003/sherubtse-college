@@ -1,0 +1,368 @@
+/**
+ * Alumni overview and sub-pages: the parts added when the long page was split
+ * (compact page banner, the sticky navigation bar, the topic cards, the closing
+ * strip) and rounded corners for the existing sections, by the project owner's
+ * request. Everything is scoped under .al; the rest of the look is in
+ * alumni-page.css. Motion stops for visitors who ask for less motion.
+ */
+
+/* ============================================================ SUB-PAGE BANNER */
+.al-subhero {
+  position: relative;
+  overflow: hidden;
+  padding: var(--s7) 0 calc(var(--s8) + 24px);
+  background: radial-gradient(130% 120% at 8% 0%, var(--navy-mid) 0%, var(--navy) 46%, var(--navy-deep) 100%);
+  color: #fff;
+}
+.al-subhero-glow {
+  position: absolute;
+  top: -200px;
+  right: 6%;
+  width: 480px;
+  height: 480px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(240, 180, 41, 0.26), transparent 70%);
+  filter: blur(50px);
+  pointer-events: none;
+  animation: al-sub-drift 18s ease-in-out infinite alternate;
+}
+.al-subhero-ring {
+  position: absolute;
+  right: 7%;
+  bottom: -150px;
+  width: 360px;
+  height: 360px;
+  border-radius: 50%;
+  border: 2px dashed rgba(240, 180, 41, 0.38);
+  pointer-events: none;
+  animation: al-sub-spin 40s linear infinite;
+}
+@keyframes al-sub-drift {
+  to {
+    transform: translate(-50px, 40px) scale(1.12);
+  }
+}
+@keyframes al-sub-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.al-subhero-inner {
+  position: relative;
+}
+.al-subhero .al-breadcrumb {
+  margin-bottom: var(--s5);
+}
+.al-subhero-head {
+  display: flex;
+  align-items: center;
+  gap: var(--s5);
+  animation: al-rise 0.8s var(--al-ease) both;
+}
+.al-subhero-icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  border: 2px dashed var(--al-gold);
+  color: var(--al-gold-soft);
+}
+.al-subhero-title {
+  margin: 6px 0 10px;
+  font-family: var(--font-serif);
+  font-size: clamp(2.2rem, 5vw, 3.8rem);
+  line-height: 1.05;
+  letter-spacing: -0.015em;
+  color: #fff;
+}
+.al-subhero-text {
+  max-width: 58ch;
+  margin: 0;
+  font-size: clamp(1.02rem, 1.4vw, 1.18rem);
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.86);
+}
+@media (max-width: 640px) {
+  .al-subhero-icon {
+    display: none;
+  }
+}
+
+/* ============================================================ NAVIGATION BAR */
+.al-subnav-wrap {
+  position: sticky;
+  top: calc(var(--al-top, 0px) + 10px);
+  z-index: 20;
+  margin-top: -32px;
+}
+.al-subnav {
+  display: flex;
+  gap: 6px;
+  padding: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  border: 2px solid var(--al-navy);
+  border-radius: 999px;
+  background: #fff;
+}
+.al-subnav::-webkit-scrollbar {
+  display: none;
+}
+.al-subnav-link {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: 999px;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--al-navy);
+  text-decoration: none;
+  transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s var(--al-ease);
+}
+.al-subnav-link:hover {
+  background: var(--al-navy-soft);
+  transform: translateY(-1px);
+}
+.al-subnav-link.is-current {
+  background: var(--al-navy);
+  color: #fff;
+}
+.al-subnav-link:focus-visible {
+  outline: 3px solid var(--al-gold);
+  outline-offset: 2px;
+}
+.al-subnav-wrap + .al-section {
+  padding-top: var(--s8);
+}
+
+/* ============================================================ TOPIC CARDS */
+.al-hub {
+  background: #fff;
+}
+.al-hub-grid {
+  --cols: 4;
+  --gap: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--gap);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.al-hub-item {
+  display: flex;
+  flex: 0 0 calc((100% - (var(--cols) - 1) * var(--gap)) / var(--cols));
+  min-width: 0;
+}
+@media (max-width: 1100px) {
+  .al-hub-grid {
+    --cols: 3;
+  }
+}
+@media (max-width: 800px) {
+  .al-hub-grid {
+    --cols: 2;
+  }
+}
+@media (max-width: 520px) {
+  .al-hub-grid {
+    --cols: 1;
+  }
+}
+.al-hub-card {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding: 26px 24px 22px;
+  border: 2px solid rgba(13, 27, 75, 0.2);
+  border-radius: 28px;
+  background: #fff;
+  color: var(--al-navy);
+  text-decoration: none;
+  transition: transform 0.35s var(--al-ease), border-color 0.25s ease;
+}
+.al-hub-fill {
+  position: absolute;
+  inset: auto 0 0 0;
+  z-index: -1;
+  height: 0;
+  background: linear-gradient(160deg, var(--al-blue), var(--al-navy) 60%, var(--al-navy-deep));
+  transition: height 0.5s var(--al-ease);
+}
+.al-hub-card:hover,
+.al-hub-card:focus-visible {
+  transform: translateY(-6px);
+  border-color: var(--al-navy);
+}
+.al-hub-card:hover .al-hub-fill,
+.al-hub-card:focus-visible .al-hub-fill {
+  height: 100%;
+}
+.al-hub-card:focus-visible {
+  outline: 3px solid var(--al-gold);
+  outline-offset: 3px;
+}
+.al-hub-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+.al-hub-icon {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--al-gold);
+  color: var(--al-navy-deep);
+  transition: transform 0.4s var(--al-ease);
+}
+.al-hub-card:hover .al-hub-icon {
+  transform: rotate(-10deg) scale(1.08);
+}
+.al-hub-meta {
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: var(--al-navy-soft);
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--al-navy);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+.al-hub-card:hover .al-hub-meta {
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+}
+.al-hub-title {
+  margin: 0 0 8px;
+  font-family: var(--font-serif);
+  font-size: 1.4rem;
+  line-height: 1.2;
+  color: var(--al-navy);
+  transition: color 0.3s ease;
+}
+.al-hub-text {
+  margin: 0 0 20px;
+  font-size: 0.96rem;
+  line-height: 1.55;
+  color: var(--ink-2);
+  transition: color 0.3s ease;
+}
+.al-hub-go {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: auto;
+  font-weight: 700;
+  color: var(--al-blue);
+  transition: color 0.3s ease;
+}
+.al-hub-go svg {
+  transition: transform 0.3s var(--al-ease);
+}
+.al-hub-card:hover .al-hub-title {
+  color: #fff;
+}
+.al-hub-card:hover .al-hub-text {
+  color: #d6dcef;
+}
+.al-hub-card:hover .al-hub-go {
+  color: var(--al-gold-soft);
+}
+.al-hub-card:hover .al-hub-go svg {
+  transform: translateX(5px);
+}
+
+/* ============================================================ CLOSING STRIP */
+.al-foot {
+  padding: var(--s7) 0;
+  background: var(--al-paper-2);
+}
+.al-foot-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s4);
+}
+.al-foot-text {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: 1.4rem;
+  color: var(--al-navy);
+}
+.al-foot-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s3);
+}
+
+/* ============================================================ ROUNDED CORNERS */
+.al .al-btn,
+.al .al-interest,
+.al .al-chips li,
+.al .al-filters button,
+.al .al-tabs,
+.al .al-tabs [role='tab'],
+.al .al-tag {
+  border-radius: 999px;
+}
+.al .al-stats,
+.al .al-why-card,
+.al .al-dist-card,
+.al .al-story,
+.al .al-event,
+.al .al-ach,
+.al .al-chapter,
+.al .al-contact-item,
+.al .al-fieldset,
+.al .al-note,
+.al .al-give-panel,
+.al .al-empty,
+.al .al-form {
+  border-radius: 24px;
+}
+.al .al-stats,
+.al .al-dist-card,
+.al .al-story,
+.al .al-event {
+  overflow: hidden;
+}
+.al .al-field input,
+.al .al-field select,
+.al .al-field textarea {
+  border-radius: 14px;
+}
+.al .al-news-row input {
+  border-radius: 999px;
+}
+.al .al-gallery-item {
+  overflow: hidden;
+  border-radius: 18px;
+}
+
+/* ============================================================ LESS MOTION */
+@media (prefers-reduced-motion: reduce) {
+  .al-subhero-glow,
+  .al-subhero-ring,
+  .al-subhero-head {
+    animation: none;
+  }
+  .al-hub-card,
+  .al-hub-fill,
+  .al-hub-icon,
+  .al-hub-go svg,
+  .al-subnav-link {
+    transition: none;
+  }
+}

@@ -44,6 +44,28 @@ const LABEL_DEFAULTS = {
   source: 'Source',
   ticker_label: 'Latest',
   swipe_hint: 'Swipe for more',
+  slider_prev: 'Previous story',
+  slider_next: 'Next story',
+  slider_pause: 'Pause the slideshow',
+  slider_play: 'Play the slideshow',
+  slide_of: 'Story {n} of {total}',
+  wishes_heading: 'Wishes from the College community',
+  learn_more: 'Learn more',
+  tab_all: 'All',
+  tab_news: 'News',
+  tab_announcements: 'Announcements',
+  tab_events: 'Events',
+  tab_vacancies: 'Vacancies',
+  search_placeholder: 'Search the latest updates',
+  show_more: 'Show more',
+  new_badge: 'New',
+  no_match: 'Nothing matches your search.',
+  view_all: 'View all',
+  ago_today: 'Today',
+  ago_yesterday: 'Yesterday',
+  ago_days: '{n} days ago',
+  on_date: 'On',
+  urgent_badge: 'Urgent',
 };
 export type HomeLabels = typeof LABEL_DEFAULTS;
 
@@ -107,6 +129,8 @@ export interface HomeEvent {
   registration: string | null;
   featured: boolean;
   expires: string;
+  /** When the event was added in Strapi — places it among the latest updates. */
+  created: string;
 }
 export interface Card {
   title: string;
@@ -124,9 +148,46 @@ export interface CentreCard { name: string; href: string; summary: string | null
 export interface Stat { value: string; label: string; note: string | null; source: string | null }
 export interface DocumentLink { title: string; url: string; ext: string | null; size: string | null; category: string | null }
 export interface LinkCard { label: string; url: string; description: string | null }
+export interface Wish { from: string; role: string | null; text: string }
+export type UpdateType = 'news' | 'announcement' | 'event' | 'vacancy';
+/** One line of the homepage "latest updates" feed: a story, notice, vacancy or event. */
+export interface Update {
+  key: string;
+  type: UpdateType;
+  label: string;
+  title: string;
+  summary: string;
+  /** What is shown: the story or notice date, or an event's start. */
+  date: string;
+  /** What the feed is ordered by (newest first). */
+  sort: string;
+  href: string;
+  image: ResponsiveImage | null;
+  meta: string | null;
+  deadline: string | null;
+  pinned: boolean;
+  urgent: boolean;
+  expires: string | null;
+  attachment: boolean;
+}
+export interface ShowItem {
+  key: string;
+  kind: 'image' | 'greeting' | 'announcement' | 'celebration' | 'quote' | 'update';
+  title: string | null;
+  text: string | null;
+  image: ResponsiveImage | null;
+  size: 'small' | 'medium' | 'large' | 'wide';
+  accent: 'white' | 'navy' | 'gold';
+  link: { label: string; url: string } | null;
+  from: string | null;
+  until: string | null;
+}
 
 export type Section =
-  | (Base & { kind: 'highlights'; layout: 'feature' | 'grid'; items: Highlight[] })
+  | (Base & { kind: 'highlights'; layout: 'carousel' | 'feature' | 'grid'; seconds: number; items: Highlight[] })
+  | (Base & { kind: 'updates'; items: Update[]; links: Record<UpdateType, string> })
+  | (Base & { kind: 'celebration'; theme: 'royal' | 'gold' | 'light'; eyebrow: string | null; greeting: string | null; date_label: string | null; message_html: string | null; portrait: ResponsiveImage | null; gallery: ResponsiveImage[]; wishes: Wish[]; from: string | null; until: string | null })
+  | (Base & { kind: 'showcase'; eyebrow: string | null; items: ShowItem[] })
   | (Base & { kind: 'notices'; items: FeedItem[] })
   | (Base & { kind: 'events'; items: HomeEvent[] })
   | (Base & { kind: 'introduction'; eyebrow: string | null; body_html: string | null; image: ResponsiveImage | null; links: LinkItem[] })
@@ -272,6 +333,7 @@ async function resolveEvents(s: any): Promise<HomeEvent[]> {
     image: responsiveImage(e.image),
     registration: text(e.registration_link),
     featured: !!e.is_featured,
+    created: e.publishedAt || e.createdAt || e.starts_at,
     expires: e.ends_at || new Date(new Date(e.starts_at).getTime() + 24 * 3600 * 1000).toISOString(),
   }));
   const ordered = s.featured_first ? [...items.filter((e) => e.featured), ...items.filter((e) => !e.featured)] : items;
@@ -380,6 +442,12 @@ const fileSize = (kb: number | null | undefined) => (kb ? (kb >= 1024 ? `${(kb /
 
 // ---------------------------------------------------------------------------
 
+let presidentPromise: Promise<any | null> | null = null;
+function president() {
+  presidentPromise ??= list('leadership-members', { filters: { role_title: { $eq: 'President' } }, populate: ['photo'], pagination: { pageSize: 1 } }).then((r) => r[0] ?? null);
+  return presidentPromise;
+}
+
 async function resolveSection(s: any, i: number): Promise<Section | null> {
   if (s.is_visible === false) return null;
   const base: Base = {
@@ -394,7 +462,7 @@ async function resolveSection(s: any, i: number): Promise<Section | null> {
   };
   switch (s.__component) {
     case 'home.highlights':
-      return { ...base, kind: 'highlights', layout: s.layout === 'grid' ? 'grid' : 'feature', items: await resolveHighlights(s) };
+      return { ...base, kind: 'highlights', layout: s.layout === 'grid' ? 'grid' : s.layout === 'feature' ? 'feature' : 'carousel', seconds: Math.min(20, Math.max(3, Number(s.slide_seconds) || 6)), items: await resolveHighlights(s) };
     case 'home.notices':
       return { ...base, kind: 'notices', items: await resolveNotices(s) };
     case 'home.events':
@@ -411,7 +479,16 @@ async function resolveSection(s: any, i: number): Promise<Section | null> {
     case 'home.message': {
       const message_html = html(s.message);
       if (!message_html) return null;
-      return { ...base, kind: 'message', name: text(s.name), role: text(s.role), message_html, photo: responsiveImage(s.photo, s.photo_alt) };
+      // Name, role and photo come from Leadership (the President) unless typed here.
+      const lead = s.name && s.photo ? null : await president();
+      return {
+        ...base,
+        kind: 'message',
+        name: text(s.name) ?? (lead ? [lead.honorific, lead.full_name].filter(Boolean).join(' ') : null),
+        role: text(s.role) ?? text(lead?.role_title),
+        message_html,
+        photo: responsiveImage(s.photo, s.photo_alt) ?? (lead?.photo ? responsiveImage(lead.photo, lead.full_name ? 'Portrait of ' + lead.full_name : '') : null),
+      };
     }
     case 'home.programmes':
       return { ...base, kind: 'programmes', items: await resolveProgrammes(s) };
@@ -444,10 +521,146 @@ async function resolveSection(s: any, i: number): Promise<Section | null> {
   }
 }
 
+// ---------------------------------------------------------------------------
+// King’s Birthday & Celebrations, and Special Content — their own records, placed
+// among the sections by the “Placement” each one has.
+
+const extraBase = (s: any, key: string, bg: Background): Base => ({
+  key,
+  heading: text(s.heading),
+  intro: text(s.intro),
+  background: bg,
+  width: 'full',
+  anchor: text(s.anchor),
+  button: s.button_label && s.button_url ? { label: s.button_label, url: s.button_url } : null,
+  empty_text: null,
+});
+const iso = (v: string | null | undefined) => (v ? new Date(v).toISOString() : null);
+
+async function resolveCelebration(): Promise<Section | null> {
+  const res = await strapiGet<StrapiSingleResponse<any>>('home-celebration', { populate: { portrait: true, gallery: true, wishes: true } });
+  const c = res?.data;
+  if (!c || c.is_visible === false) return null;
+  if (c.show_until && Date.parse(c.show_until) <= Date.now()) return null;
+  const message_html = html(c.message);
+  const wishes: Wish[] = (c.wishes ?? []).filter((w: any) => w?.from && w?.text).map((w: any) => ({ from: w.from, role: text(w.role), text: w.text }));
+  const portrait = responsiveImage(c.portrait, c.portrait_alt);
+  const gallery = ((c.gallery ?? []) as any[]).map((m) => responsiveImage(m)).filter((m): m is ResponsiveImage => !!m);
+  const greeting = text(c.greeting);
+  if (!text(c.heading) && !greeting && !message_html && !wishes.length && !portrait && !gallery.length) return null;
+  return {
+    ...extraBase(c, 'home.celebration', 'navy'),
+    kind: 'celebration',
+    theme: ['gold', 'light'].includes(c.theme) ? c.theme : 'royal',
+    eyebrow: text(c.eyebrow),
+    greeting,
+    date_label: text(c.date_label),
+    message_html,
+    portrait,
+    gallery,
+    wishes,
+    from: iso(c.show_from),
+    until: iso(c.show_until),
+  };
+}
+
+async function resolveShowcase(): Promise<Section | null> {
+  const res = await strapiGet<StrapiSingleResponse<any>>('home-showcase', { populate: { items: { populate: ['image'] } } });
+  const c = res?.data;
+  if (!c || c.is_visible === false) return null;
+  const now = Date.now();
+  const items: ShowItem[] = ((c.items ?? []) as any[])
+    .map((x, i): ShowItem | null => {
+      if (x.is_enabled === false) return null;
+      if (x.end_at && Date.parse(x.end_at) <= now) return null;
+      const image = responsiveImage(x.image, x.image_alt);
+      if (!text(x.title) && !text(x.text) && !image) return null;
+      return {
+        key: `show-${x.id ?? i}`,
+        kind: ['image', 'greeting', 'celebration', 'quote', 'update'].includes(x.kind) ? x.kind : 'announcement',
+        title: text(x.title),
+        text: text(x.text),
+        image,
+        size: ['small', 'large', 'wide'].includes(x.size) ? x.size : 'medium',
+        accent: ['navy', 'gold'].includes(x.accent) ? x.accent : 'white',
+        link: x.link_url ? { label: text(x.link_label) ?? 'Learn more', url: x.link_url } : null,
+        from: iso(x.start_at),
+        until: iso(x.end_at),
+      };
+    })
+    .filter((x): x is ShowItem => !!x);
+  if (!items.length) return null;
+  return {
+    ...extraBase(c, 'home.showcase', ['white', 'navy'].includes(c.background) ? c.background : 'soft'),
+    kind: 'showcase',
+    eyebrow: text(c.eyebrow),
+    items,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Latest updates — one filterable feed that merges the announcements, news, vacancies and
+// upcoming events (the “Current announcements” section stands in for the whole feed, and the
+// “What’s on” section beside it is folded in).
+
+const UPDATE_LINKS: Record<UpdateType, string> = {
+  news: '/news-notices/news',
+  announcement: '/news-notices/announcements',
+  vacancy: '/news-notices/recruitment',
+  event: '/news-notices/events',
+};
+
+async function resolveUpdates(eventsSection: Extract<Section, { kind: 'events' }> | null): Promise<Update[]> {
+  const [feed, news] = await Promise.all([
+    currentFeed(),
+    list('news-entries', { filters: eligibleNewsFilter(), sort: ['date:desc', 'publishedAt:desc'], populate: ['images', 'gallery', 'video_poster', 'video_file'], pagination: { pageSize: 12 } }),
+  ]);
+  const out: Update[] = [];
+  for (const n of feed.slice(0, 16)) {
+    const vacancy = n.group === 'vacancies';
+    out.push({
+      key: n.key, type: vacancy ? 'vacancy' : 'announcement', label: n.label, title: n.title, summary: n.summary, date: n.date, sort: n.date, href: n.href, image: null,
+      meta: vacancy ? n.meta : null, deadline: vacancy && n.deadline_label === 'Deadline' ? n.deadline : null, pinned: n.pinned, urgent: n.tone === 'danger', expires: n.expires, attachment: n.has_attachment,
+    });
+  }
+  for (const row of news.map(mapNews)) {
+    out.push({ key: `news-${row.id}`, type: 'news', label: row.category ?? 'News', title: row.title, summary: row.summary, date: row.date, sort: row.date, href: row.href, image: row.cover, meta: null, deadline: null, pinned: row.pinned, urgent: false, expires: row.expires, attachment: false });
+  }
+  for (const e of eventsSection?.items ?? []) {
+    out.push({
+      key: `event-${e.id}`, type: 'event', label: e.category ?? 'Event', title: e.title, summary: e.summary, date: e.starts_at, sort: e.created, href: e.href, image: e.image,
+      meta: e.venue, deadline: null, pinned: e.featured, urgent: false, expires: e.expires, attachment: false,
+    });
+  }
+  // Pinned first, then newest. An event is placed by when it was added, and shows its own date.
+  return out.sort((a, b) => Number(b.pinned) - Number(a.pinned) || b.sort.localeCompare(a.sort));
+}
+
+/** Slots an extra section into the list. After-anchors skip over a pair of half-width sections so it never splits them. */
+function place(sections: Section[], extra: Section, where: string) {
+  const messageAt = sections.findIndex((x) => x.kind === 'message');
+  const highlightsAt = sections.findIndex((x) => x.kind === 'highlights');
+  const afterHighlights = () => {
+    let i = highlightsAt < 0 ? 0 : highlightsAt + 1;
+    while (sections[i]?.width === 'half') i++;
+    return i;
+  };
+  let at: number;
+  switch (where) {
+    case 'top': at = 0; break;
+    case 'bottom': at = sections.length; break;
+    case 'before_message': at = messageAt >= 0 ? messageAt : afterHighlights(); break;
+    case 'after_message': at = messageAt >= 0 ? messageAt + 1 : afterHighlights(); break;
+    default: at = afterHighlights();
+  }
+  sections.splice(at, 0, extra);
+}
+
 /** A section with nothing to show is dropped, unless it has an “empty” message. */
 function hasContent(s: Section) {
   switch (s.kind) {
     case 'highlights':
+    case 'updates':
     case 'notices':
     case 'events':
     case 'programmes':
@@ -471,6 +684,32 @@ export async function getHomepage(): Promise<Homepage> {
   const row = res?.data ?? {};
   feedPromise = null;
   const sections = (await Promise.all(((row.sections ?? []) as any[]).map(resolveSection))).filter((s): s is Section => !!s && hasContent(s));
+  // The announcements section becomes the merged "latest updates" feed; the events section joins it.
+  const noticesAt = sections.findIndex((x) => x.kind === 'notices');
+  if (noticesAt >= 0) {
+    const eventsAt = sections.findIndex((x) => x.kind === 'events');
+    const eventsSection = eventsAt >= 0 ? (sections[eventsAt] as Extract<Section, { kind: 'events' }>) : null;
+    const items = await resolveUpdates(eventsSection);
+    const old = sections[noticesAt];
+    sections[noticesAt] = {
+      ...old,
+      kind: 'updates',
+      width: 'full',
+      button: null,
+      items,
+      links: UPDATE_LINKS,
+      empty_text: old.empty_text,
+    } as Section;
+    if (eventsAt >= 0) sections.splice(eventsAt, 1);
+  }
+  const [celebration, showcase, celRow, showRow] = await Promise.all([
+    resolveCelebration(),
+    resolveShowcase(),
+    strapiGet<StrapiSingleResponse<any>>('home-celebration', { fields: ['placement'] }),
+    strapiGet<StrapiSingleResponse<any>>('home-showcase', { fields: ['placement'] }),
+  ]);
+  if (celebration) place(sections, celebration, celRow?.data?.placement ?? 'before_message');
+  if (showcase) place(sections, showcase, showRow?.data?.placement ?? 'after_highlights');
   return {
     hero: {
       eyebrow: text(row.hero_eyebrow),

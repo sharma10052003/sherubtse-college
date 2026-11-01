@@ -13,4 +13,11 @@ import react from '@astrojs/react';
 export default defineConfig({
   redirects: redirectMap,
   integrations: [react()],
+  vite: {
+    server: {
+      // The “Ask Sherubtse” AI chat server (chat-server/, `node chat-server/server.mjs`).
+      // On the live server nginx does this. Without it the chat falls back to search.
+      proxy: { '/api/chat': 'http://127.0.0.1:4600' },
+    },
+  },
 });

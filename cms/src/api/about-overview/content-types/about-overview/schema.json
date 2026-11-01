@@ -49,6 +49,9 @@
       "allowedTypes": [
         "images"
       ]
+    },
+    "labels": {
+      "type": "json"
     }
   }
 }

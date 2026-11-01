@@ -1,24 +1,26 @@
 ---
-// Campus Facilities — an editorial "architectural journal": an asymmetric
-// opening, a numbered facility index, the Library and Laboratories as mirrored
-// half-width features, every other facility as a numbered story with details
-// that expand in place, a varied-proportion gallery and a list of useful links.
+// Campus Facilities — a photo-first "campus explorer": a full-bleed hero whose
+// photographs cross-fade, a tile for each type of facility, then a rail of tall
+// photo panels (the active one opens up, the others fold to a tab) with a
+// sticky filter, a masonry photo gallery with a viewer, and link cards.
 // Everything comes from About → Campus Facilities in Strapi
-// (lib/content/facilities.ts); section order, visibility and layout choices
-// are Page Settings → Sections. Styles: facilities.css (.cf).
+// (lib/content/facilities.ts): page settings, the Library and Laboratories
+// blocks, facilities, categories, gallery and links; section order and
+// visibility are Page Settings → Sections. A facility with no photograph is
+// shown as an icon panel until one is added. Styles: facilities-landing.css (.fl);
+// the detail text reuses facilities.css (.cf-detail).
 import Layout from '../../../layouts/Layout.astro';
 import '../../../styles/facilities.css';
-import FeatureBlock from '../../../components/facilities/FeatureBlock.astro';
-import FacilityDetail from '../../../components/facilities/FacilityDetail.astro';
+import '../../../styles/facilities-landing.css';
+import ShowcaseDetail from '../../../components/facilities/ShowcaseDetail.astro';
 import { getFacilitiesData } from '../../../lib/content/facilities';
-import type { Section, Facility } from '../../../lib/content/facilities';
+import type { Section } from '../../../lib/content/facilities';
+import { buildShowcase } from '../../../lib/content/facilities-showcase';
 import { icon } from '../../../lib/facility-icons';
 
-const { ok, page, categories, facilities, gallery, quickLinks } = await getFacilitiesData();
+const { ok, page, categories, allCategories, facilities, gallery, quickLinks } = await getFacilitiesData();
 const sectionId = (s: Section) => s.anchor ?? s.key;
-const pad = (n: number) => String(n).padStart(2, '0');
 const linkAttrs = (url: string) => (/^https?:\/\//i.test(url) ? { target: '_blank', rel: 'noopener' } : {});
-const catIcon = (f: Facility) => categories.find((c) => c.slug === f.categories[0]?.slug)?.icon ?? 'building';
 
 const hasContent = (s: Section) => {
   switch (s.kind) {
@@ -31,258 +33,250 @@ const hasContent = (s: Section) => {
   }
 };
 const sections = page.sections.filter(hasContent);
+const { items, tiles, slides } = buildShowcase({ page, categories: allCategories, facilities, gallery, sections });
 
-// Facilities linked to the Library / Laboratories features aren't repeated
-// as stories — their extra details expand under the feature instead.
-const linkedSlugs = new Set([page.library?.facility_slug, page.laboratories?.facility_slug].filter(Boolean));
-const bySlug = (slug: string | null | undefined) => (slug ? facilities.find((f) => f.slug === slug) ?? null : null);
-const labSlug = sections.find((s) => s.kind === 'laboratories')?.profiles_category ?? null;
-const labProfiles = labSlug ? facilities.filter((f) => !linkedSlugs.has(f.slug) && f.categories.some((c) => c.slug === labSlug)) : [];
-const storyFacilities = facilities.filter((f) => !linkedSlugs.has(f.slug));
-
-// One running number across the index, features and stories.
-type Entry = { no: string; name: string; kicker: string; target: string };
-const entries: Entry[] = [];
-const numberOf = new Map<string, string>();
-for (const s of sections) {
-  if (s.kind === 'library' && page.library) {
-    const no = pad(entries.length + 1);
-    numberOf.set('library', no);
-    entries.push({ no, name: page.library.heading || 'Library', kicker: 'Feature', target: sectionId(s) });
-  } else if (s.kind === 'laboratories' && page.laboratories) {
-    const no = pad(entries.length + 1);
-    numberOf.set('laboratories', no);
-    entries.push({ no, name: page.laboratories.heading || 'Laboratories', kicker: 'Feature', target: sectionId(s) });
-  } else if (s.kind === 'directory') {
-    for (const f of storyFacilities) {
-      const no = pad(entries.length + 1);
-      numberOf.set(`f:${f.slug}`, no);
-      entries.push({ no, name: f.name, kicker: f.categories[0]?.name ?? 'Facility', target: `facility-${f.slug}` });
-    }
-  }
-}
-const lead = page.hero_images[0] ?? null;
+// The rail takes the place of the first of the Library / Laboratories / Directory sections.
+const railIndex = sections.findIndex((s) => ['library', 'laboratories', 'directory'].includes(s.kind));
 const directory = sections.find((s) => s.kind === 'directory');
 const expandLabel = directory?.expand_label || 'Explore facility details';
+const railHeading = directory?.heading ?? null;
+const railIntro = directory?.intro ?? null;
+const railAnchor = directory ? sectionId(directory) : railIndex >= 0 ? sectionId(sections[railIndex]) : 'facilities';
 const galleryCategories = categories.filter((c) => gallery.some((g) => g.category?.slug === c.slug));
+const quickNav = page.quick_nav;
+const catNames = (cats: { name: string }[]) => cats.map((c) => c.name).join(' · ');
 ---
 <Layout title={page.seo_title || page.title} description={page.seo_description || page.intro || undefined}>
-  <div class="cf" data-cf>
-    <!-- ============================ OPENING ============================ -->
-    <header class="cf-opening">
-      <div class="wrap cf-wide cf-opening-grid">
-        <div class="cf-opening-text">
-          <nav class="cf-breadcrumb" aria-label="Breadcrumb">
-            <a href="/">Home</a> › <a href="/about">About</a> › <span aria-current="page">{page.title}</span>
+  <div class="cf fl" data-fl>
+    <!-- ============================ HERO ============================ -->
+    <header class="fl-hero" data-fl-hero>
+      <div class="fl-hero-media" aria-hidden="true">
+        {slides.map((s, i) => (
+          <img class:list={['fl-slide', { 'is-active': i === 0 }]} src={s.url} alt="" data-fl-slide data-caption={s.caption ?? ''} loading={i === 0 ? 'eager' : 'lazy'} decoding="async" />
+        ))}
+        <span class="fl-hero-shade"></span>
+      </div>
+
+      <div class="wrap fl-wide fl-hero-inner">
+        <nav class="fl-breadcrumb fl-rise" style="--d:0" aria-label="Breadcrumb">
+          <a href="/">Home</a><span aria-hidden="true">›</span><a href="/about">About</a><span aria-hidden="true">›</span><span aria-current="page">{page.title}</span>
+        </nav>
+        <p class="fl-eyebrow fl-rise" style="--d:1">{page.eyebrow || 'Life on Campus'}</p>
+        <h1 class="fl-title fl-rise" style="--d:2">{page.title}</h1>
+        {page.intro && <p class="fl-intro fl-rise" style="--d:3">{page.intro}</p>}
+        {quickNav.length > 0 && (
+          <nav class="fl-jumps fl-rise" style="--d:4" aria-label="Jump to">
+            {quickNav.map((n) => <a href={n.target} data-fl-jump>{n.label}</a>)}
           </nav>
-          <p class="cf-eyebrow">
-            <span class="cf-eyebrow-rule" aria-hidden="true"></span>
-            {page.eyebrow || 'Life on Campus'}
-            {entries.length > 0 && <span class="cf-eyebrow-count">N° 01–{pad(entries.length)}</span>}
-          </p>
-          <h1 class="cf-display">{page.title}</h1>
-          {page.intro && <p class="cf-standfirst">{page.intro}</p>}
-          {page.quick_nav.length > 0 && (
-            <nav class="cf-quicknav" aria-label="Jump to">
-              {page.quick_nav.map((n, i) => (
-                <a href={n.target} data-cf-nav><span class="cf-quicknav-no" aria-hidden="true">{pad(i + 1)}</span>{n.label}</a>
-              ))}
-            </nav>
+        )}
+      </div>
+
+      {slides.length > 0 && (
+        <div class="wrap fl-wide fl-hero-foot">
+          <p class="fl-hero-cap" data-fl-cap>{slides[0].caption}</p>
+          {slides.length > 1 && (
+            <div class="fl-dots" role="group" aria-label="Photographs">
+              {slides.map((_, i) => <button type="button" class:list={['fl-dot', { 'is-active': i === 0 }]} data-fl-dot={i} aria-label={`Photograph ${i + 1}`} aria-pressed={i === 0 ? 'true' : 'false'}></button>)}
+            </div>
           )}
         </div>
-
-        <figure class:list={['cf-opening-figure', { 'cf-opening-figure--plate': !lead }]}>
-          <span class="cf-frame" aria-hidden="true"></span>
-          {lead ? (
-            <div class="cf-opening-photos">
-              {page.hero_images.map((im, i) => (
-                <img class:list={['cf-opening-img', { 'is-active': i === 0 }]} src={im.url} alt={i === 0 ? im.alt : ''} data-cf-slide loading={i === 0 ? 'eager' : 'lazy'} />
-              ))}
-            </div>
-          ) : (
-            <div class="cf-plate cf-plate--opening" aria-hidden="true">
-              <svg class="cf-plate-lines" viewBox="0 0 600 450" preserveAspectRatio="xMidYMid slice">
-                <path d="M0 330 90 250l70 40 120-115 100 85 80-50 140 95" />
-                <path d="M0 365 120 310l110 30 130-70 120 45 120-25" />
-                <path d="M0 395 150 370l140 15 150-40 160 20" />
-                <path d="M235 235h130M250 235v-34h100v34M243 201l57-30 57 30M262 201v-14h76v14M300 171v-16" />
-                <circle cx="470" cy="95" r="26" />
-              </svg>
-              <span class="cf-plate-caption">Kanglung, Trashigang</span>
-            </div>
-          )}
-          {(page.hero_caption || lead) && <figcaption class="cf-caption">{page.hero_caption || lead?.alt}</figcaption>}
-        </figure>
-      </div>
+      )}
     </header>
 
-    {!ok && <div class="wrap cf-wide"><p class="cf-note-block">{page.messages.no_facilities}</p></div>}
+    {!ok && <div class="wrap fl-wide"><p class="fl-note">{page.messages.no_facilities}</p></div>}
 
     <!-- ============================ SECTIONS ============================ -->
-    {sections.map((s) => (
-      <section id={sectionId(s)} class:list={['cf-section', `cf-section--${s.kind}`, `cf-bg-${s.background}`]} aria-labelledby={s.heading ? `${sectionId(s)}-h` : undefined}>
-        <div class="wrap cf-wide">
-          {(s.heading || s.intro) && !['cta', 'library', 'laboratories'].includes(s.kind) && (
-            <header class="cf-head">
-              {s.heading && <h2 class="cf-h2" id={`${sectionId(s)}-h`} tabindex="-1">{s.heading}</h2>}
-              {s.intro && <p class="cf-lede">{s.intro}</p>}
-            </header>
-          )}
-          {(s.kind === 'library' || s.kind === 'laboratories') && s.heading && <h2 class="cf-sr" id={`${sectionId(s)}-h`} tabindex="-1">{s.heading}</h2>}
+    {sections.map((s, si) => {
+      const id = sectionId(s);
+      const head = (s.heading || s.intro) && !['cta', 'library', 'laboratories', 'directory'].includes(s.kind);
+      if (['library', 'laboratories', 'directory'].includes(s.kind) && si !== railIndex) return null;
+      return (
+        <section id={s.kind === 'directory' || si === railIndex ? railAnchor : id} class:list={['fl-section', `fl-section--${s.kind}`, `fl-bg-${s.background}`]} aria-labelledby={s.heading ? `${id}-h` : undefined}>
+          <div class="wrap fl-wide">
+            {head && (
+              <header class="fl-head" data-fl-reveal>
+                {s.heading && <h2 class="fl-h2" id={`${id}-h`}>{s.heading}</h2>}
+                {s.intro && <p class="fl-lede">{s.intro}</p>}
+              </header>
+            )}
 
-          {s.kind === 'index' && (
-            <ol class:list={['cf-index', `cf-index--${s.columns}`]} data-cf-index>
-              {entries.map((e) => (
-                <li>
-                  <a href={`#${e.target}`} data-cf-index-link>
-                    <span class="cf-index-no">{e.no}</span>
-                    <span class="cf-index-text"><strong>{e.name}</strong><span>{e.kicker}</span></span>
-                  </a>
-                </li>
-              ))}
-            </ol>
-          )}
+            {/* ---------- Categories ---------- */}
+            {s.kind === 'index' && tiles.length > 0 && (
+              <ul class="fl-tiles" style={`--n:${Math.min(tiles.length, 5)}`} role="list">
+                {tiles.map((t, i) => (
+                  <li class="fl-tile-item" data-fl-reveal style={`--d:${i * 80}ms`}>
+                    <a class:list={['fl-tile', { 'fl-tile--photo': !!t.image }]} href={`?category=${t.category.slug}#${railAnchor}`} data-fl-cat={t.category.slug}>
+                      {t.image && <img src={t.image.url} alt="" loading="lazy" decoding="async" />}
+                      <span class="fl-tile-shade" aria-hidden="true"></span>
+                      <span class="fl-tile-icon" set:html={icon(t.category.icon)} />
+                      <span class="fl-tile-body">
+                        <strong>{t.category.name}</strong>
+                        <span>{t.count} {t.count === 1 ? 'facility' : 'facilities'}</span>
+                      </span>
+                      <span class="fl-tile-go" aria-hidden="true" set:html={icon('arrow')} />
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            )}
 
-          {s.kind === 'library' && page.library && (
-            <FeatureBlock block={page.library} id={sectionId(s)} number={numberOf.get('library') ?? '01'} fallbackIcon="book" headingFallback="Library" linked={bySlug(page.library.facility_slug)} expandLabel={expandLabel} />
-          )}
+            {/* ---------- Facility rail ---------- */}
+            {si === railIndex && (
+              <div class="fl-explorer" data-fl-explorer>
+                {(railHeading || railIntro) && (
+                  <header class="fl-head" data-fl-reveal>
+                    {railHeading && <h2 class="fl-h2" id={`${id}-h`}>{railHeading}</h2>}
+                    {railIntro && <p class="fl-lede">{railIntro}</p>}
+                  </header>
+                )}
+                {items.length > 0 ? (
+                  <>
+                    <div class="fl-bar" data-fl-bar>
+                      <div class="fl-chips" role="group" aria-label="Filter by type">
+                        <button type="button" class="fl-chip is-on" data-fl-filter="" aria-pressed="true">All<span>{items.length}</span></button>
+                        {tiles.map((t) => (
+                          <button type="button" class="fl-chip" data-fl-filter={t.category.slug} aria-pressed="false">
+                            <span class="fl-chip-icon" set:html={icon(t.category.icon)} />{t.category.name}<span>{t.count}</span>
+                          </button>
+                        ))}
+                      </div>
+                      <p class="fl-count" role="status" aria-live="polite" data-fl-count>{items.length} {items.length === 1 ? 'facility' : 'facilities'}</p>
+                    </div>
 
-          {s.kind === 'laboratories' && page.laboratories && (
-            <>
-              <FeatureBlock block={page.laboratories} id={sectionId(s)} number={numberOf.get('laboratories') ?? '02'} fallbackIcon="flask" headingFallback="Laboratories" linked={bySlug(page.laboratories.facility_slug)} expandLabel={expandLabel} />
-              {labProfiles.length > 0 && (
-                <div class="cf-profiles">
-                  <h3 class="cf-h3">Our laboratories</h3>
-                  <ul class="cf-rows">
-                    {labProfiles.map((f) => (
-                      <li>
-                        <span class="cf-rows-name">{f.name}</span>
-                        {f.department && <span class="cf-rows-meta">{f.department}</span>}
-                        {f.summary && <span class="cf-rows-summary">{f.summary}</span>}
+                    <div class="fl-rail" data-fl-rail>
+                      {items.map((it, i) => (
+                        <article
+                          id={`fl-${it.key}`}
+                          class:list={['fl-panel', { 'is-active': i === 0, 'fl-panel--plain': !it.image }]}
+                          data-fl-panel
+                          data-key={it.key}
+                          data-cats={it.categories.map((c) => c.slug).join(' ')}
+                          aria-labelledby={`fl-${it.key}-h`}
+                        >
+                          {it.image ? (
+                            <img class="fl-panel-img" src={it.image.url} alt={it.image.alt} loading={i < 3 ? 'eager' : 'lazy'} decoding="async" />
+                          ) : (
+                            <div class="fl-panel-art" aria-hidden="true">
+                              <span class="fl-panel-ring"></span>
+                              <span class="fl-panel-art-icon" set:html={icon(it.icon)} />
+                            </div>
+                          )}
+                          <span class="fl-panel-shade" aria-hidden="true"></span>
+                          <button type="button" class="fl-panel-tab" data-fl-select aria-expanded={i === 0 ? 'true' : 'false'} aria-controls={`fl-${it.key}-info`}>
+                            <span class="fl-panel-tab-icon" set:html={icon(it.icon)} />
+                            <span class="fl-panel-tab-name">{it.name}</span>
+                          </button>
+                          <div class="fl-panel-info" id={`fl-${it.key}-info`}>
+                            {it.categories.length > 0 && <p class="fl-kicker">{catNames(it.categories)}</p>}
+                            <h3 class="fl-panel-title" id={`fl-${it.key}-h`}>{it.name}</h3>
+                            {it.summary && <p class="fl-panel-text">{it.summary}</p>}
+                            {it.location && <p class="fl-panel-meta"><Fragment set:html={icon('pin')} />{it.location}</p>}
+                            {(it.hasDetails || it.href) && (
+                              <div class="fl-actions">
+                                {it.hasDetails && <button type="button" class="fl-btn fl-btn--gold" data-fl-open={it.key}>{expandLabel}<Fragment set:html={icon('arrow')} /></button>}
+                                {it.href && <a class="fl-btn fl-btn--line" href={it.href}>Visit page<Fragment set:html={icon('arrow')} /></a>}
+                              </div>
+                            )}
+                          </div>
+                        </article>
+                      ))}
+                    </div>
+                    <p class="fl-note" data-fl-none hidden>{page.messages.no_filter_results}</p>
+                  </>
+                ) : (
+                  <p class="fl-note">{page.messages.no_facilities}</p>
+                )}
+              </div>
+            )}
+
+            {/* ---------- Gallery ---------- */}
+            {s.kind === 'gallery' && (
+              gallery.length > 0 ? (
+                <div class="fl-gallery" data-fl-gallery>
+                  {s.show_filters && galleryCategories.length > 1 && (
+                    <div class="fl-chips fl-chips--wrap" role="group" aria-label="Filter photographs">
+                      <button type="button" class="fl-chip is-on" data-fl-gfilter="" aria-pressed="true">All</button>
+                      {galleryCategories.map((c) => <button type="button" class="fl-chip" data-fl-gfilter={c.slug} aria-pressed="false">{c.name}</button>)}
+                    </div>
+                  )}
+                  <ul class="fl-masonry" data-fl-group>
+                    {gallery.slice(0, s.limit).map((g, i) => (
+                      <li class="fl-shot-item" data-cats={g.category?.slug ?? ''} data-fl-reveal style={`--d:${(i % 3) * 90}ms`}>
+                        <button type="button" class="fl-shot" data-cf-lightbox={g.image.url} data-cf-caption={g.caption ?? g.image.alt}>
+                          <img src={g.image.url} alt={g.image.alt} loading="lazy" decoding="async" width={g.image.width ?? undefined} height={g.image.height ?? undefined} />
+                          {g.caption && <span class="fl-shot-cap">{g.caption}</span>}
+                          <span class="cf-sr">View larger</span>
+                        </button>
                       </li>
                     ))}
                   </ul>
                 </div>
-              )}
-            </>
-          )}
+              ) : (
+                <p class="fl-note">{page.messages.no_gallery}</p>
+              )
+            )}
 
-          {s.kind === 'directory' && (
-            storyFacilities.length > 0 ? (
-              <div class:list={['cf-stories', `cf-stories--${s.layout}`]}>
-                {storyFacilities.map((f, i) => {
-                  const no = numberOf.get(`f:${f.slug}`) ?? pad(i + 1);
-                  const region = `facility-${f.slug}-details`;
-                  return (
-                    <article id={`facility-${f.slug}`} class:list={['cf-story', 'cf-entry', { 'cf-entry--flip': i % 2 === 1 }]} aria-labelledby={`facility-${f.slug}-h`}>
-                      {s.layout === 'alternating' && (
-                        <figure class="cf-entry-figure" data-cf-reveal>
-                          {f.main_image ? (
-                            <img src={f.main_image.url} alt={f.main_image.alt} loading="lazy" />
-                          ) : (
-                            <div class="cf-plate cf-plate--small" aria-hidden="true">
-                              <span class="cf-plate-no">{no}</span>
-                              <span class="cf-plate-icon" set:html={icon(catIcon(f))} />
-                            </div>
-                          )}
-                        </figure>
-                      )}
-                      <div class="cf-entry-text" data-cf-reveal>
-                        <p class="cf-label"><span class="cf-label-no">{no}</span>{f.categories.map((c) => c.name).join(' · ') || 'Facility'}</p>
-                        <h3 class="cf-entry-title" id={`facility-${f.slug}-h`}>{f.name}</h3>
-                        {f.summary && <p class="cf-entry-summary">{f.summary}</p>}
-                        {(f.location || f.building) && <p class="cf-entry-meta"><Fragment set:html={icon('pin')} />{f.location || f.building}</p>}
-                        <div class="cf-feature-actions">
-                          {f.display_mode === 'page' && (
-                            <a class="cf-arrowlink" href={`/about/campus-facilities/${f.slug}`}>Visit the {f.name} page<Fragment set:html={icon('arrow')} /></a>
-                          )}
-                          {f.display_mode === 'panel' && (
-                            <button type="button" class="cf-toggle" aria-expanded="false" aria-controls={region} data-cf-toggle>
-                              <span>{s.expand_label}</span><span class="cf-toggle-mark" aria-hidden="true"></span>
-                            </button>
-                          )}
-                        </div>
-                        {f.display_mode === 'panel' && (
-                          <div class="cf-reveal" id={region} data-cf-region hidden>
-                            <div class="cf-reveal-inner">
-                              {f.main_image && s.layout === 'list' && <img class="cf-reveal-img" src={f.main_image.url} alt={f.main_image.alt} loading="lazy" />}
-                              <FacilityDetail facility={f} level={4} />
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </article>
-                  );
-                })}
+            {/* ---------- Links ---------- */}
+            {s.kind === 'links' && (
+              <ul class="fl-links" style={`--want:${s.columns === 'three' ? 3 : 4}`} role="list">
+                {quickLinks.map((l, i) => (
+                  <li class="fl-link-item" data-fl-reveal style={`--d:${(i % 4) * 70}ms`}>
+                    <a class="fl-link" href={l.url} {...(l.external ? { target: '_blank', rel: 'noopener' } : {})}>
+                      <span class="fl-link-fill" aria-hidden="true"></span>
+                      <span class="fl-link-icon" set:html={icon(l.icon)} />
+                      <span class="fl-link-text"><strong>{l.label}</strong>{l.description && <span>{l.description}</span>}</span>
+                      <span class="fl-link-go" aria-hidden="true" set:html={icon(l.external ? 'external' : 'arrow')} />
+                      {l.external && <span class="cf-sr">(opens in a new tab)</span>}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            {/* ---------- Custom text / picture ---------- */}
+            {(s.kind === 'rich-text' || s.kind === 'image-text') && (
+              <div class:list={['fl-split', { 'fl-split--left': s.layout === 'image_left', 'fl-split--text': !s.image }]} data-fl-reveal>
+                <div class="cf-prose" set:html={s.body_html} />
+                {s.image && <img src={s.image.url} alt={s.image.alt} loading="lazy" />}
               </div>
-            ) : (
-              <p class="cf-note-block">{page.messages.no_facilities}</p>
-            )
-          )}
+            )}
 
-          {s.kind === 'gallery' && (
-            gallery.length > 0 ? (
-              <div class="cf-gallery" data-cf-gallery>
-                {s.show_filters && galleryCategories.length > 1 && (
-                  <div class="cf-tabs" role="group" aria-label="Filter photographs">
-                    <button type="button" class="cf-tab" data-cf-gfilter="" aria-pressed="true">All</button>
-                    {galleryCategories.map((c) => <button type="button" class="cf-tab" data-cf-gfilter={c.slug} aria-pressed="false">{c.name}</button>)}
-                  </div>
-                )}
-                <ul class:list={['cf-photos', `cf-photos--${s.layout}`]}>
-                  {gallery.slice(0, s.limit).map((g) => (
-                    <li class:list={['cf-photo', { 'cf-photo--featured': g.featured }]} data-cats={g.category?.slug ?? ''}>
-                      <figure>
-                        <button type="button" class="cf-shot" data-cf-lightbox={g.image.url} data-cf-caption={g.caption ?? g.image.alt}>
-                          <img src={g.image.url} alt={g.image.alt} loading="lazy" />
-                          <span class="cf-sr">View larger</span>
-                        </button>
-                        {g.caption && <figcaption class="cf-caption">{g.caption}</figcaption>}
-                      </figure>
-                    </li>
-                  ))}
-                </ul>
+            {s.kind === 'cta' && (
+              <div class="fl-cta" data-fl-reveal>
+                <div>
+                  {s.heading && <h2 class="fl-h2 fl-h2--light" id={`${id}-h`}>{s.heading}</h2>}
+                  {s.intro && <p class="fl-lede fl-lede--light">{s.intro}</p>}
+                </div>
+                {s.button && <a class="fl-btn fl-btn--gold" href={s.button.url} {...linkAttrs(s.button.url)}>{s.button.label}<Fragment set:html={icon('arrow')} /></a>}
               </div>
-            ) : (
-              <p class="cf-note-block">{page.messages.no_gallery}</p>
-            )
-          )}
+            )}
+          </div>
+        </section>
+      );
+    })}
 
-          {s.kind === 'links' && (
-            <ul class:list={['cf-linklist', { 'cf-linklist--three': s.columns === 'three' }]}>
-              {quickLinks.map((l) => (
-                <li>
-                  <a href={l.url} {...(l.external ? { target: '_blank', rel: 'noopener' } : {})}>
-                    <span class="cf-linklist-text"><strong>{l.label}</strong>{l.description && <span>{l.description}</span>}</span>
-                    <Fragment set:html={icon(l.external ? 'external' : 'arrow')} />
-                    {l.external && <span class="cf-sr">(opens in a new tab)</span>}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          )}
-
-          {(s.kind === 'rich-text' || s.kind === 'image-text') && (
-            <div class:list={['cf-split', { 'cf-split--left': s.layout === 'image_left', 'cf-split--text': !s.image }]}>
-              <div class="cf-prose" set:html={s.body_html} />
-              {s.image && <img src={s.image.url} alt={s.image.alt} loading="lazy" />}
-            </div>
-          )}
-
-          {s.kind === 'cta' && (
-            <div class="cf-cta">
-              <div>
-                {s.heading && <h2 class="cf-h2" id={`${sectionId(s)}-h`}>{s.heading}</h2>}
-                {s.intro && <p class="cf-lede">{s.intro}</p>}
-              </div>
-              {s.button && <a class="cf-arrowlink" href={s.button.url} {...linkAttrs(s.button.url)}>{s.button.label}<Fragment set:html={icon('arrow')} /></a>}
-            </div>
-          )}
-        </div>
-      </section>
+    <!-- ============================ DETAILS DIALOG ============================ -->
+    {items.filter((i) => i.hasDetails).map((it) => (
+      <template id={`fl-t-${it.key}`}>
+        <ShowcaseDetail item={it} />
+      </template>
     ))}
+    <div class="fl-dialog" data-fl-dialog hidden role="dialog" aria-modal="true" aria-labelledby="fl-dialog-title">
+      <div class="fl-dialog-card">
+        <button type="button" class="fl-dialog-close" data-fl-dialog-close aria-label="Close details"><Fragment set:html={icon('close')} /></button>
+        <div class="fl-dialog-head" data-fl-dialog-head>
+          <img alt="" data-fl-dialog-img hidden />
+          <div class="fl-dialog-titles">
+            <p class="fl-kicker" data-fl-dialog-kicker></p>
+            <h2 id="fl-dialog-title" data-fl-dialog-title tabindex="-1"></h2>
+          </div>
+        </div>
+        <div class="fl-dialog-body" data-fl-dialog-body></div>
+      </div>
+    </div>
 
-    <div class="cf-lightbox" data-cf-box hidden role="dialog" aria-modal="true" aria-label="Photo viewer">
+    <!-- ============================ PHOTO VIEWER ============================ -->
+    <div class="cf-lightbox fl-lightbox" data-cf-box hidden role="dialog" aria-modal="true" aria-label="Photo viewer">
       <button type="button" class="cf-lightbox-btn cf-lightbox-close" data-cf-box-close aria-label="Close photo"><Fragment set:html={icon('close')} /></button>
       <button type="button" class="cf-lightbox-btn cf-lightbox-prev" data-cf-box-prev aria-label="Previous photo"><Fragment set:html={icon('back')} /></button>
       <figure><img alt="" /><figcaption></figcaption></figure>
@@ -293,108 +287,197 @@ const galleryCategories = categories.filter((c) => gallery.some((g) => g.categor
 
 <script is:inline>
   (() => {
-    const root = document.querySelector('[data-cf]');
+    const root = document.querySelector('[data-fl]');
     if (!root) return;
-    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const canHover = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+    root.classList.add('is-ready');
 
-    // ---- Reveals: images unveil, text rises (only once JS has opted in) ----
-    const reveal = Array.from(root.querySelectorAll('[data-cf-reveal]'));
-    if (!reduceMotion && 'IntersectionObserver' in window) {
-      root.classList.add('cf-anim');
-      const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('is-in'); io.unobserve(e.target); } }), { rootMargin: '0px 0px -10% 0px', threshold: 0.05 });
-      reveal.forEach((el) => io.observe(el));
+    // The filter bar sticks just under the site header.
+    const masthead = document.querySelector('.masthead');
+    const setTop = () => root.style.setProperty('--fl-top', `${masthead ? masthead.getBoundingClientRect().height : 0}px`);
+    setTop();
+    addEventListener('resize', setTop, { passive: true });
+
+    // ---- Reveals ----
+    if (!reduce && 'IntersectionObserver' in window) {
+      root.classList.add('fl-anim');
+      const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('is-in'); io.unobserve(e.target); } }), { rootMargin: '0px 0px -8% 0px', threshold: 0.05 });
+      root.querySelectorAll('[data-fl-reveal]').forEach((el) => io.observe(el));
     }
 
-    // ---- Opening photographs crossfade (2+ photos, never with reduced motion) ----
-    const slides = Array.from(root.querySelectorAll('[data-cf-slide]'));
-    if (slides.length > 1 && !reduceMotion) {
-      let i = 0;
-      setInterval(() => { slides[i].classList.remove('is-active'); i = (i + 1) % slides.length; slides[i].classList.add('is-active'); }, 6500);
-    }
+    // ---- Hero photographs cross-fade, with the caption and dots in step ----
+    const slides = Array.from(root.querySelectorAll('[data-fl-slide]'));
+    const dots = Array.from(root.querySelectorAll('[data-fl-dot]'));
+    const cap = root.querySelector('[data-fl-cap]');
+    let slide = 0, slideTimer = null;
+    const showSlide = (n) => {
+      slide = (n + slides.length) % slides.length;
+      slides.forEach((s, i) => s.classList.toggle('is-active', i === slide));
+      dots.forEach((d, i) => { d.classList.toggle('is-active', i === slide); d.setAttribute('aria-pressed', String(i === slide)); });
+      if (cap) cap.textContent = slides[slide].dataset.caption || '';
+    };
+    const startSlides = () => { if (slides.length > 1 && !reduce) { clearInterval(slideTimer); slideTimer = setInterval(() => showSlide(slide + 1), 7000); } };
+    dots.forEach((d) => d.addEventListener('click', () => { showSlide(Number(d.dataset.flDot)); startSlides(); }));
+    startSlides();
 
-    // ---- Smooth jumps to a story; focus lands on its heading ----
-    const jump = (id, link) => {
-      const target = document.getElementById(id);
-      if (!target) return false;
-      target.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
-      const h = target.querySelector('h2[tabindex="-1"], h3[id]') || target;
-      if (!h.hasAttribute('tabindex')) h.setAttribute('tabindex', '-1');
-      setTimeout(() => h.focus({ preventScroll: true }), reduceMotion ? 0 : 500);
-      history.replaceState(null, '', `#${id}`);
-      if (link) setActive(id);
+    // ---- Facility rail: one panel open, the rest folded; filter; autoplay ----
+    const rail = root.querySelector('[data-fl-rail]');
+    const panels = rail ? Array.from(rail.querySelectorAll('[data-fl-panel]')) : [];
+    const count = root.querySelector('[data-fl-count]');
+    const none = root.querySelector('[data-fl-none]');
+    let filter = '';
+    let userTouched = false;
+    const visible = () => panels.filter((p) => !p.hidden);
+    const activate = (panel, fromUser) => {
+      if (!panel) return;
+      if (fromUser) userTouched = true;
+      panels.forEach((p) => {
+        const on = p === panel;
+        p.classList.toggle('is-active', on);
+        p.querySelector('[data-fl-select]')?.setAttribute('aria-expanded', String(on));
+        const info = p.querySelector('.fl-panel-info');
+        if (info) { if (on) info.removeAttribute('inert'); else info.setAttribute('inert', ''); }
+      });
+    };
+    panels.forEach((p) => {
+      const info = p.querySelector('.fl-panel-info');
+      if (info && !p.classList.contains('is-active')) info.setAttribute('inert', '');
+      p.querySelector('[data-fl-select]')?.addEventListener('click', () => activate(p, true));
+      if (canHover) {
+        let t = null;
+        p.addEventListener('pointerenter', () => { t = setTimeout(() => activate(p, true), 110); });
+        p.addEventListener('pointerleave', () => clearTimeout(t));
+      }
+    });
+    const applyFilter = (slug, scroll) => {
+      filter = slug || '';
+      let n = 0;
+      panels.forEach((p) => {
+        const match = !filter || (p.dataset.cats || '').split(' ').includes(filter);
+        p.hidden = !match;
+        if (match) n++;
+      });
+      root.querySelectorAll('[data-fl-filter]').forEach((c) => { const on = (c.dataset.flFilter || '') === filter; c.classList.toggle('is-on', on); c.setAttribute('aria-pressed', String(on)); });
+      if (count) count.textContent = `${n} ${n === 1 ? 'facility' : 'facilities'}`;
+      if (none) none.hidden = n > 0;
+      const first = visible()[0];
+      if (first && !visible().includes(rail.querySelector('.is-active'))) activate(first, false);
+      if (scroll) root.querySelector('[data-fl-explorer]')?.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+    };
+    root.querySelectorAll('[data-fl-filter]').forEach((c) => c.addEventListener('click', () => applyFilter(c.dataset.flFilter, false)));
+    root.querySelectorAll('[data-fl-cat]').forEach((a) => a.addEventListener('click', (e) => {
+      e.preventDefault();
+      applyFilter(a.dataset.flCat, true);
+      history.replaceState(null, '', `?category=${a.dataset.flCat}#${root.querySelector('[data-fl-explorer]')?.closest('section')?.id || ''}`);
+    }));
+    const startAuto = () => {
+      if (reduce || !rail || panels.length < 2) return;
+      setInterval(() => {
+        if (userTouched || document.hidden || rail.matches(':hover, :focus-within')) return;
+        const vis = visible();
+        if (vis.length < 2) return;
+        const r = rail.getBoundingClientRect();
+        if (r.bottom < 0 || r.top > innerHeight) return;
+        activate(vis[(vis.indexOf(rail.querySelector('.is-active')) + 1) % vis.length], false);
+      }, 5200);
+    };
+    startAuto();
+
+    // ---- Links to a facility or a type: #library, #laboratories, ?category=… ----
+    const explorer = root.querySelector('[data-fl-explorer]');
+    const goToPanel = (key) => {
+      const p = panels.find((x) => x.dataset.key === key);
+      if (!p) return false;
+      if (p.hidden) applyFilter('', false);
+      activate(p, true);
+      (explorer || p).scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
       return true;
     };
-    root.querySelectorAll('[data-cf-index-link], [data-cf-nav]').forEach((a) => a.addEventListener('click', (e) => {
+    root.querySelectorAll('[data-fl-jump]').forEach((a) => a.addEventListener('click', (e) => {
       const href = a.getAttribute('href') || '';
-      const hash = href.split('#')[1];
-      if (hash && jump(hash, a)) e.preventDefault();
+      const [path, hash] = href.split('#');
+      const cat = new URLSearchParams((path || '').split('?')[1] || '').get('category');
+      if (cat) { e.preventDefault(); applyFilter(cat, true); return; }
+      if (hash && goToPanel(hash)) e.preventDefault();
     }));
+    const fromAddress = () => {
+      const cat = new URLSearchParams(location.search).get('category');
+      if (cat && root.querySelector(`[data-fl-filter="${CSS.escape(cat)}"]`)) applyFilter(cat, false);
+      const hash = decodeURIComponent(location.hash.slice(1));
+      if (hash && panels.some((p) => p.dataset.key === hash)) setTimeout(() => goToPanel(hash), 60);
+    };
+    fromAddress();
 
-    // ---- Index highlight: the entry whose story is on screen ----
-    const indexLinks = Array.from(root.querySelectorAll('[data-cf-index-link]'));
-    const setActive = (id) => indexLinks.forEach((a) => {
-      const on = a.getAttribute('href') === `#${id}`;
-      a.classList.toggle('is-active', on);
-      if (on) a.setAttribute('aria-current', 'location'); else a.removeAttribute('aria-current');
-    });
-    if ('IntersectionObserver' in window && indexLinks.length) {
-      const targets = indexLinks.map((a) => document.getElementById(a.getAttribute('href').slice(1))).filter(Boolean);
-      const spy = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) setActive(e.target.id); }), { rootMargin: '-40% 0px -50% 0px' });
-      targets.forEach((t) => spy.observe(t));
-    }
-
-    // ---- "Explore facility details" toggles ----
-    root.querySelectorAll('[data-cf-toggle]').forEach((btn) => {
-      const region = document.getElementById(btn.getAttribute('aria-controls'));
-      if (!region) return;
-      btn.addEventListener('click', () => {
-        const open = btn.getAttribute('aria-expanded') === 'true';
-        btn.setAttribute('aria-expanded', String(!open));
-        if (open) {
-          region.classList.remove('is-open');
-          setTimeout(() => { region.hidden = true; }, reduceMotion ? 0 : 320);
-        } else {
-          region.hidden = false;
-          requestAnimationFrame(() => region.classList.add('is-open'));
-        }
-      });
-    });
+    // ---- Details dialog ----
+    const dlg = root.querySelector('[data-fl-dialog]');
+    const dBody = dlg.querySelector('[data-fl-dialog-body]');
+    const dTitle = dlg.querySelector('[data-fl-dialog-title]');
+    const dKick = dlg.querySelector('[data-fl-dialog-kicker]');
+    const dImg = dlg.querySelector('[data-fl-dialog-img]');
+    let dOpener = null;
+    const dKey = (e) => { if (e.key === 'Escape' && box.hidden) closeDialog(); };
+    const openDialog = (key, opener) => {
+      const panel = panels.find((p) => p.dataset.key === key);
+      const tpl = document.getElementById(`fl-t-${key}`);
+      if (!panel || !tpl) return;
+      dOpener = opener;
+      dTitle.textContent = panel.querySelector('.fl-panel-title')?.textContent || '';
+      dKick.textContent = panel.querySelector('.fl-kicker')?.textContent || '';
+      const img = panel.querySelector('.fl-panel-img');
+      dImg.hidden = !img;
+      if (img) { dImg.src = img.currentSrc || img.src; dImg.alt = img.alt || ''; }
+      dBody.replaceChildren(tpl.content.cloneNode(true));
+      dlg.hidden = false;
+      document.documentElement.classList.add('fl-lock');
+      dlg.querySelector('[data-fl-dialog-close]').focus();
+      document.addEventListener('keydown', dKey);
+    };
+    const closeDialog = () => {
+      dlg.hidden = true;
+      document.documentElement.classList.remove('fl-lock');
+      document.removeEventListener('keydown', dKey);
+      dOpener?.focus();
+    };
+    root.querySelectorAll('[data-fl-open]').forEach((b) => b.addEventListener('click', () => openDialog(b.dataset.flOpen, b)));
+    dlg.querySelector('[data-fl-dialog-close]').addEventListener('click', closeDialog);
+    dlg.addEventListener('click', (e) => { if (e.target === dlg) closeDialog(); });
 
     // ---- Gallery filter ----
-    const gal = root.querySelector('[data-cf-gallery]');
-    gal?.querySelectorAll('[data-cf-gfilter]').forEach((b) => b.addEventListener('click', () => {
-      const c = b.dataset.cfGfilter;
-      gal.querySelectorAll('[data-cf-gfilter]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
-      gal.querySelectorAll('.cf-photo').forEach((li) => { li.hidden = !!c && li.dataset.cats !== c; });
+    const gal = root.querySelector('[data-fl-gallery]');
+    gal?.querySelectorAll('[data-fl-gfilter]').forEach((b) => b.addEventListener('click', () => {
+      const c = b.dataset.flGfilter;
+      gal.querySelectorAll('[data-fl-gfilter]').forEach((x) => { x.classList.toggle('is-on', x === b); x.setAttribute('aria-pressed', String(x === b)); });
+      gal.querySelectorAll('.fl-shot-item').forEach((li) => { li.hidden = !!c && li.dataset.cats !== c; });
     }));
 
-    // ---- Lightbox with previous / next ----
+    // ---- Photo viewer with previous / next ----
     const box = root.querySelector('[data-cf-box]');
-    const img = box.querySelector('img');
-    const cap = box.querySelector('figcaption');
+    const bImg = box.querySelector('img');
+    const bCap = box.querySelector('figcaption');
     let group = [], index = 0, opener = null;
-    const show = () => { const s = group[index]; img.src = s.dataset.cfLightbox; img.alt = s.dataset.cfCaption || ''; cap.textContent = s.dataset.cfCaption || ''; };
+    const show = () => { const s = group[index]; bImg.src = s.dataset.cfLightbox; bImg.alt = s.dataset.cfCaption || ''; bCap.textContent = s.dataset.cfCaption || ''; };
     const step = (d) => { index = (index + d + group.length) % group.length; show(); };
-    const onKey = (e) => { if (e.key === 'Escape') close(); if (e.key === 'ArrowRight') step(1); if (e.key === 'ArrowLeft') step(-1); };
-    const close = () => { box.hidden = true; document.removeEventListener('keydown', onKey); opener?.focus(); };
+    const bKey = (e) => { if (e.key === 'Escape') closeBox(); if (e.key === 'ArrowRight') step(1); if (e.key === 'ArrowLeft') step(-1); };
+    const closeBox = () => { box.hidden = true; document.removeEventListener('keydown', bKey); opener?.focus(); };
     root.addEventListener('click', (e) => {
       const shot = e.target.closest('[data-cf-lightbox]');
       if (!shot) return;
-      const scope = shot.closest('.cf-photos, .cf-strip, .cf-detail-photos') || shot.parentElement;
+      const scope = shot.closest('[data-fl-group], .cf-detail-photos') || shot.parentElement;
       group = Array.from(scope.querySelectorAll('[data-cf-lightbox]')).filter((s) => !s.closest('[hidden]'));
       index = Math.max(0, group.indexOf(shot));
       opener = shot;
       show();
       box.hidden = false;
       box.querySelector('[data-cf-box-close]').focus();
-      document.addEventListener('keydown', onKey);
+      document.addEventListener('keydown', bKey);
       const single = group.length < 2;
       box.querySelector('[data-cf-box-prev]').hidden = single;
       box.querySelector('[data-cf-box-next]').hidden = single;
     });
-    box.querySelector('[data-cf-box-close]').addEventListener('click', close);
+    box.querySelector('[data-cf-box-close]').addEventListener('click', closeBox);
     box.querySelector('[data-cf-box-prev]').addEventListener('click', () => step(-1));
     box.querySelector('[data-cf-box-next]').addEventListener('click', () => step(1));
-    box.addEventListener('click', (e) => { if (e.target === box) close(); });
+    box.addEventListener('click', (e) => { if (e.target === box) closeBox(); });
   })();
 </script>

@@ -1,57 +1,403 @@
 ---
-// Detail page for one department. Sourced from the "department" content
-// type (see departments.ts) rather than the generic Unit template's usual
-// "units" source — that relation has no academic-kind records right now,
-// so this is what actually carries department data. Still rendered with
-// the unchanged, sitewide UnitTemplate: this page's redesign work is
-// scoped to the /academics/departments listing, not its detail template.
-import UnitTemplate from '../../../components/templates/UnitTemplate.astro';
-import { getDepartments, getDepartmentBySlug } from '../../../lib/content/departments';
-import type { ProgrammeCard } from '../../../lib/content/programmes';
+// One department. Everything comes from Strapi: the department record (name,
+// descriptions, vision, mission, head, accent colour) under Academics –
+// Departments; its programmes (Academics – Programmes); its faculty (Faculty
+// Profiles whose department is this one, in Strapi's seniority order); its
+// current notices (owned by the matching unit); and the wording under
+// Academics – Departments Page → Labels. Sections appear only when they have
+// something to show. Styles: department-detail.css (.dd).
+import Layout from '../../../layouts/Layout.astro';
+import '../../../styles/department-detail.css';
+import { getDepartments, getDepartmentBySlug, getDepartmentsPage } from '../../../lib/content/departments';
+import { getProgrammes } from '../../../lib/content/programmes';
+import { getFacultyDirectory, getFacultyBySlug } from '../../../lib/content/faculty';
 import { getNoticesByUnit } from '../../../lib/content/notices';
+import { makeDepartmentsLabels } from '../../../lib/content/departments-labels';
 
 export async function getStaticPaths() {
   const departments = await getDepartments();
   return departments.map((d) => ({ params: { slug: d.slug } }));
 }
 
-const { slug } = Astro.params;
-const department = await getDepartmentBySlug(slug as string);
+const { slug } = Astro.params as { slug: string };
+const [department, allDepartments, page, allProgrammes, people, notices] = await Promise.all([
+  getDepartmentBySlug(slug),
+  getDepartments(),
+  getDepartmentsPage(),
+  getProgrammes(),
+  getFacultyDirectory().catch(() => []),
+  getNoticesByUnit(slug, 6).catch(() => []),
+]);
 if (!department) return Astro.redirect('/academics/departments', 404);
 
-const programmes: ProgrammeCard[] = department.programmes.map((p) => ({
-  id: p.id,
-  slug: p.slug,
-  programme_name: p.programme_name,
-  level: p.level,
-  degree_type: null,
-  duration: null,
-  short_description: null,
-  department_name: department.name,
-  hero_image_url: null,
-}));
+const t = makeDepartmentsLabels(page.labels);
+const fill = (s: string, n: number) => s.replace('{count}', String(n));
+const shortName = (n: string) => n.replace(/^Department of\s+/i, '');
+const programmes = allProgrammes.filter((p) => p.department_slug === department.slug);
+const faculty = people
+  .filter((p) => p.department_slug === department.slug)
+  .sort((a, b) => a.sort_order - b.sort_order || a.full_name.localeCompare(b.full_name));
+const head = department.head ? await getFacultyBySlug(department.head.slug).catch(() => null) : null;
+const others = allDepartments.filter((d) => d.slug !== department.slug);
 
-const notices = await getNoticesByUnit(department.slug);
+// One animated motif per department, picked for its subject (as on the Departments page).
+const FX: Record<string, 'growth' | 'web' | 'lab'> = {
+  'humanities-social-sciences': 'growth',
+  'mathematical-data-sciences': 'web',
+  'natural-sciences': 'lab',
+};
+const fx = FX[department.slug] ?? 'growth';
+
+const intro = department.short_description;
+const body = department.description && department.description !== intro ? department.description : null;
+const hasAbout = !!(department.vision || department.mission);
+const nav = [
+  hasAbout ? ['about', t('dd_nav_about')] : null,
+  programmes.length > 0 ? ['programmes', t('dd_nav_programmes')] : null,
+  head ? ['head', t('dd_nav_head')] : null,
+  faculty.length > 0 ? ['faculty', t('dd_nav_faculty')] : null,
+  notices.length > 0 ? ['notices', t('dd_nav_notices')] : null,
+].filter((x): x is string[] => !!x);
+
+const P: Record<string, string> = {
+  arrow: '<path d="M5 12h14M13 6l6 6-6 6"/>',
+  search: '<circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/>',
+  mail: '<rect x="3" y="5" width="18" height="14" rx="3"/><path d="m3.5 7 8.5 6 8.5-6"/>',
+  book: '<path d="M4 4h6a3 3 0 0 1 3 3v13a2 2 0 0 0-2-2H4z"/><path d="M20 4h-6a3 3 0 0 0-3 3v13a2 2 0 0 1 2-2h7z"/>',
+  people: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14c2 .6 3.5 2.6 3.5 6"/>',
+  star: '<path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9z"/>',
+  eye: '<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+  target: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.2"/>',
+};
+const svg = (name: string, size = 22) =>
+  `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${P[name] ?? P.book}</svg>`;
+const initialsOf = (n: string) =>
+  n.replace(/^(Dr\.?|Dasho|Mr\.?|Ms\.?)\s+/i, '').split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]!.toUpperCase()).join('');
+const fmt = (iso: string) => new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+const accent = department.theme_color ?? 'var(--gold)';
 ---
-<UnitTemplate
-  unit={{
-    kind: 'academic',
-    id: department.id,
-    name: department.name,
-    slug: department.slug,
-    description: department.description ?? department.short_description,
-    photo_url: department.banner_url,
-    head: department.head ? { full_name: department.head.full_name, slug: department.head.slug } : null,
-    contact: null,
-    last_reviewed: department.updated_at,
-  }}
-  programmes={programmes}
-  people={[]}
-  notices={notices}
-  breadcrumb={[
-    { label: 'Home', url: '/' },
-    { label: 'Academics', url: '/academics' },
-    { label: 'Departments', url: '/academics/departments' },
-    { label: department.name, url: `/academics/departments/${department.slug}` },
-  ]}
-/>
+<Layout
+  title={department.seo_title || department.name}
+  description={department.seo_description || intro || department.description || undefined}
+>
+  <div class="dd" data-dd style={`--accent:${accent}`}>
+    <!-- =========================== HERO =========================== -->
+    <header class="dd-hero">
+      <span class="dd-glow dd-glow--a" aria-hidden="true"></span>
+      <span class="dd-glow dd-glow--b" aria-hidden="true"></span>
+      <div class="wrap dd-wide dd-hero-grid">
+        <div class="dd-hero-text">
+          <nav class="dd-breadcrumb dd-rise" style="--d:0" aria-label="Breadcrumb">
+            <a href="/">Home</a><span aria-hidden="true">›</span><a href="/academics">Academics</a><span aria-hidden="true">›</span><a href="/academics/departments">Departments</a><span aria-hidden="true">›</span><span aria-current="page">{shortName(department.name)}</span>
+          </nav>
+          <p class="dd-eyebrow dd-rise" style="--d:1">{t('panels_eyebrow')}</p>
+          <h1 class="dd-title dd-rise" style="--d:2">{department.name}</h1>
+          {intro && <p class="dd-sub dd-rise" style="--d:3">{intro}</p>}
+          {body && <p class="dd-intro dd-rise" style="--d:3">{body}</p>}
+
+          <ul class="dd-facts dd-rise" style="--d:4">
+            <li class="dd-fact">
+              <span class="dd-fact-ring" aria-hidden="true"></span>
+              <p class="dd-fact-value"><span data-dd-count={programmes.length}>{programmes.length}</span></p>
+              <p class="dd-fact-label">{t('stat_programmes')}</p>
+            </li>
+            <li class="dd-fact">
+              <span class="dd-fact-ring" aria-hidden="true"></span>
+              <p class="dd-fact-value"><span data-dd-count={faculty.length}>{faculty.length}</span></p>
+              <p class="dd-fact-label">{t('stat_faculty')}</p>
+            </li>
+          </ul>
+
+          <div class="dd-actions dd-rise" style="--d:5">
+            {programmes.length > 0 && <a class="dd-btn dd-btn--gold" href="#programmes">{t('dd_hero_programmes')}<Fragment set:html={svg('arrow', 18)} /></a>}
+            {faculty.length > 0 && <a class="dd-btn dd-btn--line" href="#faculty">{t('dd_hero_faculty')}</a>}
+          </div>
+        </div>
+
+        <div class="dd-emblem dd-rise" style="--d:3" aria-hidden="true">
+          <span class="dd-emblem-ring dd-emblem-ring--a"></span>
+          <span class="dd-emblem-ring dd-emblem-ring--b"></span>
+          {fx === 'growth' && (
+            <svg viewBox="0 0 400 400" class="dd-art dd-art--growth">
+              <g class="dd-bars">
+                {[110, 170, 140, 230, 200, 290].map((h, i) => <rect x={52 + i * 54} y={340 - h} width="30" height={h} rx="10" style={`--i:${i}`} />)}
+              </g>
+              <path class="dd-trend" pathLength="1" d="M66 250 120 190 174 220 228 130 282 160 336 70" />
+              {[[66, 250], [120, 190], [174, 220], [228, 130], [282, 160], [336, 70]].map(([x, y], i) => <circle class="dd-dot" cx={x} cy={y} r="7" style={`--i:${i}`} />)}
+            </svg>
+          )}
+          {fx === 'web' && (
+            <svg viewBox="0 0 400 400" class="dd-art dd-art--web">
+              <g class="dd-lines">
+                <path d="M200 60 90 150M200 60 310 150M90 150 70 270M90 150 200 210M310 150 200 210M310 150 330 270M200 210 70 270M200 210 330 270M200 210 200 340M70 270 200 340M330 270 200 340" />
+              </g>
+              <g class="dd-nodes">
+                {[[200, 60, 18], [90, 150, 14], [310, 150, 14], [200, 210, 22], [70, 270, 12], [330, 270, 12], [200, 340, 14]].map(([x, y, r], i) => <circle cx={x} cy={y} r={r} style={`--i:${i}`} />)}
+              </g>
+            </svg>
+          )}
+          {fx === 'lab' && (
+            <svg viewBox="0 0 400 400" class="dd-art dd-art--lab">
+              <g class="dd-orbits">
+                <ellipse cx="200" cy="200" rx="150" ry="58" />
+                <ellipse cx="200" cy="200" rx="150" ry="58" transform="rotate(60 200 200)" />
+                <ellipse cx="200" cy="200" rx="150" ry="58" transform="rotate(120 200 200)" />
+              </g>
+              <circle class="dd-core" cx="200" cy="200" r="22" />
+              <circle class="dd-electron dd-electron--1" cx="350" cy="200" r="9" />
+              <circle class="dd-electron dd-electron--2" cx="125" cy="70" r="9" />
+              <circle class="dd-electron dd-electron--3" cx="125" cy="330" r="9" />
+            </svg>
+          )}
+        </div>
+      </div>
+    </header>
+
+    <!-- =========================== SECTION NAV =========================== -->
+    {nav.length > 1 && (
+      <div class="wrap dd-wide dd-nav-wrap">
+        <nav class="dd-nav" aria-label={t('dd_nav_label')}>
+          {nav.map(([id, label]) => <a href={`#${id}`} data-dd-nav={id}>{label}</a>)}
+        </nav>
+      </div>
+    )}
+
+    <!-- =========================== VISION AND MISSION =========================== -->
+    {hasAbout && (
+      <section class="dd-section" id="about" aria-labelledby="dd-about-h">
+        <div class="wrap dd-wide">
+          <header class="dd-head" data-dd-reveal>
+            <h2 class="dd-h2" id="dd-about-h">{t('dd_about_heading')}</h2>
+          </header>
+          <div class="dd-vm">
+            {department.vision && (
+              <article class="dd-vm-card" data-dd-reveal>
+                <span class="dd-vm-icon" set:html={svg('eye', 30)} />
+                <h3>{t('dd_vision')}</h3>
+                <p>{department.vision}</p>
+              </article>
+            )}
+            {department.mission && (
+              <article class="dd-vm-card" data-dd-reveal style="--d:90ms">
+                <span class="dd-vm-icon" set:html={svg('target', 30)} />
+                <h3>{t('dd_mission')}</h3>
+                <p>{department.mission}</p>
+              </article>
+            )}
+          </div>
+        </div>
+      </section>
+    )}
+
+    <!-- =========================== PROGRAMMES =========================== -->
+    {programmes.length > 0 && (
+      <section class="dd-section dd-soft" id="programmes" aria-labelledby="dd-prog-h">
+        <div class="wrap dd-wide">
+          <header class="dd-head" data-dd-reveal>
+            <p class="dd-kicker">{t('dd_programmes_eyebrow')}</p>
+            <h2 class="dd-h2" id="dd-prog-h">{t('dd_programmes_heading')}</h2>
+            <p class="dd-lede">{t('dd_programmes_intro')}</p>
+          </header>
+          <ul class="dd-pgrid" style={`--n:${Math.min(programmes.length, 3)}`} role="list">
+            {programmes.map((p, i) => (
+              <li class="dd-pitem" data-dd-reveal style={`--d:${i * 90}ms`}>
+                <a class="dd-pcard" href={`/academics/programmes/${p.slug}`}>
+                  <span class="dd-fill" aria-hidden="true"></span>
+                  <div class="dd-pills">
+                    <span class="dd-pill">{p.level === 'postgraduate' ? t('level_postgraduate') : t('level_undergraduate')}</span>
+                    {p.duration && <span class="dd-pill dd-pill--gold">{p.duration}</span>}
+                  </div>
+                  <h3 class="dd-pname">{p.programme_name}</h3>
+                  {p.degree_type && <p class="dd-paward">{p.degree_type}</p>}
+                  {p.short_description && <p class="dd-ptext">{p.short_description}</p>}
+                  <span class="dd-go">{t('dd_open_label')} <Fragment set:html={svg('arrow', 18)} /></span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+    )}
+
+    <!-- =========================== HEAD OF DEPARTMENT =========================== -->
+    {department.head && (
+      <section class="dd-section" id="head" aria-labelledby="dd-head-h">
+        <div class="wrap dd-wide">
+          <article class="dd-headcard" data-dd-reveal>
+            <div class="dd-arch">
+              {head?.photo_url ? <img src={head.photo_url} alt="" width="320" height="400" loading="lazy" decoding="async" /> : <span class="dd-monogram" aria-hidden="true">{initialsOf(department.head.full_name)}</span>}
+            </div>
+            <div class="dd-headbody">
+              <p class="dd-kicker dd-kicker--light">{t('dd_head_eyebrow')}</p>
+              <h2 class="dd-headname" id="dd-head-h">{department.head.full_name}</h2>
+              <p class="dd-headrole">{t('dd_head_heading')}</p>
+              <ul class="dd-headfacts">
+                {head?.highest_qualification && <li><span>{head.highest_qualification}</span></li>}
+                {head?.specialization && <li><span>{head.specialization}</span></li>}
+                {head?.university && <li><span>{head.university}</span></li>}
+              </ul>
+              <div class="dd-actions">
+                <a class="dd-btn dd-btn--gold" href={`/about/faculty/${department.head.slug}`}>{t('dd_profile_label')}<Fragment set:html={svg('arrow', 18)} /></a>
+                {head?.college_email && <a class="dd-btn dd-btn--line" href={`mailto:${head.college_email}`}><Fragment set:html={svg('mail', 18)} />{head.college_email}</a>}
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+    )}
+
+    <!-- =========================== FACULTY =========================== -->
+    {faculty.length > 0 && (
+      <section class="dd-section dd-soft" id="faculty" aria-labelledby="dd-fac-h">
+        <div class="wrap dd-wide">
+          <header class="dd-head" data-dd-reveal>
+            <p class="dd-kicker">{t('dd_faculty_eyebrow')}</p>
+            <h2 class="dd-h2" id="dd-fac-h">{t('dd_faculty_heading')}</h2>
+            <p class="dd-lede">{t('dd_faculty_intro')}</p>
+          </header>
+          <div class="dd-bar">
+            <label class="dd-search">
+              <span set:html={svg('search', 20)} />
+              <input type="search" data-dd-q placeholder={t('dd_search_placeholder')} aria-label={t('dd_search_placeholder')} autocomplete="off" />
+            </label>
+            <p class="dd-count" role="status" aria-live="polite" data-dd-total data-one={t('dd_faculty_one')} data-many={t('dd_faculty_many')}>{fill(faculty.length === 1 ? t('dd_faculty_one') : t('dd_faculty_many'), faculty.length)}</p>
+            <a class="dd-link" href="/about/faculty">{t('dd_directory_link')}<Fragment set:html={svg('arrow', 18)} /></a>
+          </div>
+          <ul class="dd-fgrid" role="list">
+            {faculty.map((f, i) => (
+              <li class="dd-fitem" data-dd-item data-text={`${f.full_name} ${f.position ?? ''} ${f.highest_qualification ?? ''} ${f.specialization ?? ''}`.toLowerCase()} data-dd-reveal style={`--d:${(i % 4) * 70}ms`}>
+                <article class="dd-fcard">
+                  <a class="dd-flink" href={`/about/faculty/${f.slug}`} aria-labelledby={`dd-f-${f.slug}`}></a>
+                  <span class="dd-fill" aria-hidden="true"></span>
+                  <div class="dd-fphoto">
+                    {f.photo_url ? <img src={f.photo_url} alt="" width="441" height="566" loading="lazy" decoding="async" /> : <span class="dd-monogram" aria-hidden="true">{initialsOf(f.full_name)}</span>}
+                  </div>
+                  <div class="dd-fbody">
+                    {f.position && <p class="dd-fpos">{f.position}</p>}
+                    <h3 class="dd-fname" id={`dd-f-${f.slug}`}>{f.full_name}</h3>
+                    {f.highest_qualification && <p class="dd-fqual">{f.highest_qualification}</p>}
+                    <span class="dd-go">{t('dd_profile_label')} <Fragment set:html={svg('arrow', 18)} /></span>
+                  </div>
+                </article>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+    )}
+
+    <!-- =========================== NOTICES =========================== -->
+    {notices.length > 0 && (
+      <section class="dd-section" id="notices" aria-labelledby="dd-not-h">
+        <div class="wrap dd-wide">
+          <header class="dd-head" data-dd-reveal>
+            <p class="dd-kicker">{t('dd_notices_eyebrow')}</p>
+            <h2 class="dd-h2" id="dd-not-h">{t('dd_notices_heading')}</h2>
+          </header>
+          <ul class="dd-notices" role="list">
+            {notices.map((n, i) => (
+              <li data-dd-reveal style={`--d:${i * 60}ms`}>
+                <a class="dd-notice" href={`/news-notices/announcements/${n.id}`}>
+                  <span class="dd-notice-date">{fmt(n.publish_at)}</span>
+                  <span class="dd-notice-title">{n.title}</span>
+                  <Fragment set:html={svg('arrow', 18)} />
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+    )}
+
+    <!-- =========================== APPLY + OTHER DEPARTMENTS =========================== -->
+    <section class="dd-section dd-end" aria-labelledby="dd-apply-h">
+      <div class="wrap dd-wide">
+        <div class="dd-apply" data-dd-reveal>
+          <div>
+            <h2 class="dd-h2 dd-h2--light" id="dd-apply-h">{t('dd_apply_heading')}</h2>
+            <p class="dd-apply-text">{t('dd_apply_text')}</p>
+          </div>
+          <a class="dd-btn dd-btn--gold dd-btn--lg" href="/admissions">{t('dd_apply_button')}<Fragment set:html={svg('arrow', 18)} /></a>
+        </div>
+        {others.length > 0 && (
+          <div class="dd-others" data-dd-reveal>
+            <h3 class="dd-others-h">{t('dd_other_heading')}</h3>
+            <ul role="list">
+              {others.map((d) => (
+                <li>
+                  <a class="dd-other" href={`/academics/departments/${d.slug}`}>
+                    <span class="dd-other-name">{d.name}</span>
+                    <span class="dd-other-meta">{fill(d.programmes.length === 1 ? t('count_one') : t('count_many'), d.programmes.length)}</span>
+                    <Fragment set:html={svg('arrow', 18)} />
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+    </section>
+  </div>
+</Layout>
+
+<script is:inline>
+  (() => {
+    const root = document.querySelector('[data-dd]');
+    if (!root) return;
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // The section bar and faculty search stick just under the site header.
+    const masthead = document.querySelector('.masthead');
+    const setTop = () => root.style.setProperty('--dd-top', `${masthead ? masthead.getBoundingClientRect().height : 0}px`);
+    setTop();
+    addEventListener('resize', setTop, { passive: true });
+
+    // ---- Reveals, and the hero figures count up once ----
+    if (!reduce && 'IntersectionObserver' in window) {
+      root.classList.add('dd-anim');
+      const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('is-in'); io.unobserve(e.target); } }), { rootMargin: '0px 0px -8% 0px', threshold: 0.05 });
+      root.querySelectorAll('[data-dd-reveal]').forEach((el) => io.observe(el));
+      const run = (el) => {
+        const end = Number(el.getAttribute('data-dd-count')) || 0;
+        const t0 = performance.now();
+        const tick = (now) => {
+          const p = Math.min(1, (now - t0) / 1200);
+          el.textContent = String(Math.round(end * (1 - Math.pow(1 - p, 3))));
+          if (p < 1) requestAnimationFrame(tick);
+        };
+        el.textContent = '0';
+        requestAnimationFrame(tick);
+      };
+      const cio = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { run(e.target); cio.unobserve(e.target); } }), { threshold: 0.5 });
+      root.querySelectorAll('[data-dd-count]').forEach((n) => cio.observe(n));
+    }
+
+    // ---- Section bar: the link for the section on screen is highlighted ----
+    const links = Array.from(root.querySelectorAll('[data-dd-nav]'));
+    if (links.length && 'IntersectionObserver' in window) {
+      const byId = new Map(links.map((a) => [a.dataset.ddNav, a]));
+      const spy = new IntersectionObserver((es) => es.forEach((e) => {
+        if (!e.isIntersecting) return;
+        links.forEach((a) => a.classList.toggle('is-on', a === byId.get(e.target.id)));
+      }), { rootMargin: '-35% 0px -55% 0px' });
+      byId.forEach((_, id) => { const s = document.getElementById(id); if (s) spy.observe(s); });
+    }
+
+    // ---- Faculty search ----
+    const items = Array.from(root.querySelectorAll('[data-dd-item]'));
+    const input = root.querySelector('[data-dd-q]');
+    const count = root.querySelector('[data-dd-total]');
+    if (items.length && input && count) {
+      input.addEventListener('input', () => {
+        const words = input.value.toLowerCase().split(/\s+/).filter(Boolean);
+        let n = 0;
+        items.forEach((li) => {
+          const ok = words.every((w) => li.dataset.text.includes(w));
+          li.hidden = !ok;
+          if (ok) { n++; li.classList.add('is-in'); }
+        });
+        count.textContent = (n === 1 ? count.dataset.one : count.dataset.many).replace('{count}', String(n));
+      });
+    }
+  })();
+</script>

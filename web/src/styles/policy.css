@@ -1,0 +1,316 @@
+/**
+ * Text pages (pages/about/[slug].astro): Privacy Policy, Accessibility
+ * Statement and any other About – Text Pages entry. Scoped under .pg.
+ * Rounded like the landing pages: a navy hero with a "last reviewed" badge,
+ * a sticky "On this page" list, and rounded section cards. No drop shadows.
+ * Motion stops for visitors who ask for less motion.
+ */
+
+.pg {
+  --pg-r: 24px;
+  --pg-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  overflow-x: clip;
+}
+.pg .wrap {
+  max-width: 1400px;
+  padding-inline: clamp(var(--s4), 3vw, var(--s7));
+}
+.pg :focus-visible {
+  outline: 3px solid var(--gold);
+  outline-offset: 3px;
+}
+
+/* ---------- Hero ---------- */
+.pg-hero {
+  position: relative;
+  overflow: hidden;
+  padding: var(--s7) 0 var(--s8);
+  background: linear-gradient(140deg, var(--navy-deep) 0%, var(--navy) 55%, var(--navy-mid) 100%);
+  color: #fff;
+}
+.pg-orb {
+  position: absolute;
+  top: -240px;
+  right: 6%;
+  width: 520px;
+  height: 520px;
+  border-radius: 50%;
+  background: var(--gold);
+  opacity: 0.14;
+  filter: blur(80px);
+  pointer-events: none;
+  animation: pg-drift 16s ease-in-out infinite alternate;
+}
+@keyframes pg-drift {
+  to {
+    transform: translate(-60px, 40px) scale(1.1);
+  }
+}
+.pg-hero-inner {
+  position: relative;
+}
+.pg-breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: var(--s5);
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.75);
+}
+.pg-breadcrumb a {
+  color: #fff;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.35);
+}
+.pg-breadcrumb a:hover {
+  border-color: var(--gold);
+}
+.pg-title {
+  margin: 0;
+  max-width: 20ch;
+  font-family: var(--font-serif);
+  font-size: clamp(2.2rem, 1.5rem + 3vw, 4rem);
+  line-height: 1.05;
+}
+.pg-updated {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin: var(--s4) 0 0;
+  padding: 7px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+.pg-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #4ade80;
+}
+
+/* ---------- Contents + body ---------- */
+.pg-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--s6);
+  padding-block: var(--s7) var(--s6);
+  align-items: start;
+}
+.pg-toc {
+  padding: var(--s5);
+  border: 2px solid var(--navy);
+  border-radius: var(--pg-r);
+  background: #fff;
+}
+.pg-toc-title {
+  margin: 0 0 var(--s3);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold-ink);
+}
+.pg-toc ol {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: pg;
+}
+.pg-toc li {
+  counter-increment: pg;
+}
+.pg-toc a {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  color: var(--navy);
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.35;
+  text-decoration: none;
+  transition: background 0.2s, color 0.2s;
+}
+.pg-toc a::before {
+  content: counter(pg, decimal-leading-zero);
+  flex: none;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--gold-ink);
+}
+.pg-toc a:hover {
+  background: var(--paper-2);
+}
+.pg-toc a[aria-current='true'] {
+  background: var(--navy);
+  color: #fff;
+}
+.pg-toc a[aria-current='true']::before {
+  color: var(--gold);
+}
+
+.pg-body {
+  font-size: 1.04rem;
+  line-height: 1.75;
+  color: var(--ink);
+}
+.pg-body > p:first-child {
+  margin: 0 0 var(--s6);
+  padding: var(--s5) var(--s6);
+  border: 2px solid var(--navy);
+  border-radius: var(--pg-r);
+  background: #fffaf0;
+  font-size: 1.12rem;
+  color: var(--navy);
+}
+.pg-body h2 {
+  position: relative;
+  margin: var(--s7) 0 var(--s3);
+  padding-top: var(--s5);
+  font-family: var(--font-serif);
+  font-size: clamp(1.5rem, 1.2rem + 1vw, 2rem);
+  line-height: 1.2;
+  color: var(--navy);
+  scroll-margin-top: calc(var(--s9) + var(--s3));
+}
+.pg-body h2::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 56px;
+  height: 4px;
+  border-radius: 4px;
+  background: var(--gold);
+}
+.pg-body p {
+  margin: 0 0 var(--s4);
+  max-width: 72ch;
+}
+.pg-body ul,
+.pg-body ol {
+  display: grid;
+  gap: 10px;
+  margin: 0 0 var(--s4);
+  padding: 0;
+  max-width: 76ch;
+  list-style: none;
+}
+.pg-body li {
+  position: relative;
+  padding: 12px var(--s4) 12px calc(var(--s4) + 24px);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: #fff;
+}
+.pg-body ul > li::before {
+  content: '';
+  position: absolute;
+  left: var(--s4);
+  top: 1.35em;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--gold);
+}
+.pg-body ol {
+  counter-reset: pgl;
+}
+.pg-body ol > li {
+  counter-increment: pgl;
+}
+.pg-body ol > li::before {
+  content: counter(pgl);
+  position: absolute;
+  left: var(--s3);
+  top: 0.95em;
+  font-weight: 700;
+  color: var(--gold-ink);
+}
+.pg-body a {
+  color: var(--navy-mid);
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-color: var(--gold);
+  text-underline-offset: 3px;
+}
+.pg-body a:hover {
+  color: var(--gold-ink);
+}
+.pg-body strong {
+  color: var(--navy);
+}
+.pg-body blockquote {
+  margin: 0 0 var(--s4);
+  padding: var(--s4) var(--s5);
+  border-left: 4px solid var(--gold);
+  border-radius: 0 16px 16px 0;
+  background: var(--paper-2);
+}
+
+/* ---------- Foot ---------- */
+.pg-foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s3);
+  padding-block: var(--s4) var(--s8);
+}
+.pg-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 22px;
+  border: 2px solid var(--navy);
+  border-radius: 999px;
+  background: var(--navy);
+  color: #fff;
+  font-weight: 700;
+  text-decoration: none;
+  transition: gap 0.3s var(--pg-ease), background 0.25s, color 0.25s;
+}
+.pg-pill:hover {
+  gap: 14px;
+  background: var(--navy-mid);
+}
+.pg-pill--line {
+  background: transparent;
+  color: var(--navy);
+}
+.pg-pill--line:hover {
+  background: var(--navy);
+  color: #fff;
+}
+
+@media (min-width: 1000px) {
+  .pg-layout {
+    grid-template-columns: 300px minmax(0, 1fr);
+    gap: var(--s8);
+  }
+  .pg-toc {
+    position: sticky;
+    top: calc(var(--s9) + var(--s2));
+  }
+}
+@media (max-width: 699px) {
+  .pg {
+    --pg-r: 20px;
+  }
+  .pg-body > p:first-child {
+    padding: var(--s4);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pg *,
+  .pg *::before,
+  .pg *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}

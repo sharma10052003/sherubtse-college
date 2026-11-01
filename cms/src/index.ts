@@ -9,6 +9,16 @@ import { ensureFacilitiesContent } from './seed-facilities';
 import { ensureUnitsContent } from './seed-units';
 import { ensureHomeContent } from './seed-home';
 import { ensureResearchContent } from './seed-research';
+import { ensureChatAssistant } from './seed-chat-assistant';
+import { ensureOverviewLabels } from './seed-overview-labels';
+import { ensurePolicyPages } from './seed-policies';
+import { ensureProgrammeContent } from './seed-programmes';
+import { ensureRegulationsPage } from './seed-regulations';
+import { ensureNewsletterArchive, ensureNewslettersPage } from './seed-newsletters';
+import { ensureNewsPage } from './seed-news-page';
+import { ensureEventsPage } from './seed-events-page';
+import { removeTendersPage } from './seed-remove-tenders';
+import { ensureHomeExtras, moveMessageUp, arrangeHomepage } from './seed-home-extras';
 import { registerSiteRebuild } from './site-rebuild';
 
 /**
@@ -81,6 +91,19 @@ export default {
     await ensureUnitsContent({ strapi });
     await ensureHomeContent({ strapi });
     await ensureResearchContent({ strapi });
+    await ensureChatAssistant({ strapi });
+    await ensureOverviewLabels({ strapi });
+    await ensurePolicyPages({ strapi });
+    await ensureProgrammeContent({ strapi });
+    await ensureRegulationsPage(strapi);
+    await ensureNewsletterArchive(strapi);
+    await ensureNewslettersPage(strapi);
+    await ensureNewsPage(strapi);
+    await ensureEventsPage(strapi);
+    await removeTendersPage(strapi);
+    await ensureHomeExtras(strapi);
+    await moveMessageUp(strapi);
+    await arrangeHomepage(strapi);
     // Last, so the setup above never triggers a website rebuild.
     registerSiteRebuild({ strapi });
   },

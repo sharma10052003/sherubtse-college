@@ -1,0 +1,17 @@
+{
+  "kind": "singleType",
+  "collectionName": "examinations_page",
+  "info": {
+    "singularName": "examinations-page",
+    "pluralName": "examinations-pages",
+    "displayName": "Academics – Examinations Page",
+    "description": "Hero text and wording of the Examinations page. Documents and notices are edited under Examinations – Documents & Notices; contact details and services come from the Examination & Records unit."
+  },
+  "options": { "draftAndPublish": false },
+  "attributes": {
+    "hero_eyebrow": { "type": "string" },
+    "hero_heading": { "type": "string" },
+    "hero_intro": { "type": "text" },
+    "labels": { "type": "json" }
+  }
+}

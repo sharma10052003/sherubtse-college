@@ -1,0 +1,70 @@
+---
+// Ways for alumni to give back, and why the alumni community matters.
+import AlumniShell from '../../../components/alumni/AlumniShell.astro';
+import AlumniSubHero from '../../../components/alumni/AlumniSubHero.astro';
+import AlumniFoot from '../../../components/alumni/AlumniFoot.astro';
+import { getAlumniCopy } from '../../../lib/content/alumni';
+import { icon, INTERESTS } from '../../../lib/content/alumni-ui';
+const copy = await getAlumniCopy();
+---
+
+<AlumniShell title="Give back" description={copy.seo_description ?? undefined} texts={copy.texts}>
+<AlumniSubHero page="give_back" />
+    <!-- ====================== 9. GIVE BACK ====================== -->
+    <section id="give-back" class="al-section al-give" aria-labelledby="al-give-h">
+      <div class="wrap al-wide al-give-grid">
+        <div class="al-give-panel" data-al-reveal>
+          <svg class="al-give-art" viewBox="0 0 240 160" aria-hidden="true">
+            <circle cx="70" cy="52" r="18" />
+            <path d="M40 120c0-18 13-32 30-32s30 14 30 32" />
+            <circle cx="170" cy="62" r="14" />
+            <path d="M146 120c0-14 10-26 24-26s24 12 24 26" />
+            <path class="al-give-arrow" d="M104 70c20-16 40-16 52-4" />
+            <path class="al-give-arrow" d="M150 60l6 6-8 3" />
+          </svg>
+          <p class="al-give-label">Ways to give back</p>
+          <ul class="al-chips" role="list">
+            {INTERESTS.map((i) => <li>{i}</li>)}
+          </ul>
+        </div>
+        <div class="al-give-copy" data-al-reveal style="--d:120ms">
+          {copy.mentorship.eyebrow && <p class="al-eyebrow">{copy.mentorship.eyebrow}</p>}
+          <h2 id="al-give-h" class="al-h2">{copy.mentorship.heading}</h2>
+          {copy.mentorship.intro && <p class="al-lede">{copy.mentorship.intro}</p>}
+          {copy.mentorship.paragraphs.map((p) => <p class="al-body">{p}</p>)}
+          <div class="al-actions">
+            {copy.mentorship.button_label && <a href="/about/alumni/register?interest=Mentorship" class="al-btn al-btn--navy">{copy.mentorship.button_label}</a>}
+            {copy.mentorship.secondary_button_label && <a href="/about/alumni/register?interest=Supporting Students" class="al-btn al-btn--outline">{copy.mentorship.secondary_button_label}</a>}
+          </div>
+          <p class="al-hint">These buttons take you to the registration form with the matching interest ticked. The Alumni Office follows up personally — nothing is assigned automatically.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================== 4. WHY ALUMNI MATTERS ====================== -->
+    {copy.matters_cards.length > 0 && (
+      <section id="why" class="al-section al-why" aria-labelledby="al-why-h">
+        <div class="wrap al-wide">
+          <div class="al-head" data-al-reveal>
+            {copy.matters.eyebrow && <p class="al-eyebrow">{copy.matters.eyebrow}</p>}
+            <h2 id="al-why-h" class="al-h2">{copy.matters.heading}</h2>
+          </div>
+          <div class="al-journey-wrap" data-al-reveal>
+          <svg class="al-journey-line" viewBox="0 0 1000 20" preserveAspectRatio="none" aria-hidden="true">
+            <path class="al-draw" pathLength="1" d="M0 10H1000" />
+          </svg>
+          <ol class="al-journey" role="list">
+            {copy.matters_cards.map((card, i) => (
+              <li class={`al-why-card al-why-card--${(i % 4) + 1}`} data-al-reveal style={`--d:${i * 130}ms`}>
+                <span class="al-why-icon" set:html={icon(card.icon, 30)} />
+                <h3 class="al-why-title">{card.title}</h3>
+                <p class="al-why-text">{card.text}</p>
+              </li>
+            ))}
+          </ol>
+          </div>
+        </div>
+      </section>
+    )}
+<AlumniFoot />
+</AlumniShell>

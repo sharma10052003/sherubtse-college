@@ -1,83 +1,167 @@
 ---
+// Faculty directory. Everything is edited in Strapi:
+//  - About – Faculty Page: eyebrow, heading, intro, hero picture, the figures
+//    (student count, show statistics), card animation and the wording (Labels);
+//  - Faculty Profiles: the people (photo, position, department, qualification,
+//    "featured" = Department Heads); add or remove people there and the page follows;
+//  - Departments: the groups.
+// Design: a navy hero with figures that count up and two rows of round portraits
+// drifting in opposite directions (every portrait is a link); then the
+// directory island (sticky toolbar, heads spotlight, grouped cards).
+// Rounded and moving by the project owner's request. Styles: faculty-directory.css (.fx).
 import Layout from '../../../layouts/Layout.astro';
 import FacultyDirectory from '../../../components/faculty/FacultyDirectory.tsx';
 import { getFacultyDirectory, getDepartments, getFacultySetting, getResearchPublicationCount } from '../../../lib/content/faculty';
-import '../../../styles/faculty.css';
+import { makeLabels } from '../../../lib/content/faculty-labels';
+import '../../../styles/faculty-directory.css';
 
+const settle = <T,>(p: Promise<T>, fallback: T) => p.catch(() => fallback);
 const [people, departments, settings, researchCount] = await Promise.all([
   getFacultyDirectory(),
   getDepartments(),
   getFacultySetting(),
-  getResearchPublicationCount(),
+  settle(getResearchPublicationCount(), 0),
 ]);
+const t = makeLabels(settings.labels);
+
+const eyebrow = settings.hero_eyebrow || 'Sherubtse College';
+const heading = settings.hero_heading || 'Our Faculty';
+const intro =
+  settings.hero_intro ||
+  'Meet the scholars, mentors and researchers shaping Bhutan’s oldest seat of higher learning, across every department, from the humanities to the sciences.';
 
 const departmentCount = new Set(people.map((p) => p.department_slug).filter(Boolean)).size;
-
 const stats = [
-  { label: 'Faculty Members', value: `${people.length}+` },
-  { label: 'Departments', value: `${departmentCount}` },
-  { label: 'Students', value: settings.student_count > 0 ? `${settings.student_count}+` : null },
-  { label: 'Research Papers', value: researchCount > 0 ? `${researchCount}+` : null },
-].filter((s) => s.value !== null) as { label: string; value: string }[];
+  { label: t('stat_faculty'), value: people.length },
+  { label: t('stat_departments'), value: departmentCount },
+  { label: t('stat_students'), value: settings.student_count },
+  { label: t('stat_papers'), value: researchCount },
+].filter((s) => s.value > 0);
+
+// Two rows of portraits for the moving wall. A fixed shuffle keeps the build stable.
+const shuffled = [...people].sort((a, b) => ((a.id * 7919) % 101) - ((b.id * 7919) % 101));
+const half = Math.ceil(shuffled.length / 2);
+const rowA = shuffled.slice(0, half);
+const rowB = shuffled.slice(half).reverse();
+const initialsOf = (name: string) => {
+  const parts = name.replace(/^Dr\.?\s+/i, '').split(' ').filter(Boolean);
+  return ((parts[0]?.[0] ?? '') + (parts[parts.length - 1]?.[0] ?? '')).toUpperCase();
+};
+const down = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M6 13l6 6 6-6"/></svg>';
 ---
 
 <Layout title="Faculty" description="Meet the scholars, mentors and researchers of Sherubtse College, across every department.">
-  <section class="faculty-hero" style={settings.hero_background_url ? `background-image:url(${settings.hero_background_url})` : undefined}>
-    {settings.hero_background_url && <div class="faculty-hero-overlay"></div>}
-    <div class="faculty-hero-mark" aria-hidden="true">
-      <div class="faculty-hero-mark-ring"></div>
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M12 2 2 7l10 5 10-5-10-5z" />
-        <path d="M6 10v6c0 1.5 3 3 6 3s6-1.5 6-3v-6" />
-        <path d="M22 7v7" />
-      </svg>
-    </div>
-    <div class="wrap">
-      <nav class="breadcrumb breadcrumb-on-dark" aria-label="Breadcrumb">
-        <a href="/">Home</a> › <a href="/about">About</a> › <span class="current">Faculty</span>
-      </nav>
-      <p class="eyebrow">Sherubtse College</p>
-      <h1 class="h-display">Our Faculty</h1>
-      <p class="faculty-hero-intro">
-        Meet the scholars, mentors and researchers shaping Bhutan's oldest seat of higher learning — across every
-        department, from the humanities to the sciences.
-      </p>
-      {
-        settings.show_statistics && stats.length > 0 && (
-          <div class="faculty-stats">
-            {stats.map((s) => (
-              <div>
-                <p class="faculty-stat-value">{s.value}</p>
-                <p class="faculty-stat-label">{s.label}</p>
-              </div>
-            ))}
-          </div>
-        )
-      }
-    </div>
-  </section>
+  <div class="fx" data-fx>
+    <!-- ============ HERO ============ -->
+    <header class="fx-hero" style={settings.hero_background_url ? `--fx-bg:url(${settings.hero_background_url})` : undefined}>
+      {settings.hero_background_url && <span class="fx-hero-bg" aria-hidden="true"></span>}
+      <span class="fx-glow fx-glow--a" aria-hidden="true"></span>
+      <span class="fx-glow fx-glow--b" aria-hidden="true"></span>
 
-  <div class="wrap" style="padding-bottom:var(--s9)">
-    <FacultyDirectory
-      client:load
-      people={people}
-      departments={departments.map((d) => ({ name: d.name, slug: d.slug }))}
-      cardStyle={settings.card_style}
-      animationStyle={settings.animation_style}
-      cardsPerRow={settings.cards_per_row}
-    />
+      <div class="wrap fx-hero-grid">
+        <div class="fx-hero-text">
+          <nav class="fx-breadcrumb fx-rise" style="--d:0" aria-label="Breadcrumb">
+            <a href="/">Home</a><span aria-hidden="true">›</span><a href="/about">About</a><span aria-hidden="true">›</span><span aria-current="page">Faculty</span>
+          </nav>
+          <p class="fx-hero-eyebrow fx-rise" style="--d:1">{eyebrow}</p>
+          <h1 class="fx-hero-title fx-rise" style="--d:2">{heading}</h1>
+          <p class="fx-hero-intro fx-rise" style="--d:3">{intro}</p>
+          <div class="fx-hero-actions fx-rise" style="--d:4">
+            <a class="fx-hero-btn" href="#directory">{t('directory_heading')} <Fragment set:html={down} /></a>
+          </div>
+        </div>
+
+        {settings.show_statistics && stats.length > 0 && (
+          <ul class="fx-stats fx-rise" style="--d:3" data-count={stats.length}>
+            {stats.map((s) => (
+              <li class="fx-stat">
+                <span class="fx-stat-ring" aria-hidden="true"></span>
+                <p class="fx-stat-value"><span data-fx-count={s.value}>{s.value}</span>+</p>
+                <p class="fx-stat-label">{s.label}</p>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      {people.length > 0 && (
+        <div class="fx-wall fx-rise" style="--d:5" role="region" aria-label={t('wall_label')}>
+          {[rowA, rowB].map((row, ri) => row.length > 0 && (
+            <div class:list={['fx-lane', { 'fx-lane--rev': ri === 1 }]} style={`--dur:${Math.max(40, row.length * 4)}s`}>
+              <div class="fx-track">
+                {[0, 1].map((copy) => (
+                  <ul class="fx-set" aria-hidden={copy === 1 ? 'true' : undefined}>
+                    {row.map((p) => (
+                      <li>
+                        <a class="fx-face" href={`/about/faculty/${p.slug}`} tabindex={copy === 1 ? -1 : undefined}>
+                          <span class="fx-av">
+                            {p.photo_url ? (
+                              <img src={p.photo_url} alt="" width="56" height="56" loading="lazy" decoding="async" />
+                            ) : (
+                              <b>{initialsOf(p.full_name)}</b>
+                            )}
+                          </span>
+                          <span class="fx-face-t">
+                            <strong>{p.full_name}</strong>
+                            {p.position && <em>{p.position}</em>}
+                          </span>
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </header>
+
+    <!-- ============ DIRECTORY ============ -->
+    <div class="wrap fx-main">
+      <FacultyDirectory
+        client:load
+        people={people}
+        departments={departments.map((d) => ({ name: d.name, slug: d.slug }))}
+        labels={settings.labels}
+        animationStyle={settings.animation_style}
+      />
+    </div>
   </div>
 </Layout>
 
-<style>
-  .breadcrumb-on-dark {
-    margin-bottom: var(--s5);
-  }
-  .breadcrumb-on-dark,
-  .breadcrumb-on-dark a {
-    color: #c9d0e4;
-  }
-  .breadcrumb-on-dark .current {
-    color: #fff;
-  }
-</style>
+<script is:inline>
+  (() => {
+    const root = document.querySelector('[data-fx]');
+    if (!root) return;
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // The toolbar sticks just under the site header.
+    const masthead = document.querySelector('.masthead');
+    const setTop = () => root.style.setProperty('--fx-top', `${masthead ? masthead.getBoundingClientRect().height : 0}px`);
+    setTop();
+    window.addEventListener('resize', setTop, { passive: true });
+
+    // The figures count up once, when they come into view.
+    const nums = root.querySelectorAll('[data-fx-count]');
+    if (reduce || !('IntersectionObserver' in window)) return;
+    const run = (el) => {
+      const end = Number(el.getAttribute('data-fx-count')) || 0;
+      const t0 = performance.now();
+      const dur = 1400;
+      const tick = (now) => {
+        const p = Math.min(1, (now - t0) / dur);
+        el.textContent = String(Math.round(end * (1 - Math.pow(1 - p, 3))));
+        if (p < 1) requestAnimationFrame(tick);
+      };
+      el.textContent = '0';
+      requestAnimationFrame(tick);
+    };
+    const io = new IntersectionObserver((entries) => entries.forEach((en) => {
+      if (!en.isIntersecting) return;
+      run(en.target);
+      io.unobserve(en.target);
+    }), { threshold: 0.4 });
+    nums.forEach((n) => io.observe(n));
+  })();
+</script>

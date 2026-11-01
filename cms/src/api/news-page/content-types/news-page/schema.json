@@ -1,0 +1,17 @@
+{
+  "kind": "singleType",
+  "collectionName": "news_page",
+  "info": {
+    "singularName": "news-page",
+    "pluralName": "news-pages",
+    "displayName": "News & Notices – News Page",
+    "description": "Hero text and wording of the News page. The stories themselves are edited under News & Notices – News."
+  },
+  "options": { "draftAndPublish": false },
+  "attributes": {
+    "hero_eyebrow": { "type": "string" },
+    "hero_heading": { "type": "string" },
+    "hero_intro": { "type": "text" },
+    "labels": { "type": "json" }
+  }
+}

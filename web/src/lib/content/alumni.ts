@@ -171,6 +171,8 @@ export interface AlumniCopy {
   newsletter: SectionCopy;
   contact: SectionCopy;
   contact_items: AlumniContactItem[];
+  /** Navigation, topic-card and sub-page wording (Alumni – Page → Labels). */
+  page_labels: Record<string, string>;
   labels: Record<'total_alumni' | 'years' | 'countries' | 'stories' | 'alumni' | 'chapters' | 'upcoming_events' | 'past_events' | 'gallery_all', string>;
   texts: Record<'stories_empty' | 'upcoming_empty' | 'past_empty' | 'story_consent' | 'story_success' | 'register_consent' | 'register_success' | 'newsletter_placeholder' | 'newsletter_success' | 'newsletter_already' | 'error', string>;
 }
@@ -198,6 +200,7 @@ export async function getAlumniCopy(): Promise<AlumniCopy> {
     distinguished: sc(r.distinguished), stories: sc(r.stories), story_form: sc(r.story_form), events: sc(r.events),
     mentorship: sc(r.mentorship), global_reach: sc(r.global_reach), gallery: sc(r.gallery), achievements: sc(r.achievements),
     register: sc(r.register), newsletter: sc(r.newsletter), contact: sc(r.contact),
+    page_labels: r.labels && typeof r.labels === 'object' ? r.labels : {},
     contact_items: (r.contact_items ?? []).map((c: any) => ({ kind: c.kind, label: clean(c.label), link: c.link || null })),
     labels: {
       total_alumni: clean(r.label_total_alumni), years: clean(r.label_years), countries: clean(r.label_countries),

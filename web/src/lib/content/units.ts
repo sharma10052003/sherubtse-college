@@ -187,6 +187,7 @@ export interface UnitsPage {
   directory_heading: string;
   directory_intro: string | null;
   empty_message: string;
+  labels: Record<string, string>;
   seo_title: string | null;
   seo_description: string | null;
 }
@@ -206,6 +207,7 @@ export async function getUnitsPage(): Promise<UnitsPage> {
     directory_heading: p?.directory_heading || 'All Administrative Units',
     directory_intro: p?.directory_intro ?? null,
     empty_message: p?.empty_message || 'Administrative units will be listed here soon.',
+    labels: p?.labels && typeof p.labels === 'object' ? p.labels : {},
     seo_title: p?.seo?.title ?? null,
     seo_description: p?.seo?.description ?? null,
   };

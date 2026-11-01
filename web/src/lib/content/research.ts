@@ -49,6 +49,16 @@ const LABEL_DEFAULTS = {
   search_projects: 'Search projects, investigators or funders',
   no_results: 'No projects match these filters.',
   show_all: 'All',
+  glance_heading: 'Research at a glance',
+  stat_centres: 'Research centres',
+  stat_projects: 'Research projects',
+  stat_ongoing: 'Ongoing now',
+  stat_grants: 'Grant schemes',
+  stat_facilities: 'Research facilities',
+  type_pdf: 'PDF',
+  type_docx: 'DOCX',
+  type_page: 'Web page',
+  type_link: 'Link',
 };
 export type ResearchLabels = typeof LABEL_DEFAULTS;
 

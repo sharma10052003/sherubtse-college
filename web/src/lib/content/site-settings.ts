@@ -18,6 +18,8 @@ export interface FooterContent {
   link_groups: LinkGroup[];
   contact_heading: string;
   copyright_text: string;
+  services_heading: string;
+  directions_label: string;
   bottom_links: LinkItem[];
 }
 
@@ -54,6 +56,8 @@ const FOOTER_DEFAULTS: FooterContent = {
   link_groups: [],
   contact_heading: 'Contact',
   copyright_text: 'Sherubtse College, Royal University of Bhutan.',
+  services_heading: 'Online services',
+  directions_label: 'View on Google Maps',
   bottom_links: [],
 };
 
@@ -69,6 +73,8 @@ export async function getFooter(): Promise<FooterContent> {
     link_groups: row.link_groups ?? [],
     contact_heading: row.contact_heading || FOOTER_DEFAULTS.contact_heading,
     copyright_text: row.copyright_text || FOOTER_DEFAULTS.copyright_text,
+    services_heading: row.services_heading || FOOTER_DEFAULTS.services_heading,
+    directions_label: row.directions_label || FOOTER_DEFAULTS.directions_label,
     bottom_links: row.bottom_links ?? [],
   };
 }

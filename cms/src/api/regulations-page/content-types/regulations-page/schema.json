@@ -1,0 +1,22 @@
+{
+  "kind": "singleType",
+  "collectionName": "regulations_page",
+  "info": {
+    "singularName": "regulations-page",
+    "pluralName": "regulations-pages",
+    "displayName": "Academics – Regulations Page",
+    "description": "The Academic Regulations page: hero text, key figures, each regulation topic and the wording around them."
+  },
+  "options": { "draftAndPublish": false },
+  "attributes": {
+    "hero_eyebrow": { "type": "string" },
+    "hero_heading": { "type": "string" },
+    "hero_intro": { "type": "text" },
+    "key_figures": { "type": "component", "repeatable": true, "component": "regulations.item" },
+    "topics": { "type": "component", "repeatable": true, "component": "regulations.topic" },
+    "source_note": { "type": "text" },
+    "wheel_label": { "type": "string" },
+    "wheel_url": { "type": "string" },
+    "labels": { "type": "json" }
+  }
+}

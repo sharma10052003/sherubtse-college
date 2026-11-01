@@ -2,17 +2,23 @@ import { strapiGet, mediaUrl } from '../strapi';
 import type { StrapiListResponse, StrapiSingleResponse } from '../strapi';
 
 export interface AboutPage {
+  eyebrow: string;
   heading: string;
   intro: string;
   contact_note: string;
   seo_description: string | null;
+  /** Small wording from About – The College → Labels. */
+  labels: Record<string, string>;
 }
 
 export interface Leader {
   id: number;
   name: string;
   role_title: string;
-  category: 'president' | 'dean';
+  category: 'president' | 'dean' | 'director';
+  bio: string | null;
+  /** Where “Contact office” goes for this person. */
+  office_url: string | null;
   photo_url: string | null;
   photo_width: number | null;
   photo_height: number | null;
@@ -27,6 +33,8 @@ function clean(text: string | null | undefined): string {
 }
 
 const DEFAULT_PAGE: AboutPage = {
+  eyebrow: 'Leadership',
+  labels: {},
   heading: 'About the College',
   intro: '',
   contact_note: 'For contact details for each office, see the Contact page.',
@@ -38,6 +46,8 @@ export async function getAboutPage(): Promise<AboutPage> {
   const row = res?.data;
   if (!row) return DEFAULT_PAGE;
   return {
+    eyebrow: clean(row.eyebrow) || DEFAULT_PAGE.eyebrow,
+    labels: row.labels && typeof row.labels === 'object' ? row.labels : {},
     heading: clean(row.heading) || DEFAULT_PAGE.heading,
     intro: clean(row.intro),
     contact_note: clean(row.contact_note) || DEFAULT_PAGE.contact_note,
@@ -66,7 +76,9 @@ export async function getLeaders(): Promise<Leader[]> {
       id: row.id,
       name,
       role_title: role,
-      category: row.category === 'president' ? 'president' : 'dean',
+      category: row.category === 'president' ? 'president' : row.category === 'director' ? 'director' : 'dean',
+      bio: clean(row.bio) || null,
+      office_url: clean(row.office_url) || null,
       photo_url: mediaUrl(row.photo),
       photo_width: row.photo?.width ?? null,
       photo_height: row.photo?.height ?? null,

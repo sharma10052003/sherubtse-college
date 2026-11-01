@@ -98,6 +98,32 @@
       "type": "relation",
       "relation": "oneToOne",
       "target": "api::news.news"
+    },
+    "gallery": {
+      "type": "media",
+      "multiple": true,
+      "allowedTypes": [
+        "images"
+      ]
+    },
+    "programme": {
+      "type": "component",
+      "repeatable": true,
+      "component": "events.session"
+    },
+    "guests": {
+      "type": "component",
+      "repeatable": true,
+      "component": "events.guest"
+    },
+    "video_url": {
+      "type": "string"
+    },
+    "contact_email": {
+      "type": "string"
+    },
+    "contact_phone": {
+      "type": "string"
     }
   }
 }

@@ -32,6 +32,12 @@
       "type": "component",
       "repeatable": true,
       "component": "shared.link-item"
+    },
+    "services_heading": {
+      "type": "string"
+    },
+    "directions_label": {
+      "type": "string"
     }
   }
 }

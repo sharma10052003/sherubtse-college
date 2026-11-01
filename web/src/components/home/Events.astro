@@ -12,8 +12,8 @@ const sameDay = (a: string, b: string | null) => !b || fmtDate(a) === fmtDate(b)
 ---
 <div data-expiring>
   <ul class="hm-events">
-    {items.map((e) => (
-      <li class:list={['hm-event', { 'hm-event--featured': e.featured }]} data-expires={e.expires} data-reveal>
+    {items.map((e, i) => (
+      <li class:list={['hm-event', { 'hm-event--featured': e.featured }]} data-expires={e.expires} data-reveal style={`--i:${i % 4}`}>
         <time class="hm-event-date" datetime={e.starts_at}>
           <span class="hm-event-day">{fmtDate(e.starts_at, { day: 'numeric' })}</span>
           <span class="hm-event-month">{fmtDate(e.starts_at, { month: 'short' })}</span>

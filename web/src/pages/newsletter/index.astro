@@ -1,295 +1,246 @@
 ---
+// Newsletters — every newsletter the College publishes (The Tower, the student-network and
+// centre newsletters, older issues from the previous website), all from Strapi → Newsletter –
+// Editions, with hero text and wording from Newsletter – Page. A navy hero with the latest
+// cover as a tilting book, a filterable library (publication, year, search, shelf or list) and
+// a page-turning reader that opens on any issue. Styles: newsletter-hub.css (.nlx).
 import Layout from '../../layouts/Layout.astro';
-import NewsletterArchive from '../../components/newsletter/NewsletterArchive.tsx';
-import { getNewsletters, getFeaturedNewsletter, getNewsletterStats, EDITION_LABELS } from '../../lib/content/newsletter';
-import '../../styles/newsletter.css';
+import NewsletterReader from '../../components/newsletter/NewsletterReader.astro';
+import '../../styles/newsletter-hub.css';
+import { icon } from '../../lib/facility-icons';
+import { getNewsletters, getFeaturedNewsletter, getNewslettersPage, statsOf } from '../../lib/content/newsletter';
+import type { NewsletterCard } from '../../lib/content/newsletter';
+import { NEWSLETTERS_HERO_DEFAULTS, makeNewslettersLabels } from '../../lib/content/newsletters-labels';
 
-const [newsletters, featured, stats] = await Promise.all([getNewsletters(), getFeaturedNewsletter(), getNewsletterStats()]);
+const [all, featured, page] = await Promise.all([getNewsletters(), getFeaturedNewsletter(), getNewslettersPage()]);
+const t = makeNewslettersLabels(page.labels);
+const fill = (s: string, n: number) => s.replace('{count}', String(n));
+const eyebrow = page.hero_eyebrow || NEWSLETTERS_HERO_DEFAULTS.hero_eyebrow;
+const heading = page.hero_heading || NEWSLETTERS_HERO_DEFAULTS.hero_heading;
+const intro = page.hero_intro || NEWSLETTERS_HERO_DEFAULTS.hero_intro;
+const stats = statsOf(all);
 
-function initials(title: string): string {
-  const parts = title.split(' ').filter(Boolean);
-  return (parts.length > 1 ? parts.map((w) => w[0]).slice(0, 2).join('') : title.slice(0, 2)).toUpperCase();
-}
+const series = [...new Map(all.map((n) => [n.title, all.filter((x) => x.title === n.title).length])).entries()];
+const years = [...new Set(all.map((n) => n.year))].sort((a, b) => b - a);
+const fan = all.filter((n) => n.slug !== featured?.slug && n.cover_image_url).slice(0, 3);
 
-// Timeline: group by year, newest first (newsletters is already sorted newest-first).
-const years = Array.from(new Set(newsletters.map((n) => n.year)));
-const timeline = years.map((year) => ({
-  year,
-  editions: newsletters.filter((n) => n.year === year),
-}));
-
-// Only worth showing once there's real signal — a single edition with
-// zero views yet isn't "popular", it's just the only thing that exists.
-const popular = [...newsletters]
-  .filter((n) => n.view_count > 0 || n.download_count > 0)
-  .sort((a, b) => b.view_count + b.download_count - (a.view_count + a.download_count))
-  .slice(0, 5);
+const initials = (s: string) => s.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
+const readable = (n: NewsletterCard) => !!n.pdf_url;
+const readAttrs = (n: NewsletterCard) => ({ 'data-nlr-open': '', 'data-pdf': n.pdf_url!, 'data-slug': n.slug, 'data-title': n.title, 'data-sub': n.issue_label });
 ---
+<Layout title="Newsletters" description={intro} ogImage={featured?.cover_image_url ?? undefined}>
+  <div class="nlx" data-nlx>
+    <!-- =========================== HERO =========================== -->
+    <header class="nlx-hero">
+      <span class="nlx-glow nlx-glow--a" aria-hidden="true"></span>
+      <span class="nlx-glow nlx-glow--b" aria-hidden="true"></span>
+      <div class="wrap nlx-hero-grid">
+        <div class="nlx-hero-text">
+          <nav class="nlx-crumbs nlx-rise" style="--d:0" aria-label="Breadcrumb">
+            <a href="/">Home</a><span aria-hidden="true">›</span><a href="/news-notices">News &amp; Notices</a><span aria-hidden="true">›</span><span aria-current="page">{heading}</span>
+          </nav>
+          <p class="nlx-eyebrow nlx-rise" style="--d:1">{eyebrow}</p>
+          <h1 class="nlx-title nlx-rise" style="--d:2">{heading}</h1>
+          <p class="nlx-intro nlx-rise" style="--d:3">{intro}</p>
+          <div class="nlx-actions nlx-rise" style="--d:4">
+            {featured && readable(featured) && (
+              <button type="button" class="nlx-btn nlx-btn--gold" {...readAttrs(featured)}>
+                <Fragment set:html={icon('journal')} />{t('read_latest')}
+              </button>
+            )}
+            <a class="nlx-btn nlx-btn--ghost" href="#library">{t('browse')}<Fragment set:html={icon('arrow')} /></a>
+            <button type="button" class="nlx-btn nlx-btn--text" data-nlx-continue data-label={t('continue_label')} data-page={t('continue_page')} hidden></button>
+          </div>
+          <ul class="nlx-stats nlx-rise" style="--d:5">
+            <li><strong data-nlx-count={stats.totalEditions}>{stats.totalEditions}</strong><span>{t('stat_issues')}</span></li>
+            <li><strong data-nlx-count={stats.totalSeries}>{stats.totalSeries}</strong><span>{t('stat_publications')}</span></li>
+            <li><strong data-nlx-count={stats.totalYears}>{stats.totalYears}</strong><span>{t('stat_years')}</span></li>
+          </ul>
+        </div>
 
-<Layout
-  title="Newsletter — The Tower"
-  description="The Tower, Sherubtse College's official newsletter — read the latest edition online, download past issues, and browse the full archive."
-  ogImage={featured?.cover_image_url ?? undefined}
->
-  <!-- 1. Hero -->
-  <section class="nl-hero">
-    <div class="nl-hero-overlay"></div>
-    <div class="wrap">
-      <nav class="breadcrumb breadcrumb-on-dark" aria-label="Breadcrumb">
-        <a href="/">Home</a> › <a href="/news-notices">News &amp; Notices</a> › <span class="current">Newsletter</span>
-      </nav>
-      <span class="nl-hero-kicker">The Tower</span>
-      <h1 class="h-display nl-hero-title">Sherubtse College Newsletter</h1>
-      {
-        featured && (
-          <p class="nl-hero-edition">
-            {EDITION_LABELS[featured.edition]} Edition {featured.year}
-          </p>
-        )
-      }
-      <p class="nl-hero-tags">Stories · Achievements · Research · Community</p>
-      <div class="nl-hero-buttons">
-        {
-          featured && (
-            <>
-              <a href={`/newsletter/${featured.slug}#reader`} class="btn btn-primary">
-                Read Latest Edition
-              </a>
-              <a href={`/newsletter/${featured.slug}`} class="btn btn-secondary btn-on-hero">
-                Download PDF
-              </a>
-            </>
-          )
-        }
+        {featured && (
+          <div class="nlx-stack nlx-rise" style="--d:3" data-nlx-stack>
+            {fan.map((n, i) => (
+              <img class={`nlx-fan nlx-fan--${i + 1}`} src={n.cover_image_url!} alt="" aria-hidden="true" loading="lazy" />
+            ))}
+            <a class="nlx-hero-book" href={`/newsletter/${featured.slug}`} aria-label={`${featured.title} — ${featured.issue_label}`}>
+              <span class="nlx-hero-cover">
+                {featured.cover_image_url
+                  ? <img src={featured.cover_image_url} alt={`Cover of ${featured.title}, ${featured.issue_label}`} />
+                  : <span class="nlx-plain"><b>{initials(featured.title)}</b><i>{featured.issue_label}</i></span>}
+                <span class="nlx-shine" aria-hidden="true"></span>
+              </span>
+              <span class="nlx-hero-tag">{t('latest_badge')} · {featured.issue_label}</span>
+            </a>
+          </div>
+        )}
       </div>
-    </div>
-  </section>
+    </header>
 
-  <!-- 2 & 3. Latest Newsletter + Introduction -->
-  {
-    featured && (
-      <section class="band">
-        <div class="wrap reveal">
-          <p class="eyebrow">Latest Edition</p>
-          <div class="nl-latest-grid" style="margin-top:var(--s6)">
-            {featured.cover_image_url ? (
-              <img src={featured.cover_image_url} alt="" class="nl-latest-cover" />
-            ) : (
-              <div class="nl-latest-cover-placeholder" aria-hidden="true">
-                <span class="nl-mark">{initials(featured.title)}</span>
-                <span class="nl-sub">
-                  {EDITION_LABELS[featured.edition]} {featured.year}
-                </span>
+    <!-- =========================== LIBRARY =========================== -->
+    <section class="nlx-library" id="library" aria-labelledby="nlx-lib-h">
+      <div class="wrap">
+        <header class="nlx-head" data-nlx-reveal>
+          <h2 id="nlx-lib-h">{t('library_heading')}</h2>
+          <p>{t('library_intro')}</p>
+        </header>
+
+        {all.length === 0 ? (
+          <p class="nlx-empty">Newsletters will appear here once they are added in Strapi.</p>
+        ) : (
+          <>
+            <div class="nlx-tools" data-nlx-reveal>
+              <label class="nlx-search">
+                <span class="nlx-sr">{t('search_label')}</span>
+                <Fragment set:html={icon('search')} />
+                <input type="search" placeholder={t('search_placeholder')} autocomplete="off" data-nlx-search />
+              </label>
+              <label class="nlx-select">
+                <span class="nlx-sr">{t('year_label')}</span>
+                <select data-nlx-year>
+                  <option value="">{t('year_all')}</option>
+                  {years.map((y) => <option value={y}>{y}</option>)}
+                </select>
+              </label>
+              <label class="nlx-select">
+                <span class="nlx-sr">{t('sort_label')}</span>
+                <select data-nlx-sort>
+                  <option value="new">{t('sort_newest')}</option>
+                  <option value="old">{t('sort_oldest')}</option>
+                </select>
+              </label>
+              <div class="nlx-views" role="group" aria-label="View">
+                <button type="button" class="is-on" data-nlx-view="shelf" aria-pressed="true">{t('view_shelf')}</button>
+                <button type="button" data-nlx-view="list" aria-pressed="false">{t('view_list')}</button>
+              </div>
+              <button type="button" class="nlx-btn nlx-btn--line" data-nlx-surprise>{t('surprise')}</button>
+            </div>
+
+            {series.length > 1 && (
+              <div class="nlx-chips" role="group" aria-label="Publication" data-nlx-reveal>
+                <button type="button" class="nlx-chip is-on" data-nlx-series="" aria-pressed="true">{t('all_label')} <em>{all.length}</em></button>
+                {series.map(([name, n]) => <button type="button" class="nlx-chip" data-nlx-series={name} aria-pressed="false">{name} <em>{n}</em></button>)}
               </div>
             )}
-            <div class="nl-latest-info">
-              <h2 class="h1">{featured.title}</h2>
-              <p class="nl-latest-meta">
-                {EDITION_LABELS[featured.edition]} Edition {featured.year}
-                {featured.publication_date && ` · Published ${new Date(featured.publication_date).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })}`}
-              </p>
-              {featured.description && <p class="lede">{featured.description}</p>}
-              {featured.topics.length > 0 && (
-                <ul class="nl-latest-topics">
-                  {featured.topics.map((t) => (
-                    <li>{t}</li>
-                  ))}
-                </ul>
-              )}
-              <div class="nl-latest-actions">
-                <a href={`/newsletter/${featured.slug}#reader`} class="btn btn-primary">
-                  Read Online
-                </a>
-                <a href={`/newsletter/${featured.slug}`} class="btn btn-secondary">
-                  Download PDF
-                </a>
-                <a href={`/newsletter/${featured.slug}`} class="btn btn-secondary">
-                  View Details
-                </a>
-              </div>
+
+            <p class="nlx-count" role="status" aria-live="polite" data-nlx-total data-one={t('count_one')} data-many={t('count_many')}>{fill(all.length === 1 ? t('count_one') : t('count_many'), all.length)}</p>
+
+            <ul class="nlx-grid" data-nlx-grid data-view="shelf">
+              {all.map((n, i) => (
+                <li class="nlx-item" data-nlx-item data-nlx-reveal data-series={n.title} data-year={n.year} data-order={all.length - i} data-slug={n.slug} data-title={n.title} data-issue={n.issue_label} data-text={`${n.title} ${n.issue_label} ${n.year} ${n.topics.join(' ')} ${n.description ?? ''} ${n.unit_name ?? ''}`.toLowerCase()} style={`--d:${i % 4}`}>
+                  <article class="nlx-card">
+                    <a class="nlx-cover" href={`/newsletter/${n.slug}`} tabindex="-1" aria-hidden="true">
+                      {n.cover_image_url
+                        ? <img src={n.cover_image_url} alt="" loading="lazy" />
+                        : <span class="nlx-plain"><b>{initials(n.title)}</b><i>{n.issue_label}</i></span>}
+                      <span class="nlx-shine" aria-hidden="true"></span>
+                      {n.slug === featured?.slug && <span class="nlx-badge">{t('latest_badge')}</span>}
+                    </a>
+                    <div class="nlx-card-body">
+                      <p class="nlx-series">{n.title}</p>
+                      <h3><a href={`/newsletter/${n.slug}`}>{n.issue_label}</a></h3>
+                      {n.description && <p class="nlx-desc">{n.description}</p>}
+                      {n.unit_name && <p class="nlx-by">{n.unit_name}</p>}
+                      <div class="nlx-card-actions">
+                        {readable(n) ? (
+                          <button type="button" class="nlx-btn nlx-btn--navy" {...readAttrs(n)}><Fragment set:html={icon('journal')} />{t('read_label')}</button>
+                        ) : n.external_url ? (
+                          <a class="nlx-btn nlx-btn--navy" href={n.external_url} target="_blank" rel="noopener"><Fragment set:html={icon('external')} />{t('external_label')}</a>
+                        ) : null}
+                        <a class="nlx-btn nlx-btn--line" href={`/newsletter/${n.slug}`}>{t('details_label')}</a>
+                        {n.pdf_url && <a class="nlx-icon-btn" href={n.pdf_url} download aria-label={`${t('download_label')}: ${n.title} ${n.issue_label}`} title={t('download_label')}><Fragment set:html={icon('download')} /></a>}
+                      </div>
+                    </div>
+                  </article>
+                </li>
+              ))}
+            </ul>
+            <div class="nlx-none" data-nlx-none hidden>
+              <p>{t('empty_message')}</p>
+              <button type="button" class="nlx-btn nlx-btn--line" data-nlx-clear>{t('clear_label')}</button>
             </div>
-          </div>
-        </div>
-      </section>
-    )
-  }
-
-  <!-- 4. Community Highlights -->
-  <section class="band band-alt">
-    <div class="wrap reveal">
-      <p class="eyebrow">Community Highlights</p>
-      <h2 class="h2">Featuring Students, Faculty and the Wider College Community</h2>
-      <p class="lede" style="margin-top:var(--s3)">
-        Featuring students, faculty, international partnerships, research engagement and cultural activities across
-        the college.
-      </p>
-      <div class="nl-highlights-grid">
-        <div class="nl-highlight-card">
-          <div class="nl-highlight-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 2 7l10 5 10-5-10-5z" /><path d="M6 10v6c0 1.5 3 3 6 3s6-1.5 6-3v-6" /></svg>
-          </div>
-          <h3 class="h3">Students &amp; Faculty</h3>
-          <p>The people behind every story — student milestones and faculty achievements across departments.</p>
-        </div>
-        <div class="nl-highlight-card">
-          <div class="nl-highlight-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><path d="M2 12h20" /><path d="M12 2a15 15 0 0 1 0 20 15 15 0 0 1 0-20z" /></svg>
-          </div>
-          <h3 class="h3">International Partnerships</h3>
-          <p>Collaborations and research engagement connecting Sherubtse to institutions beyond Bhutan.</p>
-        </div>
-        <div class="nl-highlight-card">
-          <div class="nl-highlight-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.4 1.6 2.8-.3 1 2.6 2.6 1-.3 2.8L22 12l-1.6 2.4.3 2.8-2.6 1-1 2.6-2.8-.3L12 22l-2.4-1.6-2.8.3-1-2.6-2.6-1 .3-2.8L2 12l1.6-2.4-.3-2.8 2.6-1 1-2.6 2.8.3z" /></svg>
-          </div>
-          <h3 class="h3">Cultural &amp; College Activities</h3>
-          <p>Celebrations, gatherings and campus life that make up the rhythm of the college year.</p>
-        </div>
+            <p class="nlx-tip" data-nlx-reveal>{t('tip_text')}</p>
+          </>
+        )}
       </div>
-    </div>
-  </section>
+    </section>
+  </div>
 
-  <!-- 5 & 6. Newsletter Archive + Search & Filters -->
-  <section class="band" id="archive">
-    <div class="wrap reveal">
-      <p class="eyebrow">Newsletter Archive</p>
-      <h2 class="h2">Browse Previous Editions</h2>
-      <NewsletterArchive client:load items={newsletters} />
-    </div>
-  </section>
-
-  <!-- 7. Timeline -->
-  {
-    timeline.length > 1 && (
-      <section class="band band-alt">
-        <div class="wrap reveal">
-          <p class="eyebrow">Newsletter Timeline</p>
-          <h2 class="h2">A History in Print</h2>
-          <div class="nl-timeline">
-            {timeline.map((group) => (
-              <div class="nl-timeline-year">
-                <h3>{group.year}</h3>
-                <div class="nl-timeline-editions">
-                  {group.editions.map((n) => (
-                    <a href={`/newsletter/${n.slug}`}>{EDITION_LABELS[n.edition]} Edition</a>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-    )
-  }
-
-  <!-- 8. Statistics -->
-  <section class="band nl-stats-band">
-    <div class="wrap reveal">
-      <p class="eyebrow" style="color:var(--gold)">Newsletter Archive</p>
-      <h2 class="h2">Building a Lasting Record</h2>
-      <div class="nl-stats-grid">
-        <div>
-          <p class="nl-stat-value">{stats.totalEditions}</p>
-          <p class="nl-stat-label">Edition{stats.totalEditions === 1 ? '' : 's'}</p>
-        </div>
-        <div>
-          <p class="nl-stat-value">{stats.totalYears}</p>
-          <p class="nl-stat-label">Year{stats.totalYears === 1 ? '' : 's'} of Publication</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- 9. Popular editions -->
-  {
-    popular.length > 1 && (
-      <section class="band">
-        <div class="wrap reveal">
-          <p class="eyebrow">Popular Editions</p>
-          <h2 class="h2">Most Read</h2>
-          <div class="nl-popular-list">
-            {popular.map((n, i) => (
-              <a href={`/newsletter/${n.slug}`} class="nl-popular-row">
-                <span class="nl-popular-rank">{i + 1}</span>
-                <div>
-                  <h3>
-                    {n.title} — {EDITION_LABELS[n.edition]} {n.year}
-                  </h3>
-                </div>
-                <span class="nl-popular-meta">
-                  {n.view_count} views · {n.download_count} downloads
-                </span>
-              </a>
-            ))}
-          </div>
-        </div>
-      </section>
-    )
-  }
-
-  <!-- 10. Subscribe -->
-  <section class="band nl-subscribe-band">
-    <div class="wrap narrow reveal">
-      <p class="eyebrow" style="color:var(--gold)">Stay Updated</p>
-      <h2 class="h2">Never Miss an Edition</h2>
-      <p style="color:#c9d0e4;margin-top:var(--s3)">
-        Never miss the latest stories, achievements and activities from Sherubtse College.
-      </p>
-      <form class="nl-subscribe-form" id="newsletterSubscribeForm">
-        <input type="email" name="email" placeholder="Your email address" required aria-label="Email address" />
-        <button type="submit" class="btn btn-primary">Subscribe</button>
-      </form>
-      <div class="form-status" id="newsletterSubscribeStatus" role="status"></div>
-    </div>
-  </section>
-
-  <!-- 11. RUB / Sherubtse attribution -->
-  <section class="band">
-    <div class="wrap reveal nl-attribution">
-      <strong>Royal University of Bhutan</strong>
-      <p>Published by Sherubtse College under the Royal University of Bhutan, fostering academic excellence and innovation.</p>
-    </div>
-  </section>
+  <NewsletterReader />
 </Layout>
 
-<style>
-  .breadcrumb-on-dark,
-  .breadcrumb-on-dark a {
-    color: #c9d0e4;
-  }
-  .breadcrumb-on-dark .current {
-    color: #fff;
-  }
-</style>
+<script is:inline>
+  (() => {
+    const root = document.querySelector('[data-nlx]');
+    if (!root) return;
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-<script is:inline define:vars={{ strapiUrl: import.meta.env.PUBLIC_STRAPI_URL || 'http://localhost:1337' }}>
-  const form = document.getElementById('newsletterSubscribeForm');
-  form?.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const status = document.getElementById('newsletterSubscribeStatus');
-    const email = new FormData(form).get('email');
-    status.className = 'form-status is-visible loading';
-    status.textContent = 'Subscribing…';
-    try {
-      const res = await fetch(`${strapiUrl}/api/newsletter-subscribers`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ data: { email, consent: true } }),
-      });
-      if (!res.ok) {
-        const body = await res.json().catch(() => null);
-        const already = /already|unique/i.test(body?.error?.message || '');
-        status.className = `form-status is-visible ${already ? 'success' : 'error'}`;
-        status.textContent = already ? "You're already subscribed — thank you!" : `Something went wrong: ${body?.error?.message || res.status}.`;
-        if (already) form.reset();
-        return;
-      }
-      status.className = 'form-status is-visible success';
-      status.textContent = "You're subscribed — thank you!";
-      form.reset();
-    } catch (err) {
-      status.className = 'form-status is-visible error';
-      status.textContent = 'Something went wrong. Please try again.';
+    // Reveals and count-up figures (content is visible without them).
+    if (!reduce && 'IntersectionObserver' in window) {
+      root.classList.add('nlx-anim');
+      const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('is-in'); io.unobserve(e.target); } }), { rootMargin: '0px 0px -6% 0px', threshold: 0.05 });
+      root.querySelectorAll('[data-nlx-reveal]').forEach((n) => io.observe(n));
+      const run = (n) => { const end = Number(n.dataset.nlxCount) || 0, t0 = performance.now(); const tick = (now) => { const p = Math.min(1, (now - t0) / 1000); n.textContent = String(Math.round(end * (1 - Math.pow(1 - p, 3)))); if (p < 1) requestAnimationFrame(tick); }; n.textContent = '0'; requestAnimationFrame(tick); };
+      const cio = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { run(e.target); cio.unobserve(e.target); } }), { threshold: 0.5 });
+      root.querySelectorAll('[data-nlx-count]').forEach((n) => cio.observe(n));
     }
-  });
+
+    // The latest cover tilts toward the pointer.
+    const stack = root.querySelector('[data-nlx-stack]');
+    if (stack && !reduce && matchMedia('(hover: hover)').matches) {
+      stack.addEventListener('pointermove', (e) => {
+        const r = stack.getBoundingClientRect();
+        stack.style.setProperty('--rx', (((e.clientY - r.top) / r.height - 0.5) * -14).toFixed(2) + 'deg');
+        stack.style.setProperty('--ry', (((e.clientX - r.left) / r.width - 0.5) * 18).toFixed(2) + 'deg');
+      });
+      stack.addEventListener('pointerleave', () => { stack.style.setProperty('--rx', '0deg'); stack.style.setProperty('--ry', '0deg'); });
+    }
+
+    // "Continue reading": the last issue this reader left part-way through.
+    const items = [...root.querySelectorAll('[data-nlx-item]')];
+    const btn = root.querySelector('[data-nlx-continue]');
+    try {
+      let best = null;
+      items.forEach((li) => { const p = Number(localStorage.getItem('nlr:' + li.dataset.slug)); if (p > 1) best = best || { li, p }; });
+      const open = best && best.li.querySelector('[data-nlr-open]');
+      if (open && btn) {
+        btn.hidden = false;
+        btn.textContent = btn.dataset.label + ': ' + best.li.dataset.issue + ' · ' + btn.dataset.page.replace('{n}', best.p);
+        btn.addEventListener('click', () => { open.dataset.page = String(best.p); open.click(); });
+      }
+    } catch (e) { /* storage unavailable */ }
+
+    // ---- Library: search, publication, year, order, view ----
+    const grid = root.querySelector('[data-nlx-grid]');
+    if (!grid) return;
+    const search = root.querySelector('[data-nlx-search]'), year = root.querySelector('[data-nlx-year]'), sort = root.querySelector('[data-nlx-sort]');
+    const chips = [...root.querySelectorAll('[data-nlx-series]')], views = [...root.querySelectorAll('[data-nlx-view]')];
+    const total = root.querySelector('[data-nlx-total]'), none = root.querySelector('[data-nlx-none]');
+    let series = '';
+    const apply = () => {
+      const q = search.value.trim().toLowerCase(), y = year.value;
+      let n = 0;
+      items.forEach((li) => {
+        const ok = (!series || li.dataset.series === series) && (!y || li.dataset.year === y) && (!q || li.dataset.text.includes(q));
+        li.hidden = !ok; if (ok) { n++; li.classList.add('is-in'); }
+      });
+      const dir = sort.value === 'old' ? -1 : 1;
+      items.sort((a, b) => dir * (Number(b.dataset.order) - Number(a.dataset.order))).forEach((li) => grid.appendChild(li));
+      chips.forEach((c) => { const on = c.dataset.nlxSeries === series; c.classList.toggle('is-on', on); c.setAttribute('aria-pressed', String(on)); });
+      total.textContent = (n === 1 ? total.dataset.one : total.dataset.many).replace('{count}', String(n));
+      none.hidden = n > 0;
+    };
+    chips.forEach((c) => c.addEventListener('click', () => { series = c.dataset.nlxSeries; apply(); }));
+    search.addEventListener('input', apply); year.addEventListener('change', apply); sort.addEventListener('change', apply);
+    views.forEach((v) => v.addEventListener('click', () => { grid.dataset.view = v.dataset.nlxView; views.forEach((x) => { const on = x === v; x.classList.toggle('is-on', on); x.setAttribute('aria-pressed', String(on)); }); }));
+    root.querySelector('[data-nlx-clear]').addEventListener('click', () => { search.value = ''; year.value = ''; series = ''; apply(); });
+    root.querySelector('[data-nlx-surprise]').addEventListener('click', () => {
+      const pool = items.filter((li) => !li.hidden && li.querySelector('[data-nlr-open]'));
+      if (!pool.length) return;
+      const pick = pool[Math.floor(Math.random() * pool.length)];
+      pick.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'center' });
+      pick.classList.add('is-picked'); setTimeout(() => pick.classList.remove('is-picked'), 1800);
+      setTimeout(() => pick.querySelector('[data-nlr-open]').click(), reduce ? 0 : 700);
+    });
+  })();
 </script>

@@ -1,0 +1,80 @@
+---
+// Alumni events: upcoming and past, from the shared Events collection (Alumni Office).
+import AlumniShell from '../../../components/alumni/AlumniShell.astro';
+import AlumniSubHero from '../../../components/alumni/AlumniSubHero.astro';
+import AlumniFoot from '../../../components/alumni/AlumniFoot.astro';
+import { getAlumniCopy, getAlumniSetting, getAlumniEvents } from '../../../lib/content/alumni';
+import { icon, formatDate, formatTime } from '../../../lib/content/alumni-ui';
+const [copy, settings, events] = await Promise.all([getAlumniCopy(), getAlumniSetting(), getAlumniEvents()]);
+if (!settings.show_events) return Astro.redirect('/about/alumni');
+const upcomingEvents = events.filter((e) => !e.is_past);
+const pastEvents = events.filter((e) => e.is_past).reverse();
+const L = copy.labels;
+---
+
+<AlumniShell title="Alumni events" description={copy.seo_description ?? undefined} texts={copy.texts}>
+<AlumniSubHero page="events" />
+    <!-- ====================== 8. EVENTS ====================== -->
+    {settings.show_events && (
+      <section id="events" class="al-section al-events" aria-labelledby="al-events-h">
+        <div class="wrap al-wide">
+          <div class="al-head al-head--split" data-al-reveal>
+            <div>
+              {copy.events.eyebrow && <p class="al-eyebrow">{copy.events.eyebrow}</p>}
+              <h2 id="al-events-h" class="al-h2">{copy.events.heading}</h2>
+            </div>
+            <div class="al-tabs" role="tablist" aria-label="Alumni events">
+              <button type="button" role="tab" id="al-tab-upcoming" aria-controls="al-panel-upcoming" aria-selected="true" tabindex="0">
+                {L.upcoming_events} <span class="al-tab-count">{upcomingEvents.length}</span>
+              </button>
+              <button type="button" role="tab" id="al-tab-past" aria-controls="al-panel-past" aria-selected="false" tabindex="-1">
+                {L.past_events} <span class="al-tab-count">{pastEvents.length}</span>
+              </button>
+            </div>
+          </div>
+
+          {[
+            { id: 'upcoming', list: upcomingEvents, empty: copy.texts.upcoming_empty },
+            { id: 'past', list: pastEvents, empty: copy.texts.past_empty },
+          ].map((tab) => (
+            <div id={`al-panel-${tab.id}`} role="tabpanel" aria-labelledby={`al-tab-${tab.id}`} class="al-tabpanel" hidden={tab.id === 'past'} tabindex="0">
+              {tab.list.length > 0 ? (
+                <div class="al-event-list">
+                  {tab.list.map((e, i) => (
+                    <article class={`al-event${tab.id === 'upcoming' && i === 0 ? ' al-event--next' : ''}${tab.id === 'past' ? ' al-event--past' : ''}`}>
+                      <div class="al-event-date" aria-hidden="true">
+                        <span class="al-event-day">{new Date(e.starts_at).toLocaleDateString('en-GB', { day: '2-digit' })}</span>
+                        <span class="al-event-month">{new Date(e.starts_at).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })}</span>
+                      </div>
+                      {e.image_url && <img class="al-event-img" src={e.image_url} alt="" loading="lazy" />}
+                      <div class="al-event-body">
+                        {tab.id === 'upcoming' && i === 0 && <p class="al-tag al-tag--gold">Next up</p>}
+                        <h3 class="al-event-title">{e.title}</h3>
+                        <p class="al-event-meta">
+                          <span set:html={icon('calendar', 16)} />{formatDate(e.starts_at)}{tab.id === 'upcoming' && `, ${formatTime(e.starts_at)}`}
+                          {e.venue && <><span set:html={icon('pin', 16)} />{e.venue}</>}
+                        </p>
+                        {e.description && <p class="al-event-desc">{e.description}</p>}
+                        <div class="al-event-actions">
+                          <a href={`/news-notices/events/${e.id}`} class="al-link">Event details <span aria-hidden="true">→</span></a>
+                          {tab.id === 'upcoming' && e.registration_link && (
+                            <a href={e.registration_link} class="al-btn al-btn--navy al-btn--sm" target="_blank" rel="noopener noreferrer">Register</a>
+                          )}
+                        </div>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              ) : (
+                <div class="al-empty al-empty--compact">
+                  <span class="al-empty-icon" set:html={icon('calendar', 34)} />
+                  <p class="al-empty-title">{tab.empty}</p>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </section>
+    )}
+<AlumniFoot />
+</AlumniShell>

@@ -1,31 +1,34 @@
 ---
-// Latest Highlights — photo stories from News. “feature”: one large story
-// and smaller ones beside it; “grid”: equal cards. A story without photos
-// gets a typographic card instead of a broken image.
+// Latest Highlights — photo stories from News as an automatic slider: one large story that
+// fades from picture to picture, with the next stories listed beside it (tap one to jump).
+// Pauses on hover/focus, has previous/next and a pause button, swipes on phones, and stays still
+// for visitors who prefer reduced motion. “grid” (Strapi → layout) keeps the plain card grid.
+// A story without a photo gets a designed card instead of a broken image. Without JavaScript
+// the first story shows and every title is still a link.
 import type { Highlight, HomeLabels } from '../../lib/content/homepage';
 import { fmtDate } from '../../lib/content/homepage';
 import Img from './Img.astro';
 
-interface Props { items: Highlight[]; layout: 'feature' | 'grid'; labels: HomeLabels; emptyText: string | null }
-const { items, layout, labels, emptyText } = Astro.props;
+interface Props { items: Highlight[]; layout: 'carousel' | 'feature' | 'grid'; seconds?: number; labels: HomeLabels; emptyText: string | null }
+const { items, layout, seconds = 6, labels, emptyText } = Astro.props;
 const photos = (n: number) => labels.photos_count.replace('{n}', String(n));
 const camera = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>';
 const play = '<svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>';
 const pin = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M9 3h6l-1 6 4 4H6l4-4zM12 13v8"/></svg>';
+const arrow = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
+const prev = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>';
+const next = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>';
+const pause = '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M7 5h3v14H7zM14 5h3v14h-3z"/></svg>';
+const playBig = '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>';
 ---
-<div data-expiring>
-  <ul class:list={['hm-hl', `hm-hl--${layout}`, `hm-hl--n${Math.min(items.length, 5)}`]}>
-    {items.map((h, i) => {
-      const big = layout === 'feature' && i === 0;
-      return (
-        <li class:list={['hm-hl-item', { 'hm-hl-item--big': big, 'hm-hl-item--noimg': !h.cover }]} data-expires={h.expires ?? undefined} data-reveal style={`--i:${i}`}>
+{layout === 'grid' ? (
+  <div data-expiring>
+    <ul class="hm-hl hm-hl--grid">
+      {items.map((h, i) => (
+        <li class:list={['hm-hl-item', { 'hm-hl-item--noimg': !h.cover }]} data-expires={h.expires ?? undefined} data-reveal style={`--i:${i}`}>
           <article class="hm-hl-card">
             <div class="hm-hl-media">
-              {h.cover ? (
-                <Img image={h.cover} class="hm-hl-img" eager={i === 0} sizes={big ? '(min-width: 1000px) 60vw, 100vw' : '(min-width: 1000px) 25vw, (min-width: 640px) 50vw, 100vw'} />
-              ) : (
-                <span class="hm-hl-pattern" aria-hidden="true"></span>
-              )}
+              {h.cover ? <Img image={h.cover} class="hm-hl-img" sizes="(min-width: 1000px) 25vw, (min-width: 640px) 50vw, 100vw" /> : <span class="hm-hl-pattern" aria-hidden="true"></span>}
               <span class="hm-hl-badges">
                 {h.pinned && <span class="hm-chip hm-chip--gold"><Fragment set:html={pin} />{labels.pinned}</span>}
                 {h.has_video && <span class="hm-chip"><Fragment set:html={play} /></span>}
@@ -33,18 +36,108 @@ const pin = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke=
               </span>
             </div>
             <div class="hm-hl-body">
-              <p class="hm-meta">
-                {h.category && <span class="hm-meta-cat">{h.category}</span>}
-                <time datetime={h.date?.slice(0, 10)}>{fmtDate(h.date)}</time>
-              </p>
+              <p class="hm-meta">{h.category && <span class="hm-meta-cat">{h.category}</span>}<time datetime={h.date?.slice(0, 10)}>{fmtDate(h.date)}</time></p>
               <h3 class="hm-hl-title"><a href={h.href}>{h.title}</a></h3>
               {h.summary && <p class="hm-hl-summary">{h.summary}</p>}
             </div>
           </article>
         </li>
-      );
-    })}
-  </ul>
-  {items.length > 1 && <p class="hm-swipe" aria-hidden="true">{labels.swipe_hint} →</p>}
-  {emptyText && <p class="hm-empty" data-empty hidden={items.length > 0}>{emptyText}</p>}
-</div>
+      ))}
+    </ul>
+    {emptyText && <p class="hm-empty" data-empty hidden={items.length > 0}>{emptyText}</p>}
+  </div>
+) : (
+  <div data-expiring>
+    <div class="hm-slider" data-slider data-seconds={seconds} role="region" aria-roledescription="carousel" aria-label="Latest highlights">
+      <div class="hm-slider-stage">
+        <ul class="hm-slides">
+          {items.map((h, i) => (
+            <li class:list={['hm-slide', { 'is-on': i === 0, 'hm-slide--noimg': !h.cover }]} data-expires={h.expires ?? undefined} data-slide aria-roledescription="slide" aria-label={labels.slide_of.replace('{n}', String(i + 1)).replace('{total}', String(items.length))} aria-hidden={i === 0 ? 'false' : 'true'}>
+              <a class="hm-slide-media" href={h.href} tabindex={i === 0 ? 0 : -1} aria-label={h.title}>
+                {h.cover
+                  ? <Img image={h.cover} class="hm-slide-img" eager={i === 0} sizes="(min-width: 1100px) 66vw, 100vw" />
+                  : <span class="hm-slide-art" aria-hidden="true"><b>{(h.category ?? h.title).slice(0, 1)}</b></span>}
+                <span class="hm-slide-scrim" aria-hidden="true"></span>
+              </a>
+              <div class="hm-slide-body">
+                <p class="hm-slide-tags">
+                  {h.category && <span class="hm-chip hm-chip--gold">{h.category}</span>}
+                  {h.pinned && <span class="hm-chip"><Fragment set:html={pin} />{labels.pinned}</span>}
+                  {h.has_video && <span class="hm-chip"><Fragment set:html={play} /></span>}
+                  {h.photos > 1 && <span class="hm-chip"><Fragment set:html={camera} />{photos(h.photos)}</span>}
+                </p>
+                <h3 class="hm-slide-title"><a href={h.href} tabindex={i === 0 ? 0 : -1}>{h.title}</a></h3>
+                {h.summary && <p class="hm-slide-sum">{h.summary}</p>}
+                <p class="hm-slide-foot"><time datetime={h.date?.slice(0, 10)}>{fmtDate(h.date)}</time><span class="hm-slide-go">{labels.read_more} <Fragment set:html={arrow} /></span></p>
+              </div>
+            </li>
+          ))}
+        </ul>
+        {items.length > 1 && (
+          <>
+            <button type="button" class="hm-slider-btn hm-slider-btn--prev" data-slider-prev aria-label={labels.slider_prev}><Fragment set:html={prev} /></button>
+            <button type="button" class="hm-slider-btn hm-slider-btn--next" data-slider-next aria-label={labels.slider_next}><Fragment set:html={next} /></button>
+          </>
+        )}
+      </div>
+      {items.length > 1 && (
+        <div class="hm-slider-dots">
+          <ol>
+            {items.map((x, i) => (
+              <li data-expires={x.expires ?? undefined}><button type="button" class:list={['hm-dot', { 'is-on': i === 0 }]} data-slider-go={i} aria-label={x.title}><span></span></button></li>
+            ))}
+          </ol>
+          <button type="button" class="hm-slider-pause" data-slider-pause aria-pressed="false" aria-label={labels.slider_pause} data-pause={labels.slider_pause} data-play={labels.slider_play}>
+            <span class="hm-i-pause"><Fragment set:html={pause} /></span><span class="hm-i-play"><Fragment set:html={playBig} /></span>
+          </button>
+        </div>
+      )}
+    </div>
+    {emptyText && <p class="hm-empty" data-empty hidden={items.length > 0}>{emptyText}</p>}
+  </div>
+)}
+
+<script is:inline>
+  (() => {
+    if (window.__hmSlider) return;
+    window.__hmSlider = true;
+    const init = () => {
+      document.querySelectorAll('[data-slider]').forEach((root) => {
+        const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+        const slides = [...root.querySelectorAll('[data-slide]')];
+        const rails = [...root.querySelectorAll('[data-slider-go]')];
+        if (!slides.length) return;
+        rails.forEach((b, i) => { b.dataset.sliderGo = String(i); });
+        const ms = (Number(root.dataset.seconds) || 6) * 1000;
+        root.style.setProperty('--hm-slide-ms', ms + 'ms');
+        const pauseBtn = root.querySelector('[data-slider-pause]');
+        let at = 0, timer = null, paused = reduce, hover = false;
+        const show = (n) => {
+          at = (n + slides.length) % slides.length;
+          slides.forEach((s, i) => { const on = i === at; s.classList.toggle('is-on', on); s.setAttribute('aria-hidden', String(!on)); s.querySelectorAll('a').forEach((a) => { a.tabIndex = on ? 0 : -1; }); });
+          rails.forEach((b, i) => { const on = i === at; b.classList.toggle('is-on', on); const bar = b.querySelector('span'); if (bar) { bar.style.animation = 'none'; void bar.offsetWidth; bar.style.animation = ''; } });
+        };
+        const run = () => { clearInterval(timer); root.classList.toggle('is-paused', paused || hover); if (slides.length > 1 && !paused && !hover) timer = setInterval(() => show(at + 1), ms); };
+        root.querySelector('[data-slider-prev]')?.addEventListener('click', () => { show(at - 1); run(); });
+        root.querySelector('[data-slider-next]')?.addEventListener('click', () => { show(at + 1); run(); });
+        rails.forEach((b, i) => b.addEventListener('click', () => { show(i); run(); }));
+        pauseBtn?.addEventListener('click', () => {
+          paused = !paused; pauseBtn.setAttribute('aria-pressed', String(paused));
+          pauseBtn.setAttribute('aria-label', paused ? pauseBtn.dataset.play : pauseBtn.dataset.pause); run();
+        });
+        root.addEventListener('mouseenter', () => { hover = true; run(); });
+        root.addEventListener('mouseleave', () => { hover = false; run(); });
+        root.addEventListener('focusin', () => { hover = true; run(); });
+        root.addEventListener('focusout', () => { hover = false; run(); });
+        root.addEventListener('keydown', (e) => { if (e.key === 'ArrowRight') { show(at + 1); run(); } if (e.key === 'ArrowLeft') { show(at - 1); run(); } });
+        let sx = 0;
+        root.addEventListener('touchstart', (e) => { sx = e.touches[0].clientX; }, { passive: true });
+        root.addEventListener('touchend', (e) => { const dx = e.changedTouches[0].clientX - sx; if (Math.abs(dx) > 50) { show(at + (dx < 0 ? 1 : -1)); run(); } }, { passive: true });
+        if (paused && pauseBtn) pauseBtn.setAttribute('aria-pressed', 'true');
+        root.classList.add('is-ready');
+        show(0); run();
+      });
+    };
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+  })();
+</script>

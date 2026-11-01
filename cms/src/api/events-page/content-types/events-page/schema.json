@@ -1,0 +1,17 @@
+{
+  "kind": "singleType",
+  "collectionName": "events_page",
+  "info": {
+    "singularName": "events-page",
+    "pluralName": "events-pages",
+    "displayName": "News & Notices – Events Page",
+    "description": "Hero text and wording of the Events page. The events themselves are edited under News & Notices – Events."
+  },
+  "options": { "draftAndPublish": false },
+  "attributes": {
+    "hero_eyebrow": { "type": "string" },
+    "hero_heading": { "type": "string" },
+    "hero_intro": { "type": "text" },
+    "labels": { "type": "json" }
+  }
+}

@@ -34,3 +34,6 @@ web/dist
 web/.astro
 web/.env
 web/npm-debug.log*
+
+# --- AI chat server (chat-server/) — the Gemini key lives in .env ---
+chat-server/.env

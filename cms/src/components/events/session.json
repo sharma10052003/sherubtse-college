@@ -1,0 +1,11 @@
+{
+  "collectionName": "components_events_sessions",
+  "info": { "displayName": "Programme item", "icon": "clock" },
+  "options": {},
+  "attributes": {
+    "time": { "type": "string" },
+    "title": { "type": "string", "required": true },
+    "description": { "type": "text" },
+    "venue": { "type": "string" }
+  }
+}

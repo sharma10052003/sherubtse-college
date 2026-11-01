@@ -1,0 +1,350 @@
+---
+// “Ask Sherubtse” — the assistant in the corner of every page.
+//
+// Questions go to the AI chat server (/api/chat, chat-server/ in the repo),
+// which answers with Google Gemini from the published website's text only.
+// When that server isn't there (no key, daily limit reached, local dev
+// without it), the window answers from the public site search index
+// instead. Either way it can only show what visitors can already see, and
+// questions about staff systems (admin panel, logins, passwords…) get a
+// fixed reply — see lib/chat-guard.mjs, shared with the server.
+// Wording: Strapi → Global – Chat Assistant. Styles: styles/chat.css.
+import '../styles/chat.css';
+import { Image } from 'astro:assets';
+import logo from '../assets/sherubtse-logo.png';
+import { getChatAssistant } from '../lib/content/chat-assistant';
+
+const cfg = await getChatAssistant();
+// JSON inside <script> must not be able to close the tag.
+const json = cfg ? JSON.stringify(cfg).replace(/</g, '\\u003c') : '';
+const L = cfg?.labels;
+const closeIcon = '<svg class="chat-x" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>';
+---
+{cfg && L && (
+  <div class="chat" data-chat>
+    <script type="application/json" data-chat-config set:html={json} />
+    <div class="chat-bubble" hidden data-chat-bubble>
+      <button type="button" class="chat-bubble-text" data-chat-bubble-open>{L.bubble_text}</button>
+      <button type="button" class="chat-bubble-close" aria-label={L.close_label} title={L.close_label} data-chat-bubble-close>
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg>
+      </button>
+    </div>
+    <button type="button" class="chat-launcher" aria-expanded="false" aria-controls="chat-panel" aria-label={L.open_label} title={cfg.launcher_label} data-chat-open>
+      <span class="chat-halo" aria-hidden="true"></span>
+      <Image src={logo} alt="" width={96} height={96} class="chat-logo" loading="eager" />
+      <Fragment set:html={closeIcon} />
+    </button>
+
+    <section id="chat-panel" class="chat-panel" role="dialog" aria-modal="false" aria-labelledby="chat-title" hidden data-chat-panel>
+      <header class="chat-head">
+        <Image src={logo} alt="" width={80} height={80} class="chat-head-logo" />
+        <div class="chat-head-text">
+          <h2 class="chat-title" id="chat-title">{cfg.title}</h2>
+          {cfg.subtitle && <p class="chat-subtitle">{cfg.subtitle}</p>}
+        </div>
+        <button type="button" class="chat-icon-btn chat-expand" title={L.expand_label} aria-label={L.expand_label} aria-pressed="false" data-chat-expand>
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6M10 20H4v-6M20 4l-7 7M4 20l7-7" /></svg>
+        </button>
+        <button type="button" class="chat-icon-btn" title={L.restart_label} aria-label={L.restart_label} data-chat-restart>
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4v6h6" /><path d="M5.5 15a7 7 0 1 0 1.7-7.3L4 10" /></svg>
+        </button>
+        <button type="button" class="chat-icon-btn" title={L.close_label} aria-label={L.close_label} data-chat-close>
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg>
+        </button>
+      </header>
+
+      <div class="chat-log" role="log" aria-live="polite" aria-relevant="additions" data-chat-log></div>
+
+      <form class="chat-form" data-chat-form>
+        <label class="chat-sr" for="chat-input">{cfg.placeholder}</label>
+        <input id="chat-input" type="text" autocomplete="off" maxlength="300" placeholder={cfg.placeholder} data-chat-input />
+        <button type="submit" class="chat-send" aria-label={L.send_label} title={L.send_label}>
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h14M13 6l6 6-6 6" /></svg>
+        </button>
+      </form>
+      <p class="chat-note">{L.disclaimer}</p>
+    </section>
+  </div>
+)}
+
+<script>
+  import { loadIndex, search, highlight } from '../lib/search-client';
+  import { isBlocked, isSafeUrl, fold } from '../lib/chat-guard.mjs';
+  import type { ChatAssistantConfig } from '../lib/content/chat-assistant';
+
+  const root = document.querySelector<HTMLElement>('[data-chat]');
+  if (root) {
+    const cfg = JSON.parse(root.querySelector('[data-chat-config]')!.textContent || '{}') as ChatAssistantConfig;
+    const L = cfg.labels;
+    const launcher = root.querySelector<HTMLButtonElement>('[data-chat-open]')!;
+    const panel = root.querySelector<HTMLElement>('[data-chat-panel]')!;
+    const log = root.querySelector<HTMLElement>('[data-chat-log]')!;
+    const form = root.querySelector<HTMLFormElement>('[data-chat-form]')!;
+    const input = root.querySelector<HTMLInputElement>('[data-chat-input]')!;
+    const expand = root.querySelector<HTMLButtonElement>('[data-chat-expand]')!;
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const SHOW = 4;
+
+    type Item = { t: string; u: string; k: string; d: string };
+    type Source = { t: string; u: string };
+    type Msg =
+      | { from: 'user'; text: string }
+      | { from: 'bot'; kind: 'text'; text: string; chips?: boolean; contact?: boolean }
+      | { from: 'bot'; kind: 'ai'; text: string; sources: Source[] }
+      | { from: 'bot'; kind: 'results'; query: string; items: Item[]; total: number; note?: string };
+
+    // ---- Conversation kept for this browser tab, so it survives moving between pages ----
+    const KEY = 'sc-chat-v2';
+    let messages: Msg[] = [];
+    try { messages = JSON.parse(sessionStorage.getItem(KEY) || '[]'); } catch { messages = []; }
+    const save = () => { try { sessionStorage.setItem(KEY, JSON.stringify(messages.slice(-40))); } catch {} };
+
+    const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    const clip = (s: string, n: number) => (s.length > n ? `${s.slice(0, n).replace(/\s+\S*$/, '')}…` : s);
+    const isExternal = (u: string) => /^https?:\/\//i.test(u) && !u.startsWith(location.origin);
+    const linkAttrs = (u: string) => (isExternal(u) ? ' target="_blank" rel="noopener"' : '');
+
+    /** The AI's light formatting: paragraphs, bullet or numbered lists, **bold**. Everything is escaped first. */
+    function format(text: string) {
+      const inline = (s: string) => esc(s).replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>').replace(/\*\*/g, '');
+      // Line by line, so a sentence followed directly by a list still becomes a list.
+      const out: string[] = [];
+      let para: string[] = [];
+      let list: { tag: 'ul' | 'ol'; items: string[] } | null = null;
+      const flushPara = () => { if (para.length) out.push(`<p>${para.join('<br>')}</p>`); para = []; };
+      const flushList = () => { if (list) out.push(`<${list.tag}>${list.items.map((i) => `<li>${i}</li>`).join('')}</${list.tag}>`); list = null; };
+      for (const raw of text.trim().split('\n')) {
+        const line = raw.trim();
+        const item = line.match(/^[-*•]\s+(.*)$/) ?? line.match(/^\d+[.)]\s+(.*)$/);
+        if (!line) { flushPara(); flushList(); continue; }
+        if (item) {
+          const tag = /^\d/.test(line) ? 'ol' : 'ul';
+          flushPara();
+          if (list && list.tag !== tag) flushList();
+          list ??= { tag, items: [] };
+          list.items.push(inline(item[1]));
+        } else {
+          flushList();
+          para.push(inline(line));
+        }
+      }
+      flushPara();
+      flushList();
+      return out.join('');
+    }
+
+    const chips = () =>
+      cfg.quick_questions.length
+        ? `<div class="chat-chips">${cfg.quick_questions.map((q) => `<button type="button" data-q="${esc(q.question)}" data-label="${esc(q.label)}">${esc(q.label)}</button>`).join('')}</div>`
+        : '';
+    const contact = () => (cfg.contact ? `<a class="chat-contact" href="${esc(cfg.contact.url)}">${esc(cfg.contact.label)} →</a>` : '');
+    const who = (label: string) => `<span class="chat-sr">${esc(label)}: </span>`;
+
+    function sourcesHtml(sources: Source[]) {
+      const safe = sources.filter((s) => isSafeUrl(s.u));
+      if (!safe.length) return contact();
+      return `<p class="chat-sources-label">${esc(L.sources_label)}</p><ul class="chat-sources">${safe
+        .map((s) => `<li><a href="${esc(s.u)}"${linkAttrs(s.u)}>${esc(s.t)}</a></li>`)
+        .join('')}</ul>`;
+    }
+
+    function html(m: Msg): string {
+      if (m.from === 'user') return `<div class="chat-msg chat-msg--user">${who(L.you_label)}<p>${esc(m.text)}</p></div>`;
+      if (m.kind === 'text') {
+        return `<div class="chat-msg chat-msg--bot">${who(L.assistant_label)}<p>${esc(m.text)}</p>${m.contact ? contact() : ''}${m.chips ? chips() : ''}</div>`;
+      }
+      if (m.kind === 'ai') {
+        return `<div class="chat-msg chat-msg--bot chat-msg--wide">${who(L.assistant_label)}<div class="chat-answer">${format(m.text)}</div>${sourcesHtml(m.sources)}</div>`;
+      }
+      const list = m.items
+        .map((r) => `<li><a href="${esc(r.u)}"${linkAttrs(r.u)}><span class="chat-kind">${esc(r.k)}</span><strong>${highlight(r.t, m.query)}</strong>${r.d ? `<span class="chat-desc">${highlight(clip(r.d, 120), m.query)}</span>` : ''}</a></li>`)
+        .join('');
+      const more = m.total > m.items.length ? `<a class="chat-all" href="/search?q=${encodeURIComponent(m.query)}">${esc(cfg.see_all_label.replace('{count}', String(m.total)))} →</a>` : '';
+      const intro = m.note || cfg.results_intro;
+      return `<div class="chat-msg chat-msg--bot chat-msg--wide">${who(L.assistant_label)}${intro ? `<p>${esc(intro)}</p>` : ''}<ol class="chat-results">${list}</ol>${more}</div>`;
+    }
+
+    const scrollEnd = () => { log.scrollTop = log.scrollHeight; };
+    function render() {
+      const greeting: Msg = { from: 'bot', kind: 'text', text: cfg.greeting, chips: true };
+      log.innerHTML = [greeting, ...messages].filter((m) => m.from === 'user' || m.kind !== 'text' || m.text).map(html).join('');
+      scrollEnd();
+    }
+    function push(m: Msg) {
+      messages.push(m);
+      save();
+      log.insertAdjacentHTML('beforeend', html(m));
+      scrollEnd();
+      return log.lastElementChild as HTMLElement;
+    }
+
+    /** Types the AI answer out, then shows it formatted. */
+    function typeOut(box: HTMLElement, text: string) {
+      const target = box.querySelector<HTMLElement>('.chat-answer');
+      const rest = Array.from(box.children).filter((c) => !c.classList.contains('chat-answer') && !c.classList.contains('chat-sr')) as HTMLElement[];
+      if (!target || reduce) return;
+      const done = target.innerHTML;
+      rest.forEach((el) => (el.style.visibility = 'hidden'));
+      const p = document.createElement('p');
+      p.style.whiteSpace = 'pre-line';
+      target.replaceChildren(p);
+      // Paced by the clock, not by timer ticks, so it always ends within ~2.5 s.
+      const start = performance.now();
+      const duration = Math.min(2500, text.length * 10);
+      let i = 0;
+      const step = () => {
+        i = Math.min(text.length, Math.max(i + 1, Math.round((text.length * (performance.now() - start)) / duration)));
+        p.textContent = text.slice(0, i).replace(/\*\*/g, '').replace(/^\s*[-*•]\s+/gm, '• ');
+        scrollEnd();
+        if (i < text.length) setTimeout(step, 14);
+        else {
+          target.innerHTML = done;
+          rest.forEach((el) => (el.style.visibility = ''));
+          scrollEnd();
+        }
+      };
+      step();
+    }
+
+    // ---- Search fallback (no AI server, or the AI is unavailable) ----
+    // Question words are dropped so “what are the fees?” searches “fees”.
+    const FILLER = new Set(
+      'what whats which who whom whose where when why how is are was were do does did can could would should will shall i me my we our you your please tell show give find get know about information info details detail want need looking look for the a an of and in to at on there any some it this that be have has had with from by sherubtse college'.split(' '),
+    );
+    const SAME: Record<string, string> = { course: 'programme', courses: 'programmes', program: 'programme', programs: 'programmes', degree: 'programme', degrees: 'programmes', hostel: 'residence', hostels: 'residences', fee: 'fees', job: 'vacancy', jobs: 'vacancies', exam: 'examination', exams: 'examination' };
+    const GREET = /^(hi|hello|hey|hii|helo|kuzuzangpo|kuzu zangpo|kuzuzangpo la|good (morning|afternoon|evening))( la)?$/;
+    const THANKS = /\b(thanks|thank you|thank u|thankyou|tq|ty)\b/;
+
+    function toQuery(q: string) {
+      const words = fold(q).split(' ').filter(Boolean);
+      const kept = words.filter((w) => !FILLER.has(w)).map((w) => SAME[w] ?? w);
+      return (kept.length ? kept : words).join(' ');
+    }
+
+    async function searchAnswer(q: string, note?: string) {
+      const index = await loadIndex();
+      if (!index.length) return push({ from: 'bot', kind: 'text', text: L.unavailable_message });
+      const query = toQuery(q);
+      const found = search(index, query).filter((r) => isSafeUrl(r.u));
+      if (!found.length) return push({ from: 'bot', kind: 'text', text: cfg.no_results_message, chips: true, contact: true });
+      push({ from: 'bot', kind: 'results', query, total: found.length, note, items: found.slice(0, SHOW).map((r) => ({ t: r.t, u: r.u, k: r.k, d: r.d })) });
+    }
+
+    // ---- AI answers from the chat server ----
+    type Reply = { mode: 'ai'; answer: string; sources: Source[] } | { mode: 'blocked' | 'none' | 'busy' | 'search' | 'unavailable'; sources?: Source[] };
+    async function askServer(question: string): Promise<Reply | null> {
+      // The last two exchanges, so follow-ups (“and the fees?”) make sense.
+      const history = messages
+        .slice(0, -1)
+        .flatMap((m) => (m.from === 'user' ? [{ role: 'user', text: m.text }] : m.kind === 'ai' ? [{ role: 'model', text: m.text }] : []))
+        .slice(-4);
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 55_000);
+      try {
+        const res = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ question, history }), signal: ctrl.signal });
+        if (!res.ok || !(res.headers.get('content-type') || '').includes('json')) return null;
+        return (await res.json()) as Reply;
+      } catch {
+        return null;
+      } finally {
+        clearTimeout(timer);
+      }
+    }
+
+    let asking = false;
+    async function answer(question: string, shown = question) {
+      const q = question.trim().slice(0, 300);
+      if (!q || asking) return;
+      push({ from: 'user', text: shown.trim().slice(0, 300) || q });
+      const f = fold(q);
+
+      if (isBlocked(q, cfg.extra_blocked_words)) return push({ from: 'bot', kind: 'text', text: cfg.blocked_message, contact: true });
+      if (GREET.test(f)) return push({ from: 'bot', kind: 'text', text: cfg.greeting, chips: true });
+      if (THANKS.test(f) && f.split(' ').length <= 5 && cfg.thanks_message) return push({ from: 'bot', kind: 'text', text: cfg.thanks_message });
+
+      asking = true;
+      const busy = document.createElement('div');
+      busy.className = 'chat-msg chat-msg--bot chat-typing';
+      busy.innerHTML = `<span></span><span></span><span></span><span class="chat-sr">${esc(L.searching_label)}</span>`;
+      log.append(busy);
+      scrollEnd();
+      // A gentle note when the AI is slow, so it doesn't look frozen.
+      const slow = setTimeout(() => {
+        busy.insertAdjacentHTML('beforeend', `<em class="chat-slow">${esc(L.slow_label)}</em>`);
+        scrollEnd();
+      }, 8000);
+      try {
+        const reply = await askServer(q);
+        busy.remove();
+        if (reply?.mode === 'ai') {
+          const box = push({ from: 'bot', kind: 'ai', text: reply.answer, sources: reply.sources ?? [] });
+          typeOut(box, reply.answer);
+        } else if (reply?.mode === 'blocked') {
+          push({ from: 'bot', kind: 'text', text: cfg.blocked_message, contact: true });
+        } else if (reply?.mode === 'none') {
+          push({ from: 'bot', kind: 'text', text: cfg.no_results_message, chips: true, contact: true });
+        } else {
+          await searchAnswer(q, reply?.mode === 'busy' ? L.busy_message : undefined);
+        }
+      } finally {
+        clearTimeout(slow);
+        busy.remove();
+        asking = false;
+      }
+    }
+
+    // ---- Greeting bubble: appears once a visitor has settled on the page ----
+    const bubble = root.querySelector<HTMLElement>('[data-chat-bubble]')!;
+    const BUBBLE = 'sc-chat-bubble-closed';
+    let bubbleClosed = false;
+    try { bubbleClosed = sessionStorage.getItem(BUBBLE) === '1'; } catch {}
+    const hideBubble = (forGood: boolean) => {
+      bubble.hidden = true;
+      if (forGood) { bubbleClosed = true; try { sessionStorage.setItem(BUBBLE, '1'); } catch {} }
+    };
+    if (!bubbleClosed) setTimeout(() => { if (panel.hidden && !bubbleClosed) bubble.hidden = false; }, 1500);
+    root.querySelector('[data-chat-bubble-open]')!.addEventListener('click', () => open());
+    root.querySelector('[data-chat-bubble-close]')!.addEventListener('click', () => hideBubble(true));
+
+    // ---- Opening, closing, expanding ----
+    let rendered = false;
+    function open() {
+      hideBubble(true);
+      if (!rendered) { render(); rendered = true; }
+      panel.hidden = false;
+      launcher.setAttribute('aria-expanded', 'true');
+      document.documentElement.classList.add('chat-is-open');
+      requestAnimationFrame(() => { scrollEnd(); input.focus(); });
+    }
+    function close() {
+      panel.hidden = true;
+      launcher.setAttribute('aria-expanded', 'false');
+      document.documentElement.classList.remove('chat-is-open');
+      launcher.focus();
+    }
+    launcher.addEventListener('click', () => (panel.hidden ? open() : close()));
+    root.querySelector('[data-chat-close]')!.addEventListener('click', close);
+    expand.addEventListener('click', () => {
+      const wide = panel.classList.toggle('chat-panel--wide');
+      expand.setAttribute('aria-pressed', String(wide));
+      scrollEnd();
+    });
+    root.querySelector('[data-chat-restart]')!.addEventListener('click', () => {
+      messages = [];
+      save();
+      render();
+      input.focus();
+    });
+    panel.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const q = input.value;
+      input.value = '';
+      void answer(q);
+    });
+    log.addEventListener('click', (e) => {
+      const chip = (e.target as HTMLElement).closest<HTMLButtonElement>('[data-q]');
+      if (chip) void answer(chip.dataset.q || chip.textContent || '', chip.dataset.label || chip.textContent || '');
+    });
+  }
+</script>

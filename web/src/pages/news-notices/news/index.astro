@@ -1,101 +1,358 @@
 ---
-// The newsroom: a featured hero (image or video) for the top story, then a
-// mixed-template grid where each article renders in whichever layout its
-// editor picked in the CMS, then an archive timeline for older material.
-// Only the featured/broadcast hero autoplays video — every video card in
-// the grid below is a poster + play icon, by design (bandwidth + visual
-// calm over auto-playing everything).
+// The newsroom — every story the College has published, on one page. Stories, photos and
+// categories come from Strapi → News & Notices – News; the hero text and all wording from
+// News & Notices – News Page. A navy hero whose "spotlight" turns through the top stories
+// (a story with no photo gets a designed card, never an empty block), a sticky filter bar
+// (search, category, year, order, view), the full list grouped by month as cards, a list or
+// a timeline, and a photo wall of every picture. Styles: news-hub.css (.nw), news-pictures.css (.np).
 import Layout from '../../../layouts/Layout.astro';
-import NewsHero from '../../../components/news/NewsHero.astro';
-import NewsBoard from '../../../components/news/NewsBoard';
-import '../../../styles/section-landing.css';
-import '../../../styles/listing.css';
-import '../../../styles/news.css';
-import { getAllNews, CATEGORY_LABELS } from '../../../lib/content/news';
+import '../../../styles/news-hub.css';
+import '../../../styles/news-pictures.css';
+import { getAllNews, getNewsPage, CATEGORY_LABELS } from '../../../lib/content/news';
+import type { NewsItem } from '../../../lib/content/news';
+import { excerpt } from '../../../lib/article-text';
+import { NEWS_PAGE_HERO_DEFAULTS, makeNewsPageLabels } from '../../../lib/content/news-page-labels';
 
-const allNews = await getAllNews();
-const live = allNews.filter((n) => !n.archived);
+const [all, page] = await Promise.all([getAllNews(), getNewsPage()]);
+const t = makeNewsPageLabels(page.labels);
+const fill = (s: string, vars: Record<string, string | number>) => s.replace(/\{(\w+)\}/g, (_m, k) => String(vars[k] ?? ''));
+const eyebrow = page.hero_eyebrow || NEWS_PAGE_HERO_DEFAULTS.hero_eyebrow;
+const heading = page.hero_heading || NEWS_PAGE_HERO_DEFAULTS.hero_heading;
+const intro = page.hero_intro || NEWS_PAGE_HERO_DEFAULTS.hero_intro;
 
-const featuredCandidates = live.filter((n) => n.featured).sort((a, b) => {
-  if (a.pinned !== b.pinned) return a.pinned ? -1 : 1;
-  return b.date.localeCompare(a.date);
-});
-const hero = featuredCandidates[0] ?? live[0] ?? null;
+const stories = [...all].sort((a, b) => b.date.localeCompare(a.date));
+const live = stories.filter((n) => !n.archived);
+const spotlight = [...(live.length ? live : stories)]
+  .sort((a, b) => Number(b.pinned) - Number(a.pinned) || Number(b.featured) - Number(a.featured) || b.date.localeCompare(a.date))
+  .slice(0, 5);
 
-const rail = live
-  .filter((n) => n.id !== hero?.id)
-  .slice(0, 4)
-  .map((n) => ({ id: n.id, title: n.title, category_label: n.category_label }));
+const photosOf = (n: NewsItem) => [...new Set([...n.images, ...n.gallery])];
+const pictures = stories
+  .flatMap((n) => photosOf(n).map((src) => ({ src, id: n.id, title: n.title, date: n.date, alt: n.captions[src] || n.title })))
+  .filter((p, i, a) => a.findIndex((q) => q.src === p.src) === i);
+const years = [...new Set(stories.map((n) => n.year))].sort((a, b) => b - a);
+const cats = Object.entries(CATEGORY_LABELS)
+  .map(([value, label]) => ({ value, label, n: stories.filter((s) => s.category === value).length }))
+  .filter((c) => c.n > 0);
 
-const totalCategories = new Set(live.map((n) => n.category)).size;
-
-const boardItems = allNews
-  .filter((n) => n.id !== hero?.id)
-  .map((n) => ({
-    id: n.id,
-    title: n.title,
-    summary: n.summary,
-    date: n.date,
-    year: n.year,
-    category: n.category,
-    category_label: n.category_label,
-    template: n.template,
-    image_url: n.image_url,
-    images: n.images,
-    gallery: n.gallery,
-    tags: n.tags,
-    video_url: n.video_url,
-    video_poster_url: n.video_poster_url,
-    archived: n.archived,
-  }));
-
-const categoryOptions = Object.entries(CATEGORY_LABELS).map(([value, label]) => ({ value, label }));
-
-const breadcrumb = [
-  { label: 'Home', url: '/' },
-  { label: 'News & Notices', url: '/news-notices' },
-  { label: 'News', url: '/news-notices/news' },
-];
+const PICTURE_BATCH = 12;
+const longDate = (iso: string) => new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+const shortDate = (iso: string) => new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+const monthOf = (iso: string) => new Date(iso).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+const hrefOf = (n: { id: number }) => `/news-notices/news/${n.id}`;
+const isVideo = (n: NewsItem) => n.template === 'video' || n.hero_media_type === 'video';
+const imgOf = (n: NewsItem) => n.video_poster_url ?? n.image_url;
 ---
-<Layout title="News" description="The Sherubtse College newsroom — current stories, broadcasts and the full archive.">
-  <div class="wrap" style="padding-top:var(--s4)">
-    <nav class="breadcrumb" aria-label="Breadcrumb">
-      {breadcrumb.map((b, i) => (
-        <>
-          {i > 0 && ' › '}
-          {i === breadcrumb.length - 1 ? <span class="current">{b.label}</span> : <a href={b.url}>{b.label}</a>}
-        </>
-      ))}
-    </nav>
-  </div>
+<Layout title={heading} description={intro}>
+  <div class="nw" data-nw>
+    <!-- =========================== HERO =========================== -->
+    <header class="nw-hero">
+      <span class="nw-glow nw-glow--a" aria-hidden="true"></span>
+      <span class="nw-glow nw-glow--b" aria-hidden="true"></span>
+      <div class="wrap nw-hero-grid">
+        <div class="nw-hero-text">
+          <nav class="nw-crumbs nw-rise" style="--d:0" aria-label="Breadcrumb">
+            <a href="/">Home</a><span aria-hidden="true">›</span><a href="/news-notices">News &amp; Notices</a><span aria-hidden="true">›</span><span aria-current="page">{heading}</span>
+          </nav>
+          <p class="nw-eyebrow nw-rise" style="--d:1">{eyebrow}</p>
+          <h1 class="nw-title nw-rise" style="--d:2">{heading}</h1>
+          <p class="nw-intro nw-rise" style="--d:3">{intro}</p>
+          <ul class="nw-stats nw-rise" style="--d:4">
+            <li><strong data-nw-count={stories.length}>{stories.length}</strong><span>{t('stat_stories')}</span></li>
+            <li><strong data-nw-count={pictures.length}>{pictures.length}</strong><span>{t('stat_photos')}</span></li>
+            <li><strong data-nw-count={cats.length}>{cats.length}</strong><span>{t('stat_categories')}</span></li>
+            <li><strong data-nw-count={years.length}>{years.length}</strong><span>{t('stat_years')}</span></li>
+          </ul>
+        </div>
 
-  {hero ? (
-    <div class="wrap" style="padding-top:var(--s2)">
-      <NewsHero
-        item={hero}
-        rail={rail}
-        totalStories={live.length}
-        totalCategories={totalCategories}
-        archivedCount={allNews.length - live.length}
-      />
-    </div>
-  ) : (
-    <header class="sl-head">
-      <div class="wrap">
-        <p class="sl-eyebrow">News &amp; Notices</p>
-        <h1 class="sl-title">News</h1>
-        <span class="sl-rule" aria-hidden="true"></span>
+        {spotlight.length > 0 && (
+          <section class="nw-spot nw-rise" style="--d:3" data-nw-spot aria-roledescription="carousel" aria-label={t('spotlight_label')}>
+            <p class="nw-spot-label">{t('spotlight_label')}</p>
+            <div class="nw-spot-stage">
+              {spotlight.map((n, i) => (
+                <article class:list={['nw-slide', { 'is-on': i === 0 }]} data-nw-slide aria-roledescription="slide" aria-label={`${i + 1} / ${spotlight.length}`} aria-hidden={i === 0 ? 'false' : 'true'}>
+                  <a class="nw-slide-media" href={hrefOf(n)} tabindex={i === 0 ? 0 : -1} aria-label={n.title}>
+                    {imgOf(n)
+                      ? <img src={imgOf(n)!} alt="" loading={i === 0 ? 'eager' : 'lazy'} />
+                      : <span class="nw-art" aria-hidden="true"><b>{n.category_label.slice(0, 1)}</b></span>}
+                    <span class="nw-slide-scrim" aria-hidden="true"></span>
+                  </a>
+                  <div class="nw-slide-body">
+                    <p class="nw-meta"><span class="nw-cat">{n.category_label}</span><time datetime={n.date}>{longDate(n.date)}</time></p>
+                    <h2><a href={hrefOf(n)} tabindex={i === 0 ? 0 : -1}>{n.title}</a></h2>
+                    {n.summary && <p class="nw-slide-sum">{excerpt(n.summary, 150)}</p>}
+                    <span class="nw-slide-go">{t('read_story')}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+                  </div>
+                </article>
+              ))}
+            </div>
+            {spotlight.length > 1 && (
+              <div class="nw-spot-ctl">
+                <button type="button" class="nw-ico" data-nw-prev aria-label={t('spotlight_prev')}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
+                <ol class="nw-dots">
+                  {spotlight.map((n, i) => <li><button type="button" class:list={['nw-dot', { 'is-on': i === 0 }]} data-nw-dot={i} aria-label={n.title}><span></span></button></li>)}
+                </ol>
+                <button type="button" class="nw-ico" data-nw-pause aria-pressed="false" aria-label={t('spotlight_pause')}>
+                  <svg class="nw-i-pause" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 5h3v14H7zM14 5h3v14h-3z"/></svg>
+                  <svg class="nw-i-play" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+                </button>
+                <button type="button" class="nw-ico" data-nw-next aria-label={t('spotlight_next')}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
+              </div>
+            )}
+          </section>
+        )}
       </div>
     </header>
-  )}
 
-  <div class="ls-body">
-    <div class="wrap">
-      <div style="max-width:var(--measure); margin-bottom:var(--s5)">
-        <p class="eyebrow">The Newsroom</p>
-        <h2 class="h2">Latest From Sherubtse</h2>
+    <!-- =========================== BOARD =========================== -->
+    <section class="nw-board" id="stories" aria-labelledby="nw-board-h">
+      <div class="nw-bar" data-nw-bar>
+        <div class="wrap nw-bar-inner">
+          <label class="nw-search">
+            <span class="nw-sr">{t('search_label')}</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+            <input type="search" placeholder={t('search_placeholder')} autocomplete="off" data-nw-search />
+          </label>
+          <label class="nw-select"><span class="nw-sr">{t('year_label')}</span>
+            <select data-nw-year><option value="">{t('year_all')}</option>{years.map((y) => <option value={y}>{y}</option>)}</select>
+          </label>
+          <label class="nw-select"><span class="nw-sr">{t('sort_label')}</span>
+            <select data-nw-sort><option value="new">{t('sort_newest')}</option><option value="old">{t('sort_oldest')}</option></select>
+          </label>
+          <div class="nw-views" role="group" aria-label={t('view_label')}>
+            <button type="button" class="is-on" data-nw-view="cards" aria-pressed="true">{t('view_cards')}</button>
+            <button type="button" data-nw-view="list" aria-pressed="false">{t('view_list')}</button>
+            <button type="button" data-nw-view="timeline" aria-pressed="false">{t('view_timeline')}</button>
+          </div>
+        </div>
+        <div class="wrap">
+          <div class="nw-chips" role="group" aria-label="Category">
+            <button type="button" class="nw-chip is-on" data-nw-cat="" aria-pressed="true">{t('all_label')} <em data-nw-allcount>{stories.length}</em></button>
+            {cats.map((c) => <button type="button" class="nw-chip" data-nw-cat={c.value} aria-pressed="false">{c.label} <em>{c.n}</em></button>)}
+          </div>
+        </div>
       </div>
-      <NewsBoard client:load items={boardItems} categoryOptions={categoryOptions} />
-    </div>
+
+      <div class="wrap">
+        <header class="nw-head">
+          <div>
+            <h2 id="nw-board-h">{t('board_heading')}</h2>
+            <p>{t('board_intro')}</p>
+          </div>
+          <div class="nw-head-side">
+            <p class="nw-count" role="status" aria-live="polite" data-nw-total data-one={t('count_one')} data-many={t('count_many')}></p>
+            {stories.some((s) => s.archived) && (
+              <label class="nw-check"><input type="checkbox" checked data-nw-archive /><span>{t('archive_toggle')}</span></label>
+            )}
+          </div>
+        </header>
+
+        {stories.length === 0 ? (
+          <p class="nw-empty">Stories will appear here once they are added in Strapi.</p>
+        ) : (
+          <>
+            <ul class="nw-list" data-nw-list data-view="cards">
+              {stories.map((n, i) => {
+                const photos = photosOf(n).length;
+                return (
+                  <li class="nw-item" data-nw-item data-cat={n.category} data-year={n.year} data-date={n.date} data-archived={n.archived ? '1' : '0'} data-month={monthOf(n.date)} data-text={`${n.title} ${n.summary} ${n.category_label} ${n.tags.join(' ')}`.toLowerCase()} style={`--d:${i % 4}`}>
+                    <article class:list={['nw-card', `nw-card--${n.template}`, { 'nw-card--noimg': !imgOf(n) }]}>
+                      <a class="nw-media" href={hrefOf(n)} tabindex="-1" aria-hidden="true">
+                        {imgOf(n)
+                          ? <img src={imgOf(n)!} alt="" loading="lazy" decoding="async" />
+                          : <span class="nw-art" aria-hidden="true"><b>{n.category_label.slice(0, 1)}</b></span>}
+                        <span class="nw-badges">
+                          {isVideo(n) && <span class="nw-badge nw-badge--video">▶ {t('video_badge')}</span>}
+                          {photos > 1 && <span class="nw-badge">{fill(t('photos_badge'), { n: photos })}</span>}
+                          {n.archived && <span class="nw-badge nw-badge--dim">{t('archive_badge')}</span>}
+                        </span>
+                      </a>
+                      <div class="nw-body">
+                        <p class="nw-meta"><span class="nw-cat">{n.category_label}</span><time datetime={n.date}>{shortDate(n.date)}</time></p>
+                        <h3><a href={hrefOf(n)}>{n.title}</a></h3>
+                        {n.summary && <p class="nw-sum">{excerpt(n.summary, 170)}</p>}
+                        <span class="nw-read" aria-hidden="true">{t('card_read')} →</span>
+                      </div>
+                    </article>
+                  </li>
+                );
+              })}
+            </ul>
+            <div class="nw-none" data-nw-none hidden>
+              <p>{t('empty_message')}</p>
+              <button type="button" class="nw-btn" data-nw-clear>{t('clear_label')}</button>
+            </div>
+          </>
+        )}
+      </div>
+    </section>
+
+    <!-- =========================== PHOTO WALL =========================== -->
+    {pictures.length > 0 && (
+      <section class="np" aria-labelledby="np-h" data-np data-batch={PICTURE_BATCH}>
+        <div class="wrap">
+          <div class="np-head">
+            <div>
+              <p class="nw-eyebrow nw-eyebrow--dark">{t('wall_eyebrow')}</p>
+              <h2 class="np-title" id="np-h">{t('wall_heading')} <span class="np-count">{pictures.length}</span></h2>
+            </div>
+            <div class="np-seg" role="group" aria-label="Photo layout">
+              <button type="button" data-np-layout="mosaic" aria-pressed="true">{t('layout_mosaic')}</button>
+              <button type="button" data-np-layout="grid" aria-pressed="false">{t('layout_grid')}</button>
+            </div>
+          </div>
+          <ul class="np-wall" data-np-wall data-layout="mosaic">
+            {pictures.map((p, i) => (
+              <li class="np-tile" hidden={i >= PICTURE_BATCH} data-np-tile>
+                <a href={hrefOf(p)}>
+                  <img src={p.src} alt={p.alt} loading="lazy" decoding="async" />
+                  <span class="np-cap"><strong>{p.title}</strong><small>{shortDate(p.date)}</small></span>
+                </a>
+              </li>
+            ))}
+          </ul>
+          {pictures.length > PICTURE_BATCH && (
+            <p class="np-more"><button type="button" class="nw-btn" data-np-more data-left={t('wall_left')}>{t('wall_more')} · <span data-np-left>{fill(t('wall_left'), { n: pictures.length - PICTURE_BATCH })}</span></button></p>
+          )}
+        </div>
+      </section>
+    )}
+
+    <!-- =========================== MORE =========================== -->
+    <section class="nw-more">
+      <div class="wrap">
+        <h2>{t('band_heading')}</h2>
+        <ul class="nw-links">
+          <li><a href={t('band_news_url')}><span>{t('band_news_text')}</span><strong>{t('band_news_button')} →</strong></a></li>
+          <li><a href={t('band_letter_url')}><span>{t('band_letter_text')}</span><strong>{t('band_letter_button')} →</strong></a></li>
+          <li><a href={t('band_events_url')}><span>{t('band_events_text')}</span><strong>{t('band_events_button')} →</strong></a></li>
+        </ul>
+      </div>
+    </section>
   </div>
 </Layout>
+
+<script is:inline>
+  (() => {
+    const root = document.querySelector('[data-nw]');
+    if (!root) return;
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // The filter bar sticks just under the site header.
+    const masthead = document.querySelector('.masthead');
+    const setTop = () => root.style.setProperty('--nw-top', (masthead ? masthead.getBoundingClientRect().height : 0) + 'px');
+    setTop(); addEventListener('resize', setTop, { passive: true });
+
+    // Figures count up once.
+    if (!reduce && 'IntersectionObserver' in window) {
+      const run = (n) => { const end = Number(n.dataset.nwCount) || 0, t0 = performance.now(); const tick = (now) => { const p = Math.min(1, (now - t0) / 1000); n.textContent = String(Math.round(end * (1 - Math.pow(1 - p, 3)))); if (p < 1) requestAnimationFrame(tick); }; n.textContent = '0'; requestAnimationFrame(tick); };
+      const cio = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { run(e.target); cio.unobserve(e.target); } }), { threshold: 0.5 });
+      root.querySelectorAll('[data-nw-count]').forEach((n) => cio.observe(n));
+    }
+
+    // ---- Spotlight: turns through the top stories every few seconds ----
+    const spot = root.querySelector('[data-nw-spot]');
+    if (spot) {
+      const slides = [...spot.querySelectorAll('[data-nw-slide]')];
+      const dots = [...spot.querySelectorAll('[data-nw-dot]')];
+      const pauseBtn = spot.querySelector('[data-nw-pause]');
+      let at = 0, timer = null, paused = reduce, hover = false;
+      const show = (n) => {
+        at = (n + slides.length) % slides.length;
+        slides.forEach((s, i) => {
+          const on = i === at;
+          s.classList.toggle('is-on', on); s.setAttribute('aria-hidden', String(!on));
+          s.querySelectorAll('a').forEach((a) => { a.tabIndex = on ? 0 : -1; });
+        });
+        dots.forEach((d, i) => d.classList.toggle('is-on', i === at));
+        dots.forEach((d) => { const b = d.firstElementChild; b.style.animation = 'none'; void b.offsetWidth; b.style.animation = ''; });
+      };
+      const tick = () => { clearInterval(timer); if (slides.length > 1 && !paused && !hover) timer = setInterval(() => show(at + 1), 6000); spot.classList.toggle('is-paused', paused || hover); };
+      spot.querySelector('[data-nw-prev]')?.addEventListener('click', () => { show(at - 1); tick(); });
+      spot.querySelector('[data-nw-next]')?.addEventListener('click', () => { show(at + 1); tick(); });
+      dots.forEach((d, i) => d.addEventListener('click', () => { show(i); tick(); }));
+      pauseBtn?.addEventListener('click', () => { paused = !paused; pauseBtn.setAttribute('aria-pressed', String(paused)); tick(); });
+      spot.addEventListener('mouseenter', () => { hover = true; tick(); });
+      spot.addEventListener('mouseleave', () => { hover = false; tick(); });
+      spot.addEventListener('focusin', () => { hover = true; tick(); });
+      spot.addEventListener('focusout', () => { hover = false; tick(); });
+      spot.addEventListener('keydown', (e) => { if (e.key === 'ArrowRight') { show(at + 1); tick(); } if (e.key === 'ArrowLeft') { show(at - 1); tick(); } });
+      let sx = 0;
+      spot.addEventListener('touchstart', (e) => { sx = e.touches[0].clientX; }, { passive: true });
+      spot.addEventListener('touchend', (e) => { const dx = e.changedTouches[0].clientX - sx; if (Math.abs(dx) > 50) { show(at + (dx < 0 ? 1 : -1)); tick(); } }, { passive: true });
+      if (paused && pauseBtn) pauseBtn.setAttribute('aria-pressed', 'true');
+      tick();
+    }
+
+    // ---- Board: search, category, year, order, archive and view; month headings follow ----
+    const list = root.querySelector('[data-nw-list]');
+    if (list) {
+      const items = [...list.querySelectorAll('[data-nw-item]')];
+      const search = root.querySelector('[data-nw-search]'), year = root.querySelector('[data-nw-year]'), sort = root.querySelector('[data-nw-sort]');
+      const archive = root.querySelector('[data-nw-archive]'), chips = [...root.querySelectorAll('[data-nw-cat]')], views = [...root.querySelectorAll('[data-nw-view]')];
+      const total = root.querySelector('[data-nw-total]'), none = root.querySelector('[data-nw-none]');
+      let cat = '';
+      const wanted = new URLSearchParams(location.search).get('category');
+      if (wanted && chips.some((c) => c.dataset.nwCat === wanted)) cat = wanted;
+
+      const apply = () => {
+        const q = search.value.trim().toLowerCase(), y = year.value, inc = !archive || archive.checked;
+        let n = 0;
+        list.querySelectorAll('.nw-month').forEach((m) => m.remove());
+        const dir = sort.value === 'old' ? 1 : -1;
+        items.sort((a, b) => dir * a.dataset.date.localeCompare(b.dataset.date));
+        let last = '';
+        items.forEach((li) => {
+          const ok = (!cat || li.dataset.cat === cat) && (!y || li.dataset.year === y) && (inc || li.dataset.archived !== '1') && (!q || li.dataset.text.includes(q));
+          li.hidden = !ok;
+          list.appendChild(li);
+          if (ok) {
+            n++; li.classList.add('is-in');
+            if (li.dataset.month !== last) {
+              last = li.dataset.month;
+              const h = document.createElement('li'); h.className = 'nw-month'; h.setAttribute('role', 'presentation');
+              h.innerHTML = '<span></span>'; h.firstChild.textContent = last;
+              list.insertBefore(h, li);
+            }
+          }
+        });
+        chips.forEach((c) => { const on = c.dataset.nwCat === cat; c.classList.toggle('is-on', on); c.setAttribute('aria-pressed', String(on)); });
+        total.textContent = (n === 1 ? total.dataset.one : total.dataset.many).replace('{count}', String(n));
+        none.hidden = n > 0;
+        const url = new URL(location.href); if (cat) url.searchParams.set('category', cat); else url.searchParams.delete('category');
+        history.replaceState(null, '', url.pathname + url.search + url.hash);
+      };
+      chips.forEach((c) => c.addEventListener('click', () => { cat = cat === c.dataset.nwCat ? '' : c.dataset.nwCat; apply(); }));
+      search.addEventListener('input', apply); year.addEventListener('change', apply); sort.addEventListener('change', apply); archive?.addEventListener('change', apply);
+      views.forEach((v) => v.addEventListener('click', () => { list.dataset.view = v.dataset.nwView; views.forEach((x) => { const on = x === v; x.classList.toggle('is-on', on); x.setAttribute('aria-pressed', String(on)); }); }));
+      root.querySelector('[data-nw-clear]')?.addEventListener('click', () => { search.value = ''; year.value = ''; sort.value = 'new'; cat = ''; if (archive) archive.checked = true; apply(); });
+      apply();
+
+      if (!reduce && 'IntersectionObserver' in window) {
+        root.classList.add('nw-anim');
+        const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('is-seen'); io.unobserve(e.target); } }), { rootMargin: '0px 0px -6% 0px', threshold: 0.05 });
+        const watch = () => list.querySelectorAll('.nw-item:not(.is-seen),.nw-month:not(.is-seen)').forEach((el) => io.observe(el));
+        watch(); new MutationObserver(watch).observe(list, { childList: true });
+      }
+    }
+
+    // ---- Photo wall ----
+    const wall = root.querySelector('[data-np]');
+    if (wall) {
+      const grid = wall.querySelector('[data-np-wall]'), tiles = [...wall.querySelectorAll('[data-np-tile]')];
+      const batch = Number(wall.dataset.batch) || 12, more = wall.querySelector('[data-np-more]'), left = wall.querySelector('[data-np-left]');
+      let shown = batch;
+      more?.addEventListener('click', () => {
+        tiles.slice(shown, shown + batch).forEach((x) => { x.hidden = false; });
+        shown += batch;
+        const n = Math.max(0, tiles.length - shown);
+        if (left) left.textContent = more.dataset.left.replace('{n}', String(n));
+        if (n === 0) more.parentElement.remove();
+      });
+      wall.querySelectorAll('[data-np-layout]').forEach((b) => b.addEventListener('click', () => {
+        grid.dataset.layout = b.dataset.npLayout;
+        wall.querySelectorAll('[data-np-layout]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+      }));
+    }
+  })();
+</script>

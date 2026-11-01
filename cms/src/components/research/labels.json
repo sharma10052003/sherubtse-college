@@ -105,6 +105,36 @@
     },
     "show_all": {
       "type": "string"
+    },
+    "glance_heading": {
+      "type": "string"
+    },
+    "stat_centres": {
+      "type": "string"
+    },
+    "stat_projects": {
+      "type": "string"
+    },
+    "stat_ongoing": {
+      "type": "string"
+    },
+    "stat_grants": {
+      "type": "string"
+    },
+    "stat_facilities": {
+      "type": "string"
+    },
+    "type_pdf": {
+      "type": "string"
+    },
+    "type_docx": {
+      "type": "string"
+    },
+    "type_page": {
+      "type": "string"
+    },
+    "type_link": {
+      "type": "string"
     }
   }
 }

@@ -38,6 +38,7 @@ export interface FacultyCard {
   photo_url: string | null;
   is_featured: boolean;
   sort_order: number;
+  date_joined: string | null;
 }
 
 export interface Publication {
@@ -100,6 +101,10 @@ export interface FacultySetting {
   show_office_hours: boolean;
   show_research: boolean;
   hero_background_url: string | null;
+  hero_eyebrow: string | null;
+  hero_heading: string | null;
+  hero_intro: string | null;
+  labels: Record<string, string>;
 }
 
 function mapDepartment(row: any): Department {
@@ -129,6 +134,7 @@ function mapCard(row: any): FacultyCard {
     photo_url: mediaUrl(row.profile_picture),
     is_featured: !!row.is_featured,
     sort_order: row.sort_order ?? 0,
+    date_joined: row.date_joined ?? null,
   };
 }
 
@@ -155,6 +161,10 @@ export async function getFacultySetting(): Promise<FacultySetting> {
     show_office_hours: row?.show_office_hours ?? true,
     show_research: row?.show_research ?? true,
     hero_background_url: mediaUrl(row?.hero_background),
+    hero_eyebrow: row?.hero_eyebrow ?? null,
+    hero_heading: row?.hero_heading ?? null,
+    hero_intro: row?.hero_intro ?? null,
+    labels: row?.labels && typeof row.labels === 'object' ? row.labels : {},
   };
 }
 

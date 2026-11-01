@@ -1,0 +1,15 @@
+[Unit]
+Description=Sherubtse College CMS (Strapi)
+After=network.target
+
+[Service]
+Type=simple
+User=sherubtse
+WorkingDirectory=/opt/sherubtse/cms
+Environment=NODE_ENV=production
+ExecStart=/usr/bin/npm run start
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

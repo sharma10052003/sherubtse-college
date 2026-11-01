@@ -140,13 +140,21 @@ export interface AdmissionGuidePageLabels extends Struct.ComponentSchema {
     card_button: Schema.Attribute.String;
     date_next: Schema.Attribute.String;
     date_passed: Schema.Attribute.String;
+    day_to_go: Schema.Attribute.String;
+    days_to_go: Schema.Attribute.String;
     deadline_label: Schema.Attribute.String;
     documents_heading: Schema.Attribute.String;
     faq_collapse: Schema.Attribute.String;
     faq_expand: Schema.Attribute.String;
     filter_all: Schema.Attribute.String;
+    finder_applicant: Schema.Attribute.String;
+    finder_heading: Schema.Attribute.String;
+    finder_intro: Schema.Attribute.String;
+    jump_dates: Schema.Attribute.String;
+    latest_notice_heading: Schema.Attribute.String;
     links_heading: Schema.Attribute.String;
     minimum_label: Schema.Attribute.String;
+    next_date_heading: Schema.Attribute.String;
     notices_all: Schema.Attribute.String;
     notices_empty: Schema.Attribute.String;
     notices_past: Schema.Attribute.String;
@@ -164,6 +172,7 @@ export interface AdmissionGuidePageLabels extends Struct.ComponentSchema {
     tab_notices: Schema.Attribute.String;
     tab_requirements: Schema.Attribute.String;
     tab_scholarships: Schema.Attribute.String;
+    today_label: Schema.Attribute.String;
   };
 }
 
@@ -279,6 +288,18 @@ export interface AnnouncementsWrittenExamCandidate
   };
 }
 
+export interface ChatQuickQuestion extends Struct.ComponentSchema {
+  collectionName: 'components_chat_quick_questions';
+  info: {
+    displayName: 'Quick question';
+    icon: 'question';
+  };
+  attributes: {
+    label: Schema.Attribute.String & Schema.Attribute.Required;
+    question: Schema.Attribute.String;
+  };
+}
+
 export interface ContactHelpTopic extends Struct.ComponentSchema {
   collectionName: 'components_contact_help_topics';
   info: {
@@ -335,6 +356,34 @@ export interface ContactPageLabels extends Struct.ComponentSchema {
     validation_department: Schema.Attribute.String;
     validation_email: Schema.Attribute.String;
     validation_required: Schema.Attribute.String;
+  };
+}
+
+export interface EventsGuest extends Struct.ComponentSchema {
+  collectionName: 'components_events_guests';
+  info: {
+    displayName: 'Guest';
+    icon: 'user';
+  };
+  attributes: {
+    name: Schema.Attribute.String & Schema.Attribute.Required;
+    note: Schema.Attribute.Text;
+    photo: Schema.Attribute.Media<'images'>;
+    role: Schema.Attribute.String;
+  };
+}
+
+export interface EventsSession extends Struct.ComponentSchema {
+  collectionName: 'components_events_sessions';
+  info: {
+    displayName: 'Programme item';
+    icon: 'clock';
+  };
+  attributes: {
+    description: Schema.Attribute.Text;
+    time: Schema.Attribute.String;
+    title: Schema.Attribute.String & Schema.Attribute.Required;
+    venue: Schema.Attribute.String;
   };
 }
 
@@ -644,7 +693,7 @@ export interface HomeEvents extends Struct.ComponentSchema {
 export interface HomeHighlights extends Struct.ComponentSchema {
   collectionName: 'components_home_highlights';
   info: {
-    description: 'Photo stories from News. Newest first; pinned stories always stay at the front.';
+    description: 'Photo stories from News, as an automatic slider (or a grid). Newest first; pinned stories always stay at the front.';
     displayName: 'Latest Highlights';
     icon: 'picture';
   };
@@ -658,8 +707,8 @@ export interface HomeHighlights extends Struct.ComponentSchema {
     heading: Schema.Attribute.String;
     intro: Schema.Attribute.Text;
     is_visible: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
-    layout: Schema.Attribute.Enumeration<['feature', 'grid']> &
-      Schema.Attribute.DefaultTo<'feature'>;
+    layout: Schema.Attribute.Enumeration<['carousel', 'feature', 'grid']> &
+      Schema.Attribute.DefaultTo<'carousel'>;
     limit: Schema.Attribute.Integer &
       Schema.Attribute.SetMinMax<
         {
@@ -673,6 +722,15 @@ export interface HomeHighlights extends Struct.ComponentSchema {
       ['latest', 'featured_only', 'manual']
     > &
       Schema.Attribute.DefaultTo<'latest'>;
+    slide_seconds: Schema.Attribute.Integer &
+      Schema.Attribute.SetMinMax<
+        {
+          max: 20;
+          min: 3;
+        },
+        number
+      > &
+      Schema.Attribute.DefaultTo<6>;
     stories: Schema.Attribute.Relation<'manyToMany', 'api::news.news'>;
     width: Schema.Attribute.Enumeration<['full', 'half']> &
       Schema.Attribute.DefaultTo<'full'>;
@@ -713,12 +771,19 @@ export interface HomeLabels extends Struct.ComponentSchema {
     icon: 'feather';
   };
   attributes: {
+    ago_days: Schema.Attribute.String;
+    ago_today: Schema.Attribute.String;
+    ago_yesterday: Schema.Attribute.String;
     all_day: Schema.Attribute.String;
     closed: Schema.Attribute.String;
     closes_soon: Schema.Attribute.String;
     deadline: Schema.Attribute.String;
     download: Schema.Attribute.String;
     featured: Schema.Attribute.String;
+    learn_more: Schema.Attribute.String;
+    new_badge: Schema.Attribute.String;
+    no_match: Schema.Attribute.String;
+    on_date: Schema.Attribute.String;
     open_programme: Schema.Attribute.String;
     pause_video: Schema.Attribute.String;
     photos_count: Schema.Attribute.String;
@@ -726,12 +791,27 @@ export interface HomeLabels extends Struct.ComponentSchema {
     play_video: Schema.Attribute.String;
     read_more: Schema.Attribute.String;
     register: Schema.Attribute.String;
+    search_placeholder: Schema.Attribute.String;
+    show_more: Schema.Attribute.String;
+    slide_of: Schema.Attribute.String;
+    slider_next: Schema.Attribute.String;
+    slider_pause: Schema.Attribute.String;
+    slider_play: Schema.Attribute.String;
+    slider_prev: Schema.Attribute.String;
     source: Schema.Attribute.String;
     swipe_hint: Schema.Attribute.String;
+    tab_all: Schema.Attribute.String;
+    tab_announcements: Schema.Attribute.String;
+    tab_events: Schema.Attribute.String;
+    tab_news: Schema.Attribute.String;
+    tab_vacancies: Schema.Attribute.String;
     ticker_label: Schema.Attribute.String;
     today: Schema.Attribute.String;
+    urgent_badge: Schema.Attribute.String;
+    view_all: Schema.Attribute.String;
     view_photos: Schema.Attribute.String;
     visit: Schema.Attribute.String;
+    wishes_heading: Schema.Attribute.String;
   };
 }
 
@@ -902,6 +982,34 @@ export interface HomeResources extends Struct.ComponentSchema {
   };
 }
 
+export interface HomeShowcaseItem extends Struct.ComponentSchema {
+  collectionName: 'components_home_showcase_items';
+  info: {
+    description: 'One picture, greeting, announcement or celebration on the homepage.';
+    displayName: 'Special content item';
+    icon: 'star';
+  };
+  attributes: {
+    accent: Schema.Attribute.Enumeration<['white', 'navy', 'gold']> &
+      Schema.Attribute.DefaultTo<'white'>;
+    end_at: Schema.Attribute.DateTime;
+    image: Schema.Attribute.Media<'images'>;
+    image_alt: Schema.Attribute.String;
+    is_enabled: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
+    kind: Schema.Attribute.Enumeration<
+      ['image', 'greeting', 'announcement', 'celebration', 'quote', 'update']
+    > &
+      Schema.Attribute.DefaultTo<'announcement'>;
+    link_label: Schema.Attribute.String;
+    link_url: Schema.Attribute.String;
+    size: Schema.Attribute.Enumeration<['small', 'medium', 'large', 'wide']> &
+      Schema.Attribute.DefaultTo<'medium'>;
+    start_at: Schema.Attribute.DateTime;
+    text: Schema.Attribute.Text;
+    title: Schema.Attribute.String;
+  };
+}
+
 export interface HomeStat extends Struct.ComponentSchema {
   collectionName: 'components_home_stat_items';
   info: {
@@ -940,6 +1048,20 @@ export interface HomeStats extends Struct.ComponentSchema {
   };
 }
 
+export interface HomeWish extends Struct.ComponentSchema {
+  collectionName: 'components_home_wishes';
+  info: {
+    description: 'A short greeting from a person, office or group.';
+    displayName: 'Wish';
+    icon: 'heart';
+  };
+  attributes: {
+    from: Schema.Attribute.String & Schema.Attribute.Required;
+    role: Schema.Attribute.String;
+    text: Schema.Attribute.Text & Schema.Attribute.Required;
+  };
+}
+
 export interface NavigationNavItem extends Struct.ComponentSchema {
   collectionName: 'components_navigation_nav_items';
   info: {
@@ -962,6 +1084,47 @@ export interface ProgrammeCurriculumBlock extends Struct.ComponentSchema {
   attributes: {
     courses: Schema.Attribute.Text & Schema.Attribute.Required;
     label: Schema.Attribute.String & Schema.Attribute.Required;
+  };
+}
+
+export interface ProgrammeTestimonial extends Struct.ComponentSchema {
+  collectionName: 'components_programme_testimonials';
+  info: {
+    displayName: 'Student Voice';
+    icon: 'quote';
+  };
+  attributes: {
+    detail: Schema.Attribute.String;
+    name: Schema.Attribute.String & Schema.Attribute.Required;
+    quote: Schema.Attribute.Text & Schema.Attribute.Required;
+  };
+}
+
+export interface RegulationsItem extends Struct.ComponentSchema {
+  collectionName: 'components_regulations_items';
+  info: {
+    displayName: 'Rule';
+    icon: 'file';
+  };
+  attributes: {
+    highlight: Schema.Attribute.String;
+    text: Schema.Attribute.Text;
+    title: Schema.Attribute.String & Schema.Attribute.Required;
+  };
+}
+
+export interface RegulationsTopic extends Struct.ComponentSchema {
+  collectionName: 'components_regulations_topics';
+  info: {
+    displayName: 'Regulation topic';
+    icon: 'book';
+  };
+  attributes: {
+    icon: Schema.Attribute.String;
+    intro: Schema.Attribute.Text;
+    items: Schema.Attribute.Component<'regulations.item', true>;
+    key: Schema.Attribute.String & Schema.Attribute.Required;
+    title: Schema.Attribute.String & Schema.Attribute.Required;
   };
 }
 
@@ -1079,6 +1242,7 @@ export interface ResearchLabels extends Struct.ComponentSchema {
     explore_centre: Schema.Attribute.String;
     externally_funded: Schema.Attribute.String;
     funding: Schema.Attribute.String;
+    glance_heading: Schema.Attribute.String;
     issn_online: Schema.Attribute.String;
     issn_print: Schema.Attribute.String;
     listed_projects: Schema.Attribute.String;
@@ -1089,6 +1253,11 @@ export interface ResearchLabels extends Struct.ComponentSchema {
     read_more: Schema.Attribute.String;
     search_projects: Schema.Attribute.String;
     show_all: Schema.Attribute.String;
+    stat_centres: Schema.Attribute.String;
+    stat_facilities: Schema.Attribute.String;
+    stat_grants: Schema.Attribute.String;
+    stat_ongoing: Schema.Attribute.String;
+    stat_projects: Schema.Attribute.String;
     status_closed: Schema.Attribute.String;
     status_completed: Schema.Attribute.String;
     status_ongoing: Schema.Attribute.String;
@@ -1097,6 +1266,10 @@ export interface ResearchLabels extends Struct.ComponentSchema {
     tab_completed: Schema.Attribute.String;
     tab_ongoing: Schema.Attribute.String;
     themes: Schema.Attribute.String;
+    type_docx: Schema.Attribute.String;
+    type_link: Schema.Attribute.String;
+    type_page: Schema.Attribute.String;
+    type_pdf: Schema.Attribute.String;
     university_grants: Schema.Attribute.String;
     view_all_projects: Schema.Attribute.String;
   };
@@ -1383,8 +1556,11 @@ declare module '@strapi/strapi' {
       'announcements.position-opening': AnnouncementsPositionOpening;
       'announcements.shortlist-row': AnnouncementsShortlistRow;
       'announcements.written-exam-candidate': AnnouncementsWrittenExamCandidate;
+      'chat.quick-question': ChatQuickQuestion;
       'contact.help-topic': ContactHelpTopic;
       'contact.page-labels': ContactPageLabels;
+      'events.guest': EventsGuest;
+      'events.session': EventsSession;
       'facilities.feature': FacilitiesFeature;
       'facilities.feature-block': FacilitiesFeatureBlock;
       'facilities.messages': FacilitiesMessages;
@@ -1407,10 +1583,15 @@ declare module '@strapi/strapi' {
       'home.programmes': HomeProgrammes;
       'home.research': HomeResearch;
       'home.resources': HomeResources;
+      'home.showcase-item': HomeShowcaseItem;
       'home.stat': HomeStat;
       'home.stats': HomeStats;
+      'home.wish': HomeWish;
       'navigation.nav-item': NavigationNavItem;
       'programme.curriculum-block': ProgrammeCurriculumBlock;
+      'programme.testimonial': ProgrammeTestimonial;
+      'regulations.item': RegulationsItem;
+      'regulations.topic': RegulationsTopic;
       'research.doc-link': ResearchDocLink;
       'research.facility': ResearchFacility;
       'research.grant': ResearchGrant;

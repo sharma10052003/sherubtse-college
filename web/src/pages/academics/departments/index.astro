@@ -1,21 +1,38 @@
 ---
-// Departments gateway — a full editorial page rather than a plain listing,
-// built on the "department" content type (departments.ts), which is where
-// this data actually lives (the old Unit-based source this page used to
-// read had no academic-kind records to show). Every number below is real:
-// counted from what Strapi returns, not authored copy that could drift.
+// Departments gateway. The three department panels (expanding photo panels with a
+// live canvas motif each) are unchanged; everything around them is new: a hero
+// where the departments orbit the College, heads of department, a programme
+// finder, and links onward. Built on the "department" content type
+// (departments.ts); hero text and wording are Academics – Departments Page in
+// Strapi. Every number is counted from what Strapi returns. Styles: the panels
+// keep departments.css; the rest is departments-page.css (.dx).
 import Layout from '../../../layouts/Layout.astro';
-import '../../../styles/section-landing.css';
 import '../../../styles/departments.css';
-import { getDepartments } from '../../../lib/content/departments';
+import '../../../styles/departments-page.css';
+import { getDepartments, getDepartmentsPage } from '../../../lib/content/departments';
+import { getFacultyDirectory } from '../../../lib/content/faculty';
+import { DEPARTMENTS_HERO_DEFAULTS, makeDepartmentsLabels } from '../../../lib/content/departments-labels';
 
-const departments = await getDepartments();
+const [departments, page, people] = await Promise.all([
+  getDepartments(),
+  getDepartmentsPage(),
+  getFacultyDirectory().catch(() => []),
+]);
+const t = makeDepartmentsLabels(page.labels);
+const fill = (s: string, n: number) => s.replace('{count}', String(n));
+const eyebrow = page.hero_eyebrow || DEPARTMENTS_HERO_DEFAULTS.hero_eyebrow;
+const heading = page.hero_heading || DEPARTMENTS_HERO_DEFAULTS.hero_heading;
+const intro = page.hero_intro || DEPARTMENTS_HERO_DEFAULTS.hero_intro;
 
 const totalProgrammes = departments.reduce((n, d) => n + d.programmes.length, 0);
 const totalFaculty = departments.reduce((n, d) => n + d.faculty_count, 0);
 const legacyYears = new Date().getFullYear() - 1968;
-
-const beyondImage = departments.find((d) => d.banner_url)?.banner_url ?? null;
+const stats = [
+  { label: t('stat_departments'), value: departments.length, plus: false },
+  { label: t('stat_programmes'), value: totalProgrammes, plus: false },
+  { label: t('stat_faculty'), value: totalFaculty, plus: false },
+  { label: t('stat_years'), value: legacyYears, plus: true },
+].filter((s) => s.value > 0);
 
 // One live-canvas motif per department, layered behind (or, for a
 // department with a banner photo, over) its panel's media — picked for
@@ -36,39 +53,110 @@ const SHOWCASE: Record<string, { fx: 'web' | 'lab' | 'growth'; motif: string }> 
 function showcaseFor(slug: string) {
   return SHOWCASE[slug] ?? { fx: 'growth', motif: 'Discover the department' };
 }
----
-<Layout
-  title="Departments"
-  description="The academic departments of Sherubtse College — programmes, faculty and areas of expertise."
->
-  <header class="sl-head dept-hero">
-    <div class="wrap">
-      <nav class="breadcrumb" aria-label="Breadcrumb">
-        <a href="/">Home</a> › <a href="/academics">Academics</a> › <span class="current">Departments</span>
-      </nav>
-      <p class="sl-eyebrow">Academics</p>
-      <h1 class="sl-title">Explore Our Departments</h1>
-      <span class="sl-rule" aria-hidden="true"></span>
-      <p class="sl-intro">
-        Three departments carry Sherubtse College's undergraduate teaching — each with its own faculty, programmes
-        and academic character. Start with the department closest to what you want to study.
-      </p>
-    </div>
-  </header>
 
-  {departments.length === 0 ? (
-    <div class="wrap" style="padding-block:var(--s7)">
-      <p class="small">Departments will appear here once added in Strapi.</p>
-    </div>
-  ) : (
-    <>
+const shortName = (n: string) => n.replace(/^Department of\s+/i, '');
+const programmeCount = (n: number) => fill(n === 1 ? t('count_one') : t('count_many'), n);
+const initialsOf = (n: string) =>
+  n.replace(/^(Dr\.?|Dasho|Mr\.?|Ms\.?)\s+/i, '').split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]!.toUpperCase()).join('');
+
+const photoBySlug = new Map(people.map((p) => [p.slug, p.photo_url]));
+const heads = departments
+  .filter((d) => d.head)
+  .map((d) => ({ dept: d, head: d.head!, photo: photoBySlug.get(d.head!.slug) ?? null }));
+
+const allProgrammes = departments.flatMap((d) => d.programmes.map((p) => ({ p, d })));
+const levels = Array.from(new Set(allProgrammes.map((x) => x.p.level)));
+const levelLabel = (l: string) => (l === 'postgraduate' ? t('level_postgraduate') : t('level_undergraduate'));
+
+const ICONS: Record<string, string> = {
+  growth: '<path d="M4 20V13M10 20V7M16 20v-9M2 21h20"/><path d="m3 9 5-4 5 3 7-6"/>',
+  web: '<circle cx="5" cy="6" r="2"/><circle cx="19" cy="6" r="2"/><circle cx="12" cy="18" r="2"/><path d="M7 6h10M6.3 7.7l4.7 8.6M17.7 7.7 13 16.3"/>',
+  lab: '<path d="M9 3h6M10 3v6l-5.5 9.5A1.7 1.7 0 0 0 6 21h12a1.7 1.7 0 0 0 1.5-2.5L14 9V3"/><path d="M7.5 15h9"/>',
+  cap: '<path d="M12 3 2 8l10 5 10-5-10-5z"/><path d="M6 10.5v5.5c0 1.5 3 3 6 3s6-1.5 6-3v-5.5"/><path d="M22 8v6"/>',
+  people: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14c2 .6 3.5 2.6 3.5 6"/>',
+  pen: '<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>',
+  search: '<circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/>',
+  arrow: '<path d="M5 12h14M13 6l6 6-6 6"/>',
+};
+const svg = (name: string, size = 24) =>
+  `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[name] ?? ICONS.cap}</svg>`;
+---
+
+<Layout title="Departments" description="The academic departments of Sherubtse College: programmes, faculty and areas of expertise.">
+  <div class="dx" data-dx>
+    <!-- =========================== HERO =========================== -->
+    <header class="dx-hero">
+      <span class="dx-glow dx-glow--a" aria-hidden="true"></span>
+      <span class="dx-glow dx-glow--b" aria-hidden="true"></span>
+      <div class="wrap dx-wide dx-hero-grid">
+        <div class="dx-hero-text">
+          <nav class="dx-breadcrumb dx-rise" style="--d:0" aria-label="Breadcrumb">
+            <a href="/">Home</a><span aria-hidden="true">›</span><a href="/academics">Academics</a><span aria-hidden="true">›</span><span aria-current="page">Departments</span>
+          </nav>
+          <p class="dx-eyebrow dx-rise" style="--d:1">{eyebrow}</p>
+          <h1 class="dx-title dx-rise" style="--d:2">{heading}</h1>
+          <p class="dx-intro dx-rise" style="--d:3">{intro}</p>
+          {stats.length > 0 && (
+            <ul class="dx-stats dx-rise" style="--d:4">
+              {stats.map((s) => (
+                <li class="dx-stat">
+                  <span class="dx-stat-ring" aria-hidden="true"></span>
+                  <p class="dx-stat-value"><span data-dx-count={s.value}>{s.value}</span>{s.plus && <span class="plus">+</span>}</p>
+                  <p class="dx-stat-label">{s.label}</p>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        {departments.length > 0 && (
+          <div class="dx-orbit dx-rise" style="--d:3" role="group" aria-label={t('orbit_label')}>
+            <span class="dx-ring dx-ring--1" aria-hidden="true"></span>
+            <span class="dx-ring dx-ring--2" aria-hidden="true"></span>
+            <span class="dx-core" aria-hidden="true" set:html={svg('cap', 56)} />
+            <ul class="dx-planets" role="list">
+              {departments.map((d, i) => (
+                <li class="dx-planet" style={`--a:${-90 + (i * 360) / departments.length}deg`}>
+                  <span class="dx-hold">
+                    <a href={`#dept-${d.slug}`} data-dx-planet>
+                      <span class="dx-planet-dot" set:html={svg(showcaseFor(d.slug).fx, 38)} />
+                      <span class="dx-planet-name">{shortName(d.name)}</span>
+                      <span class="dx-planet-meta">{programmeCount(d.programmes.length)}</span>
+                    </a>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+    </header>
+
+    {departments.length === 0 ? (
+      <div class="wrap dx-wide" style="padding-block:var(--s7)">
+        <p class="small">Departments will appear here once added in Strapi.</p>
+      </div>
+    ) : (
+      <>
+        <!-- =========================== THE THREE PANELS =========================== -->
+        <section class="dx-section dx-panels-head" aria-labelledby="dx-panels-h">
+          <div class="wrap dx-wide">
+            <header class="dx-head" data-dx-reveal>
+              <p class="dx-kicker">{t('panels_eyebrow')}</p>
+              <h2 class="dx-h2" id="dx-panels-h">{fill(t('panels_heading'), departments.length)}</h2>
+              <p class="dx-hint">{t('panels_hint')}</p>
+            </header>
+          </div>
+        </section>
+
       <section class="dept-section dept-section-cards">
-        <div class="wrap">
+        <div class="wrap dx-wide">
           <div class="dept-panels reveal" id="dept-panels">
             {departments.map((d, i) => {
               const { fx, motif } = showcaseFor(d.slug);
               return (
                 <article
+                  id={`dept-${d.slug}`}
                   class="dept-panel"
                   tabindex="0"
                   data-fx={fx}
@@ -118,166 +206,188 @@ function showcaseFor(slug: string) {
         </div>
       </section>
 
-      <section class="dept-section dept-stats">
-        <div class="wrap">
-          <div class="dept-section-head">
-            <p class="dept-eyebrow">By the numbers</p>
-            <h2 class="dept-section-title" style="color:#fff">A small college, taught closely</h2>
-          </div>
-          <div class="dept-stat-grid">
-            <div class="dept-stat reveal">
-              <span class="dept-stat-num"><span data-count-to={departments.length}>0</span></span>
-              <span class="dept-stat-label">Academic departments</span>
+        <!-- =========================== HEADS OF DEPARTMENT =========================== -->
+        {heads.length > 0 && (
+          <section class="dx-section dx-heads" aria-labelledby="dx-heads-h">
+            <div class="wrap dx-wide">
+              <header class="dx-head" data-dx-reveal>
+                <p class="dx-kicker">{t('heads_eyebrow')}</p>
+                <h2 class="dx-h2" id="dx-heads-h">{t('heads_heading')}</h2>
+              </header>
+              <ul class="dx-hgrid" role="list">
+                {heads.map(({ dept, head, photo }, i) => (
+                  <li class="dx-hitem" data-dx-reveal style={`--d:${i * 90}ms`}>
+                    <article class="dx-hcard" aria-labelledby={`dx-h-${head.slug}`}>
+                      <a class="dx-hlink" href={`/about/faculty/${head.slug}`} aria-labelledby={`dx-h-${head.slug}`}></a>
+                      <span class="dx-fill" aria-hidden="true"></span>
+                      <div class="dx-arch">
+                        {photo ? <img src={photo} alt="" width="236" height="295" loading="lazy" decoding="async" /> : <span class="dx-monogram" aria-hidden="true">{initialsOf(head.full_name)}</span>}
+                      </div>
+                      <div class="dx-hbody">
+                        <p class="dx-tag">{shortName(dept.name)}</p>
+                        <h3 class="dx-hname" id={`dx-h-${head.slug}`}>{head.full_name}</h3>
+                        <p class="dx-hrole">{t('head_role')}</p>
+                        <span class="dx-go" aria-hidden="true">{t('profile_label')} <Fragment set:html={svg('arrow', 18)} /></span>
+                      </div>
+                    </article>
+                  </li>
+                ))}
+              </ul>
             </div>
-            <div class="dept-stat reveal">
-              <span class="dept-stat-num"><span data-count-to={totalProgrammes}>0</span></span>
-              <span class="dept-stat-label">Undergraduate programmes</span>
-            </div>
-            <div class="dept-stat reveal">
-              <span class="dept-stat-num"><span data-count-to={totalFaculty}>0</span></span>
-              <span class="dept-stat-label">Faculty members</span>
-            </div>
-            <div class="dept-stat reveal">
-              <span class="dept-stat-num"><span data-count-to={legacyYears}>0</span><span class="plus">+</span></span>
-              <span class="dept-stat-label">Years since founding, 1968</span>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="dept-section">
-        <div class="wrap">
-          <div class="dept-section-head">
-            <p class="dept-eyebrow">Full directory</p>
-            <h2 class="dept-section-title">Every department, expanded</h2>
-          </div>
-          <div class="dept-accordion reveal" data-dept-accordion>
-            {departments.map((d, i) => (
-              <div class="dept-accordion-item">
-                <h3>
-                  <button type="button" class="dept-accordion-trigger" aria-expanded="false" aria-controls={`dept-acc-${d.slug}`} data-dept-trigger>
-                    <span class="dept-accordion-num">0{i + 1}</span>
-                    <span class="dept-accordion-name">{d.name}</span>
-                    <span class="dept-accordion-meta">{d.programmes.length} programmes &middot; {d.faculty_count} faculty</span>
-                    <svg class="dept-accordion-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
-                  </button>
-                </h3>
-                <div class="dept-accordion-panel" id={`dept-acc-${d.slug}`} data-dept-panel>
-                  <div class="dept-accordion-panel-inner">
-                    <div>
-                      {(d.description || d.short_description) && (
-                        <p class="dept-accordion-desc">{d.description ?? d.short_description}</p>
-                      )}
-                      {d.programmes.length > 0 && (
-                        <div class="dept-card-chips">
-                          {d.programmes.map((p) => (
-                            <a class="tag tag-gold" href={`/academics/programmes/${p.slug}`}>{p.programme_name}</a>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                    <div class="dept-accordion-side">
-                      {d.head && <p><strong>Head of Department</strong><br />{d.head.full_name}</p>}
-                      <p><strong>{d.faculty_count}</strong> faculty members</p>
-                      <a class="btn-quiet" href={`/academics/departments/${d.slug}`}>View full department</a>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section class="dept-beyond reveal">
-        {beyondImage && (
-          <div class="dept-beyond-media"><img src={beyondImage} alt="" loading="lazy" /></div>
+          </section>
         )}
-        <div class="wrap">
-          <div class="dept-beyond-body">
-            <p class="dept-eyebrow">Beyond the syllabus</p>
-            <h2 class="dept-beyond-title">Learning Beyond the Classroom</h2>
-            <p class="dept-beyond-desc">
-              A Sherubtse education runs past the timetable — clubs, field visits, campus events and residential
-              life on the Kanglung hillside shape students as much as any lecture hall does. Departments teach the
-              subject; the wider campus is where it's put into practice.
-            </p>
-            <a class="btn btn-primary" href="/student-life">Discover student life</a>
-          </div>
-        </div>
-      </section>
 
-      <section class="dept-section">
-        <div class="wrap">
-          <div class="dept-section-head">
-            <p class="dept-eyebrow">Research &amp; expertise</p>
-            <h2 class="dept-section-title">Programmes our faculty build expertise around</h2>
-            <p class="dept-section-desc">
-              Every programme below sits inside one of the three departments above — a working map of where
-              Sherubtse's teaching and research strength currently concentrates.
-            </p>
+        <!-- =========================== PROGRAMME FINDER =========================== -->
+        {allProgrammes.length > 0 && (
+          <section class="dx-section dx-prog" id="programmes" aria-labelledby="dx-prog-h">
+            <div class="wrap dx-wide">
+              <header class="dx-head" data-dx-reveal>
+                <p class="dx-kicker">{t('programmes_eyebrow')}</p>
+                <h2 class="dx-h2" id="dx-prog-h">{t('programmes_heading')}</h2>
+                <p class="dx-lede">{t('programmes_intro')}</p>
+              </header>
+
+              <div class="dx-bar">
+                <label class="dx-search">
+                  <span set:html={svg('search', 20)} />
+                  <input type="search" data-dx-q placeholder={t('search_placeholder')} aria-label={t('search_label')} autocomplete="off" />
+                </label>
+                <div class="dx-chips" role="group" aria-label={t('programmes_heading')}>
+                  <button type="button" class="dx-chip is-on" data-dx-dept="" aria-pressed="true">{t('all_label')}<span>{allProgrammes.length}</span></button>
+                  {departments.filter((d) => d.programmes.length > 0).map((d) => (
+                    <button type="button" class="dx-chip" data-dx-dept={d.slug} aria-pressed="false">{shortName(d.name)}<span>{d.programmes.length}</span></button>
+                  ))}
+                  {levels.length > 1 && levels.map((l) => (
+                    <button type="button" class="dx-chip" data-dx-level={l} aria-pressed="false">{levelLabel(l)}<span>{allProgrammes.filter((x) => x.p.level === l).length}</span></button>
+                  ))}
+                </div>
+                <p class="dx-count" role="status" aria-live="polite" data-dx-count-text data-one={t('count_one')} data-many={t('count_many')}>{programmeCount(allProgrammes.length)}</p>
+              </div>
+
+              <ul class="dx-pgrid" role="list">
+                {allProgrammes.map(({ p, d }, i) => (
+                  <li class="dx-pitem" data-dx-item data-dept={d.slug} data-level={p.level} data-text={`${p.programme_name} ${d.name} ${levelLabel(p.level)}`.toLowerCase()} data-dx-reveal style={`--d:${(i % 4) * 70}ms`}>
+                    <a class="dx-pcard" href={`/academics/programmes/${p.slug}`} style={`--accent:${d.theme_color ?? 'var(--gold)'}`}>
+                      <span class="dx-fill" aria-hidden="true"></span>
+                      <p class="dx-level">{levelLabel(p.level)}</p>
+                      <h3 class="dx-pname">{p.programme_name}</h3>
+                      <p class="dx-pdept">{shortName(d.name)}</p>
+                      <span class="dx-go">{t('open_label')} <Fragment set:html={svg('arrow', 18)} /></span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+
+              <div class="dx-none" data-dx-none hidden>
+                <p>{t('empty_message')}</p>
+                <button type="button" class="dx-btn" data-dx-clear>{t('clear_label')}</button>
+              </div>
+            </div>
+          </section>
+        )}
+
+        <!-- =========================== KEEP EXPLORING =========================== -->
+        <section class="dx-section dx-more" aria-labelledby="dx-more-h">
+          <div class="wrap dx-wide">
+            <h2 class="dx-sr" id="dx-more-h" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">{t('more_heading')}</h2>
+            <ul class="dx-mgrid" role="list">
+              {[
+                { href: '/student-life', icon: 'people', title: t('student_title'), text: t('student_text'), button: t('student_button') },
+                { href: '/research', icon: 'lab', title: t('research_title'), text: t('research_text'), button: t('research_button') },
+                { href: '/admissions', icon: 'pen', title: t('admissions_title'), text: t('admissions_text'), button: t('admissions_button') },
+              ].map((c, i) => (
+                <li data-dx-reveal style={`--d:${i * 90}ms`}>
+                  <a class="dx-mcard" href={c.href}>
+                    <span class="dx-fill" aria-hidden="true"></span>
+                    <span class="dx-micon" set:html={svg(c.icon, 30)} />
+                    <h3 class="dx-mtitle">{c.title}</h3>
+                    <p class="dx-mtext">{c.text}</p>
+                    <span class="dx-go">{c.button} <Fragment set:html={svg('arrow', 18)} /></span>
+                  </a>
+                </li>
+              ))}
+            </ul>
           </div>
-          <div class="dept-expertise-grid">
-            {departments.flatMap((d) =>
-              d.programmes.map((p) => (
-                <a class="dept-expertise-chip reveal" href={`/academics/programmes/${p.slug}`}>
-                  <span class="dept-expertise-chip-level">{p.level === 'postgraduate' ? 'Postgraduate' : 'Undergraduate'}</span>
-                  <span class="dept-expertise-chip-name">{p.programme_name}</span>
-                  <span class="dept-expertise-chip-dept">{d.name}</span>
-                </a>
-              ))
-            )}
-          </div>
-          <p class="dept-expertise-cta">
-            <a class="btn btn-secondary" href="/research">Visit Research &amp; Innovation →</a>
-          </p>
-        </div>
-      </section>
-    </>
-  )}
+        </section>
+      </>
+    )}
+  </div>
 </Layout>
 
-<script>
-  // Count-up for the stats band — the sitewide reveal script (Layout.astro)
-  // only handles opacity/transform, so numeric counters get their own small
-  // observer here, generalised to run every [data-count-to] on the page
-  // rather than the single counter SectionLanding's split hero uses.
-  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const counters = Array.from(document.querySelectorAll<HTMLElement>('.dept-stat-num [data-count-to]'));
+<script is:inline>
+  (() => {
+    const root = document.querySelector('[data-dx]');
+    if (!root) return;
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  function runCounter(el: HTMLElement) {
-    const target = Number(el.dataset.countTo ?? '0');
-    if (prefersReducedMotion) {
-      el.textContent = String(target);
-      return;
+    // The programme filter bar sticks just under the site header.
+    const masthead = document.querySelector('.masthead');
+    const setTop = () => root.style.setProperty('--dx-top', `${masthead ? masthead.getBoundingClientRect().height : 0}px`);
+    setTop();
+    addEventListener('resize', setTop, { passive: true });
+
+    // ---- Reveals, and the hero figures count up once ----
+    if (!reduce && 'IntersectionObserver' in window) {
+      root.classList.add('dx-anim');
+      const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('is-in'); io.unobserve(e.target); } }), { rootMargin: '0px 0px -8% 0px', threshold: 0.05 });
+      root.querySelectorAll('[data-dx-reveal]').forEach((el) => io.observe(el));
+      const run = (el) => {
+        const end = Number(el.getAttribute('data-dx-count')) || 0;
+        const t0 = performance.now();
+        const tick = (now) => {
+          const p = Math.min(1, (now - t0) / 1300);
+          el.textContent = String(Math.round(end * (1 - Math.pow(1 - p, 3))));
+          if (p < 1) requestAnimationFrame(tick);
+        };
+        el.textContent = '0';
+        requestAnimationFrame(tick);
+      };
+      const cio = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { run(e.target); cio.unobserve(e.target); } }), { threshold: 0.5 });
+      root.querySelectorAll('[data-dx-count]').forEach((n) => cio.observe(n));
     }
-    const duration = 1100;
-    const start = performance.now();
-    const step = (now: number) => {
-      const t = Math.min(1, (now - start) / duration);
-      const eased = 1 - Math.pow(1 - t, 3);
-      el.textContent = String(Math.round(eased * target));
-      if (t < 1) requestAnimationFrame(step);
+
+    // ---- A planet in the hero opens its department panel ----
+    root.querySelectorAll('[data-dx-planet]').forEach((a) => a.addEventListener('click', (e) => {
+      const panel = document.getElementById((a.getAttribute('href') || '').slice(1));
+      if (!panel) return;
+      e.preventDefault();
+      e.stopPropagation();
+      document.querySelectorAll('.dept-panel').forEach((p) => p.classList.toggle('is-open', p === panel));
+      panel.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'center' });
+      panel.focus({ preventScroll: true });
+    }));
+
+    // ---- Programme finder: department, level and search ----
+    const items = Array.from(root.querySelectorAll('[data-dx-item]'));
+    if (!items.length) return;
+    const input = root.querySelector('[data-dx-q]');
+    const count = root.querySelector('[data-dx-count-text]');
+    const none = root.querySelector('[data-dx-none]');
+    const deptChips = Array.from(root.querySelectorAll('[data-dx-dept]'));
+    const levelChips = Array.from(root.querySelectorAll('[data-dx-level]'));
+    let dept = '';
+    let level = '';
+    const apply = () => {
+      const words = (input.value || '').toLowerCase().split(/\s+/).filter(Boolean);
+      let n = 0;
+      items.forEach((li) => {
+        const ok = (!dept || li.dataset.dept === dept) && (!level || li.dataset.level === level) && words.every((w) => li.dataset.text.includes(w));
+        li.hidden = !ok;
+        if (ok) { n++; li.classList.add('is-in'); }
+      });
+      deptChips.forEach((c) => { const on = (c.dataset.dxDept || '') === dept; c.classList.toggle('is-on', on); c.setAttribute('aria-pressed', String(on)); });
+      levelChips.forEach((c) => { const on = c.dataset.dxLevel === level; c.classList.toggle('is-on', on); c.setAttribute('aria-pressed', String(on)); });
+      count.textContent = (n === 1 ? count.dataset.one : count.dataset.many).replace('{count}', String(n));
+      none.hidden = n > 0;
     };
-    requestAnimationFrame(step);
-  }
+    deptChips.forEach((c) => c.addEventListener('click', () => { dept = c.dataset.dxDept || ''; apply(); }));
+    levelChips.forEach((c) => c.addEventListener('click', () => { level = level === c.dataset.dxLevel ? '' : c.dataset.dxLevel; apply(); }));
+    input.addEventListener('input', apply);
+    root.querySelector('[data-dx-clear]')?.addEventListener('click', () => { dept = ''; level = ''; input.value = ''; apply(); input.focus(); });
+  })();
+</script>
 
-  if (counters.length > 0 && 'IntersectionObserver' in window) {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (!entry.isIntersecting) continue;
-          runCounter(entry.target as HTMLElement);
-          observer.unobserve(entry.target);
-        }
-      },
-      { threshold: 0.4 }
-    );
-    counters.forEach((el) => observer.observe(el));
-  } else {
-    counters.forEach(runCounter);
-  }
-
+<script>
   // "Explore Our Departments" — expanding panels, each with a live canvas
   // motif drawn behind it when there's no banner photo to show instead.
   // The widen/reveal itself is plain CSS (flex-grow on desktop, height on
@@ -665,30 +775,4 @@ function showcaseFor(slug: string) {
       if (!(e.target as HTMLElement).closest('.dept-panel')) open(null);
     });
   })();
-
-  // Expandable directory — smooth height transition rather than the
-  // instant show/hide a plain [hidden] toggle would give.
-  const accordion = document.querySelector<HTMLElement>('[data-dept-accordion]');
-  if (accordion) {
-    const triggers = Array.from(accordion.querySelectorAll<HTMLButtonElement>('[data-dept-trigger]'));
-    triggers.forEach((trigger) => {
-      const panel = document.getElementById(trigger.getAttribute('aria-controls') ?? '');
-      if (!panel) return;
-      trigger.addEventListener('click', () => {
-        const isOpen = trigger.getAttribute('aria-expanded') === 'true';
-        trigger.setAttribute('aria-expanded', String(!isOpen));
-        panel.style.height = isOpen ? `${panel.scrollHeight}px` : '0px';
-        requestAnimationFrame(() => {
-          panel.style.height = isOpen ? '0px' : `${panel.scrollHeight}px`;
-        });
-        panel.addEventListener(
-          'transitionend',
-          () => {
-            if (trigger.getAttribute('aria-expanded') === 'true') panel.style.height = 'auto';
-          },
-          { once: true }
-        );
-      });
-    });
-  }
 </script>

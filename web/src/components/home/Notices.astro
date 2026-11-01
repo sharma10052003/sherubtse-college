@@ -13,8 +13,8 @@ const clip = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke
 ---
 <div data-expiring>
   <ul class="hm-notices">
-    {items.map((n) => (
-      <li class:list={['hm-notice', { 'hm-notice--urgent': n.tone === 'danger', 'hm-notice--warn': n.tone === 'warning', 'hm-notice--vacancy': n.group === 'vacancies' }]} data-expires={n.expires ?? undefined} data-reveal>
+    {items.map((n, i) => (
+      <li class:list={['hm-notice', { 'hm-notice--urgent': n.tone === 'danger', 'hm-notice--warn': n.tone === 'warning', 'hm-notice--vacancy': n.group === 'vacancies' }]} data-expires={n.expires ?? undefined} data-reveal style={`--i:${i % 4}`}>
         <time class="hm-notice-date" datetime={n.date?.slice(0, 10)}>
           <span>{fmtDate(n.date, { day: 'numeric' })}</span>
           <span>{fmtDate(n.date, { month: 'short' })}</span>

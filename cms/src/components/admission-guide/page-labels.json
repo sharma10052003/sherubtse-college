@@ -90,6 +90,33 @@
     },
     "faq_collapse": {
       "type": "string"
+    },
+    "finder_heading": {
+      "type": "string"
+    },
+    "finder_intro": {
+      "type": "string"
+    },
+    "finder_applicant": {
+      "type": "string"
+    },
+    "next_date_heading": {
+      "type": "string"
+    },
+    "days_to_go": {
+      "type": "string"
+    },
+    "day_to_go": {
+      "type": "string"
+    },
+    "today_label": {
+      "type": "string"
+    },
+    "latest_notice_heading": {
+      "type": "string"
+    },
+    "jump_dates": {
+      "type": "string"
     }
   }
 }

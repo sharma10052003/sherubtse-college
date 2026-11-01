@@ -1,0 +1,68 @@
+---
+// The details shown in the dialog that opens from a facility panel. Everything
+// here only appears when it has been entered in Strapi (the Library and
+// Laboratories blocks on the page settings, or the facility record).
+import type { ShowItem } from '../../lib/content/facilities-showcase';
+import FacilityDetail from './FacilityDetail.astro';
+import { icon } from '../../lib/facility-icons';
+
+interface Props {
+  item: ShowItem;
+}
+const { item } = Astro.props;
+const b = item.block;
+const f = item.facility;
+const extras = !!(f && (f.location || f.building || f.opening_hours || f.access_conditions || f.accessibility || f.department || f.contact || f.documents.length || f.images.length || f.uses_html || f.policies_html));
+---
+<div class="fl-detail">
+  {b ? (
+    <>
+      {b.intro_html && <div class="cf-prose" set:html={b.intro_html} />}
+      {b.features.length > 0 && (
+        <ul class="fl-points">
+          {b.features.map((x) => (
+            <li>
+              <span class="fl-points-icon" set:html={icon(x.icon)} />
+              <span><strong>{x.title}</strong>{x.description && <span>{x.description}</span>}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+      {b.more_html && (
+        <section class="cf-detail-block">
+          {b.more_heading && <h4>{b.more_heading}</h4>}
+          <div class="cf-prose" set:html={b.more_html} />
+        </section>
+      )}
+      {f && extras && <FacilityDetail facility={f} level={4} extrasOnly />}
+      {(b.links.length > 0 || b.documents.length > 0) && (
+        <ul class="cf-resources">
+          {b.links.map((l) => (
+            <li>
+              <a href={l.url} {...(l.external ? { target: '_blank', rel: 'noopener' } : {})}>
+                <Fragment set:html={icon(l.external ? 'external' : 'arrow')} /><span>{l.label}</span>
+                {l.external && <span class="cf-sr">(opens in a new tab)</span>}
+              </a>
+            </li>
+          ))}
+          {b.documents.map((d) => (
+            <li>
+              <a href={d.url} target="_blank" rel="noopener"><Fragment set:html={icon('download')} /><span>{d.label}</span>{d.ext && <span class="cf-ext">{d.ext}</span>}</a>
+            </li>
+          ))}
+        </ul>
+      )}
+      {b.gallery.length > 0 && (
+        <div class="cf-detail-photos" data-fl-group>
+          {b.gallery.map((im) => (
+            <button type="button" class="cf-shot" data-cf-lightbox={im.url} data-cf-caption={im.alt}>
+              <img src={im.url} alt={im.alt} loading="lazy" />
+            </button>
+          ))}
+        </div>
+      )}
+    </>
+  ) : (
+    f && <FacilityDetail facility={f} level={4} />
+  )}
+</div>

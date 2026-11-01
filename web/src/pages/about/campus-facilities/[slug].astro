@@ -1,12 +1,16 @@
 ---
 // One facility's own page — built for facilities whose "Display mode" in
 // Strapi is "Page" (others open as a panel on Campus Facilities, or have no
-// detail view). Content: lib/content/facilities.ts; styles: facilities.css.
+// detail view). Everything shown comes from that facility's Strapi record; a
+// section only appears when it has content. Content: lib/content/facilities.ts;
+// layout of the Markdown fields: lib/content/facility-markup.ts; styles:
+// facility-detail.css (.fd) plus the shared lightbox in facilities.css.
 import Layout from '../../../layouts/Layout.astro';
 import '../../../styles/facilities.css';
-import FacilityDetail from '../../../components/facilities/FacilityDetail.astro';
+import '../../../styles/facility-detail.css';
 import { getFacilities, getFacilityBySlug } from '../../../lib/content/facilities';
 import { icon } from '../../../lib/facility-icons';
+import { parseBlocks, parseContacts, telHref } from '../../../lib/content/facility-markup';
 
 export async function getStaticPaths() {
   const all = await getFacilities();
@@ -16,58 +20,341 @@ export async function getStaticPaths() {
 const { slug } = Astro.params as { slug: string };
 const facility = await getFacilityBySlug(slug);
 if (!facility || facility.display_mode !== 'page') return Astro.redirect('/about/campus-facilities', 404);
+const f = facility;
 
 const all = await getFacilities();
 const related = all
-  .filter((f) => f.slug !== facility.slug && f.display_mode !== 'card_only' && f.categories.some((c) => facility.categories.some((x) => x.slug === c.slug)))
+  .filter((x) => x.slug !== f.slug && x.display_mode !== 'card_only' && x.categories.some((c) => f.categories.some((y) => y.slug === c.slug)))
   .slice(0, 3);
-const categoriesIcon = facility.categories[0]?.icon ?? 'building';
-const hrefOf = (f: (typeof all)[number]) => (f.display_mode === 'page' ? `/about/campus-facilities/${f.slug}` : `/about/campus-facilities#facilities`);
+const hrefOf = (x: (typeof all)[number]) => (x.display_mode === 'page' ? `/about/campus-facilities/${x.slug}` : `/about/campus-facilities#facilities`);
+const heroIcon = f.categories[0]?.icon ?? 'building';
+
+// ── The two Markdown fields, laid out as blocks ──
+const about = parseBlocks(f.content_md);
+const aboutCards = about.filter((b) => b.type === 'labelled') as Extract<(typeof about)[number], { type: 'labelled' }>[];
+const aboutText = about.filter((b) => b.type === 'p') as Extract<(typeof about)[number], { type: 'p' }>[];
+const aboutLists = about.filter((b) => b.type === 'section') as Extract<(typeof about)[number], { type: 'section' }>[];
+
+const uses = parseBlocks(f.uses_md);
+const useLists = uses.filter((b) => b.type === 'section') as Extract<(typeof uses)[number], { type: 'section' }>[];
+const useNotes = uses.filter((b) => b.type !== 'section') as Exclude<(typeof uses)[number], { type: 'section' }>[];
+const isContacts = (s: (typeof useLists)[number]) => /contact/i.test(s.title) || parseContacts(s.items).length >= Math.ceil(s.items.length / 2);
+const contactLists = useLists.filter(isContacts).map((s) => ({ title: s.title, cards: parseContacts(s.items) }));
+const serviceLists = useLists.filter((s) => !isContacts(s));
+
+// A paragraph that carries a link ("Digital platform. … https://…") becomes a call-out.
+const callouts = useNotes.filter((b) => /<a href=/.test(b.html));
+const plainNotes = useNotes.filter((b) => !/<a href=/.test(b.html));
+const calloutLink = (html: string) => html.match(/<a href="([^"]+)"[^>]*>/)?.[1] ?? null;
+
+const factRows = ([
+  ['pin', 'Location', f.location],
+  ['building', 'Building', f.building && !(f.location ?? '').toLowerCase().includes(f.building.toLowerCase()) ? f.building : null],
+  ['clock', 'Opening hours', f.opening_hours],
+  ['shield', 'Access', f.access_conditions],
+  ['access', 'Accessibility', f.accessibility],
+  ['people', 'Department', f.department],
+] as [string, string, string | null][]).filter(([, , v]) => v) as [string, string, string][];
+const heroFacts = factRows.slice(0, 3);
+
+const listedCards = contactLists.flatMap((c) => c.cards);
+// The record's own contact is skipped when the Uses text already lists the same person.
+const hasContactCard = !!(f.contact && (f.contact.office || f.contact.person || f.contact.email || f.contact.phone)) && !listedCards.some((p) => p.email && p.email === f.contact?.email);
+const resources = [
+  ...f.links.map((l) => ({ label: l.label, url: l.url, kind: l.external ? 'Website' : 'Page', external: l.external })),
+  ...f.documents.map((d) => ({ label: d.label, url: d.url, kind: d.ext ? d.ext.replace('.', '').toUpperCase() : 'File', external: true })),
+];
+const primaryLink = f.links.find((l) => /platform|portal|book|apply/i.test(l.label)) ?? null;
+
+// Sections that will exist, in page order — drives the sticky navigation.
+const sections = [
+  { id: 'about', label: 'About', show: aboutCards.length + aboutText.length + aboutLists.length > 0 },
+  { id: 'highlights', label: 'Highlights', show: f.features.length > 0 },
+  { id: 'services', label: serviceLists[0]?.title || 'What we offer', show: serviceLists.length > 0 || callouts.length + plainNotes.length > 0 },
+  { id: 'resources', label: 'Resources', show: resources.length > 0 },
+  { id: 'contact', label: 'Contact', show: listedCards.length > 0 || hasContactCard },
+  { id: 'visit', label: 'Find us', show: factRows.length > 0 },
+  { id: 'gallery', label: 'Photos', show: f.images.length > 0 },
+].filter((s) => s.show);
+
+const orbit = f.features.slice(0, 6);
+const calloutLabel = (b: (typeof callouts)[number]) => (b.type === 'labelled' ? b.label : 'Good to know');
 ---
-<Layout title={facility.name} description={facility.summary ?? undefined}>
-  <div class="cf" data-cf>
-    <header class="cf-opening cf-opening--detail">
-      <div class="wrap cf-wide cf-opening-grid">
-        <div class="cf-opening-text">
-          <nav class="cf-breadcrumb" aria-label="Breadcrumb">
-            <a href="/">Home</a> › <a href="/about">About</a> › <a href="/about/campus-facilities">Campus Facilities</a> › <span aria-current="page">{facility.name}</span>
+<Layout title={f.name} description={f.summary ?? undefined}>
+  <div class="cf fd" data-fd>
+    <header class="fd-hero">
+      <span class="fd-blob fd-blob--a" aria-hidden="true"></span>
+      <span class="fd-blob fd-blob--b" aria-hidden="true"></span>
+      <div class="wrap fd-hero-grid">
+        <div class="fd-hero-text">
+          <nav class="fd-crumbs" aria-label="Breadcrumb">
+            <a href="/">Home</a> › <a href="/about">About</a> › <a href="/about/campus-facilities">Campus Facilities</a> › <span aria-current="page">{f.name}</span>
           </nav>
-          <p class="cf-eyebrow"><span class="cf-eyebrow-rule" aria-hidden="true"></span>{facility.categories.map((c) => c.name).join(' · ') || 'Campus Facilities'}</p>
-          <h1 class="cf-display cf-display--detail">{facility.name}</h1>
-          {facility.summary && <p class="cf-standfirst">{facility.summary}</p>}
-        </div>
-        <figure class:list={['cf-opening-figure', { 'cf-opening-figure--plate': !facility.main_image }]}>
-          <span class="cf-frame" aria-hidden="true"></span>
-          {facility.main_image ? (
-            <div class="cf-opening-photos"><img class="cf-opening-img is-active" src={facility.main_image.url} alt={facility.main_image.alt} /></div>
-          ) : (
-            <div class="cf-plate cf-plate--opening" aria-hidden="true">
-              <span class="cf-plate-icon" set:html={icon(categoriesIcon)} />
-              <span class="cf-plate-caption">Kanglung, Trashigang</span>
-            </div>
+          <p class="fd-chips fd-rise" style="--d:0">
+            {f.categories.length > 0
+              ? f.categories.map((c) => <span class="fd-chip"><Fragment set:html={icon(c.icon)} />{c.name}</span>)
+              : <span class="fd-chip"><Fragment set:html={icon('building')} />Campus Facilities</span>}
+          </p>
+          <h1 class="fd-title fd-rise" style="--d:1">{f.name}</h1>
+          {f.summary && <p class="fd-lede fd-rise" style="--d:2">{f.summary}</p>}
+          <div class="fd-actions fd-rise" style="--d:3">
+            {primaryLink && (
+              <a class="fd-btn fd-btn--gold" href={primaryLink.url} {...(primaryLink.external ? { target: '_blank', rel: 'noopener' } : {})}>
+                {primaryLink.label}<Fragment set:html={icon(primaryLink.external ? 'external' : 'arrow')} />
+              </a>
+            )}
+            {sections.some((s) => s.id === 'contact') && (
+              <a class="fd-btn fd-btn--ghost" href="#contact"><Fragment set:html={icon('mail')} />Get in touch</a>
+            )}
+            <a class="fd-btn fd-btn--text" href="/about/campus-facilities"><Fragment set:html={icon('back')} />All facilities</a>
+          </div>
+          {heroFacts.length > 0 && (
+            <ul class="fd-facts fd-rise" style="--d:4">
+              {heroFacts.map(([i, label, value]) => (
+                <li><Fragment set:html={icon(i)} /><span><small>{label}</small>{value}</span></li>
+              ))}
+            </ul>
           )}
+        </div>
+
+        <figure class="fd-emblem fd-rise" style="--d:2" data-fd-emblem>
+          <span class="fd-ring fd-ring--out" aria-hidden="true"></span>
+          <span class="fd-ring fd-ring--in" aria-hidden="true"></span>
+          <div class="fd-arch">
+            {f.main_image
+              ? <img src={f.main_image.url} alt={f.main_image.alt} />
+              : <span class="fd-arch-icon" aria-hidden="true" set:html={icon(heroIcon)} />}
+            {!f.main_image && <span class="fd-arch-cap">Sherubtse College · Kanglung</span>}
+          </div>
+          {orbit.map((x, i) => (
+            <span class="fd-planet" style={`--a:${(360 / orbit.length) * i - 90}deg; --i:${i}`} title={x.title}>
+              <span set:html={icon(x.icon)} />
+              <em>{x.title}</em>
+            </span>
+          ))}
         </figure>
       </div>
     </header>
 
-    <section class="cf-section cf-bg-white">
-      <div class="wrap cf-wide cf-detail-layout">
-        <FacilityDetail facility={facility} level={2} />
-        <aside class="cf-detail-side">
-          <a class="cf-back" href="/about/campus-facilities"><Fragment set:html={icon('back')} /> All campus facilities</a>
-          {related.length > 0 && (
-            <div class="cf-related">
-              <h2>Related facilities</h2>
-              <ul>
-                {related.map((r) => (
-                  <li><a href={hrefOf(r)}><strong>{r.name}</strong>{r.summary && <span>{r.summary}</span>}</a></li>
+    {sections.length > 1 && (
+      <nav class="fd-nav" aria-label="On this page" data-fd-nav>
+        <div class="wrap fd-nav-row">
+          {sections.map((s) => <a href={`#${s.id}`} data-fd-link={s.id}>{s.label}</a>)}
+        </div>
+      </nav>
+    )}
+
+    <main class="fd-main">
+      {sections.some((s) => s.id === 'about') && (
+        <section class="fd-section" id="about" data-fd-section>
+          <div class="wrap">
+            <header class="fd-head fd-reveal"><p class="fd-kicker">About</p><h2>{`About ${f.name}`}</h2></header>
+            {aboutText.length > 0 && (
+              <div class="fd-intro fd-reveal">
+                {aboutText.map((b) => <p set:html={b.html} />)}
+              </div>
+            )}
+            {aboutCards.length > 0 && (
+              <div class="fd-pair" style={`--cols:${Math.min(aboutCards.length, 3)}`}>
+                {aboutCards.map((b, i) => (
+                  <article class="fd-card fd-card--statement fd-reveal" style={`--d:${i}`}>
+                    <span class="fd-card-ico" aria-hidden="true" set:html={icon(i % 2 === 0 ? 'star' : 'heart')} />
+                    <h3>{b.label}</h3>
+                    <p set:html={b.html} />
+                  </article>
                 ))}
-              </ul>
+              </div>
+            )}
+            {aboutLists.map((s) => (
+              <div class="fd-block fd-reveal">
+                {s.title && <h3 class="fd-sub">{s.title}</h3>}
+                <ul class="fd-ticks">{s.html.map((h) => <li set:html={h} />)}</ul>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {f.features.length > 0 && (
+        <section class="fd-section fd-section--tint" id="highlights" data-fd-section>
+          <div class="wrap">
+            <header class="fd-head fd-reveal"><p class="fd-kicker">Highlights</p><h2>What makes it work</h2></header>
+            <ul class="fd-tiles" style="--cols:3">
+              {f.features.map((x, i) => (
+                <li class="fd-tile fd-reveal" style={`--d:${i % 3}`}>
+                  <span class="fd-tile-ico" aria-hidden="true" set:html={icon(x.icon)} />
+                  <h3>{x.title}</h3>
+                  {x.description && <p>{x.description}</p>}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+      )}
+
+      {sections.some((s) => s.id === 'services') && (
+        <section class="fd-section" id="services" data-fd-section>
+          <div class="wrap">
+            <header class="fd-head fd-reveal"><p class="fd-kicker">{serviceLists[0]?.title ? 'Services' : 'Good to know'}</p><h2>{serviceLists[0]?.title || 'Good to know'}</h2></header>
+            {serviceLists.map((s, k) => (
+              <>
+                {k > 0 && s.title && <h3 class="fd-sub fd-reveal">{s.title}</h3>}
+                <ul class="fd-services" data-fd-services>
+                  {s.html.map((h, i) => (
+                    <li class="fd-service fd-reveal" style={`--d:${i % 4}`}>
+                      <span class="fd-service-dot" aria-hidden="true"></span>
+                      <span set:html={h} />
+                    </li>
+                  ))}
+                </ul>
+              </>
+            ))}
+            {(callouts.length > 0 || plainNotes.length > 0) && (
+              <div class="fd-callouts">
+                {callouts.map((b) => (
+                  <aside class="fd-callout fd-reveal">
+                    <span class="fd-callout-ico" aria-hidden="true" set:html={icon('link')} />
+                    <div>
+                      <h3>{calloutLabel(b)}</h3>
+                      <p set:html={b.html.replace(/<a /g, '<a class="fd-inline-link" ')} />
+                    </div>
+                    {calloutLink(b.html) && (
+                      <a class="fd-btn fd-btn--gold" href={calloutLink(b.html)!} target="_blank" rel="noopener">
+                        Open<Fragment set:html={icon('external')} /><span class="cf-sr"> (opens in a new tab)</span>
+                      </a>
+                    )}
+                  </aside>
+                ))}
+                {plainNotes.map((b) => (
+                  <aside class="fd-note fd-reveal">
+                    {b.type === 'labelled' && <strong>{b.label}</strong>}
+                    <p set:html={b.html} />
+                  </aside>
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+
+      {resources.length > 0 && (
+        <section class="fd-section fd-section--navy" id="resources" data-fd-section>
+          <div class="wrap">
+            <header class="fd-head fd-reveal"><p class="fd-kicker">Resources</p><h2>Read, download and explore</h2></header>
+            <ul class="fd-links">
+              {resources.map((r, i) => (
+                <li class="fd-reveal" style={`--d:${i % 4}`}>
+                  <a href={r.url} {...(r.external ? { target: '_blank', rel: 'noopener' } : {})}>
+                    <span class="fd-link-ico" aria-hidden="true" set:html={icon(['Website', 'Page'].includes(r.kind) ? 'link' : 'download')} />
+                    <span class="fd-link-text">{r.label}</span>
+                    <span class="fd-link-kind">{r.kind}</span>
+                    <span class="fd-link-go" aria-hidden="true" set:html={icon('arrow')} />
+                    {r.external && <span class="cf-sr">(opens in a new tab)</span>}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+      )}
+
+      {sections.some((s) => s.id === 'contact') && (
+        <section class="fd-section" id="contact" data-fd-section>
+          <div class="wrap">
+            <header class="fd-head fd-reveal"><p class="fd-kicker">Contact</p><h2>{contactLists[0]?.title || 'Talk to us'}</h2></header>
+            <ul class="fd-people" style="--cols:3">
+              {hasContactCard && (
+                <li class="fd-person fd-person--lead fd-reveal">
+                  <span class="fd-avatar" aria-hidden="true">{(f.contact!.person ?? f.contact!.office ?? f.name).replace(/\s+—.*/, '').split(/\s+/).slice(0, 2).map((w) => w[0]).join('')}</span>
+                  <div>
+                    {f.contact!.office && <small class="fd-person-role">{f.contact!.office}</small>}
+                    {f.contact!.person && <h3>{f.contact!.person}</h3>}
+                    <p class="fd-person-lines">
+                      {f.contact!.email && <a href={`mailto:${f.contact!.email}`}><Fragment set:html={icon('mail')} />{f.contact!.email}</a>}
+                      {f.contact!.phone && <a href={telHref(f.contact!.phone)}><Fragment set:html={icon('phone')} />{f.contact!.phone}</a>}
+                    </p>
+                    {f.contact!.note && <p class="fd-person-note">{f.contact!.note}</p>}
+                  </div>
+                </li>
+              )}
+              {listedCards.map((p, i) => (
+                <li class="fd-person fd-reveal" style={`--d:${i % 3}`}>
+                  <span class="fd-avatar" aria-hidden="true">{p.name.split(/\s+/).slice(0, 2).map((w) => w[0]).join('')}</span>
+                  <div>
+                    {p.role && <small class="fd-person-role">{p.role}</small>}
+                    <h3>{p.name}</h3>
+                    <p class="fd-person-lines">
+                      {p.email && <a href={`mailto:${p.email}`}><Fragment set:html={icon('mail')} />{p.email}</a>}
+                      {p.phone && <a href={telHref(p.phone)}><Fragment set:html={icon('phone')} />{p.phone}</a>}
+                    </p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+      )}
+
+      {factRows.length > 0 && (
+        <section class="fd-section fd-section--tint" id="visit" data-fd-section>
+          <div class="wrap">
+            <header class="fd-head fd-reveal"><p class="fd-kicker">Visit</p><h2>Find us on campus</h2></header>
+            <dl class="fd-visit" style="--cols:3">
+              {factRows.map(([i, label, value], k) => (
+                <div class="fd-visit-item fd-reveal" style={`--d:${k % 3}`}>
+                  <dt><Fragment set:html={icon(i)} />{label}</dt>
+                  <dd>{value}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+        </section>
+      )}
+
+      {f.images.length > 0 && (
+        <section class="fd-section" id="gallery" data-fd-section>
+          <div class="wrap">
+            <header class="fd-head fd-reveal"><p class="fd-kicker">Photos</p><h2>A look inside</h2></header>
+            <div class="fd-photos">
+              {f.images.map((im) => (
+                <button type="button" class="cf-shot fd-photo fd-reveal" data-cf-lightbox={im.url} data-cf-caption={im.alt}>
+                  <img src={im.url} alt={im.alt} loading="lazy" />
+                </button>
+              ))}
             </div>
-          )}
-        </aside>
-      </div>
-    </section>
+          </div>
+        </section>
+      )}
+
+      {f.policies_html && (
+        <section class="fd-section fd-section--tint" id="guidelines">
+          <div class="wrap">
+            <header class="fd-head fd-reveal"><p class="fd-kicker">Guidelines</p><h2>Please note</h2></header>
+            <div class="cf-prose fd-reveal" set:html={f.policies_html} />
+          </div>
+        </section>
+      )}
+
+      {related.length > 0 && (
+        <section class="fd-section fd-section--related">
+          <div class="wrap">
+            <header class="fd-head fd-reveal"><p class="fd-kicker">Keep exploring</p><h2>Related facilities</h2></header>
+            <ul class="fd-related">
+              {related.map((r, i) => (
+                <li class="fd-reveal" style={`--d:${i}`}>
+                  <a href={hrefOf(r)}>
+                    <span class="fd-related-ico" aria-hidden="true" set:html={icon(r.categories[0]?.icon ?? 'building')} />
+                    <strong>{r.name}</strong>
+                    {r.summary && <span>{r.summary}</span>}
+                    <span class="fd-related-go" aria-hidden="true" set:html={icon('arrow')} />
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+      )}
+    </main>
 
     <div class="cf-lightbox" data-cf-box hidden role="dialog" aria-modal="true" aria-label="Photo viewer">
       <button type="button" class="cf-lightbox-btn cf-lightbox-close" data-cf-box-close aria-label="Close photo"><Fragment set:html={icon('close')} /></button>
@@ -78,6 +365,52 @@ const hrefOf = (f: (typeof all)[number]) => (f.display_mode === 'page' ? `/about
 
 <script is:inline>
   (() => {
+    const root = document.querySelector('[data-fd]');
+    if (!root) return;
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // Sticky bar sits just under the site header.
+    const masthead = document.querySelector('.masthead');
+    const setTop = () => root.style.setProperty('--fd-top', `${masthead ? masthead.getBoundingClientRect().height : 0}px`);
+    setTop(); addEventListener('resize', setTop);
+
+    // Reveal on scroll.
+    const items = root.querySelectorAll('.fd-reveal');
+    if (reduce || !('IntersectionObserver' in window)) items.forEach((el) => el.classList.add('is-in'));
+    else {
+      const io = new IntersectionObserver((entries) => entries.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('is-in'); io.unobserve(e.target); } }), { rootMargin: '0px 0px -8% 0px', threshold: 0.08 });
+      items.forEach((el) => io.observe(el));
+    }
+
+    // Highlight the section being read in the sticky bar.
+    const links = [...root.querySelectorAll('[data-fd-link]')];
+    const secs = links.map((l) => root.querySelector('#' + l.dataset.fdLink)).filter(Boolean);
+    const bar = root.querySelector('[data-fd-nav] .fd-nav-row');
+    const mark = () => {
+      const y = innerHeight * 0.32;
+      let cur = null;
+      secs.forEach((s) => { if (s.getBoundingClientRect().top <= y) cur = s.id; });
+      links.forEach((l) => {
+        const on = l.dataset.fdLink === cur;
+        l.classList.toggle('is-on', on);
+        if (on) l.setAttribute('aria-current', 'true'); else l.removeAttribute('aria-current');
+        if (on && bar && bar.scrollWidth > bar.clientWidth) bar.scrollTo({ left: l.offsetLeft - 24, behavior: reduce ? 'auto' : 'smooth' });
+      });
+    };
+    addEventListener('scroll', mark, { passive: true }); mark();
+
+    // Hero emblem: planets drift toward the pointer.
+    const emblem = root.querySelector('[data-fd-emblem]');
+    if (emblem && !reduce && matchMedia('(hover: hover)').matches) {
+      emblem.addEventListener('pointermove', (e) => {
+        const r = emblem.getBoundingClientRect();
+        emblem.style.setProperty('--px', ((e.clientX - r.left) / r.width - 0.5).toFixed(3));
+        emblem.style.setProperty('--py', ((e.clientY - r.top) / r.height - 0.5).toFixed(3));
+      });
+      emblem.addEventListener('pointerleave', () => { emblem.style.setProperty('--px', 0); emblem.style.setProperty('--py', 0); });
+    }
+
+    // Lightbox.
     const box = document.querySelector('[data-cf-box]');
     if (!box) return;
     const img = box.querySelector('img');

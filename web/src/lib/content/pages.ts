@@ -6,10 +6,12 @@ export interface ContentPage {
   title: string;
   slug: string;
   body: string;
+  /** When staff last reviewed the page (Last reviewed), else when it was last edited. */
+  updated: string | null;
 }
 
 function mapPage(row: any): ContentPage {
-  return { id: row.id, title: row.title, slug: row.slug, body: row.body };
+  return { id: row.id, title: row.title, slug: row.slug, body: row.body, updated: row.last_reviewed ?? row.updatedAt ?? null };
 }
 
 export async function getAllPageSlugs(): Promise<string[]> {

@@ -1,0 +1,17 @@
+{
+  "kind": "singleType",
+  "collectionName": "programmes_page",
+  "info": {
+    "singularName": "programmes-page",
+    "pluralName": "programmes-pages",
+    "displayName": "Academics – Programmes Page",
+    "description": "Hero text and wording of the Programmes listing page. The programmes themselves are edited under Programmes."
+  },
+  "options": { "draftAndPublish": false },
+  "attributes": {
+    "hero_eyebrow": { "type": "string" },
+    "hero_heading": { "type": "string" },
+    "hero_intro": { "type": "text" },
+    "labels": { "type": "json" }
+  }
+}

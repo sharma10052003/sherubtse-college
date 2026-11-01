@@ -6,11 +6,30 @@
     "pluralName": "about-pages",
     "displayName": "About – The College"
   },
-  "options": { "draftAndPublish": false },
+  "options": {
+    "draftAndPublish": false
+  },
   "attributes": {
-    "heading": { "type": "string", "required": true, "default": "About the College" },
-    "intro": { "type": "text", "required": true },
-    "contact_note": { "type": "string" },
-    "seo_description": { "type": "string" }
+    "eyebrow": {
+      "type": "string"
+    },
+    "heading": {
+      "type": "string",
+      "required": true,
+      "default": "About the College"
+    },
+    "intro": {
+      "type": "text",
+      "required": true
+    },
+    "contact_note": {
+      "type": "string"
+    },
+    "seo_description": {
+      "type": "string"
+    },
+    "labels": {
+      "type": "json"
+    }
   }
 }

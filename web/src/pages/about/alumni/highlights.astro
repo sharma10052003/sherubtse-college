@@ -1,0 +1,73 @@
+---
+// Alumni achievements and the photo gallery (each only when published).
+import AlumniShell from '../../../components/alumni/AlumniShell.astro';
+import AlumniSubHero from '../../../components/alumni/AlumniSubHero.astro';
+import AlumniFoot from '../../../components/alumni/AlumniFoot.astro';
+import { getAlumniCopy, getAlumniSetting, getAlumniAchievements, getAlumniGallery, ACHIEVEMENT_CATEGORY_LABELS, GALLERY_CATEGORY_LABELS } from '../../../lib/content/alumni';
+import { icon } from '../../../lib/content/alumni-ui';
+const [copy, settings, achievements, gallery] = await Promise.all([getAlumniCopy(), getAlumniSetting(), getAlumniAchievements(), getAlumniGallery()]);
+const hasGallery = settings.show_gallery && gallery.length > 0;
+const hasAchievements = settings.show_achievements && achievements.length > 0;
+if (!hasGallery && !hasAchievements) return Astro.redirect('/about/alumni');
+const L = copy.labels;
+const galleryCategories = Array.from(new Set(gallery.map((g) => g.category)));
+---
+
+<AlumniShell title="Alumni achievements and gallery" description={copy.seo_description ?? undefined} texts={copy.texts}>
+<AlumniSubHero page="highlights" />
+    {settings.show_achievements && achievements.length > 0 && (
+      <section class="al-section al-achievements" aria-labelledby="al-ach-h">
+        <div class="wrap al-wide">
+          <div class="al-head" data-al-reveal>
+            {copy.achievements.eyebrow && <p class="al-eyebrow">{copy.achievements.eyebrow}</p>}
+            <h2 id="al-ach-h" class="al-h2">{copy.achievements.heading}</h2>
+          </div>
+          <ul class="al-ach-grid" role="list">
+            {achievements.map((a, i) => (
+              <li class="al-ach" data-al-reveal style={`--d:${(i % 3) * 100}ms`}>
+                <span class="al-ach-icon" set:html={icon('trophy', 26)} />
+                <div>
+                  <p class="al-tag">{ACHIEVEMENT_CATEGORY_LABELS[a.category] ?? a.category}{a.year && ` · ${a.year}`}</p>
+                  <h3 class="al-ach-title">{a.title}</h3>
+                  <p class="al-ach-name">{a.alumni_name}</p>
+                  {a.description && <p class="al-body">{a.description}</p>}
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+    )}
+
+    <!-- ====================== GALLERY & ACHIEVEMENTS (when published) ====================== -->
+    {settings.show_gallery && gallery.length > 0 && (
+      <section class="al-section al-gallery" aria-labelledby="al-gallery-h">
+        <div class="wrap al-wide">
+          <div class="al-head al-head--split" data-al-reveal>
+            <div>
+              {copy.gallery.eyebrow && <p class="al-eyebrow">{copy.gallery.eyebrow}</p>}
+              <h2 id="al-gallery-h" class="al-h2">{copy.gallery.heading}</h2>
+            </div>
+            {galleryCategories.length > 1 && (
+              <div class="al-filters" role="group" aria-label="Filter photos" data-gallery-filters>
+                <button type="button" aria-pressed="true" data-filter="all">{L.gallery_all || 'All'}</button>
+                {galleryCategories.map((c) => <button type="button" aria-pressed="false" data-filter={c}>{GALLERY_CATEGORY_LABELS[c] ?? c}</button>)}
+              </div>
+            )}
+          </div>
+          <div class="al-gallery-grid" data-gallery-grid>
+            {gallery.map((img) => (
+              <button type="button" class="al-gallery-item" data-category={img.category} data-lightbox={img.image_url} aria-label={img.caption ? `View photo: ${img.caption}` : 'View photo'}>
+                <img src={img.image_url} alt={img.caption ?? ''} loading="lazy" />
+              </button>
+            ))}
+          </div>
+        </div>
+        <div class="al-lightbox" id="alLightbox" hidden role="dialog" aria-modal="true" aria-label="Photo viewer">
+          <button type="button" class="al-lightbox-close" aria-label="Close photo viewer">✕</button>
+          <img src="" alt="" />
+        </div>
+      </section>
+    )}
+<AlumniFoot />
+</AlumniShell>

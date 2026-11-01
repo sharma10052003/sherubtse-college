@@ -1,7 +1,7 @@
 import { strapiGet } from '../strapi';
 import type { StrapiListResponse } from '../strapi';
 
-export type NoticeCategory = 'admissions' | 'registration' | 'results' | 'fees' | 'tender' | 'general';
+export type NoticeCategory = 'admissions' | 'registration' | 'results' | 'fees' | 'general';
 
 export interface Notice {
   id: number;
@@ -57,7 +57,7 @@ export async function getNoticesByUnit(unitSlug: string, limit = 10): Promise<No
   return (res?.data ?? []).map(mapNotice);
 }
 
-/** All unexpired notices — Tenders, and the combined Announcements feed (announcement-feed.ts). */
+/** All unexpired notices — the combined Announcements feed (announcement-feed.ts). */
 export async function getAllCurrentNotices(): Promise<Notice[]> {
   const res = await strapiGet<StrapiListResponse<any>>('notices', {
     filters: { expires_at: { $gt: new Date().toISOString() } },
@@ -89,8 +89,13 @@ export async function getAllNoticeIds(): Promise<number[]> {
 }
 
 export async function getNoticeById(id: number): Promise<Notice | null> {
-  const res = await strapiGet<{ data: any }>(`notices/${id}`, {
+  // Strapi 5's /notices/:x expects a documentId, not the numeric id the
+  // notice pages use in their URLs — so look the number up with a filter.
+  const res = await strapiGet<StrapiListResponse<any>>('notices', {
+    filters: { id: { $eq: id } },
     populate: ['owning_unit', 'attachments', 'attachments.file'],
+    pagination: { pageSize: 1 },
   });
-  return res?.data ? mapNotice(res.data) : null;
+  const row = res?.data?.[0];
+  return row ? mapNotice(row) : null;
 }
