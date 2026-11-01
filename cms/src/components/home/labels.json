@@ -129,6 +129,27 @@
     },
     "urgent_badge": {
       "type": "string"
+    },
+    "programmes_count": {
+      "type": "string"
+    },
+    "departments_count": {
+      "type": "string"
+    },
+    "view_programme": {
+      "type": "string"
+    },
+    "focus_areas": {
+      "type": "string"
+    },
+    "visit_centre": {
+      "type": "string"
+    },
+    "centres_heading": {
+      "type": "string"
+    },
+    "stories_heading": {
+      "type": "string"
     }
   }
 }

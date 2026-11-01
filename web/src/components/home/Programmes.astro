@@ -1,7 +1,8 @@
 ---
-// Programmes as visual tiles: a discipline icon, the name and the level.
-// Picked and ordered in Strapi (Home – Page → Programmes).
-import Img from './Img.astro';
+// Study at Sherubtse — the degree programmes, grouped by department. Department pills filter the
+// cards (with live counts); each card shows the discipline icon in the department's colour, the
+// level and length, the award, a short description and a link. Picked and ordered in Strapi
+// (Home – Page → Programmes); the programme details come from Academics – Programmes.
 import type { ProgrammeCard, ProgrammeIcon, HomeLabels } from '../../lib/content/homepage';
 interface Props { items: ProgrammeCard[]; labels: HomeLabels; emptyText: string | null }
 const { items, labels, emptyText } = Astro.props;
@@ -16,27 +17,69 @@ const ICON: Record<ProgrammeIcon, string> = {
   politics: '<path d="M24 6v32M10 14h28"/><path d="M10 14 5 26a5 5 0 0 0 10 0zM38 14l-5 12a5 5 0 0 0 10 0z"/><path d="M16 42h16"/>',
   book: '<path d="M6 10h14a4 4 0 0 1 4 4v28a3 3 0 0 0-3-3H6zM42 10H28a4 4 0 0 0-4 4v28a3 3 0 0 1 3-3h15z"/>',
 };
-const arrow = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
+const arrow = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
+const clock = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
+const short = (n: string) => n.replace(/^Department of\s+/i, '');
+const depts = [...new Map(items.filter((p) => p.department_slug).map((p) => [p.department_slug!, { slug: p.department_slug!, name: short(p.department ?? ''), accent: p.accent }])).values()]
+  .map((d) => ({ ...d, n: items.filter((p) => p.department_slug === d.slug).length }));
 ---
 {items.length > 0 ? (
-  <ul class="hm-progs">
-    {items.map((p, i) => (
-      <li class:list={['hm-prog', { 'hm-prog--img': p.image }]} data-reveal style={`--i:${i % 4}`}>
-        {p.image ? (
-          <Img image={p.image} class="hm-prog-img" sizes="(min-width: 1000px) 25vw, 50vw" />
-        ) : (
-          <span class="hm-prog-icon" aria-hidden="true">
-            <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" set:html={ICON[p.icon]} />
-          </span>
-        )}
-        <div class="hm-prog-body">
-          {p.level && <p class="hm-prog-level">{p.level}</p>}
-          <h3 class="hm-prog-name"><a href={p.href}>{p.name}</a></h3>
-          <span class="hm-prog-go" aria-hidden="true">{labels.open_programme} <Fragment set:html={arrow} /></span>
+  <div class="hm-pg" data-pg>
+    <div class="hm-pg-bar">
+      <p class="hm-pg-count" data-pg-count data-tpl={labels.programmes_count} data-all={`${labels.programmes_count.replace('{n}', String(items.length))} · ${labels.departments_count.replace('{n}', String(depts.length))}`}>{labels.programmes_count.replace('{n}', String(items.length))} · {labels.departments_count.replace('{n}', String(depts.length))}</p>
+      {depts.length > 1 && (
+        <div class="hm-pg-tabs" role="group" aria-label="Filter by department">
+          <button type="button" class="hm-pg-tab is-on" data-pg-tab="" aria-pressed="true">{labels.tab_all} <em>{items.length}</em></button>
+          {depts.map((d) => (
+            <button type="button" class="hm-pg-tab" data-pg-tab={d.slug} aria-pressed="false" style={`--accent:${d.accent}`}><i aria-hidden="true"></i>{d.name} <em>{d.n}</em></button>
+          ))}
         </div>
-      </li>
-    ))}
-  </ul>
+      )}
+    </div>
+
+    <ul class="hm-pg-grid" data-pg-grid>
+      {items.map((p, i) => (
+        <li class="hm-pg-item" data-pg-item data-dept={p.department_slug ?? ''} data-reveal style={`--i:${i % 4};--accent:${p.accent}`}>
+          <article class="hm-pg-card">
+            <span class="hm-pg-icon" aria-hidden="true"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" set:html={ICON[p.icon]} /></span>
+            <p class="hm-pg-tags">
+              {p.level && <span class="hm-pg-tag">{p.level}</span>}
+              {p.duration && <span class="hm-pg-tag hm-pg-tag--time"><Fragment set:html={clock} />{p.duration.replace(/,?\s*full-time/i, '')}</span>}
+            </p>
+            <h3 class="hm-pg-name"><a href={p.href}>{p.name}</a></h3>
+            {p.degree && <p class="hm-pg-degree">{p.degree}</p>}
+            {p.summary && <p class="hm-pg-sum">{p.summary}</p>}
+            <p class="hm-pg-foot">
+              {p.department && <span class="hm-pg-dept"><i aria-hidden="true"></i>{short(p.department)}</span>}
+              <span class="hm-pg-go">{labels.view_programme} <Fragment set:html={arrow} /></span>
+            </p>
+          </article>
+        </li>
+      ))}
+    </ul>
+  </div>
 ) : (
   emptyText && <p class="hm-empty">{emptyText}</p>
 )}
+
+<script is:inline>
+  (() => {
+    if (window.__hmPg) return;
+    window.__hmPg = true;
+    const init = () => {
+      document.querySelectorAll('[data-pg]').forEach((root) => {
+        const tabs = [...root.querySelectorAll('[data-pg-tab]')];
+        const items = [...root.querySelectorAll('[data-pg-item]')];
+        const count = root.querySelector('[data-pg-count]');
+        const apply = (slug) => {
+          let n = 0;
+          items.forEach((li) => { const ok = !slug || li.dataset.dept === slug; li.hidden = !ok; if (ok) { n++; li.classList.add('is-in'); li.style.animation = 'none'; void li.offsetWidth; li.style.animation = ''; } });
+          tabs.forEach((b) => { const on = b.dataset.pgTab === slug; b.classList.toggle('is-on', on); b.setAttribute('aria-pressed', String(on)); });
+          if (count) count.textContent = slug ? count.dataset.tpl.replace('{n}', n) : count.dataset.all;
+        };
+        tabs.forEach((b) => b.addEventListener('click', () => apply(b.dataset.pgTab)));
+      });
+    };
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+  })();
+</script>

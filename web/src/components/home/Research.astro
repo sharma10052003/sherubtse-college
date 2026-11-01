@@ -1,47 +1,113 @@
 ---
-// Research & Innovation — stories (from News), extra cards, and research centres.
+// Research & Innovation — two clear halves. Left: the research centres as an explorer (pick a
+// centre to see its logo, what it does and its focus areas; it turns through them on its own until
+// you pick one). Right: the latest research stories (from News, plus any picture cards added in
+// Strapi). Home – Page → Research chooses the centres and stories; the centre details come from
+// Research – Centres.
 import Img from './Img.astro';
 import { fmtDate } from '../../lib/content/homepage';
-import type { Section } from '../../lib/content/homepage';
+import type { Section, HomeLabels } from '../../lib/content/homepage';
 type S = Extract<Section, { kind: 'research' }>;
-interface Props { s: S }
-const { s } = Astro.props;
-const arrow = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
+interface Props { s: S; labels: HomeLabels }
+const { s, labels } = Astro.props;
 const stories = [
   ...s.stories.map((n) => ({ title: n.title, summary: n.summary, image: n.cover, category: n.category, date: n.date as string | null, href: n.href as string | null })),
   ...s.cards.map((c) => ({ title: c.title, summary: c.summary ?? '', image: c.image, category: c.category, date: c.date, href: c.href })),
 ];
+const arrow = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
+const flask = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 1.8 3h10.4a2 2 0 0 0 1.8-3l-5-9V3"/><path d="M7.5 15h9"/></svg>';
+const initials = (n: string) => n.replace(/&/g, ' ').split(/\s+/).filter((w) => /^[A-Z]/.test(w)).slice(0, 2).map((w) => w[0]).join('');
 ---
-<div class:list={['hm-research', { 'hm-research--nocentres': s.centres.length === 0, 'hm-research--nostories': stories.length === 0 }]}>
-  {stories.length > 0 && (
-    <ul class="hm-rs">
-      {stories.map((r, i) => (
-        <li class:list={['hm-rs-item', { 'hm-rs-item--noimg': !r.image }]} data-reveal style={`--i:${i}`}>
-          {r.image && (
-            <div class="hm-rs-media">
-              <Img image={r.image} class="hm-rs-img" sizes="(min-width: 1000px) 30vw, 100vw" />
-            </div>
-          )}
-          <p class="hm-meta hm-meta--light">
-            {r.category && <span class="hm-meta-cat">{r.category}</span>}
-            {r.date && <time datetime={r.date.slice(0, 10)}>{fmtDate(r.date)}</time>}
-          </p>
-          <h3 class="hm-rs-title">{r.href ? <a href={r.href}>{r.title}</a> : r.title}</h3>
-        </li>
-      ))}
-    </ul>
-  )}
+<div class:list={['hm-rx', { 'hm-rx--solo': s.centres.length === 0 || stories.length === 0 }]}>
   {s.centres.length > 0 && (
-    <ul class="hm-centres" data-reveal>
-      {s.centres.map((c, i) => (
-        <li style={`--i:${i}`}>
-          <a href={c.href} title={c.summary ?? undefined}>
-            <span class="hm-centre-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 1.8 3h10.4a2 2 0 0 0 1.8-3l-5-9V3"/><path d="M7.5 15h9"/></svg></span>
-            <span class="hm-centre-name">{c.name}</span>
-            <span class="hm-centre-go" aria-hidden="true"><Fragment set:html={arrow} /></span>
-          </a>
-        </li>
-      ))}
-    </ul>
+    <div class="hm-rx-centres" data-rx data-reveal="left">
+      <h3 class="hm-rx-h">{labels.centres_heading}</h3>
+      <div class="hm-rx-explorer">
+        <div class="hm-rx-tabs" role="tablist" aria-label={labels.centres_heading}>
+          {s.centres.map((c, i) => (
+            <button type="button" role="tab" id={`hm-rx-t${i}`} class:list={['hm-rx-tab', { 'is-on': i === 0 }]} data-rx-tab={i} aria-selected={i === 0 ? 'true' : 'false'} aria-controls={`hm-rx-p${i}`} tabindex={i === 0 ? 0 : -1}>
+              <span class="hm-rx-badge" aria-hidden="true">{c.logo ? <Img image={c.logo} sizes="48px" /> : (c.acronym ?? initials(c.name))}</span>
+              <span class="hm-rx-tab-name">{c.name}</span>
+              <span class="hm-rx-tab-bar" aria-hidden="true"><span></span></span>
+            </button>
+          ))}
+        </div>
+        <div class="hm-rx-panels">
+          {s.centres.map((c, i) => (
+            <article role="tabpanel" id={`hm-rx-p${i}`} aria-labelledby={`hm-rx-t${i}`} class:list={['hm-rx-panel', { 'is-on': i === 0 }]} data-rx-panel={i} hidden={i !== 0}>
+              <div class="hm-rx-panel-head">
+                <span class="hm-rx-logo">{c.logo ? <Img image={c.logo} sizes="96px" /> : <span set:html={flask} />}</span>
+                <div>
+                  {c.acronym && <p class="hm-rx-acr">{c.acronym}</p>}
+                  <h4 class="hm-rx-name">{c.name}</h4>
+                </div>
+              </div>
+              {c.summary && <p class="hm-rx-sum">{c.summary}</p>}
+              {c.themes.length > 0 && (
+                <div class="hm-rx-focus">
+                  <p class="hm-rx-focus-h">{labels.focus_areas}</p>
+                  <ul>{c.themes.map((t) => <li>{t}</li>)}</ul>
+                </div>
+              )}
+              <a class="hm-rx-link" href={c.href}>{labels.visit_centre} <Fragment set:html={arrow} /></a>
+            </article>
+          ))}
+        </div>
+      </div>
+    </div>
+  )}
+
+  {stories.length > 0 && (
+    <div class="hm-rx-stories" data-reveal="right">
+      <h3 class="hm-rx-h">{labels.stories_heading}</h3>
+      <ul class="hm-rx-list">
+        {stories.map((r, i) => (
+          <li class:list={['hm-rx-story', { 'hm-rx-story--noimg': !r.image }]} data-reveal style={`--i:${i}`}>
+            <span class="hm-rx-thumb" aria-hidden="true">{r.image ? <Img image={r.image} sizes="200px" /> : <span set:html={flask} />}</span>
+            <div class="hm-rx-story-body">
+              <p class="hm-rx-meta">{r.category && <span>{r.category}</span>}{r.date && <time datetime={r.date.slice(0, 10)}>{fmtDate(r.date)}</time>}</p>
+              <h4 class="hm-rx-story-title">{r.href ? <a href={r.href}>{r.title}</a> : r.title}</h4>
+              {r.summary && <p class="hm-rx-story-sum">{r.summary}</p>}
+            </div>
+          </li>
+        ))}
+      </ul>
+    </div>
   )}
 </div>
+
+<script is:inline>
+  (() => {
+    if (window.__hmRx) return;
+    window.__hmRx = true;
+    const init = () => {
+      document.querySelectorAll('[data-rx]').forEach((root) => {
+        const tabs = [...root.querySelectorAll('[data-rx-tab]')];
+        const panels = [...root.querySelectorAll('[data-rx-panel]')];
+        if (tabs.length < 2) return;
+        const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+        let at = 0, timer = null, stopped = reduce, hover = false;
+        const show = (n, focus) => {
+          at = (n + tabs.length) % tabs.length;
+          tabs.forEach((t, i) => { const on = i === at; t.classList.toggle('is-on', on); t.setAttribute('aria-selected', String(on)); t.tabIndex = on ? 0 : -1; const bar = t.querySelector('.hm-rx-tab-bar > span'); if (bar) { bar.style.animation = 'none'; void bar.offsetWidth; bar.style.animation = ''; } });
+          panels.forEach((p, i) => { const on = i === at; p.hidden = !on; p.classList.toggle('is-on', on); });
+          if (focus) tabs[at].focus();
+        };
+        const run = () => { clearInterval(timer); root.classList.toggle('is-still', stopped || hover); if (!stopped && !hover) timer = setInterval(() => show(at + 1, false), 7000); };
+        tabs.forEach((t, i) => {
+          t.addEventListener('click', () => { stopped = true; show(i, false); run(); });
+          t.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowDown' || e.key === 'ArrowRight') { e.preventDefault(); stopped = true; show(i + 1, true); run(); }
+            if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') { e.preventDefault(); stopped = true; show(i - 1, true); run(); }
+          });
+        });
+        root.addEventListener('mouseenter', () => { hover = true; run(); });
+        root.addEventListener('mouseleave', () => { hover = false; run(); });
+        root.addEventListener('focusin', () => { hover = true; run(); });
+        root.addEventListener('focusout', () => { hover = false; run(); });
+        run();
+      });
+    };
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+  })();
+</script>

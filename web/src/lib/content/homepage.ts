@@ -66,6 +66,13 @@ const LABEL_DEFAULTS = {
   ago_days: '{n} days ago',
   on_date: 'On',
   urgent_badge: 'Urgent',
+  programmes_count: '{n} programmes',
+  departments_count: '{n} departments',
+  view_programme: 'View programme',
+  focus_areas: 'Focus areas',
+  visit_centre: 'Visit the centre',
+  centres_heading: 'Research centres',
+  stories_heading: 'From the research desk',
 };
 export type HomeLabels = typeof LABEL_DEFAULTS;
 
@@ -143,8 +150,28 @@ export interface Card {
   link_label: string | null;
 }
 export type ProgrammeIcon = 'physics' | 'chemistry' | 'life' | 'maths' | 'data' | 'media' | 'economics' | 'politics' | 'book';
-export interface ProgrammeCard { name: string; href: string; department: string | null; level: string | null; summary: string | null; image: ResponsiveImage | null; icon: ProgrammeIcon }
-export interface CentreCard { name: string; href: string; summary: string | null }
+export interface ProgrammeCard {
+  name: string;
+  href: string;
+  department: string | null;
+  department_slug: string | null;
+  /** The department's own colour, or a College colour when none is set. */
+  accent: string;
+  level: string | null;
+  degree: string | null;
+  duration: string | null;
+  summary: string | null;
+  image: ResponsiveImage | null;
+  icon: ProgrammeIcon;
+}
+export interface CentreCard {
+  name: string;
+  acronym: string | null;
+  href: string;
+  summary: string | null;
+  themes: string[];
+  logo: ResponsiveImage | null;
+}
 export interface Stat { value: string; label: string; note: string | null; source: string | null }
 export interface DocumentLink { title: string; url: string; ext: string | null; size: string | null; category: string | null }
 export interface LinkCard { label: string; url: string; description: string | null }
@@ -375,15 +402,21 @@ async function resolveProgrammes(s: any): Promise<ProgrammeCard[]> {
   const rows = await list('programmes', {
     ...(ids.length ? { filters: { documentId: { $in: ids } } } : {}),
     sort: ['display_order:asc', 'programme_name:asc'],
-    fields: ['programme_name', 'slug', 'level', 'degree_type', 'short_description', 'overview'],
-    populate: { department: { fields: ['department_name'] }, hero_image: true },
+    fields: ['programme_name', 'slug', 'level', 'degree_type', 'duration', 'short_description', 'overview'],
+    populate: { department: { fields: ['department_name', 'slug', 'theme_color'] }, hero_image: true },
   });
   const ordered = ids.length ? inOrder(rows, ids) : rows;
+  const palette = ['#1a2f7a', '#c98f12', '#1e6b4f', '#8a3b5c', '#2b6f8f'];
+  const deptOrder = [...new Set(ordered.map((p) => p.department?.slug).filter(Boolean))];
   return ordered.slice(0, s.limit || 8).map((p) => ({
     name: p.programme_name,
     href: `/academics/programmes/${p.slug}`,
     department: p.department?.department_name ?? null,
-    level: [LEVEL[p.level], text(p.degree_type)].filter(Boolean).join(' · ') || null,
+    department_slug: p.department?.slug ?? null,
+    accent: text(p.department?.theme_color) ?? palette[Math.max(0, deptOrder.indexOf(p.department?.slug)) % palette.length],
+    degree: text(p.degree_type),
+    duration: text(p.duration),
+    level: LEVEL[p.level] ?? null,
     summary: text(p.short_description) ?? (p.overview ? excerpt(p.overview, 140) : null),
     image: responsiveImage(p.hero_image),
     icon: iconFor(p.programme_name),
@@ -406,11 +439,18 @@ async function resolveResearch(s: any) {
   const centreIds = docIds(s.centres);
   const [stories, centreRows] = await Promise.all([
     newsByIds(docIds(s.stories)),
-    centreIds.length ? list('research-centres', { filters: { documentId: { $in: centreIds } }, fields: ['name', 'slug', 'description'] }) : Promise.resolve([]),
+    centreIds.length ? list('research-centres', { filters: { documentId: { $in: centreIds } }, fields: ['name', 'slug', 'description', 'acronym', 'summary', 'themes', 'logo_alt'], populate: ['logo'] }) : Promise.resolve([]),
   ]);
   return {
     stories,
-    centres: inOrder(centreRows, centreIds).map((c) => ({ name: c.name, href: `/research/centres/${c.slug}`, summary: c.description ? excerpt(c.description, 110) : null })),
+    centres: inOrder(centreRows, centreIds).map((c): CentreCard => ({
+      name: c.name,
+      acronym: text(c.acronym),
+      href: `/research/centres/${c.slug}`,
+      summary: text(c.summary) ?? (c.description ? excerpt(String(c.description).replace(/^Vision:[^\n]*\n+/i, ''), 170) : null),
+      themes: String(c.themes ?? '').split(/\n+/).map((t) => t.trim()).filter(Boolean).slice(0, 6),
+      logo: responsiveImage(c.logo, c.logo_alt),
+    })),
     cards: (s.cards ?? []).filter((c: any) => c?.title).map(cardOf),
   };
 }

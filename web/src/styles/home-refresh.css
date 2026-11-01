@@ -1204,3 +1204,26 @@
     animation: none !important;
   }
 }
+
+/* ── College Introduction: slides in on every pass, down or up ── */
+.hm-intro.is-armed [data-slide-from] {
+  opacity: 0;
+  transition: opacity 0.9s var(--hm-ease), transform 1s var(--hm-ease);
+}
+.hm-intro.is-armed [data-slide-from='left'] {
+  transform: translate(-110px, var(--hm-sy, 70px));
+}
+.hm-intro.is-armed [data-slide-from='right'] {
+  transform: translate(110px, var(--hm-sy, 70px));
+  transition-delay: 0.12s;
+}
+.hm-intro.is-armed.is-slid [data-slide-from] {
+  opacity: 1;
+  transform: none;
+}
+@media (max-width: 899px) {
+  .hm-intro.is-armed [data-slide-from='left'],
+  .hm-intro.is-armed [data-slide-from='right'] {
+    transform: translate(0, var(--hm-sy, 70px));
+  }
+}
