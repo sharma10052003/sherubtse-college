@@ -133,8 +133,3 @@
     flex-basis: calc((100% - var(--hm-gap)) / 2);
   }
 }
-@media (max-width: 600px) {
-  .hm-cp-item {
-    flex-basis: 100%;
-  }
-}

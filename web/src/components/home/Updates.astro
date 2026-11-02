@@ -11,7 +11,7 @@ import { fmtDate } from '../../lib/content/homepage';
 type S = Extract<Section, { kind: 'updates' }>;
 interface Props { s: S; labels: HomeLabels }
 const { s, labels } = Astro.props;
-const PAGE = 9;
+const PAGE = 8;
 const order: UpdateType[] = ['news', 'announcement', 'event', 'vacancy'];
 const tabLabel: Record<UpdateType, string> = { news: labels.tab_news, announcement: labels.tab_announcements, event: labels.tab_events, vacancy: labels.tab_vacancies };
 const present = order.filter((t) => s.items.some((i) => i.type === t));
@@ -95,7 +95,7 @@ const cfg = JSON.stringify({ links: s.links, labels: { all: labels.view_all, tod
     const init = () => {
       document.querySelectorAll('[data-up]').forEach((root) => {
         const cfg = JSON.parse(root.querySelector('[data-up-cfg]').textContent);
-        const PAGE = 9, STEP = 6;
+        const PAGE = matchMedia('(max-width: 700px)').matches ? 4 : 8, STEP = 4;
         const items = [...root.querySelectorAll('[data-up-item]')];
         const tabs = [...root.querySelectorAll('[data-up-tab]')];
         const grid = root.querySelector('[data-up-grid]');
