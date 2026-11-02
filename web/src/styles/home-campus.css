@@ -1,0 +1,291 @@
+/**
+ * Homepage — Student Life & Campus (components/home/Campus.astro, .hm-cp). Loaded after
+ * home-sections.css. Compact on purpose: live figures, two tabs, category chips and cards
+ * with little dead space.
+ */
+
+.hm-cp-figs {
+  list-style: none;
+  margin: 0 0 14px;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+}
+.hm-cp-figs li {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 8px 22px;
+  border-radius: 999px;
+  background: var(--hm-soft);
+  border: 2px solid var(--line);
+}
+.hm-cp-figs strong {
+  font-family: var(--font-serif);
+  font-size: 1.9rem;
+  line-height: 1;
+  color: var(--navy);
+  font-variant-numeric: tabular-nums;
+}
+.hm-cp-figs span {
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gold-ink);
+}
+.hm-cp-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  width: fit-content;
+  margin: 0 auto 14px;
+  padding: 5px;
+  border-radius: 999px;
+  background: var(--hm-soft);
+}
+.hm-cp-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 22px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--navy);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.25s, color 0.25s;
+}
+.hm-cp-tab em {
+  font-style: normal;
+  min-width: 24px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: rgb(212 168 67 / 0.25);
+  font-size: 0.78rem;
+  text-align: center;
+}
+.hm-cp-tab:hover {
+  background: rgb(212 168 67 / 0.2);
+}
+.hm-cp-tab.is-on {
+  background: var(--navy);
+  color: #fff;
+}
+.hm-cp-tab.is-on em {
+  background: var(--gold);
+  color: var(--navy-deep);
+}
+.hm-cp-panel[hidden] {
+  display: none;
+}
+.hm-cp-chips {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+  padding-bottom: 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.hm-cp-chips::-webkit-scrollbar {
+  display: none;
+}
+.hm-cp-chip {
+  flex: none;
+  padding: 7px 16px;
+  border: 2px solid var(--line);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--navy);
+  font: inherit;
+  font-weight: 700;
+  font-size: 0.86rem;
+  cursor: pointer;
+  transition: background 0.25s, color 0.25s, border-color 0.25s, transform 0.3s var(--hm-ease);
+}
+.hm-cp-chip:hover {
+  border-color: var(--gold);
+  transform: translateY(-2px);
+}
+.hm-cp-chip.is-on {
+  background: var(--navy);
+  border-color: var(--navy);
+  color: #fff;
+}
+.hm-cp-grid,
+.hm-cp-clubs {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--hm-gap);
+}
+.hm-cp-item {
+  flex: 0 1 calc((100% - 4 * var(--hm-gap)) / 5);
+  min-width: 0;
+}
+.hm-cp-club {
+  flex: 0 1 calc((100% - 4 * var(--hm-gap)) / 5);
+  min-width: 0;
+}
+.hm-cp-item[hidden],
+.hm-cp-club[hidden] {
+  display: none;
+}
+.hm-cp-card,
+.hm-cp-clubcard {
+  position: relative;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  border: 2px solid var(--line);
+  border-radius: var(--hm-radius);
+  background: #fff;
+  overflow: hidden;
+  transition: transform 0.4s var(--hm-ease), border-color 0.3s;
+}
+.hm-cp-card:hover,
+.hm-cp-clubcard:hover {
+  transform: translateY(-5px);
+  border-color: var(--gold);
+}
+.hm-cp-card--featured {
+  border-color: var(--gold);
+}
+.hm-cp-media {
+  display: block;
+  flex: none;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: var(--navy-deep);
+}
+.hm-cp-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.7s var(--hm-ease);
+}
+.hm-cp-card:hover .hm-cp-img {
+  transform: scale(1.06);
+}
+.hm-cp-tile {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  background: url('/patterns/knot-gold.svg') center / 180px, linear-gradient(150deg, var(--navy-mid), var(--navy-deep));
+  background-blend-mode: soft-light, normal;
+  color: var(--gold);
+}
+.hm-cp-tile svg {
+  width: 56px;
+  height: 56px;
+  transition: scale 0.5s var(--hm-ease), rotate 0.5s var(--hm-ease);
+}
+.hm-cp-card:hover .hm-cp-tile svg {
+  scale: 1.15;
+  rotate: -6deg;
+}
+.hm-cp-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 18px 16px;
+}
+.hm-cp-clubcard {
+  gap: 6px;
+  padding: 16px 18px 18px;
+  border-top: 5px solid var(--gold);
+}
+.hm-cp-cat {
+  margin: 0;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold-ink);
+}
+.hm-cp-name {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: 1.12rem;
+  line-height: 1.25;
+}
+.hm-cp-name a {
+  color: var(--navy);
+  text-decoration: none;
+}
+.hm-cp-name a::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+.hm-cp-sum {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--ink-2);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.hm-cp-go {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: auto;
+  padding-top: 4px;
+  font-weight: 800;
+  font-size: 0.86rem;
+  color: var(--navy-mid);
+  transition: gap 0.3s var(--hm-ease);
+}
+.hm-cp-card:hover .hm-cp-go {
+  gap: 12px;
+}
+.hm-cp-more {
+  margin: 16px 0 0;
+  text-align: center;
+}
+@media (max-width: 1250px) {
+  .hm-cp-item,
+  .hm-cp-club {
+    flex-basis: calc((100% - 3 * var(--hm-gap)) / 4);
+  }
+}
+@media (max-width: 1000px) {
+  .hm-cp-item,
+  .hm-cp-club {
+    flex-basis: calc((100% - 2 * var(--hm-gap)) / 3);
+  }
+}
+@media (max-width: 900px) {
+  .hm-cp-item,
+  .hm-cp-club {
+    flex-basis: calc((100% - var(--hm-gap)) / 2);
+  }
+}
+@media (max-width: 600px) {
+  .hm-cp-item,
+  .hm-cp-club {
+    flex-basis: 100%;
+  }
+  .hm-cp-tabs {
+    width: 100%;
+  }
+  .hm-cp-tab {
+    flex: 1;
+    justify-content: center;
+    padding-inline: 10px;
+    font-size: 0.88rem;
+  }
+}

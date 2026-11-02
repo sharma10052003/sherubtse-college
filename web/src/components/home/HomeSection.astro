@@ -51,7 +51,7 @@ const ends = s.kind === 'celebration' ? s.until : null;
     {s.kind === 'message' && <Message s={s} headingId={headingId} />}
     {s.kind === 'programmes' && <Programmes items={s.items} labels={labels} emptyText={s.empty_text} />}
     {s.kind === 'research' && <Research s={s} labels={labels} />}
-    {s.kind === 'campus' && <Campus items={s.items} layout={s.layout} emptyText={s.empty_text} />}
+    {s.kind === 'campus' && <Campus s={s} labels={labels} />}
     {s.kind === 'stats' && <Stats items={s.items} labels={labels} />}
     {s.kind === 'resources' && <Resources documents={s.documents} links={s.links} labels={labels} />}
     {s.kind === 'link-cards' && <LinkCards cards={s.cards} />}

@@ -69,6 +69,11 @@ const LABEL_DEFAULTS = {
   programmes_count: '{n} programmes',
   departments_count: '{n} departments',
   view_programme: 'View programme',
+  campus_facilities: 'Campus facilities',
+  campus_clubs: 'Clubs & units',
+  campus_areas: 'Areas of student life',
+  campus_facilities_tab: 'Campus facilities',
+  campus_clubs_tab: 'Clubs & societies',
   focus_areas: 'Focus areas',
   visit_centre: 'Visit the centre',
   centres_heading: 'Research centres',
@@ -175,6 +180,16 @@ export interface CentreCard {
 export interface Stat { value: string; label: string; note: string | null; source: string | null }
 export interface DocumentLink { title: string; url: string; ext: string | null; size: string | null; category: string | null }
 export interface LinkCard { label: string; url: string; description: string | null }
+export interface CampusFacility {
+  name: string;
+  href: string;
+  summary: string | null;
+  category: string | null;
+  icon: string;
+  image: ResponsiveImage | null;
+  featured: boolean;
+}
+export interface CampusClub { name: string; href: string; category: string | null; summary: string | null }
 export interface Wish { from: string; role: string | null; text: string }
 export type UpdateType = 'news' | 'announcement' | 'event' | 'vacancy';
 /** One line of the homepage "latest updates" feed: a story, notice, vacancy or event. */
@@ -221,7 +236,7 @@ export type Section =
   | (Base & { kind: 'message'; name: string | null; role: string | null; message_html: string; photo: ResponsiveImage | null })
   | (Base & { kind: 'programmes'; items: ProgrammeCard[] })
   | (Base & { kind: 'research'; stories: Highlight[]; centres: CentreCard[]; cards: Card[] })
-  | (Base & { kind: 'campus'; layout: 'mosaic' | 'grid'; items: Card[] })
+  | (Base & { kind: 'campus'; layout: 'mosaic' | 'grid'; items: Card[]; facilities: CampusFacility[]; clubs: CampusClub[] })
   | (Base & { kind: 'stats'; items: Stat[] })
   | (Base & { kind: 'resources'; documents: DocumentLink[]; links: LinkCard[] })
   | (Base & { kind: 'link-cards'; cards: LinkCard[] })
@@ -455,32 +470,63 @@ async function resolveResearch(s: any) {
   };
 }
 
-async function resolveCampus(s: any): Promise<Card[]> {
+/** Student Life & Campus: every campus facility (picture or designed tile), every active club, and any picture cards added in Strapi. */
+async function resolveCampus(s: any): Promise<{ items: Card[]; facilities: CampusFacility[]; clubs: CampusClub[] }> {
   const ids = docIds(s.facilities);
-  const rows = await list('facilities', {
-    ...(ids.length ? { filters: { documentId: { $in: ids } } } : {}),
-    sort: ['is_featured:desc', 'display_order:asc', 'name:asc'],
-    fields: ['name', 'slug', 'summary', 'image_alt', 'display_mode', 'is_featured'],
-    populate: ['main_image'],
-  });
-  const facilities = (ids.length ? inOrder(rows, ids) : rows.filter((f) => f.main_image)).map((f): Card => ({
-    title: f.name,
-    summary: f.summary ? excerpt(f.summary, 120) : null,
-    image: responsiveImage(f.main_image, f.image_alt),
-    caption: null,
-    category: null,
-    date: null,
+  const [rows, clubRows] = await Promise.all([
+    list('facilities', {
+      ...(ids.length ? { filters: { documentId: { $in: ids } } } : {}),
+      sort: ['is_featured:desc', 'display_order:asc', 'name:asc'],
+      fields: ['name', 'slug', 'summary', 'image_alt', 'display_mode', 'is_featured'],
+      populate: { main_image: true, categories: { fields: ['name', 'icon'] } },
+    }),
+    list('clubs', { filters: { is_active: { $ne: false } }, sort: ['name:asc'], fields: ['name', 'slug', 'category', 'description'], pagination: { pageSize: 100 } }),
+  ]);
+  const facilities = (ids.length ? inOrder(rows, ids) : rows).map((f): CampusFacility => ({
+    name: f.name,
     href: f.display_mode === 'page' ? `/about/campus-facilities/${f.slug}` : `/about/campus-facilities#facility-${f.slug}`,
-    link_label: null,
+    summary: f.summary ? excerpt(f.summary, 130) : null,
+    category: f.categories?.[0]?.name ?? null,
+    icon: f.categories?.[0]?.icon ?? 'building',
+    image: responsiveImage(f.main_image, f.image_alt),
+    featured: !!f.is_featured,
   }));
-  const cards = (s.cards ?? []).filter((c: any) => c?.title).map(cardOf);
-  return [...cards, ...facilities].slice(0, s.limit || 6);
+  const clubs = clubRows.map((c): CampusClub => ({
+    name: c.name,
+    href: `/student-life/clubs/${c.slug}`,
+    category: text(c.category),
+    summary: c.description ? excerpt(String(c.description).replace(/\s+/g, ' '), 150) : null,
+  }));
+  return { items: (s.cards ?? []).filter((c: any) => c?.title).map(cardOf), facilities, clubs };
 }
 
 const DOC_CATEGORY: Record<string, string> = { policy: 'Policy', form: 'Form', timetable: 'Timetable', guide: 'Guide', report: 'Report' };
 const fileSize = (kb: number | null | undefined) => (kb ? (kb >= 1024 ? `${(kb / 1024).toFixed(1)} MB` : `${Math.round(kb)} KB`) : null);
 
 // ---------------------------------------------------------------------------
+
+/** Counts straight from Strapi, for a figure typed as {programmes}, {departments}, {research_centres}, {clubs} or {facilities}. */
+const LIVE_SOURCES: Record<string, { path: string; filters?: Record<string, unknown> }> = {
+  programmes: { path: 'programmes' },
+  undergraduate_programmes: { path: 'programmes', filters: { level: { $eq: 'undergraduate' } } },
+  postgraduate_programmes: { path: 'programmes', filters: { level: { $eq: 'postgraduate' } } },
+  departments: { path: 'departments' },
+  research_centres: { path: 'research-centres' },
+  clubs: { path: 'clubs', filters: { is_active: { $ne: false } } },
+  facilities: { path: 'facilities' },
+};
+async function liveFigures(text: string): Promise<Record<string, number>> {
+  const wanted = Object.keys(LIVE_SOURCES).filter((k) => text.includes(`{${k}}`));
+  const out: Record<string, number> = {};
+  await Promise.all(
+    wanted.map(async (k) => {
+      const res = await strapiGet<StrapiListResponse<any>>(LIVE_SOURCES[k].path, { fields: ['id'], pagination: { pageSize: 1 }, ...(LIVE_SOURCES[k].filters ? { filters: LIVE_SOURCES[k].filters } : {}) });
+      const n = res?.meta?.pagination?.total;
+      if (typeof n === 'number') out[k] = n;
+    }),
+  );
+  return out;
+}
 
 let presidentPromise: Promise<any | null> | null = null;
 function president() {
@@ -535,9 +581,11 @@ async function resolveSection(s: any, i: number): Promise<Section | null> {
     case 'home.research':
       return { ...base, kind: 'research', ...(await resolveResearch(s)) };
     case 'home.campus':
-      return { ...base, kind: 'campus', layout: s.layout === 'grid' ? 'grid' : 'mosaic', items: await resolveCampus(s) };
+      return { ...base, kind: 'campus', layout: s.layout === 'grid' ? 'grid' : 'mosaic', ...(await resolveCampus(s)) };
     case 'home.stats': {
-      const items = (s.items ?? []).filter((x: any) => x?.verified && x.value && x.label).map((x: any) => ({ value: x.value, label: x.label, note: text(x.note), source: text(x.source) }));
+      const live = await liveFigures((s.items ?? []).map((x: any) => String(x?.value ?? '')).join(' '));
+      const fill = (v: string) => v.replace(/\{(\w+)\}/g, (m, k) => (k in live ? String(live[k]) : m));
+      const items = (s.items ?? []).filter((x: any) => x?.verified && x.value && x.label).map((x: any) => ({ value: fill(String(x.value)), label: x.label, note: text(x.note), source: text(x.source) })).filter((x: Stat) => !/\{\w+\}/.test(x.value));
       return items.length ? { ...base, kind: 'stats', items } : null;
     }
     case 'home.resources':
@@ -699,12 +747,13 @@ function place(sections: Section[], extra: Section, where: string) {
 /** A section with nothing to show is dropped, unless it has an “empty” message. */
 function hasContent(s: Section) {
   switch (s.kind) {
+    case 'campus':
+      return s.items.length + s.facilities.length + s.clubs.length > 0 || !!s.empty_text;
     case 'highlights':
     case 'updates':
     case 'notices':
     case 'events':
     case 'programmes':
-    case 'campus':
       return s.items.length > 0 || !!s.empty_text;
     case 'research':
       return s.stories.length + s.centres.length + s.cards.length > 0;
