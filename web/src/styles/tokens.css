@@ -38,9 +38,9 @@
   --s4: 16px;
   --s5: 24px;
   --s6: 32px;
-  --s7: 36px;
-  --s8: 44px;
-  --s9: 64px;
+  --s7: 30px;
+  --s8: 32px;
+  --s9: 44px;
 
   /* Layout (§04) */
   --measure: 68ch;       /* reading width, all running text, every screen size */

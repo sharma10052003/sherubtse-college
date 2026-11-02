@@ -187,6 +187,9 @@ const svg = (path: string) =>
               </button>
             </div>
           </div>
+          <details class="na-opts">
+            <summary class="na-opts-sum">Reading options <span>text size, colour, typeface, listen</span></summary>
+            <div class="na-opts-body">
           <div class="na-rail-block">
             <span class="na-rail-label" id="na-size-label">Text size</span>
             <div class="na-size" role="group" aria-labelledby="na-size-label">
@@ -232,6 +235,8 @@ const svg = (path: string) =>
             </div>
           </div>
           <button type="button" class="na-reset" data-na-reset>Reset reading settings</button>
+            </div>
+          </details>
           <button type="button" class="na-fullscreen" data-na-fullscreen hidden aria-pressed="false">
             <Fragment set:html={svg(ICON.expand)} />
             <span data-na-fullscreen-label>Read in full screen</span>
