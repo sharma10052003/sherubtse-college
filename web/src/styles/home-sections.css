@@ -605,3 +605,48 @@
     animation: none !important;
   }
 }
+
+/* ── Tighter vertical rhythm: less white space between sections ── */
+.hm-band {
+  padding-block: clamp(28px, 3vw, 48px);
+}
+.hm-band--soft,
+.hm-band--navy {
+  padding-block: clamp(34px, 3.8vw, 60px);
+}
+.hm-band--white + .hm-band--white {
+  padding-top: clamp(4px, 0.6vw, 10px);
+}
+.hm-band--celebration {
+  padding-block: clamp(18px, 2vw, 30px);
+}
+.hm-head {
+  margin-bottom: clamp(14px, 1.8vw, 24px);
+}
+.hm-h2 {
+  padding-top: 14px;
+  font-size: clamp(1.7rem, 1.25rem + 1.6vw, 2.6rem);
+}
+.hm-head .hm-lede {
+  margin-top: var(--s2);
+}
+.hm-up-bar,
+.hm-pg-bar {
+  margin-bottom: 16px;
+}
+.hm-up-actions {
+  margin-top: 20px;
+}
+.hm-slider-dots {
+  margin-top: 10px;
+}
+.hm-cel {
+  padding: clamp(24px, 3.4vw, 52px);
+}
+.hm-cel-wishes {
+  margin-top: clamp(20px, 2.6vw, 36px);
+  padding-top: clamp(18px, 2.2vw, 28px);
+}
+.hm-pair {
+  gap: var(--s6);
+}
