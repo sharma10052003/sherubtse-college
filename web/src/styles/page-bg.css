@@ -1,0 +1,84 @@
+/**
+ * One uniform page background for the whole site: warm paper, a faint Bhutanese knot pattern and two
+ * very soft navy / gold glows that drift slowly. Sections are transparent so it shows through everywhere;
+ * cards stay white. Everything is fixed and pointer-less, and motion is off for "reduce motion".
+ */
+:root {
+  --page: #f6f4ee;
+}
+body {
+  background: var(--page);
+}
+.page-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+.page-bg::before {
+  content: '';
+  position: absolute;
+  inset: -110px 0;
+  background: url('/patterns/knot-navy.svg') 0 0 / 110px 110px;
+  opacity: 0.07;
+}
+.page-bg-glow {
+  position: absolute;
+  width: 62vmax;
+  height: 62vmax;
+  border-radius: 50%;
+  will-change: transform;
+}
+.page-bg-glow--navy {
+  top: -22vmax;
+  left: -18vmax;
+  background: radial-gradient(circle, rgb(13 27 75 / 0.09), transparent 65%);
+  animation: page-drift-a 46s ease-in-out infinite alternate;
+}
+.page-bg-glow--gold {
+  right: -20vmax;
+  bottom: -26vmax;
+  background: radial-gradient(circle, rgb(240 180 41 / 0.14), transparent 65%);
+  animation: page-drift-b 58s ease-in-out infinite alternate;
+}
+@keyframes page-drift-a {
+  to {
+    transform: translate(18vmax, 14vmax) scale(1.12);
+  }
+}
+@keyframes page-drift-b {
+  to {
+    transform: translate(-16vmax, -12vmax) scale(1.08);
+  }
+}
+@supports (animation-timeline: scroll()) {
+  .page-bg::before {
+    animation: page-pattern linear both;
+    animation-timeline: scroll(root);
+  }
+  @keyframes page-pattern {
+    to {
+      transform: translateY(110px);
+    }
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .page-bg-glow,
+  .page-bg::before {
+    animation: none;
+  }
+}
+
+/* Section bands: transparent, so one background runs through every page. */
+body .band,
+body .band-alt,
+body .hm-band--soft,
+body .cf-bg-white,
+body .cf-bg-soft {
+  background: transparent;
+}
+body .cf,
+body .fl-section--links {
+  background: transparent;
+}

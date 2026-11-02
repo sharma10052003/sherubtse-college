@@ -11,6 +11,7 @@ import '../styles/tokens.css';
 import '../styles/components.css';
 import '../styles/layout.css';
 import '../styles/motion.css';
+import '../styles/page-bg.css';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import BottomTabs from '../components/BottomTabs.astro';
@@ -53,6 +54,7 @@ const pageTitle = `${title} — Sherubtse College`;
     <meta name="theme-color" content="#0d1b4b" />
   </head>
   <body>
+    <div class="page-bg" aria-hidden="true"><span class="page-bg-glow page-bg-glow--navy"></span><span class="page-bg-glow page-bg-glow--gold"></span></div>
     <a href="#main-content" class="sr-only-focusable">Skip to main content</a>
     <Header />
     <main id="main-content">
