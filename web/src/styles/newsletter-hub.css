@@ -46,7 +46,7 @@
   color: #fff;
   background: linear-gradient(150deg, var(--navy-mid), var(--navy) 55%, var(--navy-deep));
   border-radius: 0 0 clamp(28px, 4vw, 64px) clamp(28px, 4vw, 64px);
-  padding-block: clamp(36px, 5vw, 76px) clamp(56px, 7vw, 110px);
+  padding-block: clamp(24px, 3.3vw, 76px) clamp(56px, 4.62vw, 73px);
 }
 .nlx-glow {
   position: absolute;
@@ -380,7 +380,7 @@
 
 /* ── Library ────────────────────────────────────────────── */
 .nlx-library {
-  padding-block: clamp(44px, 6vw, 92px);
+  padding-block: clamp(29px, 3.96vw, 61px);
   scroll-margin-top: 80px;
 }
 .nlx-head {
@@ -690,7 +690,7 @@
 
 /* ── Issue page ─────────────────────────────────────────── */
 .nlx-issue-hero {
-  padding-block: clamp(36px, 5vw, 76px) clamp(48px, 6vw, 96px);
+  padding-block: clamp(24px, 3.3vw, 76px) clamp(48px, 3.96vw, 63px);
 }
 .nlx-issue-grid {
   display: grid;
@@ -756,7 +756,7 @@
   font-size: 1.08rem;
 }
 .nlx-section {
-  padding-block: clamp(40px, 5vw, 80px);
+  padding-block: clamp(26px, 3.3vw, 53px);
 }
 .nlx-section--tint {
   background: var(--nlx-tint);

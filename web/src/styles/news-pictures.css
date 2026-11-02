@@ -3,7 +3,7 @@
  * Scoped under .np. Mosaic (columns of natural-height pictures) or an even grid.
  */
 .np {
-  padding-block: clamp(40px, 5vw, 80px);
+  padding-block: clamp(26px, 3.3vw, 53px);
   background: var(--paper-2, #f4f6fa);
   border-radius: clamp(24px, 3.5vw, 56px) clamp(24px, 3.5vw, 56px) 0 0;
 }

@@ -49,7 +49,7 @@
   color: #fff;
   background: linear-gradient(150deg, var(--navy-mid), var(--navy) 55%, var(--navy-deep));
   border-radius: 0 0 clamp(28px, 4vw, 64px) clamp(28px, 4vw, 64px);
-  padding-block: clamp(36px, 5vw, 76px) clamp(48px, 6vw, 96px);
+  padding-block: clamp(24px, 3.3vw, 76px) clamp(48px, 3.96vw, 63px);
 }
 .nw-glow {
   position: absolute;
@@ -555,7 +555,7 @@
 
 /* ── Board ──────────────────────────────────────────────── */
 .nw-board {
-  padding-bottom: clamp(44px, 6vw, 90px);
+  padding-bottom: clamp(29px, 3.96vw, 59px);
 }
 .nw-head {
   display: flex;
@@ -867,7 +867,7 @@
 
 /* ── Links onward ───────────────────────────────────────── */
 .nw-more {
-  padding-block: clamp(40px, 5vw, 80px);
+  padding-block: clamp(26px, 3.3vw, 53px);
   background: var(--navy);
   color: #fff;
 }

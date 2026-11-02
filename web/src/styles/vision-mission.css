@@ -156,7 +156,7 @@
   z-index: 2;
   width: 100%;
   padding-top: var(--s5);
-  padding-bottom: clamp(170px, 24vh, 250px);
+  padding-bottom: clamp(112px, 24vh, 165px);
 }
 .vm-breadcrumb {
   font-size: 0.82rem;

@@ -33,7 +33,7 @@
   color: #fff;
   background: linear-gradient(150deg, var(--navy-mid), var(--navy) 55%, var(--navy-deep));
   border-radius: 0 0 clamp(28px, 4vw, 64px) clamp(28px, 4vw, 64px);
-  padding-block: clamp(36px, 5vw, 76px) clamp(48px, 6vw, 96px);
+  padding-block: clamp(24px, 3.3vw, 76px) clamp(48px, 3.96vw, 63px);
 }
 .fd-blob {
   position: absolute;
@@ -397,7 +397,7 @@
 
 /* ── Sections ───────────────────────────────────────────── */
 .fd-section {
-  padding-block: clamp(44px, 6vw, 92px);
+  padding-block: clamp(29px, 3.96vw, 61px);
   scroll-margin-top: calc(var(--fd-top) + 64px);
 }
 .fd-section--tint {
@@ -416,7 +416,7 @@
   color: var(--gold-light);
 }
 .fd-head {
-  margin-bottom: clamp(24px, 3vw, 44px);
+  margin-bottom: clamp(16px, 1.98vw, 29px);
 }
 .fd-kicker {
   display: inline-flex;
@@ -956,7 +956,7 @@
 
 /* Related */
 .fd-section--related {
-  padding-bottom: clamp(56px, 7vw, 110px);
+  padding-bottom: clamp(37px, 4.62vw, 73px);
 }
 .fd-related {
   list-style: none;

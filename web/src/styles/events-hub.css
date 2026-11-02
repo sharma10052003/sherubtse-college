@@ -48,7 +48,7 @@
   color: #fff;
   background: linear-gradient(150deg, var(--navy-mid), var(--navy) 55%, var(--navy-deep));
   border-radius: 0 0 clamp(28px, 4vw, 64px) clamp(28px, 4vw, 64px);
-  padding-block: clamp(36px, 5vw, 76px) clamp(48px, 6vw, 96px);
+  padding-block: clamp(24px, 3.3vw, 76px) clamp(48px, 3.96vw, 63px);
 }
 .evx-glow {
   position: absolute;
@@ -493,7 +493,7 @@
 
 /* ── Events ─────────────────────────────────────────────── */
 .evx-main {
-  padding-block: clamp(26px, 3.4vw, 48px) clamp(48px, 6vw, 96px);
+  padding-block: clamp(17px, 2.24vw, 48px) clamp(48px, 3.96vw, 63px);
 }
 .evx-top {
   display: flex;

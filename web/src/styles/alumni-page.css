@@ -319,7 +319,7 @@
   z-index: 2;
   width: 100%;
   padding-top: var(--s5);
-  padding-bottom: clamp(150px, 20vh, 220px);
+  padding-bottom: clamp(99px, 20vh, 145px);
 }
 .al-breadcrumb {
   font-size: 0.82rem;

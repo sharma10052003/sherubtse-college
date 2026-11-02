@@ -69,11 +69,6 @@ const LABEL_DEFAULTS = {
   programmes_count: '{n} programmes',
   departments_count: '{n} departments',
   view_programme: 'View programme',
-  campus_facilities: 'Campus facilities',
-  campus_clubs: 'Clubs & units',
-  campus_areas: 'Areas of student life',
-  campus_facilities_tab: 'Campus facilities',
-  campus_clubs_tab: 'Clubs & societies',
   focus_areas: 'Focus areas',
   visit_centre: 'Visit the centre',
   centres_heading: 'Research centres',
@@ -189,7 +184,6 @@ export interface CampusFacility {
   image: ResponsiveImage | null;
   featured: boolean;
 }
-export interface CampusClub { name: string; href: string; category: string | null; summary: string | null }
 export interface Wish { from: string; role: string | null; text: string }
 export type UpdateType = 'news' | 'announcement' | 'event' | 'vacancy';
 /** One line of the homepage "latest updates" feed: a story, notice, vacancy or event. */
@@ -236,7 +230,7 @@ export type Section =
   | (Base & { kind: 'message'; name: string | null; role: string | null; message_html: string; photo: ResponsiveImage | null })
   | (Base & { kind: 'programmes'; items: ProgrammeCard[] })
   | (Base & { kind: 'research'; stories: Highlight[]; centres: CentreCard[]; cards: Card[] })
-  | (Base & { kind: 'campus'; layout: 'mosaic' | 'grid'; items: Card[]; facilities: CampusFacility[]; clubs: CampusClub[] })
+  | (Base & { kind: 'campus'; layout: 'mosaic' | 'grid'; items: Card[]; facilities: CampusFacility[] })
   | (Base & { kind: 'stats'; items: Stat[] })
   | (Base & { kind: 'resources'; documents: DocumentLink[]; links: LinkCard[] })
   | (Base & { kind: 'link-cards'; cards: LinkCard[] })
@@ -471,17 +465,16 @@ async function resolveResearch(s: any) {
 }
 
 /** Student Life & Campus: every campus facility (picture or designed tile), every active club, and any picture cards added in Strapi. */
-async function resolveCampus(s: any): Promise<{ items: Card[]; facilities: CampusFacility[]; clubs: CampusClub[] }> {
+async function resolveCampus(s: any): Promise<{ items: Card[]; facilities: CampusFacility[] }> {
   const ids = docIds(s.facilities);
-  const [rows, clubRows] = await Promise.all([
-    list('facilities', {
+  const rows = (
+    await list('facilities', {
       ...(ids.length ? { filters: { documentId: { $in: ids } } } : {}),
       sort: ['is_featured:desc', 'display_order:asc', 'name:asc'],
       fields: ['name', 'slug', 'summary', 'image_alt', 'display_mode', 'is_featured'],
       populate: { main_image: true, categories: { fields: ['name', 'icon'] } },
-    }),
-    list('clubs', { filters: { is_active: { $ne: false } }, sort: ['name:asc'], fields: ['name', 'slug', 'category', 'description'], pagination: { pageSize: 100 } }),
-  ]);
+    })
+  );
   const facilities = (ids.length ? inOrder(rows, ids) : rows).map((f): CampusFacility => ({
     name: f.name,
     href: f.display_mode === 'page' ? `/about/campus-facilities/${f.slug}` : `/about/campus-facilities#facility-${f.slug}`,
@@ -491,13 +484,7 @@ async function resolveCampus(s: any): Promise<{ items: Card[]; facilities: Campu
     image: responsiveImage(f.main_image, f.image_alt),
     featured: !!f.is_featured,
   }));
-  const clubs = clubRows.map((c): CampusClub => ({
-    name: c.name,
-    href: `/student-life/clubs/${c.slug}`,
-    category: text(c.category),
-    summary: c.description ? excerpt(String(c.description).replace(/\s+/g, ' '), 150) : null,
-  }));
-  return { items: (s.cards ?? []).filter((c: any) => c?.title).map(cardOf), facilities, clubs };
+  return { items: (s.cards ?? []).filter((c: any) => c?.title).map(cardOf), facilities };
 }
 
 const DOC_CATEGORY: Record<string, string> = { policy: 'Policy', form: 'Form', timetable: 'Timetable', guide: 'Guide', report: 'Report' };
@@ -748,7 +735,7 @@ function place(sections: Section[], extra: Section, where: string) {
 function hasContent(s: Section) {
   switch (s.kind) {
     case 'campus':
-      return s.items.length + s.facilities.length + s.clubs.length > 0 || !!s.empty_text;
+      return s.items.length + s.facilities.length > 0 || !!s.empty_text;
     case 'highlights':
     case 'updates':
     case 'notices':
